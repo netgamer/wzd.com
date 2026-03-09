@@ -1,159 +1,153 @@
 ﻿# agent.md
 
-## 프로젝트 개요
-WZD.com 스타일의 개인화 시작페이지를 구현한다.
-사용자는 위젯(북마크, 메모, RSS, 실시간 검색어 등)을 추가/삭제하고, 3개 라인(컬럼)에 드래그앤드롭으로 배치하며, 라인 너비를 조절할 수 있어야 한다.
-배포는 Cloudflare Pages, 인증은 Google OAuth, 데이터 저장은 Supabase(PostgreSQL)를 기본으로 한다.
+## 프로젝트 미션
+개인화 대시보드(`wzd.kr`) 안에서 회원별 에이전트(개발자/기획자/PM)를 생성하고 실행할 수 있는 서비스를 구축한다.
+핵심은 "사용자별 상태 분리"와 "어떤 환경에서 로그인해도 동일한 상태 복원"이다.
 
-## 목표
-- 레거시 포털 느낌의 대시보드 UI 재현
-- 사용자별 레이아웃/위젯 상태 영구 저장(DB)
-- 빠른 초기 렌더링과 부드러운 DnD UX
-- Git 기반 자동 배포 파이프라인 구성
+## 제품 범위 (MVP)
+- 기존 위젯 대시보드 유지
+- 에이전트 위젯 제공
+  - 개발자 에이전트
+  - 기획자 에이전트
+  - PM 에이전트
+- 에이전트 실행 요청/응답/이력 저장
+- 회원별 데이터 완전 분리(RLS)
+- 브라우저/기기 간 동기화
 
-## 핵심 기능 요구사항
+## 최종 아키텍처
 
-### 1) 레이아웃 시스템
-- 기본 레이아웃은 3개 컬럼
-- 각 컬럼은 가로 너비를 드래그로 늘리거나 줄일 수 있음
-- 컬럼 내부 위젯은 세로 스택 구조
-- 위젯은 컬럼 간 이동 가능
-- 위젯 순서 변경 가능(드래그앤드롭)
-- 반응형: 데스크톱 우선, 태블릿/모바일에서는 1~2컬럼으로 자동 축소
+### 1) 프론트엔드 (Cloudflare Pages)
+- React + TypeScript + Vite
+- 대시보드 UI, 위젯 배치/저장
+- 에이전트 실행 UI(질문 입력, 상태, 결과)
+- 인증: Supabase Auth (Google)
 
-### 2) 위젯 관리
-- 상단 `콘텐츠 추가` 버튼 제공
-- 클릭 시 위젯 갤러리(모달/패널) 오픈
-- 위젯 추가 시 기본 설정값으로 생성
-- 위젯 최소 기능:
-  - 북마크: 폴더/링크 추가, 삭제, 정렬
-  - 메모: 텍스트 입력 자동 저장
-  - RSS: 피드 URL 등록, 항목 리스트 표시
-  - 실시간 검색어: 외부 API 또는 더미/모의 데이터 소스 지원
-- 위젯 공통 기능:
-  - 접기/펼치기
-  - 삭제
-  - 설정(타이틀/데이터소스/표시 개수)
+### 2) API 서버 (GCP)
+- FastAPI 또는 Node(Express/Fastify)
+- 역할:
+  - `/agent/run`: 에이전트 실행 시작
+  - `/agent/runs`: 실행 이력 조회
+  - `/agent/run/:id`: 상세 조회
+- LLM 호출: Groq API
+- 툴 연동: 필요 시 Composio(2차)
 
-### 3) 인증/사용자
-- 로그인 기본 방식은 Google OAuth 단일 로그인
-- 미로그인 사용자는 읽기 전용 또는 로컬 임시 저장만 허용
-- 로그인 사용자는 사용자별 레이아웃/콘텐츠를 DB에 저장
-- 세션 관리는 Supabase Auth를 사용
+### 3) 데이터/인증 (Supabase)
+- Auth: 사용자 식별
+- Postgres: 대시보드 상태 + 에이전트 실행 결과 저장
+- RLS: `auth.uid() = user_id` 강제
 
-### 4) 데이터 저장
-- 저장 대상:
-  - 컬럼 너비
-  - 위젯 위치/순서
-  - 위젯별 설정값
-  - 사용자 콘텐츠(북마크/메모 등)
-- DB는 Supabase PostgreSQL 사용
-- Row Level Security(RLS)로 `auth.uid() = user_id` 정책 적용
-- 로컬 캐시는 UX 개선용으로만 사용하고, 원본은 DB 기준으로 동기화
+## 에이전트 실행 모델
+- 단일 요청/응답이 아니라 "루프 기반"으로 설계
+1. 사용자 목표 입력
+2. 모델이 간단한 계획 수립
+3. 계획 단계별 실행(필요 시 검색/도구 호출)
+4. 중간 결과 검증
+5. 목표 충족 또는 제한 횟수 도달 시 종료
+6. 전체 로그/결과 저장
 
-### 5) 배포/운영
-- 저장소(GitHub 권장)와 Cloudflare Pages 연동
-- `main` 브랜치 머지 시 프로덕션 자동 배포
-- PR 브랜치는 Preview 배포 사용
-- 환경변수는 Cloudflare Pages 대시보드에서 관리
-  - `VITE_SUPABASE_URL`
-  - `VITE_SUPABASE_ANON_KEY`
-  - `VITE_APP_ENV`
+### 에이전트별 역할 정의
+- 개발자: 구현안, 코드 제안, 디버깅 우선
+- 기획자: 요구사항 구조화, 유저플로우/기능명세 우선
+- PM: 일정/리스크/우선순위/결정사항 요약 우선
 
-### 6) 상단/하단 UI
-- 상단 바:
-  - 로고 영역
-  - `콘텐츠 추가` 버튼
-  - 페이지/테마/설정 메뉴 자리
-  - 로그인 사용자 정보/로그아웃
-- 하단 바:
-  - 간단한 링크 영역(피드백/도움말 등)
+## 데이터 모델 (확정)
 
-## 비기능 요구사항
-- 위젯 이동/리사이즈 시 60fps에 가깝게 동작
-- 데이터 손실 방지(편집 즉시 저장 또는 debounce 저장)
-- 접근성:
-  - 키보드 포커스 가능
-  - 버튼/아이콘 aria-label 제공
-- 브라우저 지원: 최신 Chrome/Edge/Safari
-- 보안:
-  - 키는 공개 가능한 anon key만 클라이언트 사용
-  - 서비스 키는 클라이언트 금지
+```sql
+-- 기존: dashboard_layouts, widgets 유지
 
-## 권장 기술 스택
-- Frontend: React + TypeScript + Vite
-- 상태관리: Zustand
-- DnD: dnd-kit
-- Resizable: react-resizable 또는 커스텀 splitter
-- 스타일: CSS Modules 또는 Tailwind(레트로 스킨은 CSS 변수 기반)
-- Auth/DB: Supabase Auth + Supabase Postgres
-- Deploy: Cloudflare Pages
+create table if not exists public.agent_runs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  agent_type text not null check (agent_type in ('developer','planner','pm')),
+  goal text not null,
+  status text not null check (status in ('queued','running','completed','failed')),
+  plan_json jsonb,
+  result_text text,
+  error_text text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
 
-## 데이터 모델(초안)
+create table if not exists public.agent_steps (
+  id bigserial primary key,
+  run_id uuid not null references public.agent_runs(id) on delete cascade,
+  step_no int not null,
+  action_type text not null,
+  input_json jsonb,
+  output_json jsonb,
+  created_at timestamptz not null default now()
+);
 
-```ts
-export type WidgetType = 'bookmark' | 'memo' | 'rss' | 'trend';
+alter table public.agent_runs enable row level security;
+alter table public.agent_steps enable row level security;
 
-export interface DashboardState {
-  columns: {
-    id: string;
-    width: number;
-    widgetIds: string[];
-  }[];
-  widgets: Record<string, WidgetInstance>;
-}
+create policy "agent_runs_owner"
+on public.agent_runs
+for all
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
 
-export interface WidgetInstance {
-  id: string;
-  userId: string;
-  type: WidgetType;
-  title: string;
-  collapsed: boolean;
-  settings: Record<string, unknown>;
-  data: unknown;
-  createdAt: string;
-  updatedAt: string;
-}
+create policy "agent_steps_owner"
+on public.agent_steps
+for select
+using (
+  exists (
+    select 1 from public.agent_runs r
+    where r.id = run_id and r.user_id = auth.uid()
+  )
+);
 ```
 
-## 구현 순서(권장)
-1. 프로젝트 초기화(Vite + React + TS)
-2. Git 저장소 생성 및 원격 연결(GitHub)
-3. Supabase 프로젝트 생성(Auth: Google, DB 스키마/RLS 구성)
-4. Cloudflare Pages에 저장소 연결(빌드/환경변수 설정)
-5. 3컬럼 고정 레이아웃 + 컬럼 너비 조절(splitter) 구현
-6. 위젯 카드 공통 컴포넌트(헤더/바디/툴버튼) 구현
-7. dnd-kit으로 컬럼 내/컬럼 간 이동 구현
-8. `콘텐츠 추가` 패널 + 위젯 생성 플로우 구현
-9. 북마크/메모/RSS/실검 위젯 최소 기능 구현
-10. Supabase CRUD 연결 및 자동 저장 연결
-11. 레트로 테마 스타일 튜닝(회색 패턴 배경, 패널 음영, 작은 타이포)
-12. QA(새로고침 복원, OAuth 로그인, DnD 안정성, 리사이즈 경계값)
+## 실행 플랜 (확정)
 
-## 완료 기준(Definition of Done)
-- Google 로그인 후 사용자별 대시보드가 로드된다.
-- 새 위젯을 추가하고 원하는 컬럼/위치로 이동할 수 있다.
-- 3개 컬럼 너비를 사용자가 조절할 수 있다.
-- 새로고침/재로그인 후에도 레이아웃/콘텐츠가 유지된다.
-- 북마크, 메모, RSS, 실시간 검색어 위젯이 각각 동작한다.
-- `main` 반영 시 Cloudflare Pages에 자동 배포된다.
+### Phase 1: 기반 안정화 (완료/진행)
+- 대시보드 위젯 추가/이동/리사이즈
+- Supabase 로그인/저장/동기화
+- 에이전트 위젯 UI(개발자/기획자/PM) 추가
 
-## 주의사항
-- `기존 사이트와 완전히 동일`이 아니라 `동일한 사용 경험과 핵심 기능`을 목표로 한다.
-- 로고/브랜드/원본 리소스는 직접 복제하지 않고 자체 에셋으로 대체한다.
-- 외부 API 사용 시 서비스 약관/쿼터/저작권을 준수한다.
+### Phase 2: 에이전트 API 서버 구축 (최우선)
+1. GCP 서버 프로젝트 생성
+2. `/health`, `/agent/run`, `/agent/runs`, `/agent/run/:id` 구현
+3. Groq API 연결
+4. Supabase Service Role로 `agent_runs`, `agent_steps` 저장
+5. CORS를 `https://wzd.kr`만 허용
 
-## 서브 에이전트
+### Phase 3: 프론트 연동
+1. 에이전트 위젯에서 목표 입력
+2. 실행 요청 후 `running` 상태 표시
+3. 완료 시 결과/단계 로그 표시
+4. 다른 브라우저에서 같은 계정 로그인 시 동일 이력 복원
 
-### 디자이너 서브 에이전트
-- 파일: `designer-agent.md`
-- 역할: WZD 스타일의 시각 언어(레이아웃 밀도, 타이포, 컬러, 패널 질감, 아이콘 톤)를 일관되게 정의하고 검수
-- 호출 시점:
-  - UI 컴포넌트 제작 전(디자인 토큰/가이드 선행 정의)
-  - 신규 위젯 추가 시(카드 규격/헤더/상태/인터랙션 규칙 적용)
-  - 릴리스 전(시각 일관성/가독성/정보 밀도 최종 점검)
-- 산출물:
-  - 디자인 토큰(CSS 변수)
-  - 컴포넌트별 스타일 규칙
-  - 상태별(기본/호버/포커스/드래그중/비활성) 명세
-  - QA 체크리스트
+### Phase 4: 루프형 에이전트 고도화
+1. 계획(JSON) 생성 프롬프트 추가
+2. 단계 실행 루프(최대 step 제한)
+3. 실패 재시도/중단 로직
+4. 실행 시간/토큰 사용량 기록
+
+### Phase 5: 운영 준비
+1. 에러 모니터링(서버 로그 + 프론트 에러)
+2. 요청 제한(사용자별 rate limit)
+3. 운영 대시보드(최근 실패, 평균 응답시간)
+
+## Groq 모델 전략
+- 기본: `openai/gpt-oss-20b` 또는 `llama-3.1-8b-instant` (속도)
+- 고품질: `llama-3.3-70b-versatile` 또는 `openai/gpt-oss-120b`
+- Deprecated 모델은 사용 금지
+
+## 보안 원칙
+- Groq API 키는 서버에만 저장(클라이언트 금지)
+- Supabase `service_role` 키는 서버에만 저장
+- 클라이언트는 Supabase anon key만 사용
+- 모든 조회/수정은 user_id 기준 검증
+
+## 완료 기준 (Definition of Done)
+1. 로그인 사용자 A가 생성한 에이전트 실행 결과가 사용자 B에게 보이지 않는다.
+2. 같은 사용자로 브라우저/기기 변경 시 에이전트 실행 이력이 동일하게 보인다.
+3. 에이전트 실행 중 상태(`queued/running/completed/failed`)가 UI에서 보인다.
+4. 실행 실패 시 원인 로그가 남고 재실행이 가능하다.
+5. 대시보드 위젯 배치/데이터와 에이전트 이력이 모두 서버 기준으로 복원된다.
+
+## 즉시 다음 작업
+1. `supabase/schema.sql`에 `agent_runs`, `agent_steps` 추가
+2. GCP 에이전트 API 서버 초기 코드 생성
+3. 프론트 에이전트 위젯에 실행 버튼/결과 패널 연결
