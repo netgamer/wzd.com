@@ -7,10 +7,10 @@ interface AddWidgetModalProps {
 }
 
 const options: Array<{ type: WidgetType; label: string; description: string }> = [
-  { type: "bookmark", label: "Bookmark", description: "Quick links and folders" },
-  { type: "memo", label: "Memo", description: "Fast text notes" },
-  { type: "rss", label: "RSS", description: "Feed headlines" },
-  { type: "trend", label: "Realtime Search", description: "Trending keywords" }
+  { type: "bookmark", label: "북마크", description: "자주 가는 링크와 폴더" },
+  { type: "memo", label: "메모", description: "빠른 텍스트 메모" },
+  { type: "rss", label: "RSS", description: "피드 헤드라인" },
+  { type: "trend", label: "실시간 검색어", description: "인기 검색 키워드" }
 ];
 
 export const AddWidgetModal = ({ open, onClose, onAdd }: AddWidgetModalProps) => {
@@ -22,8 +22,8 @@ export const AddWidgetModal = ({ open, onClose, onAdd }: AddWidgetModalProps) =>
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header">
-          <h2>Add Content Widget</h2>
-          <button className="icon-button" onClick={onClose} aria-label="Close modal">
+          <h2>위젯 추가</h2>
+          <button className="icon-button" onClick={onClose} aria-label="모달 닫기">
             x
           </button>
         </div>

@@ -287,28 +287,28 @@ const App = () => {
       <header className="topbar">
         <div className="brand">
           <span className="logo">wzd</span>
-          <span className="subtitle">Personal Startpage</span>
+          <span className="subtitle">개인 시작페이지</span>
         </div>
 
         <div className="actions">
           <button className="primary" onClick={() => setModalOpen(true)}>
-            + Add Content
+            + 위젯 추가
           </button>
           {authReady ? (
             user ? (
               <>
                 <span className="user-email">{user.email}</span>
                 <button className="secondary" onClick={onLogout}>
-                  Logout
+                  로그아웃
                 </button>
               </>
             ) : (
               <button className="secondary" onClick={onGoogleLogin}>
-                Google Login
+                구글 로그인
               </button>
             )
           ) : (
-            <span className="auth-note">Set Supabase env vars to enable login</span>
+            <span className="auth-note">Supabase 환경변수를 설정하면 로그인을 사용할 수 있습니다</span>
           )}
         </div>
       </header>
@@ -390,7 +390,7 @@ const App = () => {
               <button
                 className="splitter"
                 onMouseDown={() => setActiveResize(columnIndex)}
-                aria-label={`Resize column ${columnIndex + 1}`}
+                aria-label={`${columnIndex + 1}번 컬럼 너비 조절`}
               />
             )}
           </div>
@@ -398,7 +398,7 @@ const App = () => {
       </main>
 
       <footer className="footer">
-        {user ? "Cloud synced (Supabase)" : "Local mode"} | Cloudflare Pages + Supabase + Google Auth
+        {user ? "클라우드 동기화 사용 중(슈파베이스)" : "로컬 모드"} | 클라우드플레어 페이지스 + 슈파베이스 + 구글 인증
       </footer>
 
       <AddWidgetModal open={modalOpen} onClose={() => setModalOpen(false)} onAdd={addWidget} />

@@ -25,7 +25,7 @@ export const WidgetBody = ({ data, onMemoChange }: WidgetBodyProps) => {
           className="memo-input"
           value={data.text}
           onChange={(event) => onMemoChange(event.target.value)}
-          placeholder="Write your memo"
+          placeholder="메모를 입력하세요"
         />
       );
     case "rss":

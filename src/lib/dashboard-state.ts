@@ -15,19 +15,19 @@ const defaultWidgetData = (type: WidgetType): WidgetData => {
       return {
         type: "bookmark",
         items: [
-          { id: makeId(), title: "Cloudflare", url: "https://www.cloudflare.com" },
-          { id: makeId(), title: "Supabase", url: "https://supabase.com" }
+          { id: makeId(), title: "클라우드플레어", url: "https://www.cloudflare.com" },
+          { id: makeId(), title: "슈파베이스", url: "https://supabase.com" }
         ]
       };
     case "memo":
-      return { type: "memo", text: "Type your note here..." };
+      return { type: "memo", text: "메모를 입력하세요..." };
     case "rss":
       return {
         type: "rss",
         feedUrl: "https://example.com/rss",
         items: [
-          { id: makeId(), title: "Sample feed item 1", link: "#" },
-          { id: makeId(), title: "Sample feed item 2", link: "#" }
+          { id: makeId(), title: "샘플 피드 항목 1", link: "#" },
+          { id: makeId(), title: "샘플 피드 항목 2", link: "#" }
         ]
       };
     case "trend":
@@ -46,10 +46,10 @@ const defaultWidgetData = (type: WidgetType): WidgetData => {
 
 export const newWidget = (type: WidgetType, title?: string): WidgetInstance => {
   const baseTitle: Record<WidgetType, string> = {
-    bookmark: "Bookmarks",
-    memo: "Memo",
-    rss: "RSS Feed",
-    trend: "Trending"
+    bookmark: "북마크",
+    memo: "메모",
+    rss: "RSS 피드",
+    trend: "실시간 검색어"
   };
 
   return {
@@ -66,7 +66,7 @@ export const newWidget = (type: WidgetType, title?: string): WidgetInstance => {
 export const createInitialState = (): DashboardState => {
   const w1 = newWidget("bookmark");
   const w2 = newWidget("memo");
-  const w3 = newWidget("trend", "Realtime Keywords");
+  const w3 = newWidget("trend", "실시간 검색어");
 
   return {
     columns: [
