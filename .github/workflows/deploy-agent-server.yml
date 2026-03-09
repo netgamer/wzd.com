@@ -20,35 +20,40 @@ jobs:
             exit 1
           fi
 
-      - name: Start ssh-agent and add key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.GCP_VM_PRIVATE_KEY }}
-
-      - name: Add VM host key
+      - name: Setup SSH key from secret
         run: |
           mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.GCP_VM_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          if ! grep -q "BEGIN OPENSSH PRIVATE KEY" ~/.ssh/id_rsa; then
+            echo "GCP_VM_PRIVATE_KEY must be OpenSSH private key"
+            exit 1
+          fi
+
+          echo "[debug] key fingerprint on runner:"
+          ssh-keygen -lf ~/.ssh/id_rsa
+
           ssh-keyscan -T 10 -H "${{ secrets.GCP_VM_HOST }}" >> ~/.ssh/known_hosts || true
 
       - name: SSH connectivity check
         run: |
-          ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "echo SSH_OK"
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "echo SSH_OK"
 
       - name: Upload changed files (tar over ssh)
         run: |
           REMOTE_APP_DIR="/home/${{ secrets.GCP_VM_USER }}/wzd-app"
-          ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "mkdir -p $REMOTE_APP_DIR"
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "mkdir -p $REMOTE_APP_DIR"
 
           tar \
             --exclude=.git \
             --exclude=node_modules \
             --exclude=dist \
             -czf - . | \
-          ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "tar -xzf - -C $REMOTE_APP_DIR"
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "tar -xzf - -C $REMOTE_APP_DIR"
 
       - name: Run remote deploy script
         run: |
           REMOTE_APP_DIR="/home/${{ secrets.GCP_VM_USER }}/wzd-app"
-          ssh -o IdentitiesOnly=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" \
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" \
             "bash -lc 'chmod +x $REMOTE_APP_DIR/scripts/deploy-agent-server.sh && APP_DIR=$REMOTE_APP_DIR BRANCH=main $REMOTE_APP_DIR/scripts/deploy-agent-server.sh'"
-
