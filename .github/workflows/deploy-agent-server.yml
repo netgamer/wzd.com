@@ -13,11 +13,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install rsync
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y rsync
-
       - name: Setup SSH key
         run: |
           if [ -z "${{ secrets.GCP_VM_HOST }}" ] || [ -z "${{ secrets.GCP_VM_USER }}" ]; then
@@ -57,19 +52,16 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "echo SSH_OK"
 
-      - name: Install rsync on remote VM
+      - name: Upload changed files (tar over ssh)
         run: |
-          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" \
-            "command -v rsync >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y rsync)"
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "mkdir -p /opt/wzd-app"
 
-      - name: Upload changed files
-        run: |
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
-            --exclude '.git' \
-            --exclude 'node_modules' \
-            --exclude 'dist' \
-            ./ "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}:/opt/wzd-app"
+          tar \
+            --exclude=.git \
+            --exclude=node_modules \
+            --exclude=dist \
+            -czf - . | \
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "tar -xzf - -C /opt/wzd-app"
 
       - name: Run remote deploy script
         run: |
