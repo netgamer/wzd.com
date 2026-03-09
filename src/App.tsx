@@ -38,6 +38,7 @@ const App = () => {
   const [cloudLoaded, setCloudLoaded] = useState(false);
   const [canCloudWrite, setCanCloudWrite] = useState(false);
   const [syncError, setSyncError] = useState<string>("");
+  const [saveRetryToken, setSaveRetryToken] = useState(0);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
   const lastSignatureRef = useRef<string>(getDashboardSignature(dashboard));
@@ -98,6 +99,9 @@ const App = () => {
         if (state) {
           skipNextCloudSaveRef.current = true;
           setDashboard(state);
+        } else {
+          // Seed initial state to server immediately for first-login devices.
+          setSaveRetryToken((value) => value + 1);
         }
 
         setCloudLoaded(true);
@@ -136,13 +140,16 @@ const App = () => {
         .catch((error: unknown) => {
           const message = error instanceof Error ? error.message : "클라우드 저장에 실패했습니다";
           setSyncError(`저장 실패: ${message}`);
+          window.setTimeout(() => {
+            setSaveRetryToken((value) => value + 1);
+          }, 2000);
         });
-    }, 800);
+    }, 120);
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [dashboard, canCloudWrite, cloudLoaded, user?.id]);
+  }, [dashboard, canCloudWrite, cloudLoaded, saveRetryToken, user?.id]);
 
   useEffect(() => {
     if (!user?.id || !supabase || !cloudLoaded || !canCloudWrite) {
