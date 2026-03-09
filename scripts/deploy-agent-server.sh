@@ -1,5 +1,7 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
+
+export PATH="$HOME/.nvm/versions/node/current/bin:$HOME/.nvm/versions/node/$(ls -1 $HOME/.nvm/versions/node 2>/dev/null | tail -n 1)/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
 APP_DIR=${APP_DIR:-/home/$USER/wzd-app}
 BRANCH=${BRANCH:-main}
@@ -20,6 +22,11 @@ if [ -d .git ]; then
   git reset --hard "origin/$BRANCH"
 else
   echo "[deploy] no .git directory detected (artifact upload mode), skip git sync"
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+  echo "[deploy] npm not found in PATH. install Node.js/npm on VM and retry."
+  exit 1
 fi
 
 echo "[deploy] install deps"

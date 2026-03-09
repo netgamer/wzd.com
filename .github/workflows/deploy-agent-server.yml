@@ -68,4 +68,4 @@ jobs:
         run: |
           REMOTE_APP_DIR="/home/${{ secrets.GCP_VM_USER }}/wzd-app"
           ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" \
-            "chmod +x $REMOTE_APP_DIR/scripts/deploy-agent-server.sh && APP_DIR=$REMOTE_APP_DIR BRANCH=main $REMOTE_APP_DIR/scripts/deploy-agent-server.sh"
+            "bash -lc 'chmod +x $REMOTE_APP_DIR/scripts/deploy-agent-server.sh && APP_DIR=$REMOTE_APP_DIR BRANCH=main $REMOTE_APP_DIR/scripts/deploy-agent-server.sh'"
