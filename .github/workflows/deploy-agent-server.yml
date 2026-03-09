@@ -34,6 +34,7 @@ jobs:
       - name: Upload changed files
         run: |
           rsync -avz --delete \
+            -e "ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
             --exclude '.git' \
             --exclude 'node_modules' \
             --exclude 'dist' \
@@ -41,5 +42,5 @@ jobs:
 
       - name: Run remote deploy script
         run: |
-          ssh "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" \
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" \
             "chmod +x /opt/wzd-app/scripts/deploy-agent-server.sh && APP_DIR=/opt/wzd-app BRANCH=main /opt/wzd-app/scripts/deploy-agent-server.sh"
