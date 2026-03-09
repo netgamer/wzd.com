@@ -13,6 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install rsync
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rsync
+
       - name: Setup SSH key
         run: |
           if [ -z "${{ secrets.GCP_VM_HOST }}" ] || [ -z "${{ secrets.GCP_VM_USER }}" ]; then
