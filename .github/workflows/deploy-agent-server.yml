@@ -3,13 +3,7 @@
 on:
   push:
     branches: ["main"]
-    paths:
-      - "server/**"
-      - "scripts/deploy-agent-server.sh"
-      - "ecosystem.config.cjs"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/deploy-agent-server.yml"
+  workflow_dispatch:
 
 jobs:
   deploy:
