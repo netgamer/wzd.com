@@ -36,6 +36,7 @@ const App = () => {
   const [activeResize, setActiveResize] = useState<number | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [cloudLoaded, setCloudLoaded] = useState(false);
+  const [canCloudWrite, setCanCloudWrite] = useState(false);
   const [syncError, setSyncError] = useState<string>("");
 
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -81,6 +82,7 @@ const App = () => {
 
     if (!user?.id || !supabase) {
       setCloudLoaded(false);
+      setCanCloudWrite(false);
       setSyncError("");
       return;
     }
@@ -99,6 +101,7 @@ const App = () => {
         }
 
         setCloudLoaded(true);
+        setCanCloudWrite(true);
         setSyncError("");
       })
       .catch((error: unknown) => {
@@ -108,6 +111,7 @@ const App = () => {
 
         const message = error instanceof Error ? error.message : "클라우드 불러오기에 실패했습니다";
         setSyncError(`불러오기 실패: ${message}`);
+        setCanCloudWrite(false);
         setCloudLoaded(true);
       });
 
@@ -117,7 +121,7 @@ const App = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    if (!user?.id || !supabase || !cloudLoaded) {
+    if (!user?.id || !supabase || !cloudLoaded || !canCloudWrite) {
       return;
     }
 
@@ -138,10 +142,10 @@ const App = () => {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [dashboard, cloudLoaded, user?.id]);
+  }, [dashboard, canCloudWrite, cloudLoaded, user?.id]);
 
   useEffect(() => {
-    if (!user?.id || !supabase || !cloudLoaded) {
+    if (!user?.id || !supabase || !cloudLoaded || !canCloudWrite) {
       return;
     }
 
@@ -183,7 +187,7 @@ const App = () => {
       window.clearInterval(intervalId);
       window.removeEventListener("focus", onFocus);
     };
-  }, [cloudLoaded, user?.id]);
+  }, [canCloudWrite, cloudLoaded, user?.id]);
 
   useEffect(() => {
     if (activeResize === null) {

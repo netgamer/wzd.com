@@ -21,11 +21,10 @@ interface WidgetRow {
 
 const normalizeColumns = (columns: ColumnState[], widgetIds: string[]): ColumnState[] => {
   const baseColumns = Array.isArray(columns) && columns.length > 0 ? columns : createInitialState().columns;
-  const existing = new Set(widgetIds);
 
   const normalized = baseColumns.map((column) => ({
     ...column,
-    widgetIds: (column.widgetIds ?? []).filter((id) => existing.has(id))
+    widgetIds: Array.isArray(column.widgetIds) ? [...column.widgetIds] : []
   }));
 
   const allPlaced = new Set(normalized.flatMap((column) => column.widgetIds));
@@ -121,6 +120,48 @@ export const saveDashboardToSupabase = async (userId: string, state: DashboardSt
 
   const widgets = Object.values(state.widgets);
 
+  if (widgets.length === 0) {
+    const wipe = await supabase.from("widgets").delete().eq("user_id", userId);
+    if (wipe.error) {
+      throw wipe.error;
+    }
+  } else {
+    const upsertRows: WidgetRow[] = widgets.map((widget) => ({
+      id: widget.id,
+      user_id: userId,
+      type: widget.type,
+      title: widget.title,
+      collapsed: widget.collapsed,
+      data: widget.data,
+      created_at: widget.createdAt,
+      updated_at: widget.updatedAt
+    }));
+
+    const write = await supabase.from("widgets").upsert(upsertRows);
+    if (write.error) {
+      throw write.error;
+    }
+
+    const localIds = new Set(widgets.map((widget) => widget.id));
+    const remoteIdsResult = await supabase.from("widgets").select("id").eq("user_id", userId);
+    if (remoteIdsResult.error) {
+      throw remoteIdsResult.error;
+    }
+
+    const staleIds = (remoteIdsResult.data ?? [])
+      .map((row: { id: string }) => row.id)
+      .filter((id) => !localIds.has(id));
+
+    if (staleIds.length > 0) {
+      const cleanup = await supabase.from("widgets").delete().in("id", staleIds).eq("user_id", userId);
+      if (cleanup.error) {
+        throw cleanup.error;
+      }
+    }
+  }
+
+  // Save layout last so other clients do not read a new layout that references
+  // widgets which are not written yet.
   const layoutWrite = await supabase.from("dashboard_layouts").upsert({
     user_id: userId,
     columns_json: state.columns,
@@ -128,46 +169,5 @@ export const saveDashboardToSupabase = async (userId: string, state: DashboardSt
   });
   if (layoutWrite.error) {
     throw layoutWrite.error;
-  }
-
-  if (widgets.length === 0) {
-    const wipe = await supabase.from("widgets").delete().eq("user_id", userId);
-    if (wipe.error) {
-      throw wipe.error;
-    }
-    return;
-  }
-
-  const upsertRows: WidgetRow[] = widgets.map((widget) => ({
-    id: widget.id,
-    user_id: userId,
-    type: widget.type,
-    title: widget.title,
-    collapsed: widget.collapsed,
-    data: widget.data,
-    created_at: widget.createdAt,
-    updated_at: widget.updatedAt
-  }));
-
-  const write = await supabase.from("widgets").upsert(upsertRows);
-  if (write.error) {
-    throw write.error;
-  }
-
-  const localIds = new Set(widgets.map((widget) => widget.id));
-  const remoteIdsResult = await supabase.from("widgets").select("id").eq("user_id", userId);
-  if (remoteIdsResult.error) {
-    throw remoteIdsResult.error;
-  }
-
-  const staleIds = (remoteIdsResult.data ?? [])
-    .map((row: { id: string }) => row.id)
-    .filter((id) => !localIds.has(id));
-
-  if (staleIds.length > 0) {
-    const cleanup = await supabase.from("widgets").delete().in("id", staleIds).eq("user_id", userId);
-    if (cleanup.error) {
-      throw cleanup.error;
-    }
   }
 };
