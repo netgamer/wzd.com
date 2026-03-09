@@ -24,6 +24,13 @@ export interface TrendItem {
   rank: number;
 }
 
+export interface AgentMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+}
+
 export interface AgentItem {
   id: string;
   name: string;
@@ -32,6 +39,7 @@ export interface AgentItem {
   description: string;
   avatarUrl?: string;
   status: "ready" | "busy";
+  messages: AgentMessage[];
 }
 
 export type WidgetData =

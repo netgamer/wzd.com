@@ -48,27 +48,30 @@ const defaultWidgetData = (type: WidgetType): WidgetData => {
             name: "개발자 에이전트",
             role: "developer",
             roleLabel: "개발자",
-            description: "프론트엔드/백엔드 구현과 코드 품질 개선",
+            description: "구현/디버깅/검증 자동화",
             avatarUrl: "",
-            status: "ready"
+            status: "ready",
+            messages: []
           },
           {
             id: makeId(),
             name: "기획자 에이전트",
             role: "planner",
             roleLabel: "기획자",
-            description: "요구사항 정의, 기능 우선순위, 사용자 흐름 설계",
+            description: "요구사항 정리/화면 흐름/기능 명세",
             avatarUrl: "",
-            status: "ready"
+            status: "ready",
+            messages: []
           },
           {
             id: makeId(),
             name: "PM 에이전트",
             role: "pm",
             roleLabel: "PM",
-            description: "일정/리스크 관리, 진행률 추적, 의사결정 정리",
+            description: "우선순위/일정/리스크 관리",
             avatarUrl: "",
-            status: "busy"
+            status: "busy",
+            messages: []
           }
         ]
       };

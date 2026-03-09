@@ -4,7 +4,7 @@ import { WidgetBody } from "./components/WidgetBody";
 import { createInitialState, loadState, newWidget, saveState } from "./lib/dashboard-state";
 import { getDashboardSignature, loadDashboardFromSupabase, saveDashboardToSupabase } from "./lib/supabase-dashboard";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
-import type { DashboardState, UserProfile, WidgetData, WidgetInstance, WidgetType } from "./types";
+import type { AgentItem, DashboardState, UserProfile, WidgetData, WidgetInstance, WidgetType } from "./types";
 
 interface DragPayload {
   widgetId: string;
@@ -12,6 +12,12 @@ interface DragPayload {
 }
 
 const minColumnWidth = 18;
+const agentApiBaseUrl = import.meta.env.VITE_AGENT_API_BASE_URL || "http://localhost:8787";
+
+const makeId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2, 10);
 
 const findColumnIdForWidget = (state: DashboardState, widgetId: string): string | null => {
   for (const column of state.columns) {
@@ -39,6 +45,7 @@ const App = () => {
   const [canCloudWrite, setCanCloudWrite] = useState(false);
   const [syncError, setSyncError] = useState<string>("");
   const [saveRetryToken, setSaveRetryToken] = useState(0);
+  const [runningAgentIds, setRunningAgentIds] = useState<string[]>([]);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
   const lastSignatureRef = useRef<string>(getDashboardSignature(dashboard));
@@ -100,7 +107,6 @@ const App = () => {
           skipNextCloudSaveRef.current = true;
           setDashboard(state);
         } else {
-          // Seed initial state to server immediately for first-login devices.
           setSaveRetryToken((value) => value + 1);
         }
 
@@ -305,6 +311,102 @@ const App = () => {
     });
   };
 
+  const appendAgentMessages = (widgetId: string, agentId: string, messages: { role: "user" | "assistant"; content: string }[]) => {
+    setDashboard((prev) => {
+      const widget = prev.widgets[widgetId];
+      if (!widget || widget.data.type !== "agent") {
+        return prev;
+      }
+
+      const nextItems = widget.data.items.map((item) => {
+        if (item.id !== agentId) {
+          return item;
+        }
+
+        return {
+          ...item,
+          messages: [
+            ...item.messages,
+            ...messages.map((message) => ({
+              id: makeId(),
+              role: message.role,
+              content: message.content,
+              createdAt: new Date().toISOString()
+            }))
+          ]
+        } as AgentItem;
+      });
+
+      return {
+        ...prev,
+        widgets: {
+          ...prev.widgets,
+          [widgetId]: {
+            ...widget,
+            data: {
+              ...widget.data,
+              items: nextItems
+            },
+            updatedAt: new Date().toISOString()
+          }
+        }
+      };
+    });
+  };
+
+  const runAgent = async ({
+    widgetId,
+    agentId,
+    agentType,
+    prompt,
+    scheduleCron
+  }: {
+    widgetId: string;
+    agentId: string;
+    agentType: AgentItem["role"];
+    prompt: string;
+    scheduleCron?: string;
+  }) => {
+    if (!prompt.trim()) {
+      return;
+    }
+
+    setRunningAgentIds((prev) => (prev.includes(agentId) ? prev : [...prev, agentId]));
+    appendAgentMessages(widgetId, agentId, [{ role: "user", content: prompt }]);
+
+    try {
+      const response = await fetch(`${agentApiBaseUrl}/api/agent/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          agentType,
+          prompt,
+          context: `userId=${user?.id ?? "anonymous"}`,
+          scheduleCron,
+          workflowName: scheduleCron ? `${agentType}-${Date.now()}` : undefined
+        })
+      });
+
+      const payload = await response.json();
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error ?? "에이전트 실행에 실패했습니다");
+      }
+
+      const workflowMessage = payload.workflow?.id
+        ? `\n\n[n8n 워크플로우 생성됨] workflowId=${payload.workflow.id}`
+        : "";
+
+      appendAgentMessages(widgetId, agentId, [{ role: "assistant", content: `${payload.answer}${workflowMessage}` }]);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "에이전트 실행 중 오류가 발생했습니다";
+      appendAgentMessages(widgetId, agentId, [{ role: "assistant", content: `오류: ${message}` }]);
+    } finally {
+      setRunningAgentIds((prev) => prev.filter((id) => id !== agentId));
+    }
+  };
+
   const moveWidget = (payload: DragPayload, toColumnId: string, beforeWidgetId?: string) => {
     setDashboard((prev) => {
       const fromColumnId = findColumnIdForWidget(prev, payload.widgetId) ?? payload.fromColumnId;
@@ -458,6 +560,10 @@ const App = () => {
                             }
                             updateWidgetData(widget.id, { ...widget.data, text });
                           }}
+                          onAgentRun={({ agentId, agentType, prompt, scheduleCron }) =>
+                            runAgent({ widgetId: widget.id, agentId, agentType, prompt, scheduleCron })
+                          }
+                          runningAgentIds={runningAgentIds}
                         />
                       </div>
                     )}

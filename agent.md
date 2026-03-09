@@ -1,153 +1,94 @@
-﻿# agent.md
+# agent.md
 
 ## 프로젝트 미션
-개인화 대시보드(`wzd.kr`) 안에서 회원별 에이전트(개발자/기획자/PM)를 생성하고 실행할 수 있는 서비스를 구축한다.
-핵심은 "사용자별 상태 분리"와 "어떤 환경에서 로그인해도 동일한 상태 복원"이다.
+개인화 대시보드(`wzd.kr`)에서 사용자별 반복작업 에이전트를 만들고, 채팅으로 지시하면 n8n 워크플로우를 자동 생성/실행/검증하는 서비스를 구축한다.
 
-## 제품 범위 (MVP)
-- 기존 위젯 대시보드 유지
-- 에이전트 위젯 제공
-  - 개발자 에이전트
-  - 기획자 에이전트
-  - PM 에이전트
-- 에이전트 실행 요청/응답/이력 저장
-- 회원별 데이터 완전 분리(RLS)
-- 브라우저/기기 간 동기화
+## 핵심 방향
+- 에이전트 채팅 모델: Groq API
+- 반복작업 실행 엔진: GCP의 n8n 서버
+- 사용자 인증/데이터 분리: Supabase Auth + RLS
+- 어떤 환경에서 로그인해도 상태/이력 동일 복원
+
+## 현재 구현 상태
+- 위젯 대시보드(3컬럼 DnD/리사이즈/클라우드 동기화)
+- 에이전트 위젯(개발자/기획자/PM)
+- 에이전트 채팅 UI 및 실행 버튼
+- 백엔드 API 서버 골격(`server/`)
+  - Groq 채팅 호출
+  - n8n 워크플로우 생성 API 호출
 
 ## 최종 아키텍처
+1. Frontend (Cloudflare Pages)
+- 대시보드/위젯/에이전트 채팅 UI
+- `/api/agent/chat` 호출
 
-### 1) 프론트엔드 (Cloudflare Pages)
-- React + TypeScript + Vite
-- 대시보드 UI, 위젯 배치/저장
-- 에이전트 실행 UI(질문 입력, 상태, 결과)
-- 인증: Supabase Auth (Google)
+2. Agent API Server (GCP)
+- `POST /api/agent/chat`
+- Groq로 계획/응답 생성
+- 스케줄 요청 시 n8n 워크플로우 생성/활성화
 
-### 2) API 서버 (GCP)
-- FastAPI 또는 Node(Express/Fastify)
-- 역할:
-  - `/agent/run`: 에이전트 실행 시작
-  - `/agent/runs`: 실행 이력 조회
-  - `/agent/run/:id`: 상세 조회
-- LLM 호출: Groq API
-- 툴 연동: 필요 시 Composio(2차)
+3. Supabase
+- 사용자 인증(Google)
+- 위젯/레이아웃/에이전트 실행 이력 저장
+- RLS로 사용자 단위 격리
 
-### 3) 데이터/인증 (Supabase)
-- Auth: 사용자 식별
-- Postgres: 대시보드 상태 + 에이전트 실행 결과 저장
-- RLS: `auth.uid() = user_id` 강제
+4. n8n (GCP)
+- 워크플로우 저장/스케줄 실행
+- 작업 로그 반환
 
-## 에이전트 실행 모델
-- 단일 요청/응답이 아니라 "루프 기반"으로 설계
-1. 사용자 목표 입력
-2. 모델이 간단한 계획 수립
-3. 계획 단계별 실행(필요 시 검색/도구 호출)
-4. 중간 결과 검증
-5. 목표 충족 또는 제한 횟수 도달 시 종료
-6. 전체 로그/결과 저장
+## 운영 환경변수 정책
 
-### 에이전트별 역할 정의
-- 개발자: 구현안, 코드 제안, 디버깅 우선
-- 기획자: 요구사항 구조화, 유저플로우/기능명세 우선
-- PM: 일정/리스크/우선순위/결정사항 요약 우선
+### Frontend
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_APP_ENV`
+- `VITE_AGENT_API_BASE_URL`
 
-## 데이터 모델 (확정)
+### Agent API Server
+- `PORT`
+- `ALLOWED_ORIGIN`
+- `GROQ_API_KEY`
+- `GROQ_MODEL`
+- `N8N_BASE_URL`
+- `N8N_API_KEY`
 
-```sql
--- 기존: dashboard_layouts, widgets 유지
-
-create table if not exists public.agent_runs (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  agent_type text not null check (agent_type in ('developer','planner','pm')),
-  goal text not null,
-  status text not null check (status in ('queued','running','completed','failed')),
-  plan_json jsonb,
-  result_text text,
-  error_text text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists public.agent_steps (
-  id bigserial primary key,
-  run_id uuid not null references public.agent_runs(id) on delete cascade,
-  step_no int not null,
-  action_type text not null,
-  input_json jsonb,
-  output_json jsonb,
-  created_at timestamptz not null default now()
-);
-
-alter table public.agent_runs enable row level security;
-alter table public.agent_steps enable row level security;
-
-create policy "agent_runs_owner"
-on public.agent_runs
-for all
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
-
-create policy "agent_steps_owner"
-on public.agent_steps
-for select
-using (
-  exists (
-    select 1 from public.agent_runs r
-    where r.id = run_id and r.user_id = auth.uid()
-  )
-);
-```
+## 보안 원칙 (필수)
+- Groq 키는 서버 환경변수로만 저장 (클라이언트 금지)
+- n8n API 키는 서버 환경변수로만 저장
+- Supabase service_role 키는 서버 전용
+- 사용자별 요청은 user_id로 강제 검증
 
 ## 실행 플랜 (확정)
 
-### Phase 1: 기반 안정화 (완료/진행)
-- 대시보드 위젯 추가/이동/리사이즈
-- Supabase 로그인/저장/동기화
-- 에이전트 위젯 UI(개발자/기획자/PM) 추가
+### Phase 1: 백엔드 실전 연결
+1. `server/.env` 구성
+2. `npm run server`로 API 서버 실행
+3. GCP n8n API 연결 테스트(`/api/v1/workflows`)
+4. CORS를 `wzd.kr`로 제한
 
-### Phase 2: 에이전트 API 서버 구축 (최우선)
-1. GCP 서버 프로젝트 생성
-2. `/health`, `/agent/run`, `/agent/runs`, `/agent/run/:id` 구현
-3. Groq API 연결
-4. Supabase Service Role로 `agent_runs`, `agent_steps` 저장
-5. CORS를 `https://wzd.kr`만 허용
+### Phase 2: 에이전트 채팅 고도화
+1. 에이전트별 시스템 프롬프트 정교화(개발자/기획자/PM)
+2. 응답 구조 표준화(실행계획/즉시작업/검증방법)
+3. 오류 메시지/재시도 정책 강화
 
-### Phase 3: 프론트 연동
-1. 에이전트 위젯에서 목표 입력
-2. 실행 요청 후 `running` 상태 표시
-3. 완료 시 결과/단계 로그 표시
-4. 다른 브라우저에서 같은 계정 로그인 시 동일 이력 복원
+### Phase 3: n8n 자동화 고도화
+1. 크론식 입력 -> 워크플로우 생성
+2. 워크플로우 실행 결과를 에이전트 채팅에 반영
+3. 사용자별 워크플로우 매핑 테이블 저장
 
-### Phase 4: 루프형 에이전트 고도화
-1. 계획(JSON) 생성 프롬프트 추가
-2. 단계 실행 루프(최대 step 제한)
-3. 실패 재시도/중단 로직
-4. 실행 시간/토큰 사용량 기록
+### Phase 4: 데이터 모델 확장
+1. `agent_runs`, `agent_steps`, `user_workflows` 테이블 추가
+2. 실행 이력/실패 원인/재실행 기록 저장
+3. 브라우저 간 실시간 반영
 
-### Phase 5: 운영 준비
-1. 에러 모니터링(서버 로그 + 프론트 에러)
-2. 요청 제한(사용자별 rate limit)
-3. 운영 대시보드(최근 실패, 평균 응답시간)
-
-## Groq 모델 전략
-- 기본: `openai/gpt-oss-20b` 또는 `llama-3.1-8b-instant` (속도)
-- 고품질: `llama-3.3-70b-versatile` 또는 `openai/gpt-oss-120b`
-- Deprecated 모델은 사용 금지
-
-## 보안 원칙
-- Groq API 키는 서버에만 저장(클라이언트 금지)
-- Supabase `service_role` 키는 서버에만 저장
-- 클라이언트는 Supabase anon key만 사용
-- 모든 조회/수정은 user_id 기준 검증
-
-## 완료 기준 (Definition of Done)
-1. 로그인 사용자 A가 생성한 에이전트 실행 결과가 사용자 B에게 보이지 않는다.
-2. 같은 사용자로 브라우저/기기 변경 시 에이전트 실행 이력이 동일하게 보인다.
-3. 에이전트 실행 중 상태(`queued/running/completed/failed`)가 UI에서 보인다.
-4. 실행 실패 시 원인 로그가 남고 재실행이 가능하다.
-5. 대시보드 위젯 배치/데이터와 에이전트 이력이 모두 서버 기준으로 복원된다.
+## 완료 기준 (DoD)
+1. 사용자가 에이전트에 요청하면 Groq 응답이 채팅에 기록된다.
+2. 스케줄이 포함된 요청이면 n8n 워크플로우가 생성된다.
+3. 같은 사용자 계정으로 다른 브라우저 로그인 시 동일한 채팅/결과/상태가 보인다.
+4. 사용자 A 데이터가 사용자 B에게 노출되지 않는다.
+5. 실패 시 원인 로그와 재시도 수단이 제공된다.
 
 ## 즉시 다음 작업
-1. `supabase/schema.sql`에 `agent_runs`, `agent_steps` 추가
-2. GCP 에이전트 API 서버 초기 코드 생성
-3. 프론트 에이전트 위젯에 실행 버튼/결과 패널 연결
+1. GCP 서버에 `server/` 배포
+2. n8n API Key 연결 및 워크플로우 생성 실검증
+3. Supabase에 `agent_runs`/`agent_steps` 저장 로직 연결

@@ -368,3 +368,48 @@ body,
     grid-template-columns: 1fr;
   }
 }
+
+.agent-prompt {
+  width: 100%;
+  min-height: 68px;
+  resize: vertical;
+  border: 1px solid #9ba8af;
+  background: #fff;
+  padding: 6px;
+  font-size: 12px;
+}
+
+.agent-schedule {
+  width: 100%;
+  height: 28px;
+  border: 1px solid #9ba8af;
+  background: #fff;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.agent-messages {
+  margin-top: 6px;
+  border-top: 1px dashed #b6c2ca;
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.agent-message {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.agent-message strong {
+  color: #44535b;
+  font-size: 11px;
+}
+
+.agent-message span {
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
