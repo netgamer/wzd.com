@@ -59,6 +59,11 @@ jobs:
 
       - name: Upload changed files
         run: |
+          if ! command -v rsync >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y rsync
+          fi
+
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
             --exclude '.git' \
