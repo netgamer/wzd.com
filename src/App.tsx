@@ -2,6 +2,7 @@
 import { AddWidgetModal } from "./components/AddWidgetModal";
 import { WidgetBody } from "./components/WidgetBody";
 import { createInitialState, loadState, newWidget, saveState } from "./lib/dashboard-state";
+import { appendAgentStep, completeAgentRun, createAgentRun, upsertUserWorkflow } from "./lib/supabase-agent-runs";
 import { getDashboardSignature, loadDashboardFromSupabase, saveDashboardToSupabase } from "./lib/supabase-dashboard";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import type { AgentItem, DashboardState, UserProfile, WidgetData, WidgetInstance, WidgetType } from "./types";
@@ -13,6 +14,50 @@ interface DragPayload {
 
 const minColumnWidth = 18;
 const agentApiBaseUrl = import.meta.env.VITE_AGENT_API_BASE_URL || "http://localhost:8787";
+const maxAgentRequestAttempts = 2;
+
+interface AgentApiPayload {
+  ok?: boolean;
+  answer?: string;
+  error?: string;
+  workflow?: { id?: string | number | null } | null;
+}
+
+class AgentRequestError extends Error {
+  readonly retryable: boolean;
+  readonly statusCode: number | null;
+
+  constructor(message: string, options?: { retryable?: boolean; statusCode?: number | null }) {
+    super(message);
+    this.name = "AgentRequestError";
+    this.retryable = options?.retryable ?? false;
+    this.statusCode = options?.statusCode ?? null;
+  }
+}
+
+const summarizeForRun = (text: string): string => {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (normalized.length <= 700) {
+    return normalized;
+  }
+  return `${normalized.slice(0, 697)}...`;
+};
+
+const toErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+};
+
+const safeParseJson = async (response: Response): Promise<AgentApiPayload | null> => {
+  try {
+    const payload = (await response.json()) as AgentApiPayload;
+    return payload;
+  } catch {
+    return null;
+  }
+};
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -367,41 +412,203 @@ const App = () => {
     prompt: string;
     scheduleCron?: string;
   }) => {
-    if (!prompt.trim()) {
+    const trimmedPrompt = prompt.trim();
+    if (!trimmedPrompt) {
       return;
     }
 
+    const userIdForLog = user?.id ?? null;
+    const canPersistAgentRun = Boolean(userIdForLog && supabase);
+    const workflowName = scheduleCron ? `${agentType}-${Date.now()}` : undefined;
+    let runId: string | null = null;
+    let stepIndex = 1;
+    let attemptsUsed = 1;
+
+    const logStep = async (
+      stepType: string,
+      status: "running" | "ok" | "error",
+      message: string,
+      payload?: Record<string, unknown>
+    ) => {
+      if (!canPersistAgentRun || !userIdForLog || !runId) {
+        return;
+      }
+      try {
+        await appendAgentStep({
+          runId,
+          userId: userIdForLog,
+          stepIndex,
+          stepType,
+          status,
+          message,
+          payload
+        });
+        stepIndex += 1;
+      } catch (error: unknown) {
+        console.error("[agent-step]", error);
+      }
+    };
+
+    const finishRun = async (params: {
+      status: "succeeded" | "failed";
+      attempts: number;
+      resultSummary?: string;
+      errorMessage?: string;
+      workflowId?: string;
+    }) => {
+      if (!canPersistAgentRun || !userIdForLog || !runId) {
+        return;
+      }
+      try {
+        await completeAgentRun({
+          runId,
+          userId: userIdForLog,
+          status: params.status,
+          attempts: params.attempts,
+          resultSummary: params.resultSummary,
+          errorMessage: params.errorMessage,
+          workflowId: params.workflowId
+        });
+      } catch (error: unknown) {
+        console.error("[agent-run]", error);
+      }
+    };
+
     setRunningAgentIds((prev) => (prev.includes(agentId) ? prev : [...prev, agentId]));
-    appendAgentMessages(widgetId, agentId, [{ role: "user", content: prompt }]);
+    appendAgentMessages(widgetId, agentId, [{ role: "user", content: trimmedPrompt }]);
+
+    if (canPersistAgentRun && userIdForLog) {
+      try {
+        runId = await createAgentRun({
+          userId: userIdForLog,
+          widgetId,
+          agentId,
+          agentType,
+          prompt: trimmedPrompt,
+          scheduleCron,
+          workflowName
+        });
+        await logStep("run.start", "running", "에이전트 실행 시작", {
+          agentType,
+          scheduleCron: scheduleCron ?? null
+        });
+      } catch (error: unknown) {
+        console.error("[agent-run-create]", error);
+      }
+    }
 
     try {
-      const response = await fetch(`${agentApiBaseUrl}/api/agent/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          agentType,
-          prompt,
-          context: `userId=${user?.id ?? "anonymous"}`,
-          scheduleCron,
-          workflowName: scheduleCron ? `${agentType}-${Date.now()}` : undefined
-        })
-      });
+      let payload: AgentApiPayload | null = null;
 
-      const payload = await response.json();
-      if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error ?? "에이전트 실행에 실패했습니다");
+      for (let attempt = 1; attempt <= maxAgentRequestAttempts; attempt += 1) {
+        attemptsUsed = attempt;
+        await logStep("agent.request", "running", `에이전트 API 요청 (시도 ${attempt}/${maxAgentRequestAttempts})`, {
+          attempt
+        });
+
+        try {
+          const response = await fetch(`${agentApiBaseUrl}/api/agent/chat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              agentType,
+              prompt: trimmedPrompt,
+              context: `userId=${userIdForLog ?? "anonymous"}`,
+              userId: userIdForLog ?? undefined,
+              scheduleCron,
+              workflowName
+            })
+          });
+
+          const parsed = await safeParseJson(response);
+          if (!response.ok) {
+            throw new AgentRequestError(parsed?.error ?? `에이전트 API 호출 실패 (HTTP ${response.status})`, {
+              retryable: response.status >= 500 || response.status === 429,
+              statusCode: response.status
+            });
+          }
+
+          if (!parsed?.ok || typeof parsed.answer !== "string") {
+            throw new AgentRequestError(parsed?.error ?? "에이전트 응답 형식이 올바르지 않습니다", {
+              retryable: false,
+              statusCode: response.status
+            });
+          }
+
+          payload = parsed;
+          await logStep("agent.response", "ok", `에이전트 응답 수신 (시도 ${attempt})`);
+          break;
+        } catch (error: unknown) {
+          const retryable = error instanceof AgentRequestError ? error.retryable : true;
+          const statusCode = error instanceof AgentRequestError ? error.statusCode : null;
+          const message = toErrorMessage(error, "에이전트 실행에 실패했습니다");
+
+          await logStep("agent.error", "error", `요청 실패 (시도 ${attempt}) - ${message}`, {
+            attempt,
+            retryable,
+            statusCode
+          });
+
+          if (!retryable || attempt >= maxAgentRequestAttempts) {
+            throw error;
+          }
+
+          await logStep("agent.retry", "running", `일시 오류로 재시도 실행 (${attempt + 1}/${maxAgentRequestAttempts})`);
+        }
       }
 
-      const workflowMessage = payload.workflow?.id
-        ? `\n\n[n8n 워크플로우 생성됨] workflowId=${payload.workflow.id}`
-        : "";
+      if (!payload || typeof payload.answer !== "string") {
+        throw new AgentRequestError("에이전트 응답이 비어 있습니다", { retryable: false });
+      }
+
+      const workflowId = payload.workflow?.id != null ? String(payload.workflow.id) : undefined;
+      const workflowMessage = workflowId ? `\n\n[n8n 워크플로우 생성됨] workflowId=${workflowId}` : "";
 
       appendAgentMessages(widgetId, agentId, [{ role: "assistant", content: `${payload.answer}${workflowMessage}` }]);
+
+      if (workflowId) {
+        await logStep("n8n.workflow.created", "ok", `n8n 워크플로우 생성 완료 (workflowId=${workflowId})`, {
+          workflowId,
+          workflowName: workflowName ?? null
+        });
+      }
+
+      if (workflowId && workflowName && canPersistAgentRun && userIdForLog) {
+        try {
+          await upsertUserWorkflow({
+            userId: userIdForLog,
+            workflowId,
+            workflowName,
+            agentType,
+            scheduleCron,
+            runId: runId ?? undefined
+          });
+          await logStep("n8n.workflow.map", "ok", "사용자 워크플로우 매핑 저장 완료", {
+            workflowId,
+            workflowName
+          });
+        } catch (error: unknown) {
+          console.error("[user-workflow]", error);
+          await logStep("n8n.workflow.map", "error", "사용자 워크플로우 매핑 저장 실패");
+        }
+      }
+
+      await finishRun({
+        status: "succeeded",
+        attempts: attemptsUsed,
+        resultSummary: summarizeForRun(payload.answer),
+        workflowId
+      });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "에이전트 실행 중 오류가 발생했습니다";
+      const message = toErrorMessage(error, "에이전트 실행 중 오류가 발생했습니다");
       appendAgentMessages(widgetId, agentId, [{ role: "assistant", content: `오류: ${message}` }]);
+      await finishRun({
+        status: "failed",
+        attempts: attemptsUsed,
+        errorMessage: message
+      });
     } finally {
       setRunningAgentIds((prev) => prev.filter((id) => id !== agentId));
     }

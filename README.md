@@ -43,6 +43,7 @@
    - `https://<your-pages-domain>`
    - `http://localhost:5173`
 4. Run SQL from `supabase/schema.sql` in SQL editor.
+   - Includes: `dashboard_layouts`, `widgets`, `agent_runs`, `agent_steps`, `user_workflows`
 
 ## Current milestone
 - 3-column dashboard layout
@@ -53,3 +54,4 @@
 - Google login button wired to Supabase Auth
 - Agent widget chat execution via GCP agent server
 - n8n workflow creation request from agent widget
+- Agent run/step history persistence to Supabase (with RLS)
