@@ -1,0 +1,40 @@
+﻿name: Deploy Agent Server to GCP VM
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "server/**"
+      - "scripts/deploy-agent-server.sh"
+      - "ecosystem.config.cjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy-agent-server.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GCP_VM_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.GCP_VM_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload changed files
+        run: |
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude 'dist' \
+            ./ "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}:/opt/wzd-app"
+
+      - name: Run remote deploy script
+        run: |
+          ssh "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" \
+            "chmod +x /opt/wzd-app/scripts/deploy-agent-server.sh && APP_DIR=/opt/wzd-app BRANCH=main /opt/wzd-app/scripts/deploy-agent-server.sh"

@@ -14,6 +14,27 @@
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
    - `VITE_APP_ENV`
+   - `VITE_AGENT_API_BASE_URL`
+
+## Agent server (GCP VM) + GitHub deploy
+1. Clone this repo on VM to `/opt/wzd-app`.
+2. Install runtime on VM:
+   - Node.js 20+
+   - `pm2` (`npm i -g pm2`)
+3. Create `server/.env` on VM and fill:
+   - `PORT`
+   - `ALLOWED_ORIGIN`
+   - `GROQ_API_KEY`
+   - `GROQ_MODEL`
+   - `N8N_BASE_URL`
+   - `N8N_API_KEY`
+4. Start once on VM:
+   - `cd /opt/wzd-app && npm ci && pm2 start ecosystem.config.cjs --only wzd-agent`
+5. Add GitHub secrets (Repository > Settings > Secrets and variables > Actions):
+   - `GCP_VM_HOST`
+   - `GCP_VM_USER`
+   - `GCP_VM_SSH_KEY`
+6. Push to `main` -> `.github/workflows/deploy-agent-server.yml` runs and auto deploys.
 
 ## Supabase setup
 1. Create a Supabase project.
@@ -30,3 +51,5 @@
 - Add/delete/collapse widgets
 - Memo editing with local persistence
 - Google login button wired to Supabase Auth
+- Agent widget chat execution via GCP agent server
+- n8n workflow creation request from agent widget
