@@ -10,7 +10,8 @@ const options: Array<{ type: WidgetType; label: string; description: string }> =
   { type: "bookmark", label: "북마크", description: "자주 가는 링크와 폴더" },
   { type: "memo", label: "메모", description: "빠른 텍스트 메모" },
   { type: "rss", label: "RSS", description: "피드 헤드라인" },
-  { type: "trend", label: "실시간 검색어", description: "인기 검색 키워드" }
+  { type: "trend", label: "실시간 검색어", description: "인기 검색 키워드" },
+  { type: "agent", label: "에이전트", description: "개발자/기획자/PM 에이전트" }
 ];
 
 export const AddWidgetModal = ({ open, onClose, onAdd }: AddWidgetModalProps) => {

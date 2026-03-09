@@ -1,4 +1,4 @@
-﻿export type WidgetType = "bookmark" | "memo" | "rss" | "trend";
+﻿export type WidgetType = "bookmark" | "memo" | "rss" | "trend" | "agent";
 
 export interface ColumnState {
   id: string;
@@ -24,11 +24,22 @@ export interface TrendItem {
   rank: number;
 }
 
+export interface AgentItem {
+  id: string;
+  name: string;
+  role: "developer" | "planner" | "pm";
+  roleLabel: string;
+  description: string;
+  avatarUrl?: string;
+  status: "ready" | "busy";
+}
+
 export type WidgetData =
   | { type: "bookmark"; items: BookmarkItem[] }
   | { type: "memo"; text: string }
   | { type: "rss"; feedUrl: string; items: FeedItem[] }
-  | { type: "trend"; items: TrendItem[] };
+  | { type: "trend"; items: TrendItem[] }
+  | { type: "agent"; items: AgentItem[] };
 
 export interface WidgetInstance {
   id: string;

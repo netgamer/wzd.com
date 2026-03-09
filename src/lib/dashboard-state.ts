@@ -39,6 +39,39 @@ const defaultWidgetData = (type: WidgetType): WidgetData => {
           { id: makeId(), keyword: "supabase", rank: 3 }
         ]
       };
+    case "agent":
+      return {
+        type: "agent",
+        items: [
+          {
+            id: makeId(),
+            name: "개발자 에이전트",
+            role: "developer",
+            roleLabel: "개발자",
+            description: "프론트엔드/백엔드 구현과 코드 품질 개선",
+            avatarUrl: "",
+            status: "ready"
+          },
+          {
+            id: makeId(),
+            name: "기획자 에이전트",
+            role: "planner",
+            roleLabel: "기획자",
+            description: "요구사항 정의, 기능 우선순위, 사용자 흐름 설계",
+            avatarUrl: "",
+            status: "ready"
+          },
+          {
+            id: makeId(),
+            name: "PM 에이전트",
+            role: "pm",
+            roleLabel: "PM",
+            description: "일정/리스크 관리, 진행률 추적, 의사결정 정리",
+            avatarUrl: "",
+            status: "busy"
+          }
+        ]
+      };
     default:
       return { type: "memo", text: "" };
   }
@@ -49,7 +82,8 @@ export const newWidget = (type: WidgetType, title?: string): WidgetInstance => {
     bookmark: "북마크",
     memo: "메모",
     rss: "RSS 피드",
-    trend: "실시간 검색어"
+    trend: "실시간 검색어",
+    agent: "에이전트"
   };
 
   return {
