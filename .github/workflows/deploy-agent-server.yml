@@ -57,13 +57,13 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "echo SSH_OK"
 
+      - name: Install rsync on remote VM
+        run: |
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" \
+            "command -v rsync >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y rsync)"
+
       - name: Upload changed files
         run: |
-          if ! command -v rsync >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y rsync
-          fi
-
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
             --exclude '.git' \
