@@ -3,7 +3,7 @@
     {
       name: "wzd-agent",
       script: "server/index.js",
-      cwd: "/opt/wzd-app",
+      cwd: process.env.APP_DIR || "/home/leejunho2638/wzd-app",
       env: {
         NODE_ENV: "production",
         PORT: 8787

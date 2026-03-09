@@ -54,16 +54,18 @@ jobs:
 
       - name: Upload changed files (tar over ssh)
         run: |
-          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "mkdir -p /opt/wzd-app"
+          REMOTE_APP_DIR="/home/${{ secrets.GCP_VM_USER }}/wzd-app"
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "mkdir -p $REMOTE_APP_DIR"
 
           tar \
             --exclude=.git \
             --exclude=node_modules \
             --exclude=dist \
             -czf - . | \
-          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "tar -xzf - -C /opt/wzd-app"
+          ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" "tar -xzf - -C $REMOTE_APP_DIR"
 
       - name: Run remote deploy script
         run: |
+          REMOTE_APP_DIR="/home/${{ secrets.GCP_VM_USER }}/wzd-app"
           ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes "${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }}" \
-            "chmod +x /opt/wzd-app/scripts/deploy-agent-server.sh && APP_DIR=/opt/wzd-app BRANCH=main /opt/wzd-app/scripts/deploy-agent-server.sh"
+            "chmod +x $REMOTE_APP_DIR/scripts/deploy-agent-server.sh && APP_DIR=$REMOTE_APP_DIR BRANCH=main $REMOTE_APP_DIR/scripts/deploy-agent-server.sh"
