@@ -5,6 +5,7 @@ import type { ColumnState, DashboardState, WidgetInstance } from "../types";
 interface LayoutRow {
   user_id: string;
   columns_json: ColumnState[];
+  updated_at?: string;
 }
 
 interface WidgetRow {
@@ -19,12 +20,12 @@ interface WidgetRow {
 }
 
 const normalizeColumns = (columns: ColumnState[], widgetIds: string[]): ColumnState[] => {
-  const baseColumns = columns.length > 0 ? columns : createInitialState().columns;
+  const baseColumns = Array.isArray(columns) && columns.length > 0 ? columns : createInitialState().columns;
   const existing = new Set(widgetIds);
 
   const normalized = baseColumns.map((column) => ({
     ...column,
-    widgetIds: column.widgetIds.filter((id) => existing.has(id))
+    widgetIds: (column.widgetIds ?? []).filter((id) => existing.has(id))
   }));
 
   const allPlaced = new Set(normalized.flatMap((column) => column.widgetIds));
@@ -40,13 +41,38 @@ const normalizeColumns = (columns: ColumnState[], widgetIds: string[]): ColumnSt
   return normalized;
 };
 
+export const getDashboardSignature = (state: DashboardState): string => {
+  const columns = state.columns.map((column) => ({
+    id: column.id,
+    width: Number(column.width.toFixed(4)),
+    widgetIds: [...column.widgetIds]
+  }));
+
+  const widgets = Object.values(state.widgets)
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((widget) => ({
+      id: widget.id,
+      type: widget.type,
+      title: widget.title,
+      collapsed: widget.collapsed,
+      data: widget.data,
+      updatedAt: widget.updatedAt
+    }));
+
+  return JSON.stringify({ columns, widgets });
+};
+
 export const loadDashboardFromSupabase = async (userId: string): Promise<DashboardState | null> => {
   if (!supabase) {
     return null;
   }
 
   const [layoutResult, widgetsResult] = await Promise.all([
-    supabase.from("dashboard_layouts").select("user_id,columns_json").eq("user_id", userId).maybeSingle(),
+    supabase
+      .from("dashboard_layouts")
+      .select("user_id,columns_json,updated_at")
+      .eq("user_id", userId)
+      .maybeSingle(),
     supabase
       .from("widgets")
       .select("id,user_id,type,title,collapsed,data,created_at,updated_at")
@@ -128,9 +154,20 @@ export const saveDashboardToSupabase = async (userId: string, state: DashboardSt
     throw write.error;
   }
 
-  const ids = widgets.map((widget) => `"${widget.id}"`).join(",");
-  const cleanup = await supabase.from("widgets").delete().eq("user_id", userId).not("id", "in", `(${ids})`);
-  if (cleanup.error) {
-    throw cleanup.error;
+  const localIds = new Set(widgets.map((widget) => widget.id));
+  const remoteIdsResult = await supabase.from("widgets").select("id").eq("user_id", userId);
+  if (remoteIdsResult.error) {
+    throw remoteIdsResult.error;
+  }
+
+  const staleIds = (remoteIdsResult.data ?? [])
+    .map((row: { id: string }) => row.id)
+    .filter((id) => !localIds.has(id));
+
+  if (staleIds.length > 0) {
+    const cleanup = await supabase.from("widgets").delete().in("id", staleIds).eq("user_id", userId);
+    if (cleanup.error) {
+      throw cleanup.error;
+    }
   }
 };

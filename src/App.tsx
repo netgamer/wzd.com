@@ -2,7 +2,7 @@
 import { AddWidgetModal } from "./components/AddWidgetModal";
 import { WidgetBody } from "./components/WidgetBody";
 import { createInitialState, loadState, newWidget, saveState } from "./lib/dashboard-state";
-import { loadDashboardFromSupabase, saveDashboardToSupabase } from "./lib/supabase-dashboard";
+import { getDashboardSignature, loadDashboardFromSupabase, saveDashboardToSupabase } from "./lib/supabase-dashboard";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import type { DashboardState, UserProfile, WidgetData, WidgetInstance, WidgetType } from "./types";
 
@@ -36,11 +36,15 @@ const App = () => {
   const [activeResize, setActiveResize] = useState<number | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [cloudLoaded, setCloudLoaded] = useState(false);
+  const [syncError, setSyncError] = useState<string>("");
 
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const lastSignatureRef = useRef<string>(getDashboardSignature(dashboard));
+  const skipNextCloudSaveRef = useRef(false);
 
   useEffect(() => {
     saveState(dashboard);
+    lastSignatureRef.current = getDashboardSignature(dashboard);
   }, [dashboard]);
 
   useEffect(() => {
@@ -77,6 +81,7 @@ const App = () => {
 
     if (!user?.id || !supabase) {
       setCloudLoaded(false);
+      setSyncError("");
       return;
     }
 
@@ -87,15 +92,23 @@ const App = () => {
         if (!active) {
           return;
         }
+
         if (state) {
+          skipNextCloudSaveRef.current = true;
           setDashboard(state);
         }
+
         setCloudLoaded(true);
+        setSyncError("");
       })
-      .catch(() => {
-        if (active) {
-          setCloudLoaded(true);
+      .catch((error: unknown) => {
+        if (!active) {
+          return;
         }
+
+        const message = error instanceof Error ? error.message : "클라우드 불러오기에 실패했습니다";
+        setSyncError(`불러오기 실패: ${message}`);
+        setCloudLoaded(true);
       });
 
     return () => {
@@ -108,14 +121,69 @@ const App = () => {
       return;
     }
 
+    if (skipNextCloudSaveRef.current) {
+      skipNextCloudSaveRef.current = false;
+      return;
+    }
+
     const timer = window.setTimeout(() => {
-      void saveDashboardToSupabase(user.id, dashboard);
+      void saveDashboardToSupabase(user.id, dashboard)
+        .then(() => setSyncError(""))
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : "클라우드 저장에 실패했습니다";
+          setSyncError(`저장 실패: ${message}`);
+        });
     }, 800);
 
     return () => {
       window.clearTimeout(timer);
     };
   }, [dashboard, cloudLoaded, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !supabase || !cloudLoaded) {
+      return;
+    }
+
+    let stopped = false;
+
+    const pullRemote = async () => {
+      try {
+        const remoteState = await loadDashboardFromSupabase(user.id);
+        if (!remoteState || stopped) {
+          return;
+        }
+
+        const remoteSignature = getDashboardSignature(remoteState);
+        if (remoteSignature !== lastSignatureRef.current) {
+          skipNextCloudSaveRef.current = true;
+          setDashboard(remoteState);
+          setSyncError("");
+        }
+      } catch (error: unknown) {
+        if (!stopped) {
+          const message = error instanceof Error ? error.message : "다른 브라우저 변경 동기화에 실패했습니다";
+          setSyncError(`동기화 실패: ${message}`);
+        }
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      void pullRemote();
+    }, 3000);
+
+    const onFocus = () => {
+      void pullRemote();
+    };
+
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      stopped = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [cloudLoaded, user?.id]);
 
   useEffect(() => {
     if (activeResize === null) {
@@ -399,6 +467,7 @@ const App = () => {
 
       <footer className="footer">
         {user ? "클라우드 동기화 사용 중(슈파베이스)" : "로컬 모드"} | 클라우드플레어 페이지스 + 슈파베이스 + 구글 인증
+        {syncError ? ` | ${syncError}` : ""}
       </footer>
 
       <AddWidgetModal open={modalOpen} onClose={() => setModalOpen(false)} onAdd={addWidget} />
