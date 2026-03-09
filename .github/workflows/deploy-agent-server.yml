@@ -21,8 +21,13 @@ jobs:
 
       - name: Setup SSH key
         run: |
+          if [ -z "${{ secrets.GCP_VM_HOST }}" ] || [ -z "${{ secrets.GCP_VM_USER }}" ] || [ -z "${{ secrets.GCP_VM_SSH_KEY }}" ]; then
+            echo "Missing one or more required secrets: GCP_VM_HOST, GCP_VM_USER, GCP_VM_SSH_KEY"
+            exit 1
+          fi
+
           mkdir -p ~/.ssh
-          echo "${{ secrets.GCP_VM_SSH_KEY }}" > ~/.ssh/id_rsa
+          printf '%s\n' "${{ secrets.GCP_VM_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "${{ secrets.GCP_VM_HOST }}" >> ~/.ssh/known_hosts
 
