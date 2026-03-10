@@ -81,7 +81,8 @@ textarea {
 
 .primary-btn,
 .ghost-btn,
-.icon-btn {
+.icon-btn,
+.rainbow-btn {
   border: 1px solid #9f754f;
   border-radius: 10px;
   background: linear-gradient(180deg, #fff8ea, #efddc6);
@@ -104,9 +105,40 @@ textarea {
   font-size: 11px;
 }
 
+.rainbow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.rainbow-btn.active {
+  box-shadow: 0 0 0 2px rgba(20, 105, 215, 0.4);
+}
+
+.rainbow-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(68, 43, 27, 0.35);
+  background: conic-gradient(
+    #ff5f6d 0deg 45deg,
+    #ffb26f 45deg 90deg,
+    #ffe27b 90deg 135deg,
+    #6fd19d 135deg 180deg,
+    #5fa8ff 180deg 225deg,
+    #8f74ff 225deg 270deg,
+    #d677ff 270deg 315deg,
+    #ff78b9 315deg 360deg
+  );
+}
+
 .primary-btn:disabled,
 .ghost-btn:disabled,
-.icon-btn:disabled {
+.icon-btn:disabled,
+.rainbow-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
@@ -120,7 +152,8 @@ textarea {
 
 .primary-btn:hover,
 .ghost-btn:hover,
-.icon-btn:hover {
+.icon-btn:hover,
+.rainbow-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(69, 38, 18, 0.18);
 }
@@ -128,6 +161,7 @@ textarea {
 .primary-btn:focus-visible,
 .ghost-btn:focus-visible,
 .icon-btn:focus-visible,
+.rainbow-btn:focus-visible,
 .search-input:focus-visible,
 .board-title-input:focus-visible,
 .style-select:focus-visible,
@@ -162,10 +196,14 @@ textarea {
 .workspace {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   padding: 12px;
   min-height: 0;
+}
+
+.workspace.inspector-open {
+  grid-template-columns: minmax(0, 1fr) 280px;
 }
 
 .canvas-wrap {

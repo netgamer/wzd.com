@@ -155,6 +155,7 @@ const App = () => {
   const [syncError, setSyncError] = useState("");
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
   const [trashOpen, setTrashOpen] = useState(false);
+  const [showInspector, setShowInspector] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -498,6 +499,10 @@ const App = () => {
     await supabase.auth.signOut();
   };
 
+  const onToggleInspector = () => {
+    setShowInspector((prev) => !prev);
+  };
+
   return (
     <div className="board-app">
       <header className="board-topbar">
@@ -509,6 +514,14 @@ const App = () => {
         <div className="toolbar">
           <button className="primary-btn" onClick={() => addNote()}>
             + 포스트잇 추가
+          </button>
+          <button
+            className={`rainbow-btn ${showInspector ? "active" : ""}`}
+            onClick={onToggleInspector}
+            aria-label="포스트잇 설정 열기"
+            title="포스트잇 설정"
+          >
+            <span className="rainbow-dot" aria-hidden="true" />
           </button>
           <button className="ghost-btn" onClick={() => setTrashOpen((prev) => !prev)}>
             휴지통 {trashNotes.length > 0 ? `(${trashNotes.length})` : ""}
@@ -560,7 +573,7 @@ const App = () => {
         </div>
       </header>
 
-      <main className="workspace">
+      <main className={`workspace ${showInspector ? "inspector-open" : "inspector-hidden"}`}>
         <section className="canvas-wrap">
           <div
             ref={canvasRef}
@@ -630,78 +643,80 @@ const App = () => {
           </div>
         </section>
 
-        <aside className="inspector">
-          <h2>포스트잇 설정</h2>
-          {selectedNote ? (
-            <>
-              <p className="inspector-line">
-                선택된 메모: <strong>{selectedNote.id.slice(0, 8)}</strong>
-              </p>
+        {showInspector && (
+          <aside className="inspector">
+            <h2>포스트잇 설정</h2>
+            {selectedNote ? (
+              <>
+                <p className="inspector-line">
+                  선택된 메모: <strong>{selectedNote.id.slice(0, 8)}</strong>
+                </p>
 
-              <div className="palette-grid">
-                {NOTE_COLORS.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`color-chip chip-${item.id} ${selectedNote.color === item.id ? "active" : ""}`}
-                    onClick={() => updateNote(selectedNote.id, { color: item.id })}
-                    aria-label={`${item.label} 색상`}
-                  />
-                ))}
-              </div>
-
-              <div className="size-row">
-                <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 200, h: 180 })}>
-                  S
-                </button>
-                <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 240, h: 220 })}>
-                  M
-                </button>
-                <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 300, h: 260 })}>
-                  L
-                </button>
-              </div>
-            </>
-          ) : (
-            <p className="inspector-line">포스트잇을 선택하면 색상과 크기를 바꿀 수 있습니다.</p>
-          )}
-
-          <hr />
-          <p className="inspector-line">저장 상태: {syncMessage}</p>
-          {syncError && <p className="error-text">오류: {syncError}</p>}
-          <p className="inspector-line">활성 노트: {activeNotes.length}</p>
-          <p className="inspector-line">휴지통: {trashNotes.length}</p>
-
-          {trashOpen && (
-            <>
-              <hr />
-              <div className="trash-header">
-                <h3>휴지통</h3>
-                <button className="icon-btn danger" onClick={emptyTrash} disabled={trashNotes.length === 0}>
-                  비우기
-                </button>
-              </div>
-              {trashNotes.length === 0 ? (
-                <p className="inspector-line">휴지통이 비어 있습니다.</p>
-              ) : (
-                <ul className="trash-list">
-                  {trashNotes.map((note) => (
-                    <li key={note.id} className="trash-item">
-                      <span>{note.content.trim() ? note.content.slice(0, 28) : "(내용 없음)"}</span>
-                      <div className="trash-actions">
-                        <button className="icon-btn" onClick={() => restoreNote(note.id)}>
-                          복구
-                        </button>
-                        <button className="icon-btn danger" onClick={() => permanentlyDeleteNote(note.id)}>
-                          삭제
-                        </button>
-                      </div>
-                    </li>
+                <div className="palette-grid">
+                  {NOTE_COLORS.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`color-chip chip-${item.id} ${selectedNote.color === item.id ? "active" : ""}`}
+                      onClick={() => updateNote(selectedNote.id, { color: item.id })}
+                      aria-label={`${item.label} 색상`}
+                    />
                   ))}
-                </ul>
-              )}
-            </>
-          )}
-        </aside>
+                </div>
+
+                <div className="size-row">
+                  <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 200, h: 180 })}>
+                    S
+                  </button>
+                  <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 240, h: 220 })}>
+                    M
+                  </button>
+                  <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 300, h: 260 })}>
+                    L
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="inspector-line">포스트잇을 선택하면 색상과 크기를 바꿀 수 있습니다.</p>
+            )}
+
+            <hr />
+            <p className="inspector-line">저장 상태: {syncMessage}</p>
+            {syncError && <p className="error-text">오류: {syncError}</p>}
+            <p className="inspector-line">활성 노트: {activeNotes.length}</p>
+            <p className="inspector-line">휴지통: {trashNotes.length}</p>
+
+            {trashOpen && (
+              <>
+                <hr />
+                <div className="trash-header">
+                  <h3>휴지통</h3>
+                  <button className="icon-btn danger" onClick={emptyTrash} disabled={trashNotes.length === 0}>
+                    비우기
+                  </button>
+                </div>
+                {trashNotes.length === 0 ? (
+                  <p className="inspector-line">휴지통이 비어 있습니다.</p>
+                ) : (
+                  <ul className="trash-list">
+                    {trashNotes.map((note) => (
+                      <li key={note.id} className="trash-item">
+                        <span>{note.content.trim() ? note.content.slice(0, 28) : "(내용 없음)"}</span>
+                        <div className="trash-actions">
+                          <button className="icon-btn" onClick={() => restoreNote(note.id)}>
+                            복구
+                          </button>
+                          <button className="icon-btn danger" onClick={() => permanentlyDeleteNote(note.id)}>
+                            삭제
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </aside>
+        )}
       </main>
     </div>
   );
