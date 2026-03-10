@@ -42,6 +42,21 @@ const nowIso = () => new Date().toISOString();
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
+const clampNotePosition = (
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  canvas: HTMLDivElement
+): { x: number; y: number } => {
+  const maxX = Math.max(0, canvas.clientWidth - w);
+  const maxY = Math.max(0, canvas.clientHeight - h);
+  return {
+    x: clamp(Math.round(x), 0, maxX),
+    y: clamp(Math.round(y), 0, maxY)
+  };
+};
+
 const createDefaultBoard = (userId: string): BoardV2 => ({
   id: makeId(),
   userId,
@@ -139,21 +154,30 @@ const App = () => {
   const [syncMessage, setSyncMessage] = useState("로컬 모드");
   const [syncError, setSyncError] = useState("");
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
+  const [trashOpen, setTrashOpen] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const skipNextCloudSaveRef = useRef(false);
   const cloudEnabled = Boolean(user?.id && supabase);
 
-  const selectedNote = useMemo(() => notes.find((note) => note.id === selectedNoteId) ?? null, [notes, selectedNoteId]);
+  const activeNotes = useMemo(() => notes.filter((note) => !note.archived), [notes]);
+  const trashNotes = useMemo(
+    () => [...notes.filter((note) => note.archived)].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+    [notes]
+  );
+  const selectedNote = useMemo(
+    () => activeNotes.find((note) => note.id === selectedNoteId) ?? null,
+    [activeNotes, selectedNoteId]
+  );
 
   const renderedNotes = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     const filtered = keyword
-      ? notes.filter((note) => note.content.toLowerCase().includes(keyword))
-      : notes;
+      ? activeNotes.filter((note) => note.content.toLowerCase().includes(keyword))
+      : activeNotes;
     return [...filtered].sort((a, b) => a.zIndex - b.zIndex);
-  }, [notes, search]);
+  }, [activeNotes, search]);
 
   useEffect(() => {
     if (!supabase) {
@@ -209,7 +233,7 @@ const App = () => {
         skipNextCloudSaveRef.current = true;
         setBoard(payload.board);
         setNotes(payload.notes);
-        setSelectedNoteId(payload.notes[0]?.id ?? null);
+        setSelectedNoteId(payload.notes.find((note) => !note.archived)?.id ?? null);
         setSyncMessage("클라우드 동기화 연결됨");
         setSyncError("");
         setLoading(false);
@@ -235,6 +259,16 @@ const App = () => {
     }
     saveLocalSnapshot({ board, notes });
   }, [board, cloudEnabled, notes]);
+
+  useEffect(() => {
+    if (!selectedNoteId) {
+      return;
+    }
+    const exists = activeNotes.some((note) => note.id === selectedNoteId);
+    if (!exists) {
+      setSelectedNoteId(activeNotes[0]?.id ?? null);
+    }
+  }, [activeNotes, selectedNoteId]);
 
   useEffect(() => {
     if (!cloudEnabled || !user?.id) {
@@ -271,11 +305,17 @@ const App = () => {
         return;
       }
       const rect = canvas.getBoundingClientRect();
-      const nextX = clamp(Math.round(event.clientX - rect.left - drag.offsetX), -320, 3800);
-      const nextY = clamp(Math.round(event.clientY - rect.top - drag.offsetY), -220, 2800);
+      const rawX = event.clientX - rect.left - drag.offsetX;
+      const rawY = event.clientY - rect.top - drag.offsetY;
 
       setNotes((prev) =>
-        prev.map((note) => (note.id === drag.noteId ? { ...note, x: nextX, y: nextY, updatedAt: nowIso() } : note))
+        prev.map((note) => {
+          if (note.id !== drag.noteId) {
+            return note;
+          }
+          const clamped = clampNotePosition(rawX, rawY, note.w, note.h, canvas);
+          return { ...note, x: clamped.x, y: clamped.y, updatedAt: nowIso() };
+        })
       );
     };
 
@@ -292,6 +332,37 @@ const App = () => {
       window.removeEventListener("pointerup", onPointerUp);
     };
   }, []);
+
+  useEffect(() => {
+    const clampAllActiveNotes = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        return;
+      }
+      setNotes((prev) => {
+        let changed = false;
+        const next = prev.map((note) => {
+          if (note.archived) {
+            return note;
+          }
+          const clamped = clampNotePosition(note.x, note.y, note.w, note.h, canvas);
+          if (clamped.x === note.x && clamped.y === note.y) {
+            return note;
+          }
+          changed = true;
+          return { ...note, x: clamped.x, y: clamped.y, updatedAt: nowIso() };
+        });
+        return changed ? next : prev;
+      });
+    };
+
+    const frame = window.requestAnimationFrame(clampAllActiveNotes);
+    window.addEventListener("resize", clampAllActiveNotes);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", clampAllActiveNotes);
+    };
+  }, [loading]);
 
   const bringToFront = (noteId: string) => {
     setNotes((prev) => {
@@ -312,24 +383,72 @@ const App = () => {
     const maxZ = notes.reduce((max, note) => Math.max(max, note.zIndex), 0);
     const fallbackX = 120 + (notes.length % 4) * 36;
     const fallbackY = 110 + (notes.length % 4) * 30;
+    const baseX = x ?? fallbackX;
+    const baseY = y ?? fallbackY;
+    const canvas = canvasRef.current;
+    const clamped = canvas
+      ? clampNotePosition(baseX, baseY, DEFAULT_NOTE_WIDTH, DEFAULT_NOTE_HEIGHT, canvas)
+      : { x: baseX, y: baseY };
+
     const newNote = createNote({
       boardId: board.id,
       userId: board.userId,
       zIndex: maxZ + 1,
-      x: x ?? fallbackX,
-      y: y ?? fallbackY
+      x: clamped.x,
+      y: clamped.y
     });
     setNotes((prev) => [...prev, newNote]);
     setSelectedNoteId(newNote.id);
   };
 
   const updateNote = (noteId: string, patch: Partial<NoteV2>) => {
-    setNotes((prev) => prev.map((note) => (note.id === noteId ? { ...note, ...patch, updatedAt: nowIso() } : note)));
+    const canvas = canvasRef.current;
+    setNotes((prev) =>
+      prev.map((note) => {
+        if (note.id !== noteId) {
+          return note;
+        }
+        const merged = { ...note, ...patch };
+        if (canvas) {
+          const clamped = clampNotePosition(merged.x, merged.y, merged.w, merged.h, canvas);
+          return { ...merged, x: clamped.x, y: clamped.y, updatedAt: nowIso() };
+        }
+        return { ...merged, updatedAt: nowIso() };
+      })
+    );
   };
 
   const removeNote = (noteId: string) => {
+    setNotes((prev) => prev.map((note) => (note.id === noteId ? { ...note, archived: true, updatedAt: nowIso() } : note)));
+    setSelectedNoteId((prev) => (prev === noteId ? null : prev));
+  };
+
+  const restoreNote = (noteId: string) => {
+    const maxZ = notes.reduce((max, note) => Math.max(max, note.zIndex), 0);
+    const canvas = canvasRef.current;
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              ...(canvas ? clampNotePosition(note.x, note.y, note.w, note.h, canvas) : {}),
+              archived: false,
+              zIndex: maxZ + 1,
+              updatedAt: nowIso()
+            }
+          : note
+      )
+    );
+    setSelectedNoteId(noteId);
+  };
+
+  const permanentlyDeleteNote = (noteId: string) => {
     setNotes((prev) => prev.filter((note) => note.id !== noteId));
     setSelectedNoteId((prev) => (prev === noteId ? null : prev));
+  };
+
+  const emptyTrash = () => {
+    setNotes((prev) => prev.filter((note) => !note.archived));
   };
 
   const onCanvasDoubleClick = (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -390,6 +509,9 @@ const App = () => {
         <div className="toolbar">
           <button className="primary-btn" onClick={() => addNote()}>
             + 포스트잇 추가
+          </button>
+          <button className="ghost-btn" onClick={() => setTrashOpen((prev) => !prev)}>
+            휴지통 {trashNotes.length > 0 ? `(${trashNotes.length})` : ""}
           </button>
           <input
             className="search-input"
@@ -491,7 +613,7 @@ const App = () => {
                             removeNote(note.id);
                           }}
                         >
-                          삭제
+                          휴지통
                         </button>
                       </div>
                     </div>
@@ -546,7 +668,39 @@ const App = () => {
           <hr />
           <p className="inspector-line">저장 상태: {syncMessage}</p>
           {syncError && <p className="error-text">오류: {syncError}</p>}
-          <p className="inspector-line">노트 수: {notes.length}</p>
+          <p className="inspector-line">활성 노트: {activeNotes.length}</p>
+          <p className="inspector-line">휴지통: {trashNotes.length}</p>
+
+          {trashOpen && (
+            <>
+              <hr />
+              <div className="trash-header">
+                <h3>휴지통</h3>
+                <button className="icon-btn danger" onClick={emptyTrash} disabled={trashNotes.length === 0}>
+                  비우기
+                </button>
+              </div>
+              {trashNotes.length === 0 ? (
+                <p className="inspector-line">휴지통이 비어 있습니다.</p>
+              ) : (
+                <ul className="trash-list">
+                  {trashNotes.map((note) => (
+                    <li key={note.id} className="trash-item">
+                      <span>{note.content.trim() ? note.content.slice(0, 28) : "(내용 없음)"}</span>
+                      <div className="trash-actions">
+                        <button className="icon-btn" onClick={() => restoreNote(note.id)}>
+                          복구
+                        </button>
+                        <button className="icon-btn danger" onClick={() => permanentlyDeleteNote(note.id)}>
+                          삭제
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
         </aside>
       </main>
     </div>

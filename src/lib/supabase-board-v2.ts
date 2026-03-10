@@ -136,7 +136,6 @@ export const loadOrCreateBoardV2 = async (userId: string): Promise<{ board: Boar
     .select("id,board_id,user_id,content,color,x,y,w,h,z_index,rotation,pinned,archived,metadata,updated_at")
     .eq("board_id", board.id)
     .eq("user_id", userId)
-    .eq("archived", false)
     .order("z_index", { ascending: true })
     .order("updated_at", { ascending: true });
 
