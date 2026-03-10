@@ -24,6 +24,10 @@ const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const DEFAULT_NOTE_WIDTH = 240;
 const DEFAULT_NOTE_HEIGHT = 220;
 const AUTO_ORGANIZE_BREAKPOINT = 1100;
+const MOBILE_BREAKPOINT = 760;
+const DEFAULT_FREE_CANVAS_HEIGHT = 980;
+const MOBILE_FREE_CANVAS_HEIGHT = 1700;
+const FREE_CANVAS_BOTTOM_PADDING = 280;
 
 const NOTE_COLORS: { id: NoteColor; label: string }[] = [
   { id: "yellow", label: "노랑" },
@@ -163,6 +167,10 @@ const App = () => {
   const [isNarrowViewport, setIsNarrowViewport] = useState<boolean>(() =>
     typeof window !== "undefined" ? window.innerWidth <= AUTO_ORGANIZE_BREAKPOINT : false
   );
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth <= MOBILE_BREAKPOINT : false
+  );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -180,6 +188,12 @@ const App = () => {
     () => activeNotes.find((note) => note.id === selectedNoteId) ?? null,
     [activeNotes, selectedNoteId]
   );
+  const isToolbarVisible = !isMobileViewport || mobileMenuOpen;
+  const freeCanvasHeight = useMemo(() => {
+    const minHeight = isMobileViewport ? MOBILE_FREE_CANVAS_HEIGHT : DEFAULT_FREE_CANVAS_HEIGHT;
+    const maxBottom = activeNotes.reduce((max, note) => Math.max(max, note.y + note.h), 0);
+    return Math.max(minHeight, maxBottom + FREE_CANVAS_BOTTOM_PADDING);
+  }, [activeNotes, isMobileViewport]);
 
   const renderedNotes = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -283,6 +297,11 @@ const App = () => {
   useEffect(() => {
     const onResize = () => {
       setIsNarrowViewport(window.innerWidth <= AUTO_ORGANIZE_BREAKPOINT);
+      const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
+      setIsMobileViewport(mobile);
+      if (!mobile) {
+        setMobileMenuOpen(false);
+      }
     };
     onResize();
     window.addEventListener("resize", onResize);
@@ -354,7 +373,7 @@ const App = () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
     };
-  }, [isOrganizeMode]);
+  }, [isOrganizeMode, freeCanvasHeight]);
 
   useEffect(() => {
     if (!isOrganizeMode) {
@@ -546,15 +565,24 @@ const App = () => {
     setManualLayoutMode(null);
   };
 
+  const onToggleMobileMenu = () => {
+    setMobileMenuOpen((prev) => !prev);
+  };
+
   return (
     <div className="board-app">
       <header className="board-topbar">
-        <div className="brand">
-          <span className="logo">WZD</span>
-          <span className="brand-subtitle">Cork Board</span>
+        <div className="topbar-main">
+          <div className="brand">
+            <span className="logo">WZD</span>
+            <span className="brand-subtitle">Cork Board</span>
+          </div>
+          <button className="mobile-menu-btn" onClick={onToggleMobileMenu} aria-label="메뉴 열기/닫기">
+            {mobileMenuOpen ? "✕" : "☰"}
+          </button>
         </div>
 
-        <div className="toolbar">
+        <div className={`toolbar ${isToolbarVisible ? "open" : "closed"}`}>
           <button className="primary-btn" onClick={() => addNote()}>
             + 포스트잇 추가
           </button>
@@ -629,6 +657,7 @@ const App = () => {
           <div
             ref={canvasRef}
             className={`board-canvas canvas-${board.backgroundStyle} ${isOrganizeMode ? "organize-mode" : "free-mode"}`}
+            style={!isOrganizeMode ? { height: `${freeCanvasHeight}px` } : undefined}
             onDoubleClick={onCanvasDoubleClick}
             aria-label="코르크 보드 캔버스"
           >
