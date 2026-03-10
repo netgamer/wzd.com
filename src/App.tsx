@@ -18,9 +18,12 @@ interface DragState {
   offsetY: number;
 }
 
+type LayoutMode = "free" | "organize";
+
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const DEFAULT_NOTE_WIDTH = 240;
 const DEFAULT_NOTE_HEIGHT = 220;
+const AUTO_ORGANIZE_BREAKPOINT = 1100;
 
 const NOTE_COLORS: { id: NoteColor; label: string }[] = [
   { id: "yellow", label: "노랑" },
@@ -156,11 +159,17 @@ const App = () => {
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
   const [trashOpen, setTrashOpen] = useState(false);
   const [showInspector, setShowInspector] = useState(false);
+  const [manualLayoutMode, setManualLayoutMode] = useState<LayoutMode | null>(null);
+  const [isNarrowViewport, setIsNarrowViewport] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth <= AUTO_ORGANIZE_BREAKPOINT : false
+  );
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const skipNextCloudSaveRef = useRef(false);
   const cloudEnabled = Boolean(user?.id && supabase);
+  const effectiveLayoutMode: LayoutMode = manualLayoutMode ?? (isNarrowViewport ? "organize" : "free");
+  const isOrganizeMode = effectiveLayoutMode === "organize";
 
   const activeNotes = useMemo(() => notes.filter((note) => !note.archived), [notes]);
   const trashNotes = useMemo(
@@ -272,6 +281,15 @@ const App = () => {
   }, [activeNotes, selectedNoteId]);
 
   useEffect(() => {
+    const onResize = () => {
+      setIsNarrowViewport(window.innerWidth <= AUTO_ORGANIZE_BREAKPOINT);
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
     if (!cloudEnabled || !user?.id) {
       return;
     }
@@ -299,6 +317,10 @@ const App = () => {
   }, [board, cloudEnabled, notes, user?.id]);
 
   useEffect(() => {
+    if (isOrganizeMode) {
+      return;
+    }
+
     const onPointerMove = (event: PointerEvent) => {
       const drag = dragRef.current;
       const canvas = canvasRef.current;
@@ -332,7 +354,15 @@ const App = () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
     };
-  }, []);
+  }, [isOrganizeMode]);
+
+  useEffect(() => {
+    if (!isOrganizeMode) {
+      return;
+    }
+    dragRef.current = null;
+    setDraggingNoteId(null);
+  }, [isOrganizeMode]);
 
   useEffect(() => {
     const clampAllActiveNotes = () => {
@@ -464,7 +494,7 @@ const App = () => {
 
   const onNoteHandlePointerDown = (event: ReactPointerEvent<HTMLDivElement>, note: NoteV2) => {
     event.preventDefault();
-    if (note.pinned) {
+    if (note.pinned || isOrganizeMode) {
       return;
     }
     const canvas = canvasRef.current;
@@ -503,6 +533,19 @@ const App = () => {
     setShowInspector((prev) => !prev);
   };
 
+  const onToggleLayoutMode = () => {
+    setManualLayoutMode((prev) => {
+      if (prev === null) {
+        return isOrganizeMode ? "free" : "organize";
+      }
+      return prev === "free" ? "organize" : "free";
+    });
+  };
+
+  const onResetLayoutMode = () => {
+    setManualLayoutMode(null);
+  };
+
   return (
     <div className="board-app">
       <header className="board-topbar">
@@ -515,6 +558,14 @@ const App = () => {
           <button className="primary-btn" onClick={() => addNote()}>
             + 포스트잇 추가
           </button>
+          <button className={`ghost-btn ${isOrganizeMode ? "active-mode-btn" : ""}`} onClick={onToggleLayoutMode}>
+            {isOrganizeMode ? "자유배치" : "정리모드"}
+          </button>
+          {manualLayoutMode && (
+            <button className="ghost-btn" onClick={onResetLayoutMode} title="화면 크기에 따라 자동 전환">
+              자동
+            </button>
+          )}
           <button
             className={`rainbow-btn ${showInspector ? "active" : ""}`}
             onClick={onToggleInspector}
@@ -577,7 +628,7 @@ const App = () => {
         <section className="canvas-wrap">
           <div
             ref={canvasRef}
-            className={`board-canvas canvas-${board.backgroundStyle}`}
+            className={`board-canvas canvas-${board.backgroundStyle} ${isOrganizeMode ? "organize-mode" : "free-mode"}`}
             onDoubleClick={onCanvasDoubleClick}
             aria-label="코르크 보드 캔버스"
           >
@@ -593,22 +644,30 @@ const App = () => {
                     key={note.id}
                     className={`sticky-note note-${note.color} ${selected ? "selected" : ""} ${
                       draggingNoteId === note.id ? "dragging" : ""
-                    }`}
-                    style={{
-                      left: `${note.x}px`,
-                      top: `${note.y}px`,
-                      width: `${note.w}px`,
-                      height: `${note.h}px`,
-                      zIndex: note.zIndex,
-                      transform: `rotate(${note.rotation}deg)`
-                    }}
+                    } ${isOrganizeMode ? "organized-note" : ""}`}
+                    style={
+                      isOrganizeMode
+                        ? {
+                            zIndex: note.zIndex
+                          }
+                        : {
+                            left: `${note.x}px`,
+                            top: `${note.y}px`,
+                            width: `${note.w}px`,
+                            height: `${note.h}px`,
+                            zIndex: note.zIndex,
+                            transform: `rotate(${note.rotation}deg)`
+                          }
+                    }
                     onMouseDown={() => {
                       setSelectedNoteId(note.id);
-                      bringToFront(note.id);
+                      if (!isOrganizeMode) {
+                        bringToFront(note.id);
+                      }
                     }}
                   >
                     <div className="sticky-handle" onPointerDown={(event) => onNoteHandlePointerDown(event, note)}>
-                      <span>{note.pinned ? "고정됨" : "드래그해서 이동"}</span>
+                      <span>{isOrganizeMode ? "정리모드" : note.pinned ? "고정됨" : "드래그해서 이동"}</span>
                       <div className="note-actions">
                         <button
                           className="icon-btn"
