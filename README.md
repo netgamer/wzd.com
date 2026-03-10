@@ -44,6 +44,8 @@
    - `http://localhost:5173`
 4. Run SQL from `supabase/schema.sql` in SQL editor.
    - Includes: `dashboard_layouts`, `widgets`, `agent_runs`, `agent_steps`, `user_workflows`
+5. For cork-board redesign, run `supabase/schema.board-v2.sql` in SQL editor.
+   - Includes: `boards`, `notes`, `note_tags` with RLS policies.
 
 ## Current milestone
 - 3-column dashboard layout

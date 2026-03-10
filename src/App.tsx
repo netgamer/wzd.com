@@ -1,117 +1,174 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { AddWidgetModal } from "./components/AddWidgetModal";
-import { WidgetBody } from "./components/WidgetBody";
-import { createInitialState, loadState, newWidget, saveState } from "./lib/dashboard-state";
-import { appendAgentStep, completeAgentRun, createAgentRun, upsertUserWorkflow } from "./lib/supabase-agent-runs";
-import { getDashboardSignature, loadDashboardFromSupabase, saveDashboardToSupabase } from "./lib/supabase-dashboard";
+import { type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
-import type { AgentItem, DashboardState, UserProfile, WidgetData, WidgetInstance, WidgetType } from "./types";
+import { type BoardBackgroundStyle, type BoardV2, loadOrCreateBoardV2, type NoteColor, type NoteV2, saveBoardV2 } from "./lib/supabase-board-v2";
 
-interface DragPayload {
-  widgetId: string;
-  fromColumnId: string;
+interface UserProfile {
+  id: string;
+  email: string;
 }
 
-const minColumnWidth = 18;
-const agentApiBaseUrl = import.meta.env.VITE_AGENT_API_BASE_URL || "http://localhost:8787";
-const maxAgentRequestAttempts = 2;
-
-interface AgentApiPayload {
-  ok?: boolean;
-  answer?: string;
-  error?: string;
-  workflow?: { id?: string | number | null } | null;
+interface LocalSnapshot {
+  board: BoardV2;
+  notes: NoteV2[];
 }
 
-class AgentRequestError extends Error {
-  readonly retryable: boolean;
-  readonly statusCode: number | null;
-
-  constructor(message: string, options?: { retryable?: boolean; statusCode?: number | null }) {
-    super(message);
-    this.name = "AgentRequestError";
-    this.retryable = options?.retryable ?? false;
-    this.statusCode = options?.statusCode ?? null;
-  }
+interface DragState {
+  noteId: string;
+  offsetX: number;
+  offsetY: number;
 }
 
-const summarizeForRun = (text: string): string => {
-  const normalized = text.replace(/\s+/g, " ").trim();
-  if (normalized.length <= 700) {
-    return normalized;
-  }
-  return `${normalized.slice(0, 697)}...`;
-};
+const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
+const DEFAULT_NOTE_WIDTH = 240;
+const DEFAULT_NOTE_HEIGHT = 220;
 
-const toErrorMessage = (error: unknown, fallback: string): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return fallback;
-};
-
-const safeParseJson = async (response: Response): Promise<AgentApiPayload | null> => {
-  try {
-    const payload = (await response.json()) as AgentApiPayload;
-    return payload;
-  } catch {
-    return null;
-  }
-};
+const NOTE_COLORS: { id: NoteColor; label: string }[] = [
+  { id: "yellow", label: "노랑" },
+  { id: "pink", label: "핑크" },
+  { id: "blue", label: "블루" },
+  { id: "green", label: "그린" },
+  { id: "orange", label: "오렌지" },
+  { id: "purple", label: "보라" },
+  { id: "mint", label: "민트" },
+  { id: "white", label: "화이트" }
+];
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2, 10);
 
-const findColumnIdForWidget = (state: DashboardState, widgetId: string): string | null => {
-  for (const column of state.columns) {
-    if (column.widgetIds.includes(widgetId)) {
-      return column.id;
-    }
-  }
-  return null;
+const nowIso = () => new Date().toISOString();
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const createDefaultBoard = (userId: string): BoardV2 => ({
+  id: makeId(),
+  userId,
+  title: "My Board",
+  description: "",
+  backgroundStyle: "cork",
+  settings: {},
+  updatedAt: nowIso()
+});
+
+const createNote = (params: {
+  boardId: string;
+  userId: string;
+  zIndex: number;
+  x: number;
+  y: number;
+  content?: string;
+  color?: NoteColor;
+}): NoteV2 => ({
+  id: makeId(),
+  boardId: params.boardId,
+  userId: params.userId,
+  content: params.content ?? "",
+  color: params.color ?? "yellow",
+  x: Math.round(params.x),
+  y: Math.round(params.y),
+  w: DEFAULT_NOTE_WIDTH,
+  h: DEFAULT_NOTE_HEIGHT,
+  zIndex: params.zIndex,
+  rotation: 0,
+  pinned: false,
+  archived: false,
+  metadata: {},
+  updatedAt: nowIso()
+});
+
+const createDefaultSnapshot = (): LocalSnapshot => {
+  const board = createDefaultBoard("local");
+  const firstNote = createNote({
+    boardId: board.id,
+    userId: "local",
+    zIndex: 1,
+    x: 120,
+    y: 120,
+    content: "더블클릭으로 새 포스트잇을 만들 수 있습니다.",
+    color: "yellow"
+  });
+  const secondNote = createNote({
+    boardId: board.id,
+    userId: "local",
+    zIndex: 2,
+    x: 410,
+    y: 180,
+    content: "로그인하면 어디서든 같은 보드를 볼 수 있어요.",
+    color: "mint"
+  });
+  return { board, notes: [firstNote, secondNote] };
 };
 
-const removeWidgetFromColumns = (columns: DashboardState["columns"], widgetId: string) =>
-  columns.map((column) => ({ ...column, widgetIds: column.widgetIds.filter((id) => id !== widgetId) }));
+const loadLocalSnapshot = (): LocalSnapshot => {
+  if (typeof window === "undefined") {
+    return createDefaultSnapshot();
+  }
+
+  const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (!raw) {
+    return createDefaultSnapshot();
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as LocalSnapshot;
+    if (!parsed?.board?.id || !Array.isArray(parsed.notes)) {
+      return createDefaultSnapshot();
+    }
+    return parsed;
+  } catch {
+    return createDefaultSnapshot();
+  }
+};
+
+const saveLocalSnapshot = (snapshot: LocalSnapshot) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshot));
+};
 
 const App = () => {
-  const [dashboard, setDashboard] = useState<DashboardState>(() => {
-    if (typeof window === "undefined") {
-      return createInitialState();
-    }
-    return loadState();
-  });
-  const [modalOpen, setModalOpen] = useState(false);
-  const [activeResize, setActiveResize] = useState<number | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [cloudLoaded, setCloudLoaded] = useState(false);
-  const [canCloudWrite, setCanCloudWrite] = useState(false);
-  const [syncError, setSyncError] = useState<string>("");
-  const [saveRetryToken, setSaveRetryToken] = useState(0);
-  const [runningAgentIds, setRunningAgentIds] = useState<string[]>([]);
+  const [board, setBoard] = useState<BoardV2>(() => createDefaultSnapshot().board);
+  const [notes, setNotes] = useState<NoteV2[]>(() => createDefaultSnapshot().notes);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [syncMessage, setSyncMessage] = useState("로컬 모드");
+  const [syncError, setSyncError] = useState("");
+  const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
 
-  const boardRef = useRef<HTMLDivElement | null>(null);
-  const lastSignatureRef = useRef<string>(getDashboardSignature(dashboard));
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<DragState | null>(null);
   const skipNextCloudSaveRef = useRef(false);
+  const cloudEnabled = Boolean(user?.id && supabase);
 
-  useEffect(() => {
-    saveState(dashboard);
-    lastSignatureRef.current = getDashboardSignature(dashboard);
-  }, [dashboard]);
+  const selectedNote = useMemo(() => notes.find((note) => note.id === selectedNoteId) ?? null, [notes, selectedNoteId]);
+
+  const renderedNotes = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    const filtered = keyword
+      ? notes.filter((note) => note.content.toLowerCase().includes(keyword))
+      : notes;
+    return [...filtered].sort((a, b) => a.zIndex - b.zIndex);
+  }, [notes, search]);
 
   useEffect(() => {
     if (!supabase) {
+      const local = loadLocalSnapshot();
+      setBoard(local.board);
+      setNotes(local.notes);
+      setLoading(false);
       return;
     }
 
     supabase.auth.getSession().then(({ data }) => {
       const sessionUser = data.session?.user;
-      if (!sessionUser?.email) {
-        return;
+      if (sessionUser?.email) {
+        setUser({ id: sessionUser.id, email: sessionUser.email });
       }
-      setUser({ id: sessionUser.id, email: sessionUser.email });
     });
 
     const {
@@ -134,40 +191,37 @@ const App = () => {
     let active = true;
 
     if (!user?.id || !supabase) {
-      setCloudLoaded(false);
-      setCanCloudWrite(false);
+      const local = loadLocalSnapshot();
+      setBoard(local.board);
+      setNotes(local.notes);
+      setSyncMessage("로컬 모드");
       setSyncError("");
+      setLoading(false);
       return;
     }
 
-    setCloudLoaded(false);
-
-    loadDashboardFromSupabase(user.id)
-      .then((state) => {
+    setLoading(true);
+    loadOrCreateBoardV2(user.id)
+      .then((payload) => {
         if (!active) {
           return;
         }
-
-        if (state) {
-          skipNextCloudSaveRef.current = true;
-          setDashboard(state);
-        } else {
-          setSaveRetryToken((value) => value + 1);
-        }
-
-        setCloudLoaded(true);
-        setCanCloudWrite(true);
+        skipNextCloudSaveRef.current = true;
+        setBoard(payload.board);
+        setNotes(payload.notes);
+        setSelectedNoteId(payload.notes[0]?.id ?? null);
+        setSyncMessage("클라우드 동기화 연결됨");
         setSyncError("");
+        setLoading(false);
       })
       .catch((error: unknown) => {
         if (!active) {
           return;
         }
-
-        const message = error instanceof Error ? error.message : "클라우드 불러오기에 실패했습니다";
-        setSyncError(`불러오기 실패: ${message}`);
-        setCanCloudWrite(false);
-        setCloudLoaded(true);
+        const message = error instanceof Error ? error.message : "클라우드 보드 불러오기에 실패했습니다";
+        setSyncError(message);
+        setSyncMessage("로컬 모드로 동작 중");
+        setLoading(false);
       });
 
     return () => {
@@ -176,7 +230,14 @@ const App = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    if (!user?.id || !supabase || !cloudLoaded || !canCloudWrite) {
+    if (cloudEnabled) {
+      return;
+    }
+    saveLocalSnapshot({ board, notes });
+  }, [board, cloudEnabled, notes]);
+
+  useEffect(() => {
+    if (!cloudEnabled || !user?.id) {
       return;
     }
 
@@ -186,480 +247,128 @@ const App = () => {
     }
 
     const timer = window.setTimeout(() => {
-      void saveDashboardToSupabase(user.id, dashboard)
-        .then(() => setSyncError(""))
-        .catch((error: unknown) => {
-          const message = error instanceof Error ? error.message : "클라우드 저장에 실패했습니다";
-          setSyncError(`저장 실패: ${message}`);
-          window.setTimeout(() => {
-            setSaveRetryToken((value) => value + 1);
-          }, 2000);
-        });
-    }, 120);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [dashboard, canCloudWrite, cloudLoaded, saveRetryToken, user?.id]);
-
-  useEffect(() => {
-    if (!user?.id || !supabase || !cloudLoaded || !canCloudWrite) {
-      return;
-    }
-
-    let stopped = false;
-
-    const pullRemote = async () => {
-      try {
-        const remoteState = await loadDashboardFromSupabase(user.id);
-        if (!remoteState || stopped) {
-          return;
-        }
-
-        const remoteSignature = getDashboardSignature(remoteState);
-        if (remoteSignature !== lastSignatureRef.current) {
-          skipNextCloudSaveRef.current = true;
-          setDashboard(remoteState);
+      setSyncMessage("저장 중...");
+      void saveBoardV2({ board, notes })
+        .then(() => {
+          setSyncMessage("클라우드 저장 완료");
           setSyncError("");
-        }
-      } catch (error: unknown) {
-        if (!stopped) {
-          const message = error instanceof Error ? error.message : "다른 브라우저 변경 동기화에 실패했습니다";
-          setSyncError(`동기화 실패: ${message}`);
-        }
-      }
-    };
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : "저장 실패";
+          setSyncError(message);
+          setSyncMessage("클라우드 저장 실패");
+        });
+    }, 500);
 
-    const intervalId = window.setInterval(() => {
-      void pullRemote();
-    }, 3000);
-
-    const onFocus = () => {
-      void pullRemote();
-    };
-
-    window.addEventListener("focus", onFocus);
-
-    return () => {
-      stopped = true;
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", onFocus);
-    };
-  }, [canCloudWrite, cloudLoaded, user?.id]);
+    return () => window.clearTimeout(timer);
+  }, [board, cloudEnabled, notes, user?.id]);
 
   useEffect(() => {
-    if (activeResize === null) {
-      return;
-    }
-
-    const onMouseMove = (event: MouseEvent) => {
-      const boardWidth = boardRef.current?.getBoundingClientRect().width ?? 0;
-      if (boardWidth <= 0) {
+    const onPointerMove = (event: PointerEvent) => {
+      const drag = dragRef.current;
+      const canvas = canvasRef.current;
+      if (!drag || !canvas) {
         return;
       }
+      const rect = canvas.getBoundingClientRect();
+      const nextX = clamp(Math.round(event.clientX - rect.left - drag.offsetX), -320, 3800);
+      const nextY = clamp(Math.round(event.clientY - rect.top - drag.offsetY), -220, 2800);
 
-      const delta = (event.movementX / boardWidth) * 100;
-      setDashboard((prev) => {
-        const columns = [...prev.columns];
-        const left = columns[activeResize];
-        const right = columns[activeResize + 1];
-
-        if (!left || !right) {
-          return prev;
-        }
-
-        const nextLeft = left.width + delta;
-        const nextRight = right.width - delta;
-
-        if (nextLeft < minColumnWidth || nextRight < minColumnWidth) {
-          return prev;
-        }
-
-        columns[activeResize] = { ...left, width: nextLeft };
-        columns[activeResize + 1] = { ...right, width: nextRight };
-        return { ...prev, columns };
-      });
+      setNotes((prev) =>
+        prev.map((note) => (note.id === drag.noteId ? { ...note, x: nextX, y: nextY, updatedAt: nowIso() } : note))
+      );
     };
 
-    const onMouseUp = () => setActiveResize(null);
+    const onPointerUp = () => {
+      dragRef.current = null;
+      setDraggingNoteId(null);
+    };
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
 
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
     };
-  }, [activeResize]);
+  }, []);
 
-  const addWidget = (type: WidgetType) => {
-    const widget = newWidget(type);
-    setDashboard((prev) => {
-      const columns = [...prev.columns];
-      columns[0] = { ...columns[0], widgetIds: [widget.id, ...columns[0].widgetIds] };
-      return {
-        columns,
-        widgets: {
-          ...prev.widgets,
-          [widget.id]: widget
-        }
-      };
+  const bringToFront = (noteId: string) => {
+    setNotes((prev) => {
+      const maxZ = prev.reduce((max, note) => Math.max(max, note.zIndex), 0);
+      return prev.map((note) =>
+        note.id === noteId && note.zIndex !== maxZ
+          ? {
+              ...note,
+              zIndex: maxZ + 1,
+              updatedAt: nowIso()
+            }
+          : note
+      );
     });
   };
 
-  const deleteWidget = (widgetId: string) => {
-    setDashboard((prev) => {
-      const nextColumns = removeWidgetFromColumns(prev.columns, widgetId);
-      const nextWidgets = { ...prev.widgets };
-      delete nextWidgets[widgetId];
-      return { columns: nextColumns, widgets: nextWidgets };
+  const addNote = (x?: number, y?: number) => {
+    const maxZ = notes.reduce((max, note) => Math.max(max, note.zIndex), 0);
+    const fallbackX = 120 + (notes.length % 4) * 36;
+    const fallbackY = 110 + (notes.length % 4) * 30;
+    const newNote = createNote({
+      boardId: board.id,
+      userId: board.userId,
+      zIndex: maxZ + 1,
+      x: x ?? fallbackX,
+      y: y ?? fallbackY
     });
+    setNotes((prev) => [...prev, newNote]);
+    setSelectedNoteId(newNote.id);
   };
 
-  const toggleCollapse = (widgetId: string) => {
-    setDashboard((prev) => {
-      const widget = prev.widgets[widgetId];
-      if (!widget) {
-        return prev;
-      }
-      return {
-        ...prev,
-        widgets: {
-          ...prev.widgets,
-          [widgetId]: {
-            ...widget,
-            collapsed: !widget.collapsed,
-            updatedAt: new Date().toISOString()
-          }
-        }
-      };
-    });
+  const updateNote = (noteId: string, patch: Partial<NoteV2>) => {
+    setNotes((prev) => prev.map((note) => (note.id === noteId ? { ...note, ...patch, updatedAt: nowIso() } : note)));
   };
 
-  const updateWidgetData = (widgetId: string, data: WidgetData) => {
-    setDashboard((prev) => {
-      const widget = prev.widgets[widgetId];
-      if (!widget) {
-        return prev;
-      }
-      return {
-        ...prev,
-        widgets: {
-          ...prev.widgets,
-          [widgetId]: {
-            ...widget,
-            data,
-            updatedAt: new Date().toISOString()
-          }
-        }
-      };
-    });
+  const removeNote = (noteId: string) => {
+    setNotes((prev) => prev.filter((note) => note.id !== noteId));
+    setSelectedNoteId((prev) => (prev === noteId ? null : prev));
   };
 
-  const appendAgentMessages = (widgetId: string, agentId: string, messages: { role: "user" | "assistant"; content: string }[]) => {
-    setDashboard((prev) => {
-      const widget = prev.widgets[widgetId];
-      if (!widget || widget.data.type !== "agent") {
-        return prev;
-      }
-
-      const nextItems = widget.data.items.map((item) => {
-        if (item.id !== agentId) {
-          return item;
-        }
-
-        return {
-          ...item,
-          messages: [
-            ...item.messages,
-            ...messages.map((message) => ({
-              id: makeId(),
-              role: message.role,
-              content: message.content,
-              createdAt: new Date().toISOString()
-            }))
-          ]
-        } as AgentItem;
-      });
-
-      return {
-        ...prev,
-        widgets: {
-          ...prev.widgets,
-          [widgetId]: {
-            ...widget,
-            data: {
-              ...widget.data,
-              items: nextItems
-            },
-            updatedAt: new Date().toISOString()
-          }
-        }
-      };
-    });
-  };
-
-  const runAgent = async ({
-    widgetId,
-    agentId,
-    agentType,
-    prompt,
-    scheduleCron
-  }: {
-    widgetId: string;
-    agentId: string;
-    agentType: AgentItem["role"];
-    prompt: string;
-    scheduleCron?: string;
-  }) => {
-    const trimmedPrompt = prompt.trim();
-    if (!trimmedPrompt) {
+  const onCanvasDoubleClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      addNote();
       return;
     }
-
-    const userIdForLog = user?.id ?? null;
-    const canPersistAgentRun = Boolean(userIdForLog && supabase);
-    const workflowName = scheduleCron ? `${agentType}-${Date.now()}` : undefined;
-    let runId: string | null = null;
-    let stepIndex = 1;
-    let attemptsUsed = 1;
-
-    const logStep = async (
-      stepType: string,
-      status: "running" | "ok" | "error",
-      message: string,
-      payload?: Record<string, unknown>
-    ) => {
-      if (!canPersistAgentRun || !userIdForLog || !runId) {
-        return;
-      }
-      try {
-        await appendAgentStep({
-          runId,
-          userId: userIdForLog,
-          stepIndex,
-          stepType,
-          status,
-          message,
-          payload
-        });
-        stepIndex += 1;
-      } catch (error: unknown) {
-        console.error("[agent-step]", error);
-      }
-    };
-
-    const finishRun = async (params: {
-      status: "succeeded" | "failed";
-      attempts: number;
-      resultSummary?: string;
-      errorMessage?: string;
-      workflowId?: string;
-    }) => {
-      if (!canPersistAgentRun || !userIdForLog || !runId) {
-        return;
-      }
-      try {
-        await completeAgentRun({
-          runId,
-          userId: userIdForLog,
-          status: params.status,
-          attempts: params.attempts,
-          resultSummary: params.resultSummary,
-          errorMessage: params.errorMessage,
-          workflowId: params.workflowId
-        });
-      } catch (error: unknown) {
-        console.error("[agent-run]", error);
-      }
-    };
-
-    setRunningAgentIds((prev) => (prev.includes(agentId) ? prev : [...prev, agentId]));
-    appendAgentMessages(widgetId, agentId, [{ role: "user", content: trimmedPrompt }]);
-
-    if (canPersistAgentRun && userIdForLog) {
-      try {
-        runId = await createAgentRun({
-          userId: userIdForLog,
-          widgetId,
-          agentId,
-          agentType,
-          prompt: trimmedPrompt,
-          scheduleCron,
-          workflowName
-        });
-        await logStep("run.start", "running", "에이전트 실행 시작", {
-          agentType,
-          scheduleCron: scheduleCron ?? null
-        });
-      } catch (error: unknown) {
-        console.error("[agent-run-create]", error);
-      }
-    }
-
-    try {
-      let payload: AgentApiPayload | null = null;
-
-      for (let attempt = 1; attempt <= maxAgentRequestAttempts; attempt += 1) {
-        attemptsUsed = attempt;
-        await logStep("agent.request", "running", `에이전트 API 요청 (시도 ${attempt}/${maxAgentRequestAttempts})`, {
-          attempt
-        });
-
-        try {
-          const response = await fetch(`${agentApiBaseUrl}/api/agent/chat`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              agentType,
-              prompt: trimmedPrompt,
-              context: `userId=${userIdForLog ?? "anonymous"}`,
-              userId: userIdForLog ?? undefined,
-              scheduleCron,
-              workflowName
-            })
-          });
-
-          const parsed = await safeParseJson(response);
-          if (!response.ok) {
-            throw new AgentRequestError(parsed?.error ?? `에이전트 API 호출 실패 (HTTP ${response.status})`, {
-              retryable: response.status >= 500 || response.status === 429,
-              statusCode: response.status
-            });
-          }
-
-          if (!parsed?.ok || typeof parsed.answer !== "string") {
-            throw new AgentRequestError(parsed?.error ?? "에이전트 응답 형식이 올바르지 않습니다", {
-              retryable: false,
-              statusCode: response.status
-            });
-          }
-
-          payload = parsed;
-          await logStep("agent.response", "ok", `에이전트 응답 수신 (시도 ${attempt})`);
-          break;
-        } catch (error: unknown) {
-          const retryable = error instanceof AgentRequestError ? error.retryable : true;
-          const statusCode = error instanceof AgentRequestError ? error.statusCode : null;
-          const message = toErrorMessage(error, "에이전트 실행에 실패했습니다");
-
-          await logStep("agent.error", "error", `요청 실패 (시도 ${attempt}) - ${message}`, {
-            attempt,
-            retryable,
-            statusCode
-          });
-
-          if (!retryable || attempt >= maxAgentRequestAttempts) {
-            throw error;
-          }
-
-          await logStep("agent.retry", "running", `일시 오류로 재시도 실행 (${attempt + 1}/${maxAgentRequestAttempts})`);
-        }
-      }
-
-      if (!payload || typeof payload.answer !== "string") {
-        throw new AgentRequestError("에이전트 응답이 비어 있습니다", { retryable: false });
-      }
-
-      const workflowId = payload.workflow?.id != null ? String(payload.workflow.id) : undefined;
-      const workflowMessage = workflowId ? `\n\n[n8n 워크플로우 생성됨] workflowId=${workflowId}` : "";
-
-      appendAgentMessages(widgetId, agentId, [{ role: "assistant", content: `${payload.answer}${workflowMessage}` }]);
-
-      if (workflowId) {
-        await logStep("n8n.workflow.created", "ok", `n8n 워크플로우 생성 완료 (workflowId=${workflowId})`, {
-          workflowId,
-          workflowName: workflowName ?? null
-        });
-      }
-
-      if (workflowId && workflowName && canPersistAgentRun && userIdForLog) {
-        try {
-          await upsertUserWorkflow({
-            userId: userIdForLog,
-            workflowId,
-            workflowName,
-            agentType,
-            scheduleCron,
-            runId: runId ?? undefined
-          });
-          await logStep("n8n.workflow.map", "ok", "사용자 워크플로우 매핑 저장 완료", {
-            workflowId,
-            workflowName
-          });
-        } catch (error: unknown) {
-          console.error("[user-workflow]", error);
-          await logStep("n8n.workflow.map", "error", "사용자 워크플로우 매핑 저장 실패");
-        }
-      }
-
-      await finishRun({
-        status: "succeeded",
-        attempts: attemptsUsed,
-        resultSummary: summarizeForRun(payload.answer),
-        workflowId
-      });
-    } catch (error: unknown) {
-      const message = toErrorMessage(error, "에이전트 실행 중 오류가 발생했습니다");
-      appendAgentMessages(widgetId, agentId, [{ role: "assistant", content: `오류: ${message}` }]);
-      await finishRun({
-        status: "failed",
-        attempts: attemptsUsed,
-        errorMessage: message
-      });
-    } finally {
-      setRunningAgentIds((prev) => prev.filter((id) => id !== agentId));
-    }
+    const rect = canvas.getBoundingClientRect();
+    addNote(event.clientX - rect.left - DEFAULT_NOTE_WIDTH / 2, event.clientY - rect.top - 42);
   };
 
-  const moveWidget = (payload: DragPayload, toColumnId: string, beforeWidgetId?: string) => {
-    setDashboard((prev) => {
-      const fromColumnId = findColumnIdForWidget(prev, payload.widgetId) ?? payload.fromColumnId;
-      if (!fromColumnId) {
-        return prev;
-      }
-
-      const stripped = removeWidgetFromColumns(prev.columns, payload.widgetId);
-      const columns = stripped.map((column) => {
-        if (column.id !== toColumnId) {
-          return column;
-        }
-
-        const nextIds = [...column.widgetIds];
-        if (beforeWidgetId) {
-          const targetIndex = nextIds.indexOf(beforeWidgetId);
-          if (targetIndex >= 0) {
-            nextIds.splice(targetIndex, 0, payload.widgetId);
-          } else {
-            nextIds.push(payload.widgetId);
-          }
-        } else {
-          nextIds.push(payload.widgetId);
-        }
-
-        return {
-          ...column,
-          widgetIds: nextIds
-        };
-      });
-
-      return { ...prev, columns };
-    });
+  const onNoteHandlePointerDown = (event: ReactPointerEvent<HTMLDivElement>, note: NoteV2) => {
+    event.preventDefault();
+    if (note.pinned) {
+      return;
+    }
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    dragRef.current = {
+      noteId: note.id,
+      offsetX: event.clientX - rect.left - note.x,
+      offsetY: event.clientY - rect.top - note.y
+    };
+    setDraggingNoteId(note.id);
+    setSelectedNoteId(note.id);
+    bringToFront(note.id);
   };
-
-  const authReady = useMemo(() => hasSupabaseConfig && Boolean(supabase), []);
 
   const onGoogleLogin = async () => {
     if (!supabase) {
       return;
     }
-
-    const redirectTo = window.location.origin;
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo }
+      options: { redirectTo: window.location.origin }
     });
   };
 
@@ -671,130 +380,175 @@ const App = () => {
   };
 
   return (
-    <div className="app-shell">
-      <header className="topbar">
+    <div className="board-app">
+      <header className="board-topbar">
         <div className="brand">
-          <span className="logo">wzd</span>
-          <span className="subtitle">개인 시작페이지</span>
+          <span className="logo">WZD</span>
+          <span className="brand-subtitle">Cork Board</span>
         </div>
 
-        <div className="actions">
-          <button className="primary" onClick={() => setModalOpen(true)}>
-            + 위젯 추가
+        <div className="toolbar">
+          <button className="primary-btn" onClick={() => addNote()}>
+            + 포스트잇 추가
           </button>
-          {authReady ? (
+          <input
+            className="search-input"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="포스트잇 검색"
+          />
+          <input
+            className="board-title-input"
+            value={board.title}
+            onChange={(event) => setBoard((prev) => ({ ...prev, title: event.target.value, updatedAt: nowIso() }))}
+            placeholder="보드 이름"
+            aria-label="보드 이름"
+          />
+          <select
+            className="style-select"
+            value={board.backgroundStyle}
+            onChange={(event) =>
+              setBoard((prev) => ({
+                ...prev,
+                backgroundStyle: event.target.value as BoardBackgroundStyle,
+                updatedAt: nowIso()
+              }))
+            }
+          >
+            <option value="cork">코르크</option>
+            <option value="whiteboard">화이트보드</option>
+            <option value="paper">페이퍼</option>
+          </select>
+          {hasSupabaseConfig ? (
             user ? (
               <>
                 <span className="user-email">{user.email}</span>
-                <button className="secondary" onClick={onLogout}>
+                <button className="ghost-btn" onClick={onLogout}>
                   로그아웃
                 </button>
               </>
             ) : (
-              <button className="secondary" onClick={onGoogleLogin}>
+              <button className="ghost-btn" onClick={onGoogleLogin}>
                 구글 로그인
               </button>
             )
           ) : (
-            <span className="auth-note">Supabase 환경변수를 설정하면 로그인을 사용할 수 있습니다</span>
+            <span className="hint-text">Supabase 환경변수를 설정하면 클라우드 동기화를 사용할 수 있습니다.</span>
           )}
         </div>
       </header>
 
-      <main className="dashboard" ref={boardRef}>
-        {dashboard.columns.map((column, columnIndex) => (
-          <div key={column.id} className="column-wrapper" style={{ width: `${column.width}%` }}>
-            <section
-              className="column"
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.preventDefault();
-                const raw = event.dataTransfer.getData("application/json");
-                if (!raw) {
-                  return;
-                }
-                const payload = JSON.parse(raw) as DragPayload;
-                moveWidget(payload, column.id);
-              }}
-            >
-              {column.widgetIds.map((widgetId) => {
-                const widget = dashboard.widgets[widgetId] as WidgetInstance | undefined;
-                if (!widget) {
-                  return null;
-                }
-
+      <main className="workspace">
+        <section className="canvas-wrap">
+          <div
+            ref={canvasRef}
+            className={`board-canvas canvas-${board.backgroundStyle}`}
+            onDoubleClick={onCanvasDoubleClick}
+            aria-label="코르크 보드 캔버스"
+          >
+            {loading ? (
+              <div className="canvas-empty">보드를 불러오는 중...</div>
+            ) : renderedNotes.length === 0 ? (
+              <div className="canvas-empty">더블클릭해서 첫 포스트잇을 추가해보세요.</div>
+            ) : (
+              renderedNotes.map((note) => {
+                const selected = selectedNoteId === note.id;
                 return (
                   <article
-                    key={widget.id}
-                    className="widget-card"
-                    draggable
-                    onDragStart={(event) => {
-                      event.dataTransfer.setData(
-                        "application/json",
-                        JSON.stringify({ widgetId: widget.id, fromColumnId: column.id } satisfies DragPayload)
-                      );
-                      event.dataTransfer.effectAllowed = "move";
+                    key={note.id}
+                    className={`sticky-note note-${note.color} ${selected ? "selected" : ""} ${
+                      draggingNoteId === note.id ? "dragging" : ""
+                    }`}
+                    style={{
+                      left: `${note.x}px`,
+                      top: `${note.y}px`,
+                      width: `${note.w}px`,
+                      height: `${note.h}px`,
+                      zIndex: note.zIndex,
+                      transform: `rotate(${note.rotation}deg)`
                     }}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      const raw = event.dataTransfer.getData("application/json");
-                      if (!raw) {
-                        return;
-                      }
-                      const payload = JSON.parse(raw) as DragPayload;
-                      moveWidget(payload, column.id, widget.id);
+                    onMouseDown={() => {
+                      setSelectedNoteId(note.id);
+                      bringToFront(note.id);
                     }}
                   >
-                    <header className="widget-header">
-                      <h3>{widget.title}</h3>
-                      <div className="widget-controls">
-                        <button className="icon-button" onClick={() => toggleCollapse(widget.id)}>
-                          {widget.collapsed ? "+" : "-"}
-                        </button>
-                        <button className="icon-button" onClick={() => deleteWidget(widget.id)}>
-                          x
-                        </button>
-                      </div>
-                    </header>
-                    {!widget.collapsed && (
-                      <div className="widget-body">
-                        <WidgetBody
-                          data={widget.data}
-                          onMemoChange={(text) => {
-                            if (widget.data.type !== "memo") {
-                              return;
-                            }
-                            updateWidgetData(widget.id, { ...widget.data, text });
+                    <div className="sticky-handle" onPointerDown={(event) => onNoteHandlePointerDown(event, note)}>
+                      <span>{note.pinned ? "고정됨" : "드래그해서 이동"}</span>
+                      <div className="note-actions">
+                        <button
+                          className="icon-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            updateNote(note.id, { pinned: !note.pinned });
                           }}
-                          onAgentRun={({ agentId, agentType, prompt, scheduleCron }) =>
-                            runAgent({ widgetId: widget.id, agentId, agentType, prompt, scheduleCron })
-                          }
-                          runningAgentIds={runningAgentIds}
-                        />
+                        >
+                          {note.pinned ? "핀 해제" : "핀 고정"}
+                        </button>
+                        <button
+                          className="icon-btn danger"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            removeNote(note.id);
+                          }}
+                        >
+                          삭제
+                        </button>
                       </div>
-                    )}
+                    </div>
+                    <textarea
+                      className="sticky-editor"
+                      value={note.content}
+                      onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                      placeholder="메모를 입력하세요..."
+                    />
                   </article>
                 );
-              })}
-            </section>
-            {columnIndex < dashboard.columns.length - 1 && (
-              <button
-                className="splitter"
-                onMouseDown={() => setActiveResize(columnIndex)}
-                aria-label={`${columnIndex + 1}번 컬럼 너비 조절`}
-              />
+              })
             )}
           </div>
-        ))}
+        </section>
+
+        <aside className="inspector">
+          <h2>포스트잇 설정</h2>
+          {selectedNote ? (
+            <>
+              <p className="inspector-line">
+                선택된 메모: <strong>{selectedNote.id.slice(0, 8)}</strong>
+              </p>
+
+              <div className="palette-grid">
+                {NOTE_COLORS.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`color-chip chip-${item.id} ${selectedNote.color === item.id ? "active" : ""}`}
+                    onClick={() => updateNote(selectedNote.id, { color: item.id })}
+                    aria-label={`${item.label} 색상`}
+                  />
+                ))}
+              </div>
+
+              <div className="size-row">
+                <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 200, h: 180 })}>
+                  S
+                </button>
+                <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 240, h: 220 })}>
+                  M
+                </button>
+                <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 300, h: 260 })}>
+                  L
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="inspector-line">포스트잇을 선택하면 색상과 크기를 바꿀 수 있습니다.</p>
+          )}
+
+          <hr />
+          <p className="inspector-line">저장 상태: {syncMessage}</p>
+          {syncError && <p className="error-text">오류: {syncError}</p>}
+          <p className="inspector-line">노트 수: {notes.length}</p>
+        </aside>
       </main>
-
-      <footer className="footer">
-        {user ? "클라우드 동기화 사용 중(슈파베이스)" : "로컬 모드"} | 클라우드플레어 페이지스 + 슈파베이스 + 구글 인증
-        {syncError ? ` | ${syncError}` : ""}
-      </footer>
-
-      <AddWidgetModal open={modalOpen} onClose={() => setModalOpen(false)} onAdd={addWidget} />
     </div>
   );
 };
