@@ -131,12 +131,13 @@ export const loadBoardsV2 = async (userId: string): Promise<{ boards: BoardV2[];
     throw boardQuery.error;
   }
 
-  const boards = ((boardQuery.data ?? []) as BoardRow[]).map(mapBoardRow);
+  let boards = ((boardQuery.data ?? []) as BoardRow[]).map(mapBoardRow);
+
+  if (boards.length === 0) {
+    boards = [await createBoardV2(userId)];
+  }
 
   const boardIds = boards.map((board) => board.id);
-  if (boardIds.length === 0) {
-    return { boards: [], notes: [] };
-  }
 
   const notesQuery = await supabase!
     .from("notes")

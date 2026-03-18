@@ -283,11 +283,27 @@ const sanitizeNotes = (notes: NoteV2[]) => notes.filter((note) => !isDisposableE
 const pruneEmptyBoards = (snapshot: LocalSnapshot): LocalSnapshot => {
   const notes = sanitizeNotes(snapshot.notes);
   const usedBoardIds = new Set(notes.map((note) => note.boardId));
-  const boards = snapshot.boards.filter((board) => usedBoardIds.has(board.id));
-  const selectedBoardId =
-    boards.some((board) => board.id === snapshot.selectedBoardId) ? snapshot.selectedBoardId : boards[0]?.id ?? null;
+  let boards = snapshot.boards.filter((board) => usedBoardIds.has(board.id));
 
-  return { boards, notes, selectedBoardId };
+  if (boards.length === 0 && snapshot.boards.length > 0) {
+    const fallbackBoard =
+      snapshot.boards.find((board) => board.id === snapshot.selectedBoardId) ??
+      sortBoards(snapshot.boards)[0] ??
+      snapshot.boards[0];
+    boards = fallbackBoard ? [fallbackBoard] : [];
+  }
+
+  const keptBoardIds = new Set(boards.map((board) => board.id));
+  const selectedBoardId =
+    boards.some((board) => board.id === snapshot.selectedBoardId)
+      ? snapshot.selectedBoardId
+      : boards[0]?.id ?? snapshot.selectedBoardId ?? null;
+
+  return {
+    boards,
+    notes: notes.filter((note) => keptBoardIds.has(note.boardId)),
+    selectedBoardId
+  };
 };
 
 const makeBoardTitle = (boards: BoardV2[]) => {
