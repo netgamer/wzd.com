@@ -860,7 +860,7 @@ const App = () => {
                     }}
                   >
                     <div className="sticky-handle" onPointerDown={(event) => onNoteHandlePointerDown(event, note)}>
-                      <span>{isOrganizeMode ? "드래그해서 순서 변경" : note.pinned ? "고정됨" : "드래그해서 이동"}</span>
+                      <span className="handle-dots" aria-hidden="true">...</span>
                       <div className="note-actions">
                         <button
                           className={`note-color-toggle chip-${note.color}`}
@@ -870,26 +870,30 @@ const App = () => {
                             const nextColor = NOTE_COLORS[(currentIndex + 1) % NOTE_COLORS.length]?.id ?? "yellow";
                             updateNote(note.id, { color: nextColor });
                           }}
-                          aria-label="메모 색상 변경"
-                          title="메모 색상 변경"
+                          aria-label="?? ?? ??"
+                          title="?? ?? ??"
                         />
                         <button
-                          className="icon-btn"
+                          className="icon-btn icon-only"
                           onClick={(event) => {
                             event.stopPropagation();
                             updateNote(note.id, { pinned: !note.pinned });
                           }}
+                          aria-label={note.pinned ? "? ??" : "? ??"}
+                          title={note.pinned ? "? ??" : "? ??"}
                         >
-                          {note.pinned ? "핀 해제" : "핀 고정"}
+                          {note.pinned ? "??" : "??"}
                         </button>
                         <button
-                          className="icon-btn danger"
+                          className="icon-btn danger icon-only"
                           onClick={(event) => {
                             event.stopPropagation();
                             removeNote(note.id);
                           }}
+                          aria-label="???"
+                          title="???"
                         >
-                          휴지통
+                          ??
                         </button>
                       </div>
                     </div>
