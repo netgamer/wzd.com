@@ -34,6 +34,7 @@ type FeedMode = "active" | "archived";
 type CloudSaveState = "idle" | "saving" | "saved" | "error";
 type LinkPreviewState = LinkPreview | null;
 type RssFeedState = RssFeedPreview | null;
+type WidgetType = "note" | "rss" | "bookmark";
 
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
@@ -42,6 +43,7 @@ const DEFAULT_FONT_SIZE: NoteFontSize = 16;
 const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "purple", "mint", "white"];
 const CLOUD_SAVE_DEBOUNCE_MS = 120;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
+const DEFAULT_BOOKMARK_URL = "https://";
 const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
 
 const makeId = () =>
@@ -246,11 +248,16 @@ const getNoteTitle = (content: string) => {
 };
 
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
-const getWidgetType = (note: NoteV2) => (typeof note.metadata?.widgetType === "string" ? note.metadata.widgetType : "note");
+const getWidgetType = (note: NoteV2): WidgetType =>
+  note.metadata?.widgetType === "rss" || note.metadata?.widgetType === "bookmark" ? note.metadata.widgetType : "note";
 const getRssFeedUrl = (note: NoteV2) =>
   typeof note.metadata?.feedUrl === "string" && note.metadata.feedUrl.trim()
     ? note.metadata.feedUrl.trim()
     : DEFAULT_RSS_FEED_URL;
+const getBookmarkUrl = (note: NoteV2) =>
+  typeof note.metadata?.bookmarkUrl === "string" && note.metadata.bookmarkUrl.trim()
+    ? note.metadata.bookmarkUrl.trim()
+    : DEFAULT_BOOKMARK_URL;
 const isDisposableEmptyNote = (note: NoteV2) => {
   if (getWidgetType(note) !== "note") {
     return false;
@@ -409,6 +416,7 @@ const App = () => {
   );
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
+  const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -443,6 +451,7 @@ const App = () => {
         setMobileSearchOpen(false);
         setMobileBoardMenuOpen(false);
       }
+      setWidgetMenuOpen(false);
     };
 
     window.addEventListener("resize", onResize);
@@ -773,9 +782,20 @@ const App = () => {
   useEffect(() => {
     const urls = Array.from(
       new Set(
-        visibleNotes
-          .map((note) => extractFirstUrl(note.content))
-          .filter((url) => url && !isImageUrl(url))
+        visibleNotes.flatMap((note) => {
+          const urls = [] as string[];
+          const noteUrl = extractFirstUrl(note.content);
+          if (noteUrl && !isImageUrl(noteUrl)) {
+            urls.push(noteUrl);
+          }
+          if (getWidgetType(note) === "bookmark") {
+            const bookmarkUrl = getBookmarkUrl(note);
+            if (bookmarkUrl && !isImageUrl(bookmarkUrl)) {
+              urls.push(bookmarkUrl);
+            }
+          }
+          return urls;
+        })
       )
     ).filter((url) => !(url in linkPreviews));
 
@@ -918,6 +938,38 @@ const App = () => {
     setFeedMode("active");
     setSelectedNoteId(note.id);
     setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addBookmarkWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "북마크"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "bookmark",
+      bookmarkUrl: DEFAULT_BOOKMARK_URL
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
   };
 
   const updateBoardTitle = (boardId: string, title: string) => {
@@ -1243,14 +1295,26 @@ const App = () => {
             <button className="new-note-pill" onClick={addNote}>
               새 메모
             </button>
-            <button className="widget-pill" onClick={addRssWidget}>
-              위젯 추가
-            </button>
+            <div className="widget-menu-wrap">
+              <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
+                위젯 추가
+              </button>
+              {widgetMenuOpen && (
+                <div className="widget-menu">
+                  <button className="widget-menu-item" onClick={addRssWidget}>
+                    RSS 리더
+                  </button>
+                  <button className="widget-menu-item" onClick={addBookmarkWidget}>
+                    북마크
+                  </button>
+                </div>
+              )}
+            </div>
             <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="새 메모">
               +
             </button>
-            <button className="mobile-icon-action" onClick={addRssWidget} aria-label="위젯 추가">
-              RSS
+            <button className="mobile-icon-action" onClick={() => setWidgetMenuOpen((prev) => !prev)} aria-label="위젯 추가">
+              W
             </button>
             {hasSupabaseConfig ? (
               user ? (
@@ -1362,8 +1426,11 @@ const App = () => {
                     const fontSize = getNoteFontSize(note);
                     const widgetType = getWidgetType(note);
                     const isRssWidget = widgetType === "rss";
+                    const isBookmarkWidget = widgetType === "bookmark";
                     const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
                     const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
+                    const bookmarkUrl = isBookmarkWidget ? getBookmarkUrl(note) : "";
+                    const bookmarkPreview = bookmarkUrl ? linkPreviews[bookmarkUrl] : undefined;
                     const previewUrl = extractFirstUrl(note.content);
                     const previewText = stripUrls(note.content);
                     const linkPreview = previewUrl && !isImageUrl(previewUrl) ? linkPreviews[previewUrl] : undefined;
@@ -1530,6 +1597,76 @@ const App = () => {
                                       <p className="rss-empty">RSS 항목을 불러오는 중이거나 피드를 읽을 수 없습니다.</p>
                                     )}
                                   </div>
+                                )}
+                              </>
+                            ) : isBookmarkWidget ? (
+                              <>
+                                <div className="widget-header">
+                                  <span className="widget-badge">LINK</span>
+                                  <p className="pin-title">{bookmarkPreview?.title || "북마크"}</p>
+                                </div>
+                                {selected ? (
+                                  <div className="widget-editor-stack">
+                                    <input
+                                      className="widget-input"
+                                      value={bookmarkUrl}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) =>
+                                        updateNote(note.id, {
+                                          metadata: {
+                                            ...note.metadata,
+                                            widgetType: "bookmark",
+                                            bookmarkUrl: event.target.value
+                                          }
+                                        })
+                                      }
+                                      placeholder="북마크 URL"
+                                    />
+                                    <button
+                                      className="widget-confirm"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setSelectedNoteId(null);
+                                      }}
+                                    >
+                                      확인
+                                    </button>
+                                  </div>
+                                ) : bookmarkPreview ? (
+                                  <a
+                                    className="link-preview-card bookmark-widget-card"
+                                    href={bookmarkPreview.finalUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(event) => event.stopPropagation()}
+                                  >
+                                    {bookmarkPreview.image && (
+                                      <img
+                                        className="link-preview-image"
+                                        src={getImageProxyUrl(bookmarkPreview.image)}
+                                        alt={bookmarkPreview.title}
+                                      />
+                                    )}
+                                    <span className="link-preview-meta">
+                                      <span className="link-preview-site">
+                                        {bookmarkPreview.siteName || bookmarkPreview.hostname}
+                                      </span>
+                                      <span className="link-preview-title">{bookmarkPreview.title}</span>
+                                      {bookmarkPreview.description && (
+                                        <span className="link-preview-description">{bookmarkPreview.description}</span>
+                                      )}
+                                    </span>
+                                  </a>
+                                ) : (
+                                  <a
+                                    className="link-chip"
+                                    href={bookmarkUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(event) => event.stopPropagation()}
+                                  >
+                                    {bookmarkUrl}
+                                  </a>
                                 )}
                               </>
                             ) : (

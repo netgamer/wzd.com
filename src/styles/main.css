@@ -334,6 +334,36 @@ button {
   font-weight: 700;
 }
 
+.widget-menu-wrap {
+  position: relative;
+}
+
+.widget-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 140px;
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.widget-menu-item {
+  min-height: 40px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text);
+  text-align: left;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
 .ghost-action {
   background: var(--surface-soft);
   color: var(--text);
@@ -679,6 +709,10 @@ button {
   line-height: 1.45;
 }
 
+.bookmark-widget-card {
+  background: rgba(255, 255, 255, 0.9);
+}
+
 .pin-card.image-note .pin-card-body {
   position: absolute;
   left: 0;
@@ -900,6 +934,7 @@ button {
 .pin-editor:focus-visible,
 .new-note-pill:focus-visible,
 .widget-pill:focus-visible,
+.widget-menu-item:focus-visible,
 .ghost-action:focus-visible,
 .mobile-icon-action:focus-visible,
 .pin-icon-button:focus-visible,
