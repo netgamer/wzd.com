@@ -606,7 +606,7 @@ const App = () => {
                     )}
 
                     <div className="pin-card-head">
-                      <span className="pin-dot chip-badge">{note.color}</span>
+                      <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
                       <div className="pin-actions">
                         <button
                           className={`note-color-toggle chip-${note.color}`}
