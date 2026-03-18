@@ -293,6 +293,7 @@ const App = () => {
   const [cloudSaveState, setCloudSaveState] = useState<CloudSaveState>("idle");
 
   const skipNextCloudSaveRef = useRef(false);
+  const suppressNextCardClickRef = useRef(false);
   const latestBoardsRef = useRef<BoardV2[]>(boards);
   const latestNotesRef = useRef<NoteV2[]>(notes);
   const latestUserIdRef = useRef<string | null>(user?.id ?? null);
@@ -764,7 +765,6 @@ const App = () => {
     event.dataTransfer.setData("text/plain", noteId);
     setRunningDragNoteId(noteId);
     setDragPreviewNoteId(noteId);
-    setSelectedNoteId(noteId);
   };
 
   const onPinDrop = (event: ReactDragEvent<HTMLElement>, targetNoteId?: string) => {
@@ -785,6 +785,7 @@ const App = () => {
     if (draggedNote) {
       touchBoard(draggedNote.boardId);
     }
+    suppressNextCardClickRef.current = true;
     setRunningDragNoteId(null);
     setDragPreviewNoteId(null);
   };
@@ -1000,6 +1001,7 @@ const App = () => {
                       draggable={feedMode === "active"}
                       onDragStart={(event) => onPinDragStart(event, note.id)}
                       onDragEnd={() => {
+                        suppressNextCardClickRef.current = true;
                         setRunningDragNoteId(null);
                         setDragPreviewNoteId(null);
                       }}
@@ -1017,7 +1019,14 @@ const App = () => {
                         }
                       }}
                       onDrop={(event) => onPinDrop(event, note.id)}
-                      onClick={() => setSelectedNoteId(note.id)}
+                      onClick={() => {
+                        if (suppressNextCardClickRef.current) {
+                          suppressNextCardClickRef.current = false;
+                          return;
+                        }
+
+                        setSelectedNoteId(note.id);
+                      }}
                     >
                       {previewUrl && isImageUrl(previewUrl) && (
                         <div className="pin-image-wrap">
