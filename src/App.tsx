@@ -42,6 +42,8 @@ const VISIBLE_NOTE_BATCH_SIZE = 16;
 const DEFAULT_FONT_SIZE: NoteFontSize = 16;
 const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "purple", "mint", "white"];
 const CLOUD_SAVE_DEBOUNCE_MS = 120;
+const TRASH_RETENTION_DAYS = 30;
+const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
 const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
@@ -246,6 +248,36 @@ const getNoteTitle = (content: string) => {
 };
 
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
+const getTrashDateValue = (value: unknown) => {
+  if (typeof value !== "string" || !value) {
+    return null;
+  }
+
+  return Number.isNaN(Date.parse(value)) ? null : value;
+};
+const isTrashExpired = (value: string | null) => {
+  if (!value) {
+    return false;
+  }
+
+  return Date.now() - Date.parse(value) > TRASH_RETENTION_MS;
+};
+const getBoardTrashedAt = (board: BoardV2) => getTrashDateValue(board.settings?.trashedAt);
+const getNoteTrashedAt = (note: NoteV2) =>
+  getTrashDateValue(note.metadata?.trashedAt ?? (note.archived ? note.updatedAt : null));
+const isBoardTrashed = (board: BoardV2) => {
+  const trashedAt = getBoardTrashedAt(board);
+  return Boolean(trashedAt) && !isTrashExpired(trashedAt);
+};
+const isNoteTrashed = (note: NoteV2) => {
+  const trashedAt = getNoteTrashedAt(note);
+  return Boolean(trashedAt) && !isTrashExpired(trashedAt);
+};
+const clearTrashedAt = (value: Record<string, unknown>) => {
+  const next = { ...value };
+  delete next.trashedAt;
+  return next;
+};
 const getBoardOrder = (board: BoardV2) =>
   typeof board.settings?.sidebarOrder === "number" ? board.settings.sidebarOrder : Number.MAX_SAFE_INTEGER;
 const sortBoards = (boards: BoardV2[]) =>
@@ -279,14 +311,17 @@ const isDisposableEmptyNote = (note: NoteV2) => {
   return trimmed === "새 메모" || trimmed === "https://" || trimmed === DEFAULT_NEW_NOTE_CONTENT.trim();
 };
 
-const sanitizeNotes = (notes: NoteV2[]) => notes.filter((note) => !isDisposableEmptyNote(note));
+const sanitizeNotes = (notes: NoteV2[]) =>
+  notes.filter((note) => !isDisposableEmptyNote(note) && !isTrashExpired(getNoteTrashedAt(note)));
 const pruneEmptyBoards = (snapshot: LocalSnapshot): LocalSnapshot => {
-  const notes = sanitizeNotes(snapshot.notes);
-  const boards = snapshot.boards;
+  const boards = snapshot.boards.filter((board) => !isTrashExpired(getBoardTrashedAt(board)));
+  const boardIds = new Set(boards.map((board) => board.id));
+  const notes = sanitizeNotes(snapshot.notes).filter((note) => boardIds.has(note.boardId));
+  const activeBoards = boards.filter((board) => !isBoardTrashed(board));
   const selectedBoardId =
-    boards.some((board) => board.id === snapshot.selectedBoardId)
+    activeBoards.some((board) => board.id === snapshot.selectedBoardId)
       ? snapshot.selectedBoardId
-      : boards[0]?.id ?? snapshot.selectedBoardId ?? null;
+      : activeBoards[0]?.id ?? boards[0]?.id ?? snapshot.selectedBoardId ?? null;
 
   return {
     boards,
@@ -439,6 +474,7 @@ const App = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [draggingBoardId, setDraggingBoardId] = useState<string | null>(null);
   const [dragPreviewBoardId, setDragPreviewBoardId] = useState<string | null>(null);
   const [dragArmedBoardId, setDragArmedBoardId] = useState<string | null>(null);
@@ -452,11 +488,13 @@ const App = () => {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const boardLongPressTimerRef = useRef<number | null>(null);
 
-  const selectedBoard = useMemo(
-    () => boards.find((board) => board.id === selectedBoardId) ?? boards[0] ?? null,
-    [boards, selectedBoardId]
-  );
   const orderedBoards = useMemo(() => sortBoards(boards), [boards]);
+  const activeBoards = useMemo(() => orderedBoards.filter((board) => !isBoardTrashed(board)), [orderedBoards]);
+  const trashedBoards = useMemo(() => orderedBoards.filter((board) => isBoardTrashed(board)), [orderedBoards]);
+  const selectedBoard = useMemo(
+    () => activeBoards.find((board) => board.id === selectedBoardId) ?? activeBoards[0] ?? null,
+    [activeBoards, selectedBoardId]
+  );
 
   useEffect(() => {
     latestBoardsRef.current = boards;
@@ -575,8 +613,30 @@ const App = () => {
     () => notes.filter((note) => note.boardId === selectedBoard?.id),
     [notes, selectedBoard?.id]
   );
-  const activeNotes = useMemo(() => boardNotes.filter((note) => !note.archived), [boardNotes]);
-  const archivedNotes = useMemo(() => boardNotes.filter((note) => note.archived), [boardNotes]);
+  const activeNotes = useMemo(() => boardNotes.filter((note) => !isNoteTrashed(note)), [boardNotes]);
+  const archivedNotes = useMemo(() => boardNotes.filter((note) => isNoteTrashed(note)), [boardNotes]);
+  const trashedNotes = useMemo(
+    () =>
+      notes.filter((note) => {
+        if (!isNoteTrashed(note)) {
+          return false;
+        }
+
+        const board = boards.find((item) => item.id === note.boardId);
+        return board ? !isBoardTrashed(board) : false;
+      }),
+    [boards, notes]
+  );
+  const sortedTrashedBoards = useMemo(
+    () =>
+      [...trashedBoards].sort((a, b) => (getBoardTrashedAt(b) ?? "").localeCompare(getBoardTrashedAt(a) ?? "")),
+    [trashedBoards]
+  );
+  const sortedTrashedNotes = useMemo(
+    () =>
+      [...trashedNotes].sort((a, b) => (getNoteTrashedAt(b) ?? "").localeCompare(getNoteTrashedAt(a) ?? "")),
+    [trashedNotes]
+  );
   const currentNotes = feedMode === "active" ? activeNotes : archivedNotes;
 
   const filteredNotes = useMemo(() => {
@@ -754,10 +814,10 @@ const App = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    if (!selectedBoard && boards.length > 0) {
-      setSelectedBoardId(boards[0].id);
+    if (!selectedBoard && activeBoards.length > 0) {
+      setSelectedBoardId(activeBoards[0].id);
     }
-  }, [boards, selectedBoard]);
+  }, [activeBoards, selectedBoard]);
 
   useEffect(() => {
     setBoardTitleDraft(selectedBoard?.title ?? "");
@@ -926,13 +986,71 @@ const App = () => {
     setFeedMode("active");
   };
 
+  const boardHasRecoverableContent = (boardId: string) =>
+    notes.some((note) => note.boardId === boardId && !isNoteTrashed(note) && !isDisposableEmptyNote(note));
+
+  const restoreBoard = (boardId: string) => {
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === boardId
+          ? {
+              ...board,
+              settings: clearTrashedAt(board.settings),
+              updatedAt: nowIso()
+            }
+          : board
+      )
+    );
+    setSelectedBoardId(boardId);
+    setFeedMode("active");
+    setSettingsOpen(false);
+  };
+
   const deleteBoard = async () => {
     if (!selectedBoard) {
       return;
     }
 
-    const shouldDelete = window.confirm(`'${selectedBoard.title}' 보드를 삭제할까요?`);
+    const hasRecoverableContent = boardHasRecoverableContent(selectedBoard.id);
+    const shouldDelete = window.confirm(
+      hasRecoverableContent
+        ? `'${selectedBoard.title}' 보드를 삭제할까요? 30일 동안 설정의 휴지통에서 복구할 수 있습니다.`
+        : `'${selectedBoard.title}' 보드를 삭제할까요?`
+    );
     if (!shouldDelete) {
+      return;
+    }
+
+    if (hasRecoverableContent) {
+      const trashedAt = nowIso();
+      const remainingActiveBoards = activeBoards.filter((board) => board.id !== selectedBoard.id);
+
+      setBoards((prev) =>
+        prev.map((board) =>
+          board.id === selectedBoard.id
+            ? {
+                ...board,
+                settings: {
+                  ...board.settings,
+                  trashedAt
+                },
+                updatedAt: trashedAt
+              }
+            : board
+        )
+      );
+      setSelectedNoteId(null);
+      setFeedMode("active");
+
+      if (remainingActiveBoards.length > 0) {
+        setSelectedBoardId(remainingActiveBoards[0].id);
+        return;
+      }
+
+      const replacementBoard = createDefaultBoard(user?.id ?? "local");
+      replacementBoard.settings = { ...replacementBoard.settings, sidebarOrder: orderedBoards.length };
+      setBoards((prev) => [replacementBoard, ...prev]);
+      setSelectedBoardId(replacementBoard.id);
       return;
     }
 
@@ -958,11 +1076,13 @@ const App = () => {
       }
     }
 
-    if (remainingBoards.length === 0) {
+    const remainingActiveBoards = remainingBoards.filter((board) => !isBoardTrashed(board));
+
+    if (remainingActiveBoards.length === 0) {
       const replacementBoard = createDefaultBoard(user?.id ?? "local");
       replacementBoard.settings = { ...replacementBoard.settings, sidebarOrder: 0 };
-      setBoards([replacementBoard]);
-      setNotes([]);
+      setBoards([...remainingBoards, replacementBoard]);
+      setNotes(remainingNotes);
       setSelectedBoardId(replacementBoard.id);
       setSelectedNoteId(null);
       setFeedMode("active");
@@ -971,7 +1091,7 @@ const App = () => {
 
     setBoards(remainingBoards);
     setNotes(remainingNotes);
-    setSelectedBoardId(remainingBoards[0]?.id ?? null);
+    setSelectedBoardId(remainingActiveBoards[0]?.id ?? null);
     setSelectedNoteId(null);
     setFeedMode("active");
   };
@@ -1157,14 +1277,41 @@ const App = () => {
   };
 
   const archiveNote = (noteId: string) => {
-    updateNote(noteId, { archived: true });
+    const targetNote = notes.find((note) => note.id === noteId);
+    if (!targetNote) {
+      return;
+    }
+
+    if (isDisposableEmptyNote(targetNote)) {
+      setNotes((prev) => prev.filter((note) => note.id !== noteId));
+      touchBoard(targetNote.boardId);
+      setSelectedNoteId((prev) => (prev === noteId ? null : prev));
+      return;
+    }
+
+    updateNote(noteId, {
+      archived: true,
+      metadata: {
+        ...targetNote.metadata,
+        trashedAt: nowIso()
+      }
+    });
     setSelectedNoteId(null);
   };
 
   const restoreNote = (noteId: string) => {
-    updateNote(noteId, { archived: false });
+    const targetNote = notes.find((note) => note.id === noteId);
+    if (!targetNote) {
+      return;
+    }
+
+    updateNote(noteId, {
+      archived: false,
+      metadata: clearTrashedAt(targetNote.metadata)
+    });
     setFeedMode("active");
     setSelectedNoteId(noteId);
+    setSettingsOpen(false);
   };
 
   const deleteArchivedNote = (noteId: string) => {
@@ -1342,7 +1489,7 @@ const App = () => {
             }}
             onDrop={(event) => onBoardChipDrop(event)}
           >
-            {orderedBoards.map((boardItem) => (
+            {activeBoards.map((boardItem) => (
               <div key={boardItem.id}>
                 {draggingBoardId && dragPreviewBoardId === boardItem.id && draggingBoardId !== boardItem.id && (
                   <div className="board-chip-drop-preview" aria-hidden="true" />
@@ -1411,8 +1558,12 @@ const App = () => {
 
         <div className="sidebar-spacer" />
 
-        <button className="side-icon subtle" onClick={addNote} aria-label="새 메모">
-          …
+        <button
+          className={`side-icon subtle ${settingsOpen ? "active" : ""}`}
+          onClick={() => setSettingsOpen((prev) => !prev)}
+          aria-label="설정"
+        >
+          설
         </button>
       </aside>
 
@@ -1547,7 +1698,7 @@ const App = () => {
         {mobileBoardMenuOpen && (
           <div className="mobile-board-sheet">
             <div className="mobile-board-list">
-              {orderedBoards.map((boardItem) => (
+              {activeBoards.map((boardItem) => (
                 <button
                   key={`mobile-${boardItem.id}`}
                   className={`mobile-board-item ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
@@ -1563,6 +1714,75 @@ const App = () => {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {settingsOpen && (
+          <div className="settings-overlay" onClick={() => setSettingsOpen(false)}>
+            <section className="settings-panel" onClick={(event) => event.stopPropagation()}>
+              <div className="settings-panel-head">
+                <div>
+                  <p className="settings-kicker">설정</p>
+                  <h2>휴지통</h2>
+                </div>
+                <button className="settings-close" onClick={() => setSettingsOpen(false)} aria-label="설정 닫기">
+                  ×
+                </button>
+              </div>
+
+              <div className="settings-section">
+                <div className="settings-section-head">
+                  <strong>삭제된 보드</strong>
+                  <span>{sortedTrashedBoards.length}개</span>
+                </div>
+                {sortedTrashedBoards.length === 0 ? (
+                  <p className="settings-empty">30일 안에 복구할 보드가 없습니다.</p>
+                ) : (
+                  <div className="trash-list">
+                    {sortedTrashedBoards.map((board) => (
+                      <div key={`trash-board-${board.id}`} className="trash-item">
+                        <div className="trash-copy">
+                          <strong>{board.title}</strong>
+                          <span>{getBoardTrashedAt(board)?.slice(0, 10)}까지 복구 가능</span>
+                        </div>
+                        <button className="trash-restore" onClick={() => restoreBoard(board.id)}>
+                          복구
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="settings-section">
+                <div className="settings-section-head">
+                  <strong>삭제된 메모</strong>
+                  <span>{sortedTrashedNotes.length}개</span>
+                </div>
+                {sortedTrashedNotes.length === 0 ? (
+                  <p className="settings-empty">30일 안에 복구할 메모가 없습니다.</p>
+                ) : (
+                  <div className="trash-list">
+                    {sortedTrashedNotes.map((note) => {
+                      const noteBoard = boards.find((board) => board.id === note.boardId);
+                      return (
+                        <div key={`trash-note-${note.id}`} className="trash-item">
+                          <div className="trash-copy">
+                            <strong>{getNoteTitle(note.content)}</strong>
+                            <span>
+                              {noteBoard?.title ?? "알 수 없는 보드"} · {getNoteTrashedAt(note)?.slice(0, 10)}까지 복구 가능
+                            </span>
+                          </div>
+                          <button className="trash-restore" onClick={() => restoreNote(note.id)}>
+                            복구
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         )}
 
