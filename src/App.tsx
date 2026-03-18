@@ -926,6 +926,56 @@ const App = () => {
     setFeedMode("active");
   };
 
+  const deleteBoard = async () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const shouldDelete = window.confirm(`'${selectedBoard.title}' 보드를 삭제할까요?`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    const remainingBoards = boards.filter((board) => board.id !== selectedBoard.id);
+    const remainingNotes = notes.filter((note) => note.boardId !== selectedBoard.id);
+
+    if (supabase && user?.id) {
+      const deleteNotesResult = await supabase
+        .from("notes")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("board_id", selectedBoard.id);
+
+      if (deleteNotesResult.error) {
+        setCloudSaveState("error");
+        return;
+      }
+
+      const deleteBoardResult = await supabase.from("boards").delete().eq("user_id", user.id).eq("id", selectedBoard.id);
+      if (deleteBoardResult.error) {
+        setCloudSaveState("error");
+        return;
+      }
+    }
+
+    if (remainingBoards.length === 0) {
+      const replacementBoard = createDefaultBoard(user?.id ?? "local");
+      replacementBoard.settings = { ...replacementBoard.settings, sidebarOrder: 0 };
+      setBoards([replacementBoard]);
+      setNotes([]);
+      setSelectedBoardId(replacementBoard.id);
+      setSelectedNoteId(null);
+      setFeedMode("active");
+      return;
+    }
+
+    setBoards(remainingBoards);
+    setNotes(remainingNotes);
+    setSelectedBoardId(remainingBoards[0]?.id ?? null);
+    setSelectedNoteId(null);
+    setFeedMode("active");
+  };
+
   const addNote = () => {
     if (!selectedBoard) {
       return;
@@ -1446,6 +1496,11 @@ const App = () => {
             <button className="new-note-pill" onClick={addNote}>
               새 메모
             </button>
+            {feedMode === "active" && selectedBoard && (
+              <button className="ghost-action ghost-danger" onClick={() => void deleteBoard()}>
+                보드 삭제
+              </button>
+            )}
             <div className="widget-menu-wrap">
               <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
                 위젯 추가
