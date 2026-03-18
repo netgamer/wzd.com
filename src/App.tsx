@@ -69,7 +69,7 @@ const createNote = (params: {
   x: 0,
   y: 0,
   w: 244,
-  h: 0,
+  h: 220,
   zIndex: params.zIndex,
   rotation: 0,
   pinned: false,
@@ -493,6 +493,10 @@ const App = () => {
       return;
     }
 
+    if (loading) {
+      return;
+    }
+
     if (skipNextCloudSaveRef.current) {
       skipNextCloudSaveRef.current = false;
       return;
@@ -513,7 +517,7 @@ const App = () => {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [boards, notes, selectedBoard?.id, user?.id]);
+  }, [boards, notes, selectedBoard?.id, user?.id, loading]);
 
   useEffect(() => {
     return () => {

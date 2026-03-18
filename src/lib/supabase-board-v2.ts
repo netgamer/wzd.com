@@ -93,6 +93,8 @@ const ensureSupabase = () => {
   }
 };
 
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
 export const createBoardV2 = async (userId: string, title = "My Board"): Promise<BoardV2> => {
   ensureSupabase();
 
@@ -185,8 +187,8 @@ export const saveBoardsV2 = async (params: { boards: BoardV2[]; notes: NoteV2[] 
       color: note.color,
       x: note.x,
       y: note.y,
-      w: note.w,
-      h: note.h,
+      w: clamp(note.w, 140, 520),
+      h: clamp(note.h, 120, 640),
       z_index: note.zIndex,
       rotation: note.rotation,
       pinned: note.pinned,
