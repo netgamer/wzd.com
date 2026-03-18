@@ -43,13 +43,6 @@ const NOTE_COLORS: { id: NoteColor; label: string }[] = [
   { id: "white", label: "화이트" }
 ];
 
-const NOTE_FONT_SIZES: { value: NoteFontSize; label: string }[] = [
-  { value: 14, label: "S" },
-  { value: 16, label: "M" },
-  { value: 18, label: "L" },
-  { value: 20, label: "XL" }
-];
-
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -209,12 +202,8 @@ const App = () => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [syncMessage, setSyncMessage] = useState("로컬 모드");
-  const [syncError, setSyncError] = useState("");
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
   const [organizeDragNoteId, setOrganizeDragNoteId] = useState<string | null>(null);
-  const [trashOpen, setTrashOpen] = useState(false);
-  const [showInspector, setShowInspector] = useState(false);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("organize");
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() =>
     typeof window !== "undefined" ? window.innerWidth <= MOBILE_BREAKPOINT : false
@@ -229,14 +218,6 @@ const App = () => {
   const isOrganizeMode = layoutMode === "organize";
 
   const activeNotes = useMemo(() => notes.filter((note) => !note.archived), [notes]);
-  const trashNotes = useMemo(
-    () => [...notes.filter((note) => note.archived)].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
-    [notes]
-  );
-  const selectedNote = useMemo(
-    () => activeNotes.find((note) => note.id === selectedNoteId) ?? null,
-    [activeNotes, selectedNoteId]
-  );
   const isToolbarVisible = !isMobileViewport || mobileMenuOpen;
   const freeCanvasHeight = useMemo(() => {
     const minHeight = isMobileViewport ? MOBILE_FREE_CANVAS_HEIGHT : DEFAULT_FREE_CANVAS_HEIGHT;
@@ -297,8 +278,6 @@ const App = () => {
       const local = loadLocalSnapshot();
       setBoard(local.board);
       setNotes(local.notes);
-      setSyncMessage("로컬 모드");
-      setSyncError("");
       setLoading(false);
       return;
     }
@@ -313,17 +292,12 @@ const App = () => {
         setBoard(payload.board);
         setNotes(payload.notes);
         setSelectedNoteId(payload.notes.find((note) => !note.archived)?.id ?? null);
-        setSyncMessage("클라우드 동기화 연결됨");
-        setSyncError("");
-        setLoading(false);
+          setLoading(false);
       })
-      .catch((error: unknown) => {
+      .catch(() => {
         if (!active) {
           return;
         }
-        const message = error instanceof Error ? error.message : "클라우드 보드 불러오기에 실패했습니다";
-        setSyncError(message);
-        setSyncMessage("로컬 모드로 동작 중");
         setLoading(false);
       });
 
@@ -373,16 +347,10 @@ const App = () => {
     }
 
     const timer = window.setTimeout(() => {
-      setSyncMessage("저장 중...");
       void saveBoardV2({ board, notes })
         .then(() => {
-          setSyncMessage("클라우드 저장 완료");
-          setSyncError("");
-        })
-        .catch((error: unknown) => {
-          const message = error instanceof Error ? error.message : "저장 실패";
-          setSyncError(message);
-          setSyncMessage("클라우드 저장 실패");
+            })
+        .catch(() => {
         });
     }, 500);
 
@@ -576,54 +544,9 @@ const App = () => {
     );
   };
 
-  const updateNoteFontSize = (noteId: string, fontSize: NoteFontSize) => {
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === noteId
-          ? {
-              ...note,
-              metadata: {
-                ...note.metadata,
-                fontSize
-              },
-              updatedAt: nowIso()
-            }
-          : note
-      )
-    );
-  };
-
   const removeNote = (noteId: string) => {
     setNotes((prev) => prev.map((note) => (note.id === noteId ? { ...note, archived: true, updatedAt: nowIso() } : note)));
     setSelectedNoteId((prev) => (prev === noteId ? null : prev));
-  };
-
-  const restoreNote = (noteId: string) => {
-    const maxZ = notes.reduce((max, note) => Math.max(max, note.zIndex), 0);
-    const canvas = canvasRef.current;
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === noteId
-          ? {
-              ...note,
-              ...(canvas && !isOrganizeMode ? clampNotePosition(note.x, note.y, note.w, note.h, canvas) : {}),
-              archived: false,
-              zIndex: maxZ + 1,
-              updatedAt: nowIso()
-            }
-          : note
-      )
-    );
-    setSelectedNoteId(noteId);
-  };
-
-  const permanentlyDeleteNote = (noteId: string) => {
-    setNotes((prev) => prev.filter((note) => note.id !== noteId));
-    setSelectedNoteId((prev) => (prev === noteId ? null : prev));
-  };
-
-  const emptyTrash = () => {
-    setNotes((prev) => prev.filter((note) => !note.archived));
   };
 
   const onCanvasDoubleClick = (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -701,10 +624,6 @@ const App = () => {
     await supabase.auth.signOut();
   };
 
-  const onToggleInspector = () => {
-    setShowInspector((prev) => !prev);
-  };
-
   const onToggleLayoutMode = () => {
     setLayoutMode((prev) => (prev === "organize" ? "free" : "organize"));
   };
@@ -718,7 +637,6 @@ const App = () => {
       return;
     }
     setSelectedNoteId(null);
-    setShowInspector(false);
   };
 
   return (
@@ -740,17 +658,6 @@ const App = () => {
           </button>
           <button className={`ghost-btn ${isOrganizeMode ? "active-mode-btn" : ""}`} onClick={onToggleLayoutMode}>
             {isOrganizeMode ? "자유배치" : "핀터레스트"}
-          </button>
-          <button
-            className={`rainbow-btn ${showInspector ? "active" : ""}`}
-            onClick={onToggleInspector}
-            aria-label="메모 설정 열기"
-            title="메모 설정"
-          >
-            <span className="rainbow-dot" aria-hidden="true" />
-          </button>
-          <button className="ghost-btn" onClick={() => setTrashOpen((prev) => !prev)}>
-            휴지통 {trashNotes.length > 0 ? `(${trashNotes.length})` : ""}
           </button>
           <input
             className="search-input"
@@ -799,7 +706,7 @@ const App = () => {
         </div>
       </header>
 
-      <main className={`workspace ${showInspector ? "inspector-open" : "inspector-hidden"}`}>
+      <main className="workspace">
         <section className="canvas-wrap">
           <div
             ref={canvasRef}
@@ -853,7 +760,6 @@ const App = () => {
                     onDrop={(event) => onOrganizeDrop(event, note.id)}
                     onMouseDown={() => {
                       setSelectedNoteId(note.id);
-                      setShowInspector(true);
                       if (!isOrganizeMode) {
                         bringToFront(note.id);
                       }
@@ -903,8 +809,7 @@ const App = () => {
                       style={{ fontSize: `${getNoteFontSize(note)}px` }}
                       onFocus={() => {
                         setSelectedNoteId(note.id);
-                        setShowInspector(true);
-                      }}
+                        }}
                       onChange={(event) => {
                         updateNote(note.id, { content: event.target.value });
                         if (isOrganizeMode) {
@@ -928,70 +833,6 @@ const App = () => {
           )}
         </section>
 
-        {showInspector && (
-          <aside className="inspector">
-            <h2>메모 설정</h2>
-            {selectedNote ? (
-              <>
-                <p className="inspector-line">
-                  선택된 메모: <strong>{selectedNote.id.slice(0, 8)}</strong>
-                </p>
-
-                <div className="size-row">
-                  {NOTE_FONT_SIZES.map((sizeOption) => (
-                    <button
-                      key={sizeOption.value}
-                      className={`ghost-btn ${getNoteFontSize(selectedNote) === sizeOption.value ? "active-font-btn" : ""}`}
-                      onClick={() => updateNoteFontSize(selectedNote.id, sizeOption.value)}
-                    >
-                      {sizeOption.label}
-                    </button>
-                  ))}
-                </div>
-                <p className="inspector-line">폰트 크기: {getNoteFontSize(selectedNote)}px</p>
-              </>
-            ) : (
-              <p className="inspector-line">메모를 선택하면 색상과 크기를 바꿀 수 있습니다.</p>
-            )}
-
-            <hr />
-            <p className="inspector-line">저장 상태: {syncMessage}</p>
-            {syncError && <p className="error-text">오류: {syncError}</p>}
-            <p className="inspector-line">활성 노트: {activeNotes.length}</p>
-            <p className="inspector-line">휴지통: {trashNotes.length}</p>
-
-            {trashOpen && (
-              <>
-                <hr />
-                <div className="trash-header">
-                  <h3>휴지통</h3>
-                  <button className="icon-btn danger" onClick={emptyTrash} disabled={trashNotes.length === 0}>
-                    비우기
-                  </button>
-                </div>
-                {trashNotes.length === 0 ? (
-                  <p className="inspector-line">휴지통이 비어 있습니다.</p>
-                ) : (
-                  <ul className="trash-list">
-                    {trashNotes.map((note) => (
-                      <li key={note.id} className="trash-item">
-                        <span>{note.content.trim() ? note.content.slice(0, 28) : "(내용 없음)"}</span>
-                        <div className="trash-actions">
-                          <button className="icon-btn" onClick={() => restoreNote(note.id)}>
-                            복구
-                          </button>
-                          <button className="icon-btn danger" onClick={() => permanentlyDeleteNote(note.id)}>
-                            삭제
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </>
-            )}
-          </aside>
-        )}
       </main>
     </div>
   );
