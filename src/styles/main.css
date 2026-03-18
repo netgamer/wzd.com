@@ -124,6 +124,7 @@ button {
   font-size: 17px;
   font-weight: 700;
   gap: 12px;
+  justify-items: center;
 }
 
 .board-chip-badge {
@@ -133,6 +134,7 @@ button {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
+  margin: 0 auto;
 }
 
 .board-chip-label {
