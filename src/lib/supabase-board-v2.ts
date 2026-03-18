@@ -155,12 +155,12 @@ export const loadBoardsV2 = async (userId: string): Promise<{ boards: BoardV2[];
   return { boards, notes };
 };
 
-export const saveBoardsV2 = async (params: { boards: BoardV2[]; notes: NoteV2[]; userId?: string }): Promise<void> => {
+export const saveBoardsV2 = async (params: { boards: BoardV2[]; notes: NoteV2[] }): Promise<void> => {
   if (!supabase) {
     return;
   }
 
-  const { boards, notes, userId } = params;
+  const { boards, notes } = params;
 
   if (boards.length > 0) {
     const boardRows = boards.map((board) => ({
@@ -205,28 +205,6 @@ export const saveBoardsV2 = async (params: { boards: BoardV2[]; notes: NoteV2[];
   }
 
   const boardIds = boards.map((board) => board.id);
-  const effectiveUserId = userId ?? boards[0]?.userId ?? notes[0]?.userId;
-  if (!effectiveUserId) {
-    return;
-  }
-
-  const remoteBoards = await supabase.from("boards").select("id").eq("user_id", effectiveUserId);
-  if (remoteBoards.error) {
-    throw remoteBoards.error;
-  }
-
-  const localBoardIdSet = new Set(boardIds);
-  const staleBoardIds = (remoteBoards.data ?? [])
-    .map((row: { id: string }) => row.id)
-    .filter((id) => !localBoardIdSet.has(id));
-
-  if (staleBoardIds.length > 0) {
-    const deleteBoardsResult = await supabase.from("boards").delete().in("id", staleBoardIds);
-    if (deleteBoardsResult.error) {
-      throw deleteBoardsResult.error;
-    }
-  }
-
   if (boardIds.length === 0) {
     return;
   }

@@ -282,18 +282,7 @@ const isDisposableEmptyNote = (note: NoteV2) => {
 const sanitizeNotes = (notes: NoteV2[]) => notes.filter((note) => !isDisposableEmptyNote(note));
 const pruneEmptyBoards = (snapshot: LocalSnapshot): LocalSnapshot => {
   const notes = sanitizeNotes(snapshot.notes);
-  const usedBoardIds = new Set(notes.map((note) => note.boardId));
-  let boards = snapshot.boards.filter((board) => usedBoardIds.has(board.id));
-
-  if (boards.length === 0 && snapshot.boards.length > 0) {
-    const fallbackBoard =
-      snapshot.boards.find((board) => board.id === snapshot.selectedBoardId) ??
-      sortBoards(snapshot.boards)[0] ??
-      snapshot.boards[0];
-    boards = fallbackBoard ? [fallbackBoard] : [];
-  }
-
-  const keptBoardIds = new Set(boards.map((board) => board.id));
+  const boards = snapshot.boards;
   const selectedBoardId =
     boards.some((board) => board.id === snapshot.selectedBoardId)
       ? snapshot.selectedBoardId
@@ -301,7 +290,7 @@ const pruneEmptyBoards = (snapshot: LocalSnapshot): LocalSnapshot => {
 
   return {
     boards,
-    notes: notes.filter((note) => keptBoardIds.has(note.boardId)),
+    notes,
     selectedBoardId
   };
 };
@@ -514,12 +503,11 @@ const App = () => {
     const pruned = pruneEmptyBoards({
       boards: latestBoardsRef.current,
       notes: latestNotesRef.current,
-      selectedBoardId: selectedBoardId
+      selectedBoardId
     });
     await saveBoardsV2({
       boards: pruned.boards,
-      notes: pruned.notes,
-      userId: latestUserIdRef.current ?? undefined
+      notes: pruned.notes
     });
   };
 
@@ -577,7 +565,7 @@ const App = () => {
       selectedBoardId: importedBoards[0]?.id ?? remoteBoards[0]?.id ?? null
     });
 
-    await saveBoardsV2({ boards: merged.boards, notes: merged.notes, userId });
+    await saveBoardsV2({ boards: merged.boards, notes: merged.notes });
     clearLocalSnapshot();
 
     return merged;
