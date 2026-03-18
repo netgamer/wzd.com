@@ -307,7 +307,7 @@ button {
 .pin-board {
   display: grid;
   grid-template-columns: repeat(var(--pin-columns, 4), minmax(0, 244px));
-  align-items: start;
+  align-items: stretch;
   gap: 18px;
 }
 
@@ -316,6 +316,7 @@ button {
   flex-direction: column;
   gap: 18px;
   min-width: 0;
+  min-height: 100%;
 }
 
 .pin-card {
