@@ -1091,7 +1091,13 @@ const App = () => {
                       }
                     }
                   }}
-                  onDrop={(event) => onPinDrop(event, undefined, columnIndex)}
+                  onDrop={(event) =>
+                    onPinDrop(
+                      event,
+                      dragPreviewColumn === columnIndex ? dragPreviewNoteId ?? undefined : undefined,
+                      columnIndex
+                    )
+                  }
                 >
                   {columnNotes.map((note) => {
                     const selected = selectedNoteId === note.id;
