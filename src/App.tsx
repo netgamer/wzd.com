@@ -909,7 +909,7 @@ const App = () => {
                       }
                     }}
                     onDrop={(event) => onPinDrop(event, note.id)}
-                    onMouseDown={() => setSelectedNoteId(note.id)}
+                    onClick={() => setSelectedNoteId(note.id)}
                   >
                     {previewUrl && isImageUrl(previewUrl) && (
                       <div className="pin-image-wrap">
