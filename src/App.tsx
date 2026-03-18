@@ -1176,6 +1176,9 @@ const App = () => {
                     const previewUrl = extractFirstUrl(note.content);
                     const previewText = stripUrls(note.content);
                     const linkPreview = previewUrl && !isImageUrl(previewUrl) ? linkPreviews[previewUrl] : undefined;
+                    const hasImagePreview = Boolean(previewUrl && isImageUrl(previewUrl));
+                    const hasTextPreview = previewText.trim().length > 0;
+                    const useImageHeroCard = hasImagePreview && !selected;
                     const showDropPreview =
                       runningDragNoteId !== null &&
                       dragPreviewNoteId === note.id &&
@@ -1186,9 +1189,9 @@ const App = () => {
                       <div key={note.id}>
                         {showDropPreview && <article className="pin-card pin-drop-preview" aria-hidden="true" />}
                         <article
-                          className={`pin-card note-${note.color} ${selected ? "selected" : ""} ${
-                            runningDragNoteId === note.id ? "dragging" : ""
-                          }`}
+                          className={`pin-card note-${note.color} ${useImageHeroCard ? "image-note" : ""} ${
+                            hasTextPreview ? "has-hover-copy" : "image-only"
+                          } ${selected ? "selected" : ""} ${runningDragNoteId === note.id ? "dragging" : ""}`}
                           draggable={feedMode === "active" && !selected}
                           onDragStart={(event) => onPinDragStart(event, note.id)}
                           onDragEnd={() => {
@@ -1216,7 +1219,7 @@ const App = () => {
                             setSelectedNoteId(note.id);
                           }}
                         >
-                          {previewUrl && isImageUrl(previewUrl) && (
+                          {hasImagePreview && (
                             <div className="pin-image-wrap">
                               <img
                                 className="pin-image"
@@ -1272,7 +1275,7 @@ const App = () => {
                           </div>
 
                           <div className="pin-card-body">
-                            <p className="pin-title">{getNoteTitle(note.content)}</p>
+                            {(!useImageHeroCard || hasTextPreview) && <p className="pin-title">{getNoteTitle(note.content)}</p>}
 
                             {selected ? (
                               <textarea
@@ -1291,7 +1294,7 @@ const App = () => {
                               />
                             ) : (
                               <>
-                                {previewUrl && !isImageUrl(previewUrl) &&
+                                {previewUrl && !hasImagePreview &&
                                   (linkPreview ? (
                                     <a
                                       className="link-preview-card"
@@ -1328,9 +1331,11 @@ const App = () => {
                                       {previewUrl}
                                     </a>
                                   ))}
-                                <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                                  {previewText || (previewUrl ? getUrlSnippet(previewUrl) : "메모를 클릭해서 편집하세요.")}
-                                </p>
+                                {(!useImageHeroCard || hasTextPreview) && (
+                                  <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
+                                    {previewText || (previewUrl ? getUrlSnippet(previewUrl) : "메모를 클릭해서 편집하세요.")}
+                                  </p>
+                                )}
                               </>
                             )}
                           </div>
