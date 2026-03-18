@@ -48,6 +48,10 @@ button {
   background: linear-gradient(180deg, #fffefb, #fbf7f0);
 }
 
+.pin-page.sidebar-expanded {
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+
 .pin-sidebar {
   position: sticky;
   top: 0;
@@ -59,6 +63,12 @@ button {
   padding: 18px 0;
   background: rgba(255, 255, 255, 0.92);
   border-right: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.pin-sidebar.expanded {
+  align-items: stretch;
+  padding: 18px 12px;
 }
 
 .board-switcher {
@@ -67,6 +77,52 @@ button {
   align-items: center;
   gap: 12px;
   width: 100%;
+}
+
+.board-menu {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.board-menu-toggle {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-soft);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.board-menu-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(230, 0, 35, 0.08);
+  color: var(--accent);
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.board-menu-label {
+  display: none;
+  flex: 1;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.board-menu-caret {
+  display: none;
+  color: var(--muted);
+  font-size: 18px;
 }
 
 .pin-brand,
@@ -99,6 +155,28 @@ button {
   color: var(--text);
   font-size: 17px;
   font-weight: 700;
+  gap: 12px;
+}
+
+.board-chip-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.board-chip-label {
+  display: none;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .board-chip.active {
@@ -116,6 +194,33 @@ button {
 
 .board-chip.active:hover {
   background: var(--accent);
+}
+
+.pin-sidebar.expanded .board-switcher {
+  align-items: stretch;
+}
+
+.pin-sidebar.expanded .board-menu-label,
+.pin-sidebar.expanded .board-menu-caret,
+.pin-sidebar.expanded .board-chip-label {
+  display: block;
+}
+
+.pin-sidebar.expanded .board-chip {
+  width: 100%;
+  height: auto;
+  min-height: 46px;
+  justify-content: flex-start;
+  padding: 0 6px 0 0;
+}
+
+.pin-sidebar.expanded .board-chip-badge {
+  background: transparent;
+}
+
+.pin-sidebar.expanded .pin-brand,
+.pin-sidebar.expanded .side-icon {
+  margin-inline: auto;
 }
 
 .sidebar-spacer {

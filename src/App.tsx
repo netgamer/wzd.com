@@ -381,6 +381,7 @@ const App = () => {
   const [cloudSaveState, setCloudSaveState] = useState<CloudSaveState>("idle");
   const [columnCount, setColumnCount] = useState(() => getColumnCount());
   const [linkPreviews, setLinkPreviews] = useState<Record<string, LinkPreviewState>>({});
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -971,28 +972,43 @@ const App = () => {
   };
 
   return (
-    <div className="pin-page">
-      <aside className="pin-sidebar">
+    <div className={`pin-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+      <aside className={`pin-sidebar ${sidebarExpanded ? "expanded" : ""}`}>
         <button className="pin-brand" aria-label="WZD 홈">
           <span>W</span>
         </button>
 
-        <div className="board-switcher">
-          {boards.map((boardItem) => (
-            <button
-              key={boardItem.id}
-              className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
-              onClick={() => {
-                setSelectedBoardId(boardItem.id);
-                setSelectedNoteId(null);
-                setFeedMode("active");
-              }}
-              aria-label={boardItem.title}
-              title={boardItem.title}
-            >
-              {getBoardBadge(boardItem.title)}
-            </button>
-          ))}
+        <div className="board-menu">
+          <button
+            className={`board-menu-toggle ${sidebarExpanded ? "expanded" : ""}`}
+            onClick={() => setSidebarExpanded((prev) => !prev)}
+            aria-label="?? ?? ??"
+          >
+            <span className="board-menu-icon">{selectedBoard ? getBoardBadge(selectedBoard.title) : "B"}</span>
+            <span className="board-menu-label">?? ??</span>
+            <span className="board-menu-caret" aria-hidden="true">
+              {sidebarExpanded ? "?" : "?"}
+            </span>
+          </button>
+
+          <div className="board-switcher">
+            {boards.map((boardItem) => (
+              <button
+                key={boardItem.id}
+                className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
+                onClick={() => {
+                  setSelectedBoardId(boardItem.id);
+                  setSelectedNoteId(null);
+                  setFeedMode("active");
+                }}
+                aria-label={boardItem.title}
+                title={boardItem.title}
+              >
+                <span className="board-chip-badge">{getBoardBadge(boardItem.title)}</span>
+                <span className="board-chip-label">{boardItem.title}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <button className="side-icon" onClick={() => void addBoard()} aria-label="새 보드">
