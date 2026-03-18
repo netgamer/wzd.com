@@ -166,7 +166,8 @@ export const saveBoardsV2 = async (params: { boards: BoardV2[]; notes: NoteV2[] 
       title: board.title,
       description: board.description,
       background_style: board.backgroundStyle,
-      settings: board.settings
+      settings: board.settings,
+      updated_at: board.updatedAt
     }));
 
     const boardWrite = await supabase.from("boards").upsert(boardRows);
@@ -190,7 +191,8 @@ export const saveBoardsV2 = async (params: { boards: BoardV2[]; notes: NoteV2[] 
       rotation: note.rotation,
       pinned: note.pinned,
       archived: note.archived,
-      metadata: note.metadata
+      metadata: note.metadata,
+      updated_at: note.updatedAt
     }));
 
     const noteWrite = await supabase.from("notes").upsert(noteRows);

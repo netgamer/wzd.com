@@ -562,6 +562,7 @@ const App = () => {
     });
 
     setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
     setFeedMode("active");
     setSelectedNoteId(note.id);
     setVisibleNoteCount((prev) => Math.max(prev, 1));
@@ -592,18 +593,41 @@ const App = () => {
     setEditingBoardTitle(false);
   };
 
-  const updateNote = (noteId: string, patch: Partial<NoteV2>) => {
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === noteId
+  const touchBoard = (boardId: string) => {
+    const timestamp = nowIso();
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === boardId
           ? {
-              ...note,
-              ...patch,
-              updatedAt: nowIso()
+              ...board,
+              updatedAt: timestamp
             }
-          : note
+          : board
       )
     );
+  };
+
+  const updateNote = (noteId: string, patch: Partial<NoteV2>) => {
+    let touchedBoardId: string | null = null;
+
+    setNotes((prev) =>
+      prev.map((note) => {
+        if (note.id !== noteId) {
+          return note;
+        }
+
+        touchedBoardId = note.boardId;
+        return {
+          ...note,
+          ...patch,
+          updatedAt: nowIso()
+        };
+      })
+    );
+
+    if (touchedBoardId) {
+      touchBoard(touchedBoardId);
+    }
   };
 
   const updateNoteFontSize = (noteId: string, fontSize: NoteFontSize) => {
@@ -635,7 +659,11 @@ const App = () => {
   };
 
   const deleteArchivedNote = (noteId: string) => {
+    const targetNote = notes.find((note) => note.id === noteId);
     setNotes((prev) => prev.filter((note) => note.id !== noteId));
+    if (targetNote) {
+      touchBoard(targetNote.boardId);
+    }
     setSelectedNoteId((prev) => (prev === noteId ? null : prev));
   };
 
@@ -668,7 +696,11 @@ const App = () => {
       return;
     }
 
+    const draggedNote = notes.find((note) => note.id === draggedNoteId);
     setNotes((prev) => reorderNotes(prev, draggedNoteId, targetNoteId));
+    if (draggedNote) {
+      touchBoard(draggedNote.boardId);
+    }
     setRunningDragNoteId(null);
   };
 
