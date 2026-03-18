@@ -1442,13 +1442,6 @@ const App = () => {
                                   <div className="widget-editor-stack">
                                     <input
                                       className="widget-input"
-                                      value={note.content}
-                                      onMouseDown={(event) => event.stopPropagation()}
-                                      onChange={(event) => updateNote(note.id, { content: event.target.value })}
-                                      placeholder="위젯 제목"
-                                    />
-                                    <input
-                                      className="widget-input"
                                       value={rssFeedUrl}
                                       onMouseDown={(event) => event.stopPropagation()}
                                       onChange={(event) =>
@@ -1462,6 +1455,15 @@ const App = () => {
                                       }
                                       placeholder="RSS 피드 URL"
                                     />
+                                    <button
+                                      className="widget-confirm"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setSelectedNoteId(null);
+                                      }}
+                                    >
+                                      확인
+                                    </button>
                                   </div>
                                 ) : (
                                   <div className="rss-widget-feed">

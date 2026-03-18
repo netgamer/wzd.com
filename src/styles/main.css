@@ -640,6 +640,15 @@ button {
   outline: none;
 }
 
+.widget-confirm {
+  min-height: 40px;
+  border-radius: 14px;
+  background: var(--text);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .rss-feed-source {
   color: var(--text);
   font-size: 13px;
