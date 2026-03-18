@@ -139,12 +139,61 @@ const loadLocalSnapshot = (): LocalSnapshot => {
   }
 };
 
+const readStoredLocalSnapshot = (): LocalSnapshot | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return migrateLocalSnapshot(raw);
+  } catch {
+    return null;
+  }
+};
+
 const saveLocalSnapshot = (snapshot: LocalSnapshot) => {
   if (typeof window === "undefined") {
     return;
   }
 
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshot));
+};
+
+const clearLocalSnapshot = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  localStorage.removeItem(LOCAL_STORAGE_KEY);
+};
+
+const normalizeSnapshotForCompare = (snapshot: LocalSnapshot) => ({
+  boards: snapshot.boards.map((board) => ({
+    title: board.title,
+    description: board.description,
+    backgroundStyle: board.backgroundStyle
+  })),
+  notes: snapshot.notes.map((note) => ({
+    content: note.content,
+    color: note.color,
+    pinned: note.pinned,
+    archived: note.archived,
+    fontSize: note.metadata?.fontSize ?? DEFAULT_FONT_SIZE
+  }))
+});
+
+const hasCustomLocalSnapshot = (snapshot: LocalSnapshot | null) => {
+  if (!snapshot) {
+    return false;
+  }
+
+  const defaultSnapshot = createDefaultSnapshot();
+  return JSON.stringify(normalizeSnapshotForCompare(snapshot)) !== JSON.stringify(normalizeSnapshotForCompare(defaultSnapshot));
 };
 
 const getNoteFontSize = (note: NoteV2): NoteFontSize => {
@@ -243,6 +292,45 @@ const App = () => {
     [boards, selectedBoardId]
   );
 
+  const mergeLocalSnapshotToCloud = async (userId: string, remoteBoards: BoardV2[], remoteNotes: NoteV2[]) => {
+    const localSnapshot = readStoredLocalSnapshot();
+    if (!hasCustomLocalSnapshot(localSnapshot)) {
+      return { boards: remoteBoards, notes: remoteNotes, selectedBoardId: remoteBoards[0]?.id ?? null };
+    }
+
+    const timestamp = nowIso();
+    const importedBoards = localSnapshot!.boards.map((board, index) => ({
+      ...board,
+      id: makeId(),
+      userId,
+      title: board.title || `Imported Board ${index + 1}`,
+      updatedAt: timestamp
+    }));
+
+    const boardIdMap = new Map(localSnapshot!.boards.map((board, index) => [board.id, importedBoards[index].id]));
+
+    const importedNotes = localSnapshot!.notes.map((note, index) => ({
+      ...note,
+      id: makeId(),
+      boardId: boardIdMap.get(note.boardId) ?? importedBoards[0]?.id ?? makeId(),
+      userId,
+      zIndex: index + 1,
+      updatedAt: timestamp
+    }));
+
+    const mergedBoards = [...importedBoards, ...remoteBoards];
+    const mergedNotes = [...importedNotes, ...remoteNotes];
+
+    await saveBoardsV2({ boards: mergedBoards, notes: mergedNotes });
+    clearLocalSnapshot();
+
+    return {
+      boards: mergedBoards,
+      notes: mergedNotes,
+      selectedBoardId: importedBoards[0]?.id ?? remoteBoards[0]?.id ?? null
+    };
+  };
+
   const boardNotes = useMemo(
     () => notes.filter((note) => note.boardId === selectedBoard?.id),
     [notes, selectedBoard?.id]
@@ -321,15 +409,20 @@ const App = () => {
     setLoading(true);
 
     loadBoardsV2(user.id)
-      .then((payload) => {
+      .then(async (payload) => {
+        if (!active) {
+          return;
+        }
+
+        const merged = await mergeLocalSnapshotToCloud(user.id, payload.boards, payload.notes);
         if (!active) {
           return;
         }
 
         skipNextCloudSaveRef.current = true;
-        setBoards(payload.boards);
-        setNotes(payload.notes);
-        setSelectedBoardId(payload.boards[0]?.id ?? null);
+        setBoards(merged.boards);
+        setNotes(merged.notes);
+        setSelectedBoardId(merged.selectedBoardId);
         setSelectedNoteId(null);
         setLoading(false);
       })
