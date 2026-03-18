@@ -879,7 +879,6 @@ const App = () => {
             onDragOver={(event) => {
               if (feedMode === "active") {
                 event.preventDefault();
-                setDragPreviewNoteId(null);
               }
             }}
             onDrop={(event) => onPinDrop(event)}
