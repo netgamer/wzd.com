@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   type DragEvent as ReactDragEvent,
   useEffect,
   useMemo,
@@ -203,46 +204,6 @@ const getNoteFontSize = (note: NoteV2): NoteFontSize => {
   return value === 14 || value === 16 || value === 18 || value === 20 ? value : DEFAULT_FONT_SIZE;
 };
 
-const reorderNotes = (notes: NoteV2[], draggedNoteId: string, targetNoteId?: string): NoteV2[] => {
-  const dragged = notes.find((note) => note.id === draggedNoteId);
-  if (!dragged) {
-    return notes;
-  }
-
-  const boardId = dragged.boardId;
-  const boardActiveNotes = notes
-    .filter((note) => note.boardId === boardId && !note.archived)
-    .sort((a, b) => a.zIndex - b.zIndex);
-  const boardArchivedNotes = notes.filter((note) => note.boardId === boardId && note.archived);
-  const otherNotes = notes.filter((note) => note.boardId !== boardId);
-
-  const sourceIndex = boardActiveNotes.findIndex((note) => note.id === draggedNoteId);
-  if (sourceIndex < 0) {
-    return notes;
-  }
-
-  const [moved] = boardActiveNotes.splice(sourceIndex, 1);
-
-  if (targetNoteId) {
-    const targetIndex = boardActiveNotes.findIndex((note) => note.id === targetNoteId);
-    if (targetIndex >= 0) {
-      boardActiveNotes.splice(targetIndex, 0, moved);
-    } else {
-      boardActiveNotes.push(moved);
-    }
-  } else {
-    boardActiveNotes.push(moved);
-  }
-
-  const reordered = boardActiveNotes.map((note, index) => ({
-    ...note,
-    zIndex: index + 1,
-    updatedAt: nowIso()
-  }));
-
-  return [...otherNotes, ...reordered, ...boardArchivedNotes];
-};
-
 const extractFirstUrl = (content: string) => {
   const match = content.match(/https?:\/\/\S+/i);
   return match?.[0] ?? "";
@@ -276,6 +237,116 @@ const makeBoardTitle = (boards: BoardV2[]) => {
 const isInteractiveElement = (target: EventTarget | null) =>
   target instanceof HTMLElement && Boolean(target.closest("textarea, input, button, a"));
 
+const getColumnCount = () => {
+  if (typeof window === "undefined") {
+    return 4;
+  }
+
+  if (window.innerWidth < 720) {
+    return 1;
+  }
+
+  if (window.innerWidth < 1080) {
+    return 2;
+  }
+
+  if (window.innerWidth < 1480) {
+    return 3;
+  }
+
+  return 4;
+};
+
+const getNoteColumn = (note: NoteV2, columnCount: number) => {
+  const value = note.metadata?.column;
+  if (typeof value === "number" && value >= 0 && value < columnCount) {
+    return value;
+  }
+
+  return Math.abs((note.zIndex - 1) % columnCount);
+};
+
+const groupNotesByColumn = (notes: NoteV2[], columnCount: number) => {
+  const columns = Array.from({ length: columnCount }, () => [] as NoteV2[]);
+
+  [...notes]
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) {
+        return a.pinned ? -1 : 1;
+      }
+
+      return a.zIndex - b.zIndex;
+    })
+    .forEach((note) => {
+      columns[getNoteColumn(note, columnCount)]?.push(note);
+    });
+
+  return columns;
+};
+
+const reorderNotes = (
+  notes: NoteV2[],
+  draggedNoteId: string,
+  targetNoteId: string | undefined,
+  targetColumn: number,
+  columnCount: number
+): NoteV2[] => {
+  const dragged = notes.find((note) => note.id === draggedNoteId);
+  if (!dragged) {
+    return notes;
+  }
+
+  const boardId = dragged.boardId;
+  const boardActiveNotes = notes
+    .filter((note) => note.boardId === boardId && !note.archived)
+    .sort((a, b) => a.zIndex - b.zIndex);
+  const boardArchivedNotes = notes.filter((note) => note.boardId === boardId && note.archived);
+  const otherNotes = notes.filter((note) => note.boardId !== boardId);
+  const columns = groupNotesByColumn(boardActiveNotes, columnCount);
+  const sourceColumn = getNoteColumn(dragged, columnCount);
+
+  columns[sourceColumn] = columns[sourceColumn].filter((note) => note.id !== draggedNoteId);
+
+  const destinationColumn = targetNoteId
+    ? getNoteColumn(boardActiveNotes.find((note) => note.id === targetNoteId) ?? dragged, columnCount)
+    : targetColumn;
+
+  const movedNote = {
+    ...dragged,
+    metadata: {
+      ...dragged.metadata,
+      column: destinationColumn
+    }
+  };
+
+  if (targetNoteId) {
+    const targetIndex = columns[destinationColumn].findIndex((note) => note.id === targetNoteId);
+    if (targetIndex >= 0) {
+      columns[destinationColumn].splice(targetIndex, 0, movedNote);
+    } else {
+      columns[destinationColumn].push(movedNote);
+    }
+  } else {
+    columns[destinationColumn].push(movedNote);
+  }
+
+  let nextZIndex = 1;
+  const updatedAt = nowIso();
+  const reordered = columns.flatMap((column, columnIndex) =>
+    column.map((note) => ({
+      ...note,
+      zIndex: nextZIndex++,
+      metadata: {
+        ...note.metadata,
+        column: columnIndex
+      },
+      updatedAt
+    }))
+  );
+
+  return [...otherNotes, ...reordered, ...boardArchivedNotes];
+};
+
 const App = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [boards, setBoards] = useState<BoardV2[]>(() => createDefaultSnapshot().boards);
@@ -288,9 +359,11 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [runningDragNoteId, setRunningDragNoteId] = useState<string | null>(null);
   const [dragPreviewNoteId, setDragPreviewNoteId] = useState<string | null>(null);
+  const [dragPreviewColumn, setDragPreviewColumn] = useState<number | null>(null);
   const [visibleNoteCount, setVisibleNoteCount] = useState(INITIAL_VISIBLE_NOTE_COUNT);
   const [feedMode, setFeedMode] = useState<FeedMode>("active");
   const [cloudSaveState, setCloudSaveState] = useState<CloudSaveState>("idle");
+  const [columnCount, setColumnCount] = useState(() => getColumnCount());
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -315,6 +388,19 @@ const App = () => {
   useEffect(() => {
     latestUserIdRef.current = user?.id ?? null;
   }, [user?.id]);
+
+  useEffect(() => {
+    const onResize = () => {
+      setColumnCount(getColumnCount());
+    };
+
+    window.addEventListener("resize", onResize);
+    onResize();
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
 
   const persistCloudSnapshot = async () => {
     if (!supabase || !latestUserIdRef.current) {
@@ -406,6 +492,10 @@ const App = () => {
   const visibleNotes = useMemo(
     () => filteredNotes.slice(0, visibleNoteCount),
     [filteredNotes, visibleNoteCount]
+  );
+  const visibleColumns = useMemo(
+    () => groupNotesByColumn(visibleNotes, columnCount),
+    [visibleNotes, columnCount]
   );
 
   useEffect(() => {
@@ -763,11 +853,13 @@ const App = () => {
 
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", noteId);
+    const draggedNote = notes.find((note) => note.id === noteId);
     setRunningDragNoteId(noteId);
     setDragPreviewNoteId(noteId);
+    setDragPreviewColumn(draggedNote ? getNoteColumn(draggedNote, columnCount) : 0);
   };
 
-  const onPinDrop = (event: ReactDragEvent<HTMLElement>, targetNoteId?: string) => {
+  const onPinDrop = (event: ReactDragEvent<HTMLElement>, targetNoteId?: string, targetColumn?: number) => {
     if (feedMode !== "active") {
       return;
     }
@@ -777,17 +869,20 @@ const App = () => {
     if (!draggedNoteId || draggedNoteId === targetNoteId) {
       setRunningDragNoteId(null);
       setDragPreviewNoteId(null);
+      setDragPreviewColumn(null);
       return;
     }
 
     const draggedNote = notes.find((note) => note.id === draggedNoteId);
-    setNotes((prev) => reorderNotes(prev, draggedNoteId, targetNoteId));
+    const fallbackColumn = draggedNote ? getNoteColumn(draggedNote, columnCount) : 0;
+    setNotes((prev) => reorderNotes(prev, draggedNoteId, targetNoteId, targetColumn ?? fallbackColumn, columnCount));
     if (draggedNote) {
       touchBoard(draggedNote.boardId);
     }
     suppressNextCardClickRef.current = true;
     setRunningDragNoteId(null);
     setDragPreviewNoteId(null);
+    setDragPreviewColumn(null);
   };
 
   const onBoardBackgroundMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -963,168 +1058,187 @@ const App = () => {
 
           <section
             className="pin-board"
+            style={{ "--pin-columns": String(columnCount) } as CSSProperties}
             onMouseDown={onBoardBackgroundMouseDown}
             onDragOver={(event) => {
               if (feedMode === "active") {
                 event.preventDefault();
               }
             }}
-            onDrop={(event) => onPinDrop(event)}
+            onDrop={(event) => onPinDrop(event, undefined, dragPreviewColumn ?? 0)}
           >
             {loading ? (
-              <div className="feed-empty">메모를 불러오는 중입니다.</div>
+              <div className="feed-empty">??? ???? ????.</div>
             ) : !selectedBoard ? (
-              <div className="feed-empty">왼쪽의 + 버튼으로 첫 보드를 만들어보세요.</div>
+              <div className="feed-empty">??? + ???? ? ??? ??????.</div>
             ) : visibleNotes.length === 0 ? (
               <div className="feed-empty">
-                {feedMode === "active" ? "이 보드의 첫 메모를 추가해보세요." : "보관된 메모가 없습니다."}
+                {feedMode === "active" ? "? ??? ? ??? ??????." : "??? ??? ????."}
               </div>
             ) : (
-              visibleNotes.map((note) => {
-                const selected = selectedNoteId === note.id;
-                const fontSize = getNoteFontSize(note);
-                const previewUrl = extractFirstUrl(note.content);
-                const previewText = stripUrls(note.content);
-                const showDropPreview =
-                  runningDragNoteId !== null &&
-                  dragPreviewNoteId === note.id &&
-                  runningDragNoteId !== note.id;
+              visibleColumns.map((columnNotes, columnIndex) => (
+                <div
+                  key={`column-${columnIndex}`}
+                  className="pin-column"
+                  onDragOver={(event) => {
+                    if (feedMode === "active") {
+                      event.preventDefault();
+                      setDragPreviewNoteId(null);
+                      setDragPreviewColumn(columnIndex);
+                    }
+                  }}
+                  onDrop={(event) => onPinDrop(event, undefined, columnIndex)}
+                >
+                  {columnNotes.map((note) => {
+                    const selected = selectedNoteId === note.id;
+                    const fontSize = getNoteFontSize(note);
+                    const previewUrl = extractFirstUrl(note.content);
+                    const previewText = stripUrls(note.content);
+                    const showDropPreview =
+                      runningDragNoteId !== null &&
+                      dragPreviewNoteId === note.id &&
+                      dragPreviewColumn === columnIndex &&
+                      runningDragNoteId !== note.id;
 
-                return (
-                  <>
-                    {showDropPreview && <article className="pin-card pin-drop-preview" aria-hidden="true" />}
-                    <article
-                      key={note.id}
-                      className={`pin-card note-${note.color} ${selected ? "selected" : ""} ${
-                        runningDragNoteId === note.id ? "dragging" : ""
-                      }`}
-                      draggable={feedMode === "active"}
-                      onDragStart={(event) => onPinDragStart(event, note.id)}
-                      onDragEnd={() => {
-                        suppressNextCardClickRef.current = true;
-                        setRunningDragNoteId(null);
-                        setDragPreviewNoteId(null);
-                      }}
-                      onDragEnter={() => {
-                        if (feedMode === "active" && runningDragNoteId !== note.id) {
-                          setDragPreviewNoteId(note.id);
-                        }
-                      }}
-                      onDragOver={(event) => {
-                        if (feedMode === "active") {
-                          event.preventDefault();
-                          if (runningDragNoteId !== note.id) {
-                            setDragPreviewNoteId(note.id);
-                          }
-                        }
-                      }}
-                      onDrop={(event) => onPinDrop(event, note.id)}
-                      onClick={() => {
-                        if (suppressNextCardClickRef.current) {
-                          suppressNextCardClickRef.current = false;
-                          return;
-                        }
-
-                        setSelectedNoteId(note.id);
-                      }}
-                    >
-                      {previewUrl && isImageUrl(previewUrl) && (
-                        <div className="pin-image-wrap">
-                          <img className="pin-image" src={previewUrl} alt={getNoteTitle(note.content)} />
-                        </div>
-                      )}
-
-                      <div className="pin-card-head">
-                        <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
-                        <div className="pin-actions">
-                          <button
-                            className={`note-color-toggle chip-${note.color}`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              cycleNoteColor(note.id, note.color);
-                            }}
-                            aria-label="메모 색상 변경"
-                            title="메모 색상 변경"
-                          />
-                          <button
-                            className="pin-icon-button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (feedMode === "active") {
-                                updateNote(note.id, { pinned: !note.pinned });
-                              } else {
-                                restoreNote(note.id);
+                    return (
+                      <div key={note.id}>
+                        {showDropPreview && <article className="pin-card pin-drop-preview" aria-hidden="true" />}
+                        <article
+                          className={`pin-card note-${note.color} ${selected ? "selected" : ""} ${
+                            runningDragNoteId === note.id ? "dragging" : ""
+                          }`}
+                          draggable={feedMode === "active"}
+                          onDragStart={(event) => onPinDragStart(event, note.id)}
+                          onDragEnd={() => {
+                            suppressNextCardClickRef.current = true;
+                            setRunningDragNoteId(null);
+                            setDragPreviewNoteId(null);
+                            setDragPreviewColumn(null);
+                          }}
+                          onDragEnter={() => {
+                            if (feedMode === "active" && runningDragNoteId !== note.id) {
+                              setDragPreviewNoteId(note.id);
+                              setDragPreviewColumn(columnIndex);
+                            }
+                          }}
+                          onDragOver={(event) => {
+                            if (feedMode === "active") {
+                              event.preventDefault();
+                              if (runningDragNoteId !== note.id) {
+                                setDragPreviewNoteId(note.id);
+                                setDragPreviewColumn(columnIndex);
                               }
-                            }}
-                            aria-label={feedMode === "active" ? "핀 고정" : "메모 복구"}
-                            title={feedMode === "active" ? "핀 고정" : "메모 복구"}
-                          >
-                            {feedMode === "active" ? "⌖" : "↺"}
-                          </button>
-                          <button
-                            className="pin-icon-button danger"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (feedMode === "active") {
-                                archiveNote(note.id);
-                              } else {
-                                deleteArchivedNote(note.id);
-                              }
-                            }}
-                            aria-label={feedMode === "active" ? "메모 보관" : "메모 삭제"}
-                            title={feedMode === "active" ? "메모 보관" : "메모 삭제"}
-                          >
-                            {feedMode === "active" ? "✕" : "⌫"}
-                          </button>
-                        </div>
-                      </div>
+                            }
+                          }}
+                          onDrop={(event) => onPinDrop(event, note.id, columnIndex)}
+                          onClick={() => {
+                            if (suppressNextCardClickRef.current) {
+                              suppressNextCardClickRef.current = false;
+                              return;
+                            }
 
-                      <div className="pin-card-body">
-                        <p className="pin-title">{getNoteTitle(note.content)}</p>
+                            setSelectedNoteId(note.id);
+                          }}
+                        >
+                          {previewUrl && isImageUrl(previewUrl) && (
+                            <div className="pin-image-wrap">
+                              <img className="pin-image" src={previewUrl} alt={getNoteTitle(note.content)} />
+                            </div>
+                          )}
 
-                      {selected ? (
-                        <>
-                          <textarea
-                            className="pin-editor"
-                            value={note.content}
-                              style={{ fontSize: `${fontSize}px` }}
-                              onMouseDown={(event) => event.stopPropagation()}
-                              onFocus={() => setSelectedNoteId(note.id)}
-                              onChange={(event) => {
-                                updateNote(note.id, { content: event.target.value });
-                                event.currentTarget.style.height = "0px";
-                                event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-                              }}
-                              placeholder="메모, 링크, 이미지 URL을 입력하세요"
-                              rows={1}
-                            />
-                          </>
-                        ) : (
-                          <>
-                            {previewUrl && !isImageUrl(previewUrl) && (
-                              <a
-                                className="link-chip"
-                                href={previewUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(event) => event.stopPropagation()}
+                          <div className="pin-card-head">
+                            <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
+                            <div className="pin-actions">
+                              <button
+                                className={`note-color-toggle chip-${note.color}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  cycleNoteColor(note.id, note.color);
+                                }}
+                                aria-label="?? ?? ??"
+                                title="?? ?? ??"
+                              />
+                              <button
+                                className="pin-icon-button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  if (feedMode === "active") {
+                                    updateNote(note.id, { pinned: !note.pinned });
+                                  } else {
+                                    restoreNote(note.id);
+                                  }
+                                }}
+                                aria-label={feedMode === "active" ? "? ??" : "?? ??"}
+                                title={feedMode === "active" ? "? ??" : "?? ??"}
                               >
-                                {previewUrl}
-                              </a>
+                                {feedMode === "active" ? "?" : "?"}
+                              </button>
+                              <button
+                                className="pin-icon-button danger"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  if (feedMode === "active") {
+                                    archiveNote(note.id);
+                                  } else {
+                                    deleteArchivedNote(note.id);
+                                  }
+                                }}
+                                aria-label={feedMode === "active" ? "?? ??" : "?? ??"}
+                                title={feedMode === "active" ? "?? ??" : "?? ??"}
+                              >
+                                {feedMode === "active" ? "?" : "?"}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="pin-card-body">
+                            <p className="pin-title">{getNoteTitle(note.content)}</p>
+
+                            {selected ? (
+                              <textarea
+                                className="pin-editor"
+                                value={note.content}
+                                style={{ fontSize: `${fontSize}px` }}
+                                onMouseDown={(event) => event.stopPropagation()}
+                                onFocus={() => setSelectedNoteId(note.id)}
+                                onChange={(event) => {
+                                  updateNote(note.id, { content: event.target.value });
+                                  event.currentTarget.style.height = "0px";
+                                  event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+                                }}
+                                placeholder="??, ??, ??? URL? ?????"
+                                rows={1}
+                              />
+                            ) : (
+                              <>
+                                {previewUrl && !isImageUrl(previewUrl) && (
+                                  <a
+                                    className="link-chip"
+                                    href={previewUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(event) => event.stopPropagation()}
+                                  >
+                                    {previewUrl}
+                                  </a>
+                                )}
+                                <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
+                                  {previewText || "??? ???? ?????."}
+                                </p>
+                              </>
                             )}
-                            <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                              {previewText || "메모를 클릭해서 편집하세요."}
-                            </p>
-                          </>
-                        )}
+                          </div>
+                        </article>
                       </div>
-                    </article>
-                  </>
-                );
-              })
+                    );
+                  })}
+                  {runningDragNoteId !== null && dragPreviewNoteId === null && dragPreviewColumn == columnIndex && (
+                    <article className="pin-card pin-drop-preview" aria-hidden="true" />
+                  )}
+                </div>
+              ))
             )}
           </section>
-
           <div className="infinite-scroll-status" aria-live="polite">
             {visibleNoteCount < filteredNotes.length
               ? "아래로 스크롤하면 메모가 계속 로드됩니다."

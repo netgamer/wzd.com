@@ -305,8 +305,17 @@ button {
 }
 
 .pin-board {
-  column-width: 244px;
-  column-gap: 18px;
+  display: grid;
+  grid-template-columns: repeat(var(--pin-columns, 4), minmax(0, 244px));
+  align-items: start;
+  gap: 18px;
+}
+
+.pin-column {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
 }
 
 .pin-card {
@@ -314,13 +323,12 @@ button {
   max-width: 244px;
   display: inline-flex;
   flex-direction: column;
-  margin: 0 0 18px;
+  margin: 0;
   border-radius: 24px;
   background: var(--surface);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
   overflow: hidden;
-  break-inside: avoid;
   cursor: pointer;
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
@@ -639,8 +647,7 @@ button {
   }
 
   .pin-board {
-    column-width: auto;
-    columns: 1;
+    grid-template-columns: 1fr;
   }
 
   .pin-card {
