@@ -8,6 +8,7 @@ import {
 } from "react";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
+import { fetchRssFeed, type RssFeedPreview } from "./lib/rss";
 import {
   createBoardV2,
   type BoardV2,
@@ -32,6 +33,7 @@ type NoteFontSize = 14 | 16 | 18 | 20;
 type FeedMode = "active" | "archived";
 type CloudSaveState = "idle" | "saving" | "saved" | "error";
 type LinkPreviewState = LinkPreview | null;
+type RssFeedState = RssFeedPreview | null;
 
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
@@ -39,6 +41,7 @@ const VISIBLE_NOTE_BATCH_SIZE = 16;
 const DEFAULT_FONT_SIZE: NoteFontSize = 16;
 const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "purple", "mint", "white"];
 const CLOUD_SAVE_DEBOUNCE_MS = 120;
+const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -237,6 +240,11 @@ const getNoteTitle = (content: string) => {
 };
 
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
+const getWidgetType = (note: NoteV2) => (typeof note.metadata?.widgetType === "string" ? note.metadata.widgetType : "note");
+const getRssFeedUrl = (note: NoteV2) =>
+  typeof note.metadata?.feedUrl === "string" && note.metadata.feedUrl.trim()
+    ? note.metadata.feedUrl.trim()
+    : DEFAULT_RSS_FEED_URL;
 
 const makeBoardTitle = (boards: BoardV2[]) => {
   let index = boards.length + 1;
@@ -381,6 +389,7 @@ const App = () => {
   const [cloudSaveState, setCloudSaveState] = useState<CloudSaveState>("idle");
   const [columnCount, setColumnCount] = useState(() => getColumnCount());
   const [linkPreviews, setLinkPreviews] = useState<Record<string, LinkPreviewState>>({});
+  const [rssFeeds, setRssFeeds] = useState<Record<string, RssFeedState>>({});
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [compactSidebar, setCompactSidebar] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 1180 : false
@@ -783,6 +792,42 @@ const App = () => {
     };
   }, [visibleNotes, linkPreviews]);
 
+  useEffect(() => {
+    const urls = Array.from(
+      new Set(
+        visibleNotes
+          .filter((note) => getWidgetType(note) === "rss")
+          .map((note) => getRssFeedUrl(note))
+          .filter(Boolean)
+      )
+    ).filter((url) => !(url in rssFeeds));
+
+    if (urls.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void Promise.all(
+      urls.map(async (url) => {
+        try {
+          const feed = await fetchRssFeed(url);
+          if (!cancelled) {
+            setRssFeeds((prev) => ({ ...prev, [url]: feed }));
+          }
+        } catch {
+          if (!cancelled) {
+            setRssFeeds((prev) => ({ ...prev, [url]: null }));
+          }
+        }
+      })
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleNotes, rssFeeds]);
+
   const addBoard = async () => {
     const title = makeBoardTitle(boards);
 
@@ -821,6 +866,36 @@ const App = () => {
       zIndex: boardMaxZ + 1,
       content: "새 메모\n\nhttps://"
     });
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+  };
+
+  const addRssWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "AI 뉴스"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "rss",
+      feedUrl: DEFAULT_RSS_FEED_URL
+    };
 
     setNotes((prev) => [note, ...prev]);
     touchBoard(selectedBoard.id);
@@ -1112,8 +1187,14 @@ const App = () => {
             <button className="new-note-pill" onClick={addNote}>
               새 메모
             </button>
+            <button className="widget-pill" onClick={addRssWidget}>
+              위젯 추가
+            </button>
             <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="새 메모">
               +
+            </button>
+            <button className="mobile-icon-action" onClick={addRssWidget} aria-label="위젯 추가">
+              RSS
             </button>
             {hasSupabaseConfig ? (
               user ? (
@@ -1201,6 +1282,10 @@ const App = () => {
                   {columnNotes.map((note) => {
                     const selected = selectedNoteId === note.id;
                     const fontSize = getNoteFontSize(note);
+                    const widgetType = getWidgetType(note);
+                    const isRssWidget = widgetType === "rss";
+                    const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
+                    const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
                     const previewUrl = extractFirstUrl(note.content);
                     const previewText = stripUrls(note.content);
                     const linkPreview = previewUrl && !isImageUrl(previewUrl) ? linkPreviews[previewUrl] : undefined;
@@ -1219,7 +1304,9 @@ const App = () => {
                         <article
                           className={`pin-card note-${note.color} ${useImageHeroCard ? "image-note" : ""} ${
                             hasTextPreview ? "has-hover-copy" : "image-only"
-                          } ${selected ? "selected" : ""} ${runningDragNoteId === note.id ? "dragging" : ""}`}
+                          } ${isRssWidget ? "widget-note rss-widget" : ""} ${selected ? "selected" : ""} ${
+                            runningDragNoteId === note.id ? "dragging" : ""
+                          }`}
                           draggable={feedMode === "active" && !selected}
                           onDragStart={(event) => onPinDragStart(event, note.id)}
                           onDragEnd={() => {
@@ -1303,6 +1390,70 @@ const App = () => {
                           </div>
 
                           <div className="pin-card-body">
+                            {isRssWidget ? (
+                              <>
+                                <div className="widget-header">
+                                  <span className="widget-badge">RSS</span>
+                                  <p className="pin-title">{note.content.trim() || "RSS 리더"}</p>
+                                </div>
+                                {selected ? (
+                                  <div className="widget-editor-stack">
+                                    <input
+                                      className="widget-input"
+                                      value={note.content}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                                      placeholder="위젯 제목"
+                                    />
+                                    <input
+                                      className="widget-input"
+                                      value={rssFeedUrl}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) =>
+                                        updateNote(note.id, {
+                                          metadata: {
+                                            ...note.metadata,
+                                            widgetType: "rss",
+                                            feedUrl: event.target.value
+                                          }
+                                        })
+                                      }
+                                      placeholder="RSS 피드 URL"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="rss-widget-feed">
+                                    <a
+                                      className="rss-feed-source"
+                                      href={rssFeed?.link || rssFeedUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      onClick={(event) => event.stopPropagation()}
+                                    >
+                                      {rssFeed?.title || "RSS 피드 열기"}
+                                    </a>
+                                    {rssFeed?.items?.length ? (
+                                      rssFeed.items.slice(0, 5).map((item) => (
+                                        <a
+                                          key={`${note.id}-${item.link}-${item.title}`}
+                                          className="rss-item"
+                                          href={item.link}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          onClick={(event) => event.stopPropagation()}
+                                        >
+                                          <span className="rss-item-title">{item.title}</span>
+                                          {item.pubDate && <span className="rss-item-date">{item.pubDate}</span>}
+                                        </a>
+                                      ))
+                                    ) : (
+                                      <p className="rss-empty">RSS 항목을 불러오는 중이거나 피드를 읽을 수 없습니다.</p>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <div className="pin-note-stack">
                             {(!useImageHeroCard || hasTextPreview) && <p className="pin-title">{getNoteTitle(note.content)}</p>}
 
                             {selected ? (
@@ -1365,6 +1516,8 @@ const App = () => {
                                   </p>
                                 )}
                               </>
+                            )}
+                              </div>
                             )}
                           </div>
                         </article>

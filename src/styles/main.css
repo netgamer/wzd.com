@@ -307,6 +307,7 @@ button {
 }
 
 .new-note-pill,
+.widget-pill,
 .ghost-action {
   min-height: 42px;
   padding: 0 16px;
@@ -317,6 +318,12 @@ button {
 
 .new-note-pill {
   background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.widget-pill {
+  background: #1f1a13;
   color: #fff;
   font-weight: 700;
 }
@@ -348,6 +355,7 @@ button {
 }
 
 .new-note-pill:hover,
+.widget-pill:hover,
 .ghost-action:hover,
 .pin-icon-button:hover,
 .font-chip:hover {
@@ -583,6 +591,74 @@ button {
   gap: 10px;
 }
 
+.widget-note .pin-card-body {
+  padding-top: 10px;
+}
+
+.widget-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.widget-badge {
+  align-self: flex-start;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(31, 26, 19, 0.08);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.widget-editor-stack,
+.rss-widget-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.widget-input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  border-radius: 14px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.75);
+  outline: none;
+}
+
+.rss-feed-source {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.rss-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.rss-item-title {
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.rss-item-date,
+.rss-empty {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .pin-card.image-note .pin-card-body {
   position: absolute;
   left: 0;
@@ -803,6 +879,7 @@ button {
 .board-title-input:focus-visible,
 .pin-editor:focus-visible,
 .new-note-pill:focus-visible,
+.widget-pill:focus-visible,
 .ghost-action:focus-visible,
 .mobile-icon-action:focus-visible,
 .pin-icon-button:focus-visible,
@@ -899,6 +976,10 @@ button {
 
   .new-note-pill,
   .ghost-action {
+    display: none;
+  }
+
+  .widget-pill {
     display: none;
   }
 

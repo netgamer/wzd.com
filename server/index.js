@@ -42,6 +42,35 @@ const buildFallbackPreview = (targetUrl) => {
   };
 };
 
+const decodeXml = (value = "") =>
+  value
+    .replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+
+const matchXmlTag = (source, tag) => {
+  const match = source.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
+  return decodeXml(match?.[1]?.trim() || "");
+};
+
+const parseRssItems = (xml, limit = 5) => {
+  const itemMatches = [...xml.matchAll(/<item\b[\s\S]*?<\/item>/gi)].slice(0, limit);
+  const entryMatches = itemMatches.length > 0 ? [] : [...xml.matchAll(/<entry\b[\s\S]*?<\/entry>/gi)].slice(0, limit);
+  const nodes = itemMatches.length > 0 ? itemMatches.map((match) => match[0]) : entryMatches.map((match) => match[0]);
+
+  return nodes.map((item) => {
+    const atomLink = item.match(/<link[^>]+href=["']([^"']+)["'][^>]*\/?>/i)?.[1] || "";
+    return {
+      title: matchXmlTag(item, "title") || "제목 없는 항목",
+      link: matchXmlTag(item, "link") || atomLink,
+      pubDate: matchXmlTag(item, "pubDate") || matchXmlTag(item, "published") || matchXmlTag(item, "updated")
+    };
+  });
+};
+
 app.use(
   cors({
     origin: [config.allowedOrigin, "http://localhost:5173"],
@@ -191,6 +220,55 @@ app.get("/api/image-proxy", async (req, res) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown error";
     res.status(500).send(message);
+  }
+});
+
+app.get("/api/rss-feed", async (req, res) => {
+  try {
+    const rawUrl = typeof req.query.url === "string" ? req.query.url.trim() : "";
+    if (!rawUrl) {
+      res.status(400).json({ ok: false, error: "url is required" });
+      return;
+    }
+
+    let targetUrl;
+    try {
+      targetUrl = new URL(rawUrl);
+    } catch {
+      res.status(400).json({ ok: false, error: "invalid url" });
+      return;
+    }
+
+    const response = await fetch(targetUrl, {
+      headers: {
+        "user-agent": "WZD RSS Reader/1.0",
+        accept: "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8"
+      }
+    });
+
+    if (!response.ok) {
+      res.status(502).json({ ok: false, error: `rss feed request failed: ${response.status}` });
+      return;
+    }
+
+    const xml = await response.text();
+    const title = matchXmlTag(xml, "title") || targetUrl.hostname.replace(/^www\./i, "");
+    const description = matchXmlTag(xml, "description") || matchXmlTag(xml, "subtitle");
+    const link = matchXmlTag(xml, "link") || targetUrl.toString();
+    const items = parseRssItems(xml);
+
+    res.json({
+      ok: true,
+      feed: {
+        title,
+        description,
+        link,
+        items
+      }
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown error";
+    res.status(500).json({ ok: false, error: message });
   }
 });
 
