@@ -159,6 +159,23 @@ button {
   line-height: 1;
 }
 
+.editable-board-title {
+  cursor: text;
+}
+
+.board-title-input {
+  width: min(360px, 100%);
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 31px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .search-shell {
   flex: 0 1 520px;
   min-width: 0;
@@ -543,6 +560,7 @@ button {
 }
 
 .search-input:focus-visible,
+.board-title-input:focus-visible,
 .pin-editor:focus-visible,
 .new-note-pill:focus-visible,
 .ghost-action:focus-visible,

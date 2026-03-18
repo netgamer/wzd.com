@@ -226,6 +226,8 @@ const App = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [boards, setBoards] = useState<BoardV2[]>(() => createDefaultSnapshot().boards);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(() => createDefaultSnapshot().selectedBoardId);
+  const [boardTitleDraft, setBoardTitleDraft] = useState("");
+  const [editingBoardTitle, setEditingBoardTitle] = useState(false);
   const [notes, setNotes] = useState<NoteV2[]>(() => createDefaultSnapshot().notes);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -371,6 +373,11 @@ const App = () => {
   }, [boards, selectedBoard]);
 
   useEffect(() => {
+    setBoardTitleDraft(selectedBoard?.title ?? "");
+    setEditingBoardTitle(false);
+  }, [selectedBoard?.id]);
+
+  useEffect(() => {
     if (!selectedBoard) {
       setSelectedNoteId(null);
       return;
@@ -465,6 +472,31 @@ const App = () => {
     setFeedMode("active");
     setSelectedNoteId(note.id);
     setVisibleNoteCount((prev) => Math.max(prev, 1));
+  };
+
+  const updateBoardTitle = (boardId: string, title: string) => {
+    const nextTitle = title.trim() || "Untitled Board";
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === boardId
+          ? {
+              ...board,
+              title: nextTitle,
+              updatedAt: nowIso()
+            }
+          : board
+      )
+    );
+  };
+
+  const commitBoardTitle = () => {
+    if (!selectedBoard) {
+      setEditingBoardTitle(false);
+      return;
+    }
+
+    updateBoardTitle(selectedBoard.id, boardTitleDraft);
+    setEditingBoardTitle(false);
   };
 
   const updateNote = (noteId: string, patch: Partial<NoteV2>) => {
@@ -622,8 +654,40 @@ const App = () => {
         <header className="pin-topbar">
           <div className="topbar-primary">
             <div className="topbar-board-title">
-              <p className="feed-kicker">{feedMode === "active" ? "Personal + Group Memo" : "Archive"}</p>
-              <h1>{feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}</h1>
+              <p className="feed-kicker">{feedMode === "active" ? "개인 보드" : "보관 메모"}</p>
+              {feedMode === "active" && editingBoardTitle ? (
+                <input
+                  className="board-title-input"
+                  value={boardTitleDraft}
+                  onChange={(event) => setBoardTitleDraft(event.target.value)}
+                  onBlur={commitBoardTitle}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      commitBoardTitle();
+                    }
+
+                    if (event.key === "Escape") {
+                      setBoardTitleDraft(selectedBoard?.title ?? "");
+                      setEditingBoardTitle(false);
+                    }
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <h1
+                  className={feedMode === "active" ? "editable-board-title" : undefined}
+                  onClick={() => {
+                    if (feedMode !== "active") {
+                      return;
+                    }
+                    setBoardTitleDraft(selectedBoard?.title ?? "");
+                    setEditingBoardTitle(true);
+                  }}
+                >
+                  {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}
+                </h1>
+              )}
             </div>
 
             <div className="search-shell">
