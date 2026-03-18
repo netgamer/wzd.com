@@ -1117,7 +1117,7 @@ const App = () => {
                           className={`pin-card note-${note.color} ${selected ? "selected" : ""} ${
                             runningDragNoteId === note.id ? "dragging" : ""
                           }`}
-                          draggable={feedMode === "active"}
+                          draggable={feedMode === "active" && !selected}
                           onDragStart={(event) => onPinDragStart(event, note.id)}
                           onDragEnd={() => {
                             suppressNextCardClickRef.current = true;
