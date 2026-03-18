@@ -724,23 +724,6 @@ const App = () => {
     }
   };
 
-  const updateNoteFontSize = (noteId: string, fontSize: NoteFontSize) => {
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === noteId
-          ? {
-              ...note,
-              metadata: {
-                ...note.metadata,
-                fontSize
-              },
-              updatedAt: nowIso()
-            }
-          : note
-      )
-    );
-  };
-
   const archiveNote = (noteId: string) => {
     updateNote(noteId, { archived: true });
     setSelectedNoteId(null);
@@ -1090,25 +1073,11 @@ const App = () => {
                       <div className="pin-card-body">
                         <p className="pin-title">{getNoteTitle(note.content)}</p>
 
-                        {selected ? (
-                          <>
-                            <div className="font-scale">
-                              {[14, 16, 18, 20].map((size) => (
-                                <button
-                                  key={size}
-                                  className={`font-chip ${fontSize === size ? "active" : ""}`}
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    updateNoteFontSize(note.id, size as NoteFontSize);
-                                  }}
-                                >
-                                  {size}
-                                </button>
-                              ))}
-                            </div>
-                            <textarea
-                              className="pin-editor"
-                              value={note.content}
+                      {selected ? (
+                        <>
+                          <textarea
+                            className="pin-editor"
+                            value={note.content}
                               style={{ fontSize: `${fontSize}px` }}
                               onMouseDown={(event) => event.stopPropagation()}
                               onFocus={() => setSelectedNoteId(note.id)}
