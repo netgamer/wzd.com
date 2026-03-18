@@ -382,6 +382,9 @@ const App = () => {
   const [columnCount, setColumnCount] = useState(() => getColumnCount());
   const [linkPreviews, setLinkPreviews] = useState<Record<string, LinkPreviewState>>({});
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [compactSidebar, setCompactSidebar] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1180 : false
+  );
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -410,6 +413,7 @@ const App = () => {
   useEffect(() => {
     const onResize = () => {
       setColumnCount(getColumnCount());
+      setCompactSidebar(window.innerWidth < 1180);
     };
 
     window.addEventListener("resize", onResize);
@@ -419,6 +423,12 @@ const App = () => {
       window.removeEventListener("resize", onResize);
     };
   }, []);
+
+  useEffect(() => {
+    if (compactSidebar && sidebarExpanded) {
+      setSidebarExpanded(false);
+    }
+  }, [compactSidebar, sidebarExpanded]);
 
   const persistCloudSnapshot = async () => {
     if (!supabase || !latestUserIdRef.current) {
@@ -971,23 +981,25 @@ const App = () => {
     await supabase.auth.signOut();
   };
 
+  const showExpandedSidebar = sidebarExpanded && !compactSidebar;
+
   return (
-    <div className={`pin-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
-      <aside className={`pin-sidebar ${sidebarExpanded ? "expanded" : ""}`}>
+    <div className={`pin-page ${showExpandedSidebar ? "sidebar-expanded" : ""}`}>
+      <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`}>
         <button className="pin-brand" aria-label="WZD 홈">
           <span>W</span>
         </button>
 
         <div className="board-menu">
           <button
-            className={`board-menu-toggle ${sidebarExpanded ? "expanded" : ""}`}
+            className={`board-menu-toggle ${showExpandedSidebar ? "expanded" : ""}`}
             onClick={() => setSidebarExpanded((prev) => !prev)}
             aria-label="?? ?? ??"
           >
             <span className="board-menu-icon">{selectedBoard ? getBoardBadge(selectedBoard.title) : "B"}</span>
             <span className="board-menu-label">?? ??</span>
             <span className="board-menu-caret" aria-hidden="true">
-              {sidebarExpanded ? "?" : "?"}
+              {showExpandedSidebar ? "?" : "?"}
             </span>
           </button>
 

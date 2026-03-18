@@ -206,16 +206,32 @@ button {
   display: block;
 }
 
+.pin-sidebar.expanded .board-menu-toggle {
+  padding: 0 14px;
+}
+
 .pin-sidebar.expanded .board-chip {
+  display: flex;
+  align-items: center;
   width: 100%;
   height: auto;
   min-height: 46px;
   justify-content: flex-start;
-  padding: 0 6px 0 0;
+  padding: 0 14px;
+  border-radius: 22px;
 }
 
 .pin-sidebar.expanded .board-chip-badge {
-  background: transparent;
+  background: rgba(31, 26, 19, 0.06);
+}
+
+.pin-sidebar.expanded .board-chip.active .board-chip-badge {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.pin-sidebar.expanded .board-chip-label {
+  line-height: 1.2;
 }
 
 .pin-sidebar.expanded .pin-brand,
@@ -818,6 +834,11 @@ button {
   .pin-brand,
   .board-switcher {
     display: none;
+  }
+
+  .board-menu-label,
+  .board-menu-caret {
+    display: none !important;
   }
 
   .pin-topbar {
