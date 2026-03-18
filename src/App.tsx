@@ -42,6 +42,7 @@ const DEFAULT_FONT_SIZE: NoteFontSize = 16;
 const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "purple", "mint", "white"];
 const CLOUD_SAVE_DEBOUNCE_MS = 120;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
+const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -141,7 +142,8 @@ const loadLocalSnapshot = (): LocalSnapshot => {
   }
 
   try {
-    return migrateLocalSnapshot(raw);
+    const snapshot = migrateLocalSnapshot(raw);
+    return { ...snapshot, notes: sanitizeNotes(snapshot.notes) };
   } catch {
     return createDefaultSnapshot();
   }
@@ -158,7 +160,8 @@ const readStoredLocalSnapshot = (): LocalSnapshot | null => {
   }
 
   try {
-    return migrateLocalSnapshot(raw);
+    const snapshot = migrateLocalSnapshot(raw);
+    return { ...snapshot, notes: sanitizeNotes(snapshot.notes) };
   } catch {
     return null;
   }
@@ -169,7 +172,7 @@ const saveLocalSnapshot = (snapshot: LocalSnapshot) => {
     return;
   }
 
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshot));
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ ...snapshot, notes: sanitizeNotes(snapshot.notes) }));
 };
 
 const clearLocalSnapshot = () => {
@@ -245,6 +248,20 @@ const getRssFeedUrl = (note: NoteV2) =>
   typeof note.metadata?.feedUrl === "string" && note.metadata.feedUrl.trim()
     ? note.metadata.feedUrl.trim()
     : DEFAULT_RSS_FEED_URL;
+const isDisposableEmptyNote = (note: NoteV2) => {
+  if (getWidgetType(note) !== "note") {
+    return false;
+  }
+
+  const trimmed = note.content.trim();
+  if (!trimmed) {
+    return true;
+  }
+
+  return trimmed === "새 메모" || trimmed === "https://" || trimmed === DEFAULT_NEW_NOTE_CONTENT.trim();
+};
+
+const sanitizeNotes = (notes: NoteV2[]) => notes.filter((note) => !isDisposableEmptyNote(note));
 
 const makeBoardTitle = (boards: BoardV2[]) => {
   let index = boards.length + 1;
@@ -444,9 +461,10 @@ const App = () => {
       return;
     }
 
+    const cleanedNotes = sanitizeNotes(latestNotesRef.current);
     await saveBoardsV2({
       boards: latestBoardsRef.current,
-      notes: latestNotesRef.current
+      notes: cleanedNotes
     });
   };
 
@@ -601,7 +619,7 @@ const App = () => {
 
         skipNextCloudSaveRef.current = true;
         setBoards(merged.boards);
-        setNotes(merged.notes);
+        setNotes(sanitizeNotes(merged.notes));
         setSelectedBoardId(merged.selectedBoardId);
         setSelectedNoteId(null);
         setLoading(false);
@@ -859,7 +877,7 @@ const App = () => {
       boardId: selectedBoard.id,
       userId: selectedBoard.userId,
       zIndex: boardMaxZ + 1,
-      content: "새 메모\n\nhttps://"
+      content: DEFAULT_NEW_NOTE_CONTENT
     });
 
     setNotes((prev) => [note, ...prev]);
