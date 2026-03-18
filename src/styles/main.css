@@ -522,6 +522,14 @@ button {
   background: linear-gradient(180deg, rgba(8, 8, 8, 0.34), rgba(8, 8, 8, 0));
 }
 
+.pin-card.image-note .pin-dot {
+  display: none;
+}
+
+.pin-card.image-note .pin-card-head {
+  justify-content: flex-end;
+}
+
 .chip-badge {
   display: inline-flex;
   align-items: center;
