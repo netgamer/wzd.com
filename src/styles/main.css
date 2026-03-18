@@ -335,7 +335,15 @@ button {
 }
 
 .pin-card.dragging {
-  opacity: 0.84;
+  opacity: 0.28;
+}
+
+.pin-drop-preview {
+  min-height: 220px;
+  background: rgba(255, 255, 255, 0.32);
+  border: 2px dashed rgba(29, 111, 216, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(6px);
 }
 
 .pin-image-wrap {

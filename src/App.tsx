@@ -285,6 +285,7 @@ const App = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [runningDragNoteId, setRunningDragNoteId] = useState<string | null>(null);
+  const [dragPreviewNoteId, setDragPreviewNoteId] = useState<string | null>(null);
   const [visibleNoteCount, setVisibleNoteCount] = useState(INITIAL_VISIBLE_NOTE_COUNT);
   const [feedMode, setFeedMode] = useState<FeedMode>("active");
 
@@ -689,6 +690,7 @@ const App = () => {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", noteId);
     setRunningDragNoteId(noteId);
+    setDragPreviewNoteId(noteId);
     setSelectedNoteId(noteId);
   };
 
@@ -701,6 +703,7 @@ const App = () => {
     const draggedNoteId = event.dataTransfer.getData("text/plain") || runningDragNoteId;
     if (!draggedNoteId || draggedNoteId === targetNoteId) {
       setRunningDragNoteId(null);
+      setDragPreviewNoteId(null);
       return;
     }
 
@@ -710,6 +713,7 @@ const App = () => {
       touchBoard(draggedNote.boardId);
     }
     setRunningDragNoteId(null);
+    setDragPreviewNoteId(null);
   };
 
   const onBoardBackgroundMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -875,6 +879,7 @@ const App = () => {
             onDragOver={(event) => {
               if (feedMode === "active") {
                 event.preventDefault();
+                setDragPreviewNoteId(null);
               }
             }}
             onDrop={(event) => onPinDrop(event)}
@@ -893,129 +898,147 @@ const App = () => {
                 const fontSize = getNoteFontSize(note);
                 const previewUrl = extractFirstUrl(note.content);
                 const previewText = stripUrls(note.content);
+                const showDropPreview =
+                  runningDragNoteId !== null &&
+                  dragPreviewNoteId === note.id &&
+                  runningDragNoteId !== note.id;
 
                 return (
-                  <article
-                    key={note.id}
-                    className={`pin-card note-${note.color} ${selected ? "selected" : ""} ${
-                      runningDragNoteId === note.id ? "dragging" : ""
-                    }`}
-                    draggable={feedMode === "active"}
-                    onDragStart={(event) => onPinDragStart(event, note.id)}
-                    onDragEnd={() => setRunningDragNoteId(null)}
-                    onDragOver={(event) => {
-                      if (feedMode === "active") {
-                        event.preventDefault();
-                      }
-                    }}
-                    onDrop={(event) => onPinDrop(event, note.id)}
-                    onClick={() => setSelectedNoteId(note.id)}
-                  >
-                    {previewUrl && isImageUrl(previewUrl) && (
-                      <div className="pin-image-wrap">
-                        <img className="pin-image" src={previewUrl} alt={getNoteTitle(note.content)} />
-                      </div>
-                    )}
-
-                    <div className="pin-card-head">
-                      <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
-                      <div className="pin-actions">
-                        <button
-                          className={`note-color-toggle chip-${note.color}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            cycleNoteColor(note.id, note.color);
-                          }}
-                          aria-label="메모 색상 변경"
-                          title="메모 색상 변경"
-                        />
-                        <button
-                          className="pin-icon-button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            if (feedMode === "active") {
-                              updateNote(note.id, { pinned: !note.pinned });
-                            } else {
-                              restoreNote(note.id);
-                            }
-                          }}
-                          aria-label={feedMode === "active" ? "핀 고정" : "메모 복구"}
-                          title={feedMode === "active" ? "핀 고정" : "메모 복구"}
-                        >
-                          {feedMode === "active" ? "⌖" : "↺"}
-                        </button>
-                        <button
-                          className="pin-icon-button danger"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            if (feedMode === "active") {
-                              archiveNote(note.id);
-                            } else {
-                              deleteArchivedNote(note.id);
-                            }
-                          }}
-                          aria-label={feedMode === "active" ? "메모 보관" : "메모 삭제"}
-                          title={feedMode === "active" ? "메모 보관" : "메모 삭제"}
-                        >
-                          {feedMode === "active" ? "✕" : "⌫"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="pin-card-body">
-                      <p className="pin-title">{getNoteTitle(note.content)}</p>
-
-                      {selected ? (
-                        <>
-                          <div className="font-scale">
-                            {[14, 16, 18, 20].map((size) => (
-                              <button
-                                key={size}
-                                className={`font-chip ${fontSize === size ? "active" : ""}`}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  updateNoteFontSize(note.id, size as NoteFontSize);
-                                }}
-                              >
-                                {size}
-                              </button>
-                            ))}
-                          </div>
-                          <textarea
-                            className="pin-editor"
-                            value={note.content}
-                            style={{ fontSize: `${fontSize}px` }}
-                            onMouseDown={(event) => event.stopPropagation()}
-                            onFocus={() => setSelectedNoteId(note.id)}
-                            onChange={(event) => {
-                              updateNote(note.id, { content: event.target.value });
-                              event.currentTarget.style.height = "0px";
-                              event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-                            }}
-                            placeholder="메모, 링크, 이미지 URL을 입력하세요"
-                            rows={1}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          {previewUrl && !isImageUrl(previewUrl) && (
-                            <a
-                              className="link-chip"
-                              href={previewUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(event) => event.stopPropagation()}
-                            >
-                              {previewUrl}
-                            </a>
-                          )}
-                          <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                            {previewText || "메모를 클릭해서 편집하세요."}
-                          </p>
-                        </>
+                  <>
+                    {showDropPreview && <article className="pin-card pin-drop-preview" aria-hidden="true" />}
+                    <article
+                      key={note.id}
+                      className={`pin-card note-${note.color} ${selected ? "selected" : ""} ${
+                        runningDragNoteId === note.id ? "dragging" : ""
+                      }`}
+                      draggable={feedMode === "active"}
+                      onDragStart={(event) => onPinDragStart(event, note.id)}
+                      onDragEnd={() => {
+                        setRunningDragNoteId(null);
+                        setDragPreviewNoteId(null);
+                      }}
+                      onDragEnter={() => {
+                        if (feedMode === "active" && runningDragNoteId !== note.id) {
+                          setDragPreviewNoteId(note.id);
+                        }
+                      }}
+                      onDragOver={(event) => {
+                        if (feedMode === "active") {
+                          event.preventDefault();
+                          if (runningDragNoteId !== note.id) {
+                            setDragPreviewNoteId(note.id);
+                          }
+                        }
+                      }}
+                      onDrop={(event) => onPinDrop(event, note.id)}
+                      onClick={() => setSelectedNoteId(note.id)}
+                    >
+                      {previewUrl && isImageUrl(previewUrl) && (
+                        <div className="pin-image-wrap">
+                          <img className="pin-image" src={previewUrl} alt={getNoteTitle(note.content)} />
+                        </div>
                       )}
-                    </div>
-                  </article>
+
+                      <div className="pin-card-head">
+                        <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
+                        <div className="pin-actions">
+                          <button
+                            className={`note-color-toggle chip-${note.color}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              cycleNoteColor(note.id, note.color);
+                            }}
+                            aria-label="메모 색상 변경"
+                            title="메모 색상 변경"
+                          />
+                          <button
+                            className="pin-icon-button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (feedMode === "active") {
+                                updateNote(note.id, { pinned: !note.pinned });
+                              } else {
+                                restoreNote(note.id);
+                              }
+                            }}
+                            aria-label={feedMode === "active" ? "핀 고정" : "메모 복구"}
+                            title={feedMode === "active" ? "핀 고정" : "메모 복구"}
+                          >
+                            {feedMode === "active" ? "⌖" : "↺"}
+                          </button>
+                          <button
+                            className="pin-icon-button danger"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (feedMode === "active") {
+                                archiveNote(note.id);
+                              } else {
+                                deleteArchivedNote(note.id);
+                              }
+                            }}
+                            aria-label={feedMode === "active" ? "메모 보관" : "메모 삭제"}
+                            title={feedMode === "active" ? "메모 보관" : "메모 삭제"}
+                          >
+                            {feedMode === "active" ? "✕" : "⌫"}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="pin-card-body">
+                        <p className="pin-title">{getNoteTitle(note.content)}</p>
+
+                        {selected ? (
+                          <>
+                            <div className="font-scale">
+                              {[14, 16, 18, 20].map((size) => (
+                                <button
+                                  key={size}
+                                  className={`font-chip ${fontSize === size ? "active" : ""}`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    updateNoteFontSize(note.id, size as NoteFontSize);
+                                  }}
+                                >
+                                  {size}
+                                </button>
+                              ))}
+                            </div>
+                            <textarea
+                              className="pin-editor"
+                              value={note.content}
+                              style={{ fontSize: `${fontSize}px` }}
+                              onMouseDown={(event) => event.stopPropagation()}
+                              onFocus={() => setSelectedNoteId(note.id)}
+                              onChange={(event) => {
+                                updateNote(note.id, { content: event.target.value });
+                                event.currentTarget.style.height = "0px";
+                                event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+                              }}
+                              placeholder="메모, 링크, 이미지 URL을 입력하세요"
+                              rows={1}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            {previewUrl && !isImageUrl(previewUrl) && (
+                              <a
+                                className="link-chip"
+                                href={previewUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {previewUrl}
+                              </a>
+                            )}
+                            <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
+                              {previewText || "메모를 클릭해서 편집하세요."}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </article>
+                  </>
                 );
               })
             )}
