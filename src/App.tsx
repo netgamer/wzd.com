@@ -991,24 +991,16 @@ const App = () => {
         </button>
 
         <div className="board-menu">
-          <button
-            className={`board-menu-toggle ${showExpandedSidebar ? "expanded" : ""}`}
-            onClick={() => setSidebarExpanded((prev) => !prev)}
-            aria-label="?? ?? ??"
-          >
-            <span className="board-menu-icon">{selectedBoard ? getBoardBadge(selectedBoard.title) : "B"}</span>
-            <span className="board-menu-label">?? ??</span>
-            <span className="board-menu-caret" aria-hidden="true">
-              {showExpandedSidebar ? "?" : "?"}
-            </span>
-          </button>
-
           <div className="board-switcher">
             {boards.map((boardItem) => (
               <button
                 key={boardItem.id}
                 className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
                 onClick={() => {
+                  if (boardItem.id === selectedBoard?.id) {
+                    setSidebarExpanded((prev) => !prev);
+                  }
+
                   setSelectedBoardId(boardItem.id);
                   setSelectedNoteId(null);
                   setFeedMode("active");

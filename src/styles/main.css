@@ -86,45 +86,6 @@ button {
   gap: 12px;
 }
 
-.board-menu-toggle {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 10px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--surface-soft);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.board-menu-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: rgba(230, 0, 35, 0.08);
-  color: var(--accent);
-  font-weight: 700;
-  flex: 0 0 auto;
-}
-
-.board-menu-label {
-  display: none;
-  flex: 1;
-  text-align: left;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.board-menu-caret {
-  display: none;
-  color: var(--muted);
-  font-size: 18px;
-}
-
 .pin-brand,
 .side-icon,
 .board-chip {
@@ -200,14 +161,8 @@ button {
   align-items: stretch;
 }
 
-.pin-sidebar.expanded .board-menu-label,
-.pin-sidebar.expanded .board-menu-caret,
 .pin-sidebar.expanded .board-chip-label {
   display: block;
-}
-
-.pin-sidebar.expanded .board-menu-toggle {
-  padding: 0 14px;
 }
 
 .pin-sidebar.expanded .board-chip {
@@ -842,11 +797,6 @@ button {
   .pin-brand,
   .board-switcher {
     display: none;
-  }
-
-  .board-menu-label,
-  .board-menu-caret {
-    display: none !important;
   }
 
   .pin-topbar {
