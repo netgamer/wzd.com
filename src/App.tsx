@@ -426,6 +426,11 @@ const App = () => {
     }, 2200);
   };
 
+  const updateDragPreview = (noteId: string | null, column: number | null) => {
+    setDragPreviewNoteId((prev) => (prev === noteId ? prev : noteId));
+    setDragPreviewColumn((prev) => (prev === column ? prev : column));
+  };
+
   const mergeLocalSnapshotToCloud = async (userId: string, remoteBoards: BoardV2[], remoteNotes: NoteV2[]) => {
     const localSnapshot = readStoredLocalSnapshot();
     if (!hasCustomLocalSnapshot(localSnapshot)) {
@@ -855,8 +860,7 @@ const App = () => {
     event.dataTransfer.setData("text/plain", noteId);
     const draggedNote = notes.find((note) => note.id === noteId);
     setRunningDragNoteId(noteId);
-    setDragPreviewNoteId(noteId);
-    setDragPreviewColumn(draggedNote ? getNoteColumn(draggedNote, columnCount) : 0);
+    updateDragPreview(noteId, draggedNote ? getNoteColumn(draggedNote, columnCount) : 0);
   };
 
   const onPinDrop = (event: ReactDragEvent<HTMLElement>, targetNoteId?: string, targetColumn?: number) => {
@@ -868,8 +872,7 @@ const App = () => {
     const draggedNoteId = event.dataTransfer.getData("text/plain") || runningDragNoteId;
     if (!draggedNoteId || draggedNoteId === targetNoteId) {
       setRunningDragNoteId(null);
-      setDragPreviewNoteId(null);
-      setDragPreviewColumn(null);
+      updateDragPreview(null, null);
       return;
     }
 
@@ -881,8 +884,7 @@ const App = () => {
     }
     suppressNextCardClickRef.current = true;
     setRunningDragNoteId(null);
-    setDragPreviewNoteId(null);
-    setDragPreviewColumn(null);
+    updateDragPreview(null, null);
   };
 
   const onBoardBackgroundMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -1083,8 +1085,9 @@ const App = () => {
                   onDragOver={(event) => {
                     if (feedMode === "active") {
                       event.preventDefault();
-                      setDragPreviewNoteId(null);
-                      setDragPreviewColumn(columnIndex);
+                      if (event.target === event.currentTarget) {
+                        updateDragPreview(null, columnIndex);
+                      }
                     }
                   }}
                   onDrop={(event) => onPinDrop(event, undefined, columnIndex)}
@@ -1112,22 +1115,16 @@ const App = () => {
                           onDragEnd={() => {
                             suppressNextCardClickRef.current = true;
                             setRunningDragNoteId(null);
-                            setDragPreviewNoteId(null);
-                            setDragPreviewColumn(null);
+                            updateDragPreview(null, null);
                           }}
                           onDragEnter={() => {
                             if (feedMode === "active" && runningDragNoteId !== note.id) {
-                              setDragPreviewNoteId(note.id);
-                              setDragPreviewColumn(columnIndex);
+                              updateDragPreview(note.id, columnIndex);
                             }
                           }}
                           onDragOver={(event) => {
                             if (feedMode === "active") {
                               event.preventDefault();
-                              if (runningDragNoteId !== note.id) {
-                                setDragPreviewNoteId(note.id);
-                                setDragPreviewColumn(columnIndex);
-                              }
                             }
                           }}
                           onDrop={(event) => onPinDrop(event, note.id, columnIndex)}
