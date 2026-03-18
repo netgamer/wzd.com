@@ -713,6 +713,14 @@ const App = () => {
     setMobileMenuOpen((prev) => !prev);
   };
 
+  const onCanvasBackgroundMouseDown = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+    setSelectedNoteId(null);
+    setShowInspector(false);
+  };
+
   return (
     <div className="board-app">
       <header className="board-topbar">
@@ -797,6 +805,7 @@ const App = () => {
             ref={canvasRef}
             className={`board-canvas canvas-${board.backgroundStyle} ${isOrganizeMode ? "organize-mode" : "free-mode"}`}
             style={!isOrganizeMode ? { height: `${freeCanvasHeight}px` } : undefined}
+            onMouseDown={onCanvasBackgroundMouseDown}
             onDoubleClick={onCanvasDoubleClick}
             onDragOver={(event) => {
               if (isOrganizeMode) {
