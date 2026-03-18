@@ -140,8 +140,27 @@ button {
   border-bottom: 1px solid var(--line);
 }
 
-.search-shell {
+.topbar-primary {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.topbar-board-title {
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.topbar-board-title h1 {
+  margin: 0;
+  font-size: 31px;
+  line-height: 1;
+}
+
+.search-shell {
+  flex: 0 1 520px;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -243,10 +262,10 @@ button {
 
 .feed-head {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-end;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .feed-kicker {
@@ -574,6 +593,15 @@ button {
   .pin-topbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .topbar-primary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-board-title h1 {
+    font-size: 25px;
   }
 
   .topbar-actions {

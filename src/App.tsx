@@ -620,16 +620,23 @@ const App = () => {
 
       <div className="pin-app">
         <header className="pin-topbar">
-          <div className="search-shell">
-            <span className="search-icon" aria-hidden="true">
-              ⌕
-            </span>
-            <input
-              className="search-input pinterest-search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={feedMode === "active" ? "내 메모와 링크 검색" : "보관된 메모 검색"}
-            />
+          <div className="topbar-primary">
+            <div className="topbar-board-title">
+              <p className="feed-kicker">{feedMode === "active" ? "Personal + Group Memo" : "Archive"}</p>
+              <h1>{feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}</h1>
+            </div>
+
+            <div className="search-shell">
+              <span className="search-icon" aria-hidden="true">
+                ⌕
+              </span>
+              <input
+                className="search-input pinterest-search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={feedMode === "active" ? "내 메모와 링크 검색" : "보관된 메모 검색"}
+              />
+            </div>
           </div>
 
           <div className="topbar-actions">
@@ -660,10 +667,6 @@ const App = () => {
 
         <main className="pin-main">
           <section className="feed-head">
-            <div>
-              <p className="feed-kicker">{feedMode === "active" ? "Personal + Group Memo" : "Archive"}</p>
-              <h1>{feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}</h1>
-            </div>
             <div className="feed-meta">
               <span>{feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`}</span>
             </div>
