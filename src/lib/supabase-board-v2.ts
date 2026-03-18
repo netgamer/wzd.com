@@ -87,18 +87,22 @@ const mapNoteRow = (row: NoteRow): NoteV2 => ({
   updatedAt: row.updated_at
 });
 
-const createBoard = async (userId: string): Promise<BoardV2> => {
+const ensureSupabase = () => {
   if (!supabase) {
     throw new Error("Supabase client is not configured");
   }
+};
 
-  const { data, error } = await supabase
+export const createBoardV2 = async (userId: string, title = "My Board"): Promise<BoardV2> => {
+  ensureSupabase();
+
+  const { data, error } = await supabase!
     .from("boards")
     .insert({
       user_id: userId,
-      title: "My Board",
+      title,
       description: "",
-      background_style: "cork",
+      background_style: "paper",
       settings: {}
     })
     .select("id,user_id,title,description,background_style,settings,updated_at")
@@ -111,30 +115,31 @@ const createBoard = async (userId: string): Promise<BoardV2> => {
   return mapBoardRow(data as BoardRow);
 };
 
-export const loadOrCreateBoardV2 = async (userId: string): Promise<{ board: BoardV2; notes: NoteV2[] }> => {
-  if (!supabase) {
-    throw new Error("Supabase client is not configured");
-  }
+export const loadBoardsV2 = async (userId: string): Promise<{ boards: BoardV2[]; notes: NoteV2[] }> => {
+  ensureSupabase();
 
-  const boardQuery = await supabase
+  const boardQuery = await supabase!
     .from("boards")
     .select("id,user_id,title,description,background_style,settings,updated_at")
     .eq("user_id", userId)
     .eq("is_archived", false)
-    .order("updated_at", { ascending: false })
-    .limit(1);
+    .order("updated_at", { ascending: false });
 
   if (boardQuery.error) {
     throw boardQuery.error;
   }
 
-  const boardRow = (boardQuery.data?.[0] as BoardRow | undefined) ?? null;
-  const board = boardRow ? mapBoardRow(boardRow) : await createBoard(userId);
+  let boards = ((boardQuery.data ?? []) as BoardRow[]).map(mapBoardRow);
 
-  const notesQuery = await supabase
+  if (boards.length === 0) {
+    boards = [await createBoardV2(userId)];
+  }
+
+  const boardIds = boards.map((board) => board.id);
+  const notesQuery = await supabase!
     .from("notes")
     .select("id,board_id,user_id,content,color,x,y,w,h,z_index,rotation,pinned,archived,metadata,updated_at")
-    .eq("board_id", board.id)
+    .in("board_id", boardIds)
     .eq("user_id", userId)
     .order("z_index", { ascending: true })
     .order("updated_at", { ascending: true });
@@ -144,33 +149,34 @@ export const loadOrCreateBoardV2 = async (userId: string): Promise<{ board: Boar
   }
 
   const notes = ((notesQuery.data ?? []) as NoteRow[]).map(mapNoteRow);
-  return { board, notes };
+  return { boards, notes };
 };
 
-export const saveBoardV2 = async (params: { board: BoardV2; notes: NoteV2[] }): Promise<void> => {
+export const saveBoardsV2 = async (params: { boards: BoardV2[]; notes: NoteV2[] }): Promise<void> => {
   if (!supabase) {
     return;
   }
 
-  const { board, notes } = params;
+  const { boards, notes } = params;
 
-  const boardWrite = await supabase
-    .from("boards")
-    .update({
+  if (boards.length > 0) {
+    const boardRows = boards.map((board) => ({
+      id: board.id,
+      user_id: board.userId,
       title: board.title,
       description: board.description,
       background_style: board.backgroundStyle,
       settings: board.settings
-    })
-    .eq("id", board.id)
-    .eq("user_id", board.userId);
+    }));
 
-  if (boardWrite.error) {
-    throw boardWrite.error;
+    const boardWrite = await supabase.from("boards").upsert(boardRows);
+    if (boardWrite.error) {
+      throw boardWrite.error;
+    }
   }
 
   if (notes.length > 0) {
-    const upsertRows = notes.map((note) => ({
+    const noteRows = notes.map((note) => ({
       id: note.id,
       board_id: note.boardId,
       user_id: note.userId,
@@ -187,13 +193,18 @@ export const saveBoardV2 = async (params: { board: BoardV2; notes: NoteV2[] }): 
       metadata: note.metadata
     }));
 
-    const upsertResult = await supabase.from("notes").upsert(upsertRows);
-    if (upsertResult.error) {
-      throw upsertResult.error;
+    const noteWrite = await supabase.from("notes").upsert(noteRows);
+    if (noteWrite.error) {
+      throw noteWrite.error;
     }
   }
 
-  const remoteIds = await supabase.from("notes").select("id").eq("board_id", board.id).eq("user_id", board.userId);
+  const boardIds = boards.map((board) => board.id);
+  if (boardIds.length === 0) {
+    return;
+  }
+
+  const remoteIds = await supabase.from("notes").select("id,board_id").in("board_id", boardIds);
   if (remoteIds.error) {
     throw remoteIds.error;
   }
@@ -204,7 +215,7 @@ export const saveBoardV2 = async (params: { board: BoardV2; notes: NoteV2[] }): 
     .filter((id) => !localIdSet.has(id));
 
   if (staleIds.length > 0) {
-    const deleteResult = await supabase.from("notes").delete().eq("board_id", board.id).eq("user_id", board.userId).in("id", staleIds);
+    const deleteResult = await supabase.from("notes").delete().in("id", staleIds);
     if (deleteResult.error) {
       throw deleteResult.error;
     }

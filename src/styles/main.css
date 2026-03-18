@@ -61,8 +61,17 @@ button {
   border-right: 1px solid var(--line);
 }
 
+.board-switcher {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
 .pin-brand,
-.side-icon {
+.side-icon,
+.board-chip {
   width: 42px;
   height: 42px;
   border-radius: 999px;
@@ -85,10 +94,28 @@ button {
   font-size: 18px;
 }
 
+.board-chip {
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.board-chip.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(230, 0, 35, 0.2);
+}
+
 .side-icon.active,
 .side-icon:hover,
-.side-icon.subtle:hover {
+.side-icon.subtle:hover,
+.board-chip:hover {
   background: var(--surface-muted);
+}
+
+.board-chip.active:hover {
+  background: var(--accent);
 }
 
 .sidebar-spacer {
@@ -529,7 +556,8 @@ button {
   }
 
   .sidebar-spacer,
-  .pin-brand {
+  .pin-brand,
+  .board-switcher {
     display: none;
   }
 

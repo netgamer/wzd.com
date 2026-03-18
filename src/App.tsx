@@ -7,11 +7,12 @@ import {
 } from "react";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import {
+  createBoardV2,
   type BoardV2,
-  loadOrCreateBoardV2,
+  loadBoardsV2,
   type NoteColor,
   type NoteV2,
-  saveBoardV2
+  saveBoardsV2
 } from "./lib/supabase-board-v2";
 
 interface UserProfile {
@@ -20,8 +21,9 @@ interface UserProfile {
 }
 
 interface LocalSnapshot {
-  board: BoardV2;
+  boards: BoardV2[];
   notes: NoteV2[];
+  selectedBoardId: string | null;
 }
 
 type NoteFontSize = 14 | 16 | 18 | 20;
@@ -31,7 +33,6 @@ const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
 const VISIBLE_NOTE_BATCH_SIZE = 16;
 const DEFAULT_FONT_SIZE: NoteFontSize = 16;
-
 const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "purple", "mint", "white"];
 
 const makeId = () =>
@@ -41,10 +42,10 @@ const makeId = () =>
 
 const nowIso = () => new Date().toISOString();
 
-const createDefaultBoard = (userId: string): BoardV2 => ({
+const createDefaultBoard = (userId: string, title = "My Board"): BoardV2 => ({
   id: makeId(),
   userId,
-  title: "My Board",
+  title,
   description: "",
   backgroundStyle: "paper",
   settings: {},
@@ -77,23 +78,48 @@ const createNote = (params: {
 
 const createDefaultSnapshot = (): LocalSnapshot => {
   const board = createDefaultBoard("local");
-  const firstNote = createNote({
-    boardId: board.id,
-    userId: "local",
-    zIndex: 1,
-    color: "yellow",
-    content:
-      "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 한곳에 모아두는 용도입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
-  });
-  const secondNote = createNote({
-    boardId: board.id,
-    userId: "local",
-    zIndex: 2,
-    color: "mint",
-    content:
-      "그룹 메모장\n\n주제별 그룹 보드에서 각자 찾은 링크를 함께 공유할 수 있습니다.\n예: AI Studio 레퍼런스 모음"
-  });
-  return { board, notes: [firstNote, secondNote] };
+  const notes = [
+    createNote({
+      boardId: board.id,
+      userId: "local",
+      zIndex: 1,
+      color: "yellow",
+      content:
+        "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
+    }),
+    createNote({
+      boardId: board.id,
+      userId: "local",
+      zIndex: 2,
+      color: "mint",
+      content:
+        "그룹 메모장\n\n주제별 보드에서 각자 찾은 링크와 자료를 함께 공유해보세요.\n예: AI Studio 레퍼런스 모음"
+    })
+  ];
+
+  return { boards: [board], notes, selectedBoardId: board.id };
+};
+
+const migrateLocalSnapshot = (raw: string): LocalSnapshot => {
+  const parsed = JSON.parse(raw) as Partial<LocalSnapshot> & { board?: BoardV2 };
+
+  if (Array.isArray(parsed.boards) && Array.isArray(parsed.notes)) {
+    return {
+      boards: parsed.boards,
+      notes: parsed.notes,
+      selectedBoardId: parsed.selectedBoardId ?? parsed.boards[0]?.id ?? null
+    };
+  }
+
+  if (parsed.board && Array.isArray(parsed.notes)) {
+    return {
+      boards: [parsed.board],
+      notes: parsed.notes,
+      selectedBoardId: parsed.board.id
+    };
+  }
+
+  return createDefaultSnapshot();
 };
 
 const loadLocalSnapshot = (): LocalSnapshot => {
@@ -107,11 +133,7 @@ const loadLocalSnapshot = (): LocalSnapshot => {
   }
 
   try {
-    const parsed = JSON.parse(raw) as LocalSnapshot;
-    if (!parsed?.board?.id || !Array.isArray(parsed.notes)) {
-      return createDefaultSnapshot();
-    }
-    return parsed;
+    return migrateLocalSnapshot(raw);
   } catch {
     return createDefaultSnapshot();
   }
@@ -121,6 +143,7 @@ const saveLocalSnapshot = (snapshot: LocalSnapshot) => {
   if (typeof window === "undefined") {
     return;
   }
+
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshot));
 };
 
@@ -130,39 +153,43 @@ const getNoteFontSize = (note: NoteV2): NoteFontSize => {
 };
 
 const reorderNotes = (notes: NoteV2[], draggedNoteId: string, targetNoteId?: string): NoteV2[] => {
-  const ordered = [...notes.filter((note) => !note.archived)].sort((a, b) => a.zIndex - b.zIndex);
-  const archived = notes.filter((note) => note.archived);
-  const sourceIndex = ordered.findIndex((note) => note.id === draggedNoteId);
+  const dragged = notes.find((note) => note.id === draggedNoteId);
+  if (!dragged) {
+    return notes;
+  }
 
+  const boardId = dragged.boardId;
+  const boardActiveNotes = notes
+    .filter((note) => note.boardId === boardId && !note.archived)
+    .sort((a, b) => a.zIndex - b.zIndex);
+  const boardArchivedNotes = notes.filter((note) => note.boardId === boardId && note.archived);
+  const otherNotes = notes.filter((note) => note.boardId !== boardId);
+
+  const sourceIndex = boardActiveNotes.findIndex((note) => note.id === draggedNoteId);
   if (sourceIndex < 0) {
     return notes;
   }
 
-  const [moved] = ordered.splice(sourceIndex, 1);
+  const [moved] = boardActiveNotes.splice(sourceIndex, 1);
 
   if (targetNoteId) {
-    const targetIndex = ordered.findIndex((note) => note.id === targetNoteId);
+    const targetIndex = boardActiveNotes.findIndex((note) => note.id === targetNoteId);
     if (targetIndex >= 0) {
-      ordered.splice(targetIndex, 0, moved);
+      boardActiveNotes.splice(targetIndex, 0, moved);
     } else {
-      ordered.push(moved);
+      boardActiveNotes.push(moved);
     }
   } else {
-    ordered.push(moved);
+    boardActiveNotes.push(moved);
   }
 
-  const activeMap = new Map(
-    ordered.map((note, index) => [
-      note.id,
-      {
-        ...note,
-        zIndex: index + 1,
-        updatedAt: nowIso()
-      }
-    ])
-  );
+  const reordered = boardActiveNotes.map((note, index) => ({
+    ...note,
+    zIndex: index + 1,
+    updatedAt: nowIso()
+  }));
 
-  return [...ordered.map((note) => activeMap.get(note.id) ?? note), ...archived];
+  return [...otherNotes, ...reordered, ...boardArchivedNotes];
 };
 
 const extractFirstUrl = (content: string) => {
@@ -181,9 +208,24 @@ const getNoteTitle = (content: string) => {
   return firstLine.slice(0, 48);
 };
 
+const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
+
+const makeBoardTitle = (boards: BoardV2[]) => {
+  let index = boards.length + 1;
+  let title = `Board ${index}`;
+
+  while (boards.some((board) => board.title === title)) {
+    index += 1;
+    title = `Board ${index}`;
+  }
+
+  return title;
+};
+
 const App = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [board, setBoard] = useState<BoardV2>(() => createDefaultSnapshot().board);
+  const [boards, setBoards] = useState<BoardV2[]>(() => createDefaultSnapshot().boards);
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(() => createDefaultSnapshot().selectedBoardId);
   const [notes, setNotes] = useState<NoteV2[]>(() => createDefaultSnapshot().notes);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -194,18 +236,34 @@ const App = () => {
 
   const skipNextCloudSaveRef = useRef(false);
 
-  const activeNotes = useMemo(() => notes.filter((note) => !note.archived), [notes]);
-  const archivedNotes = useMemo(() => notes.filter((note) => note.archived), [notes]);
+  const selectedBoard = useMemo(
+    () => boards.find((board) => board.id === selectedBoardId) ?? boards[0] ?? null,
+    [boards, selectedBoardId]
+  );
+
+  const boardNotes = useMemo(
+    () => notes.filter((note) => note.boardId === selectedBoard?.id),
+    [notes, selectedBoard?.id]
+  );
+  const activeNotes = useMemo(() => boardNotes.filter((note) => !note.archived), [boardNotes]);
+  const archivedNotes = useMemo(() => boardNotes.filter((note) => note.archived), [boardNotes]);
   const currentNotes = feedMode === "active" ? activeNotes : archivedNotes;
 
   const filteredNotes = useMemo(() => {
     const keyword = search.trim().toLowerCase();
-    const base = [...currentNotes].sort((a, b) => a.zIndex - b.zIndex);
+    const base = [...currentNotes].sort((a, b) => {
+      if (a.pinned !== b.pinned) {
+        return a.pinned ? -1 : 1;
+      }
+      return a.zIndex - b.zIndex;
+    });
+
     if (!keyword) {
       return base;
     }
+
     return base.filter((note) => note.content.toLowerCase().includes(keyword));
-  }, [currentNotes, feedMode, search]);
+  }, [currentNotes, search]);
 
   const visibleNotes = useMemo(
     () => filteredNotes.slice(0, visibleNoteCount),
@@ -215,8 +273,9 @@ const App = () => {
   useEffect(() => {
     if (!supabase) {
       const local = loadLocalSnapshot();
-      setBoard(local.board);
+      setBoards(local.boards);
       setNotes(local.notes);
+      setSelectedBoardId(local.selectedBoardId ?? local.boards[0]?.id ?? null);
       setLoading(false);
       return;
     }
@@ -236,6 +295,7 @@ const App = () => {
         setUser(null);
         return;
       }
+
       setUser({ id: sessionUser.id, email: sessionUser.email });
     });
 
@@ -249,30 +309,32 @@ const App = () => {
 
     if (!user?.id || !supabase) {
       const local = loadLocalSnapshot();
-      setBoard(local.board);
+      setBoards(local.boards);
       setNotes(local.notes);
+      setSelectedBoardId(local.selectedBoardId ?? local.boards[0]?.id ?? null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
 
-    loadOrCreateBoardV2(user.id)
+    loadBoardsV2(user.id)
       .then((payload) => {
         if (!active) {
           return;
         }
+
         skipNextCloudSaveRef.current = true;
-        setBoard(payload.board);
+        setBoards(payload.boards);
         setNotes(payload.notes);
-        setSelectedNoteId(payload.notes.find((note) => !note.archived)?.id ?? null);
+        setSelectedBoardId(payload.boards[0]?.id ?? null);
+        setSelectedNoteId(null);
         setLoading(false);
       })
       .catch(() => {
-        if (!active) {
-          return;
+        if (active) {
+          setLoading(false);
         }
-        setLoading(false);
       });
 
     return () => {
@@ -281,8 +343,10 @@ const App = () => {
   }, [user?.id]);
 
   useEffect(() => {
+    const currentBoardId = selectedBoard?.id ?? boards[0]?.id ?? null;
+
     if (!user?.id || !supabase) {
-      saveLocalSnapshot({ board, notes });
+      saveLocalSnapshot({ boards, notes, selectedBoardId: currentBoardId });
       return;
     }
 
@@ -292,22 +356,41 @@ const App = () => {
     }
 
     const timer = window.setTimeout(() => {
-      void saveBoardV2({ board, notes }).catch(() => {});
+      void saveBoardsV2({ boards, notes }).catch(() => {});
     }, 400);
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [board, notes, user?.id]);
+  }, [boards, notes, selectedBoard?.id, user?.id]);
+
+  useEffect(() => {
+    if (!selectedBoard && boards.length > 0) {
+      setSelectedBoardId(boards[0].id);
+    }
+  }, [boards, selectedBoard]);
+
+  useEffect(() => {
+    if (!selectedBoard) {
+      setSelectedNoteId(null);
+      return;
+    }
+
+    const stillVisible = notes.some((note) => note.id === selectedNoteId && note.boardId === selectedBoard.id);
+    if (!stillVisible) {
+      setSelectedNoteId(null);
+    }
+  }, [notes, selectedBoard, selectedNoteId]);
 
   useEffect(() => {
     setVisibleNoteCount((prev) => {
       if (filteredNotes.length <= INITIAL_VISIBLE_NOTE_COUNT) {
         return filteredNotes.length;
       }
+
       return Math.max(INITIAL_VISIBLE_NOTE_COUNT, Math.min(prev, filteredNotes.length));
     });
-  }, [filteredNotes.length, feedMode]);
+  }, [filteredNotes.length, feedMode, selectedBoard?.id]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -339,12 +422,42 @@ const App = () => {
     });
   }, [visibleNotes, selectedNoteId]);
 
+  const addBoard = async () => {
+    const title = makeBoardTitle(boards);
+
+    if (supabase && user?.id) {
+      try {
+        const board = await createBoardV2(user.id, title);
+        setBoards((prev) => [board, ...prev]);
+        setSelectedBoardId(board.id);
+        setSelectedNoteId(null);
+        setFeedMode("active");
+        return;
+      } catch {
+        return;
+      }
+    }
+
+    const board = createDefaultBoard(user?.id ?? "local", title);
+    setBoards((prev) => [board, ...prev]);
+    setSelectedBoardId(board.id);
+    setSelectedNoteId(null);
+    setFeedMode("active");
+  };
+
   const addNote = () => {
-    const maxZ = notes.reduce((max, note) => Math.max(max, note.zIndex), 0);
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
     const note = createNote({
-      boardId: board.id,
-      userId: board.userId,
-      zIndex: maxZ + 1,
+      boardId: selectedBoard.id,
+      userId: selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
       content: "새 메모\n\nhttps://"
     });
 
@@ -386,32 +499,12 @@ const App = () => {
   };
 
   const archiveNote = (noteId: string) => {
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === noteId
-          ? {
-              ...note,
-              archived: true,
-              updatedAt: nowIso()
-            }
-          : note
-      )
-    );
+    updateNote(noteId, { archived: true });
     setSelectedNoteId(null);
   };
 
   const restoreNote = (noteId: string) => {
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === noteId
-          ? {
-              ...note,
-              archived: false,
-              updatedAt: nowIso()
-            }
-          : note
-      )
-    );
+    updateNote(noteId, { archived: false });
     setFeedMode("active");
     setSelectedNoteId(noteId);
   };
@@ -458,6 +551,7 @@ const App = () => {
     if (event.target !== event.currentTarget) {
       return;
     }
+
     setSelectedNoteId(null);
   };
 
@@ -476,6 +570,7 @@ const App = () => {
     if (!supabase) {
       return;
     }
+
     await supabase.auth.signOut();
   };
 
@@ -485,26 +580,41 @@ const App = () => {
         <button className="pin-brand" aria-label="WZD 홈">
           <span>W</span>
         </button>
-        <button
-          className={`side-icon ${feedMode === "active" ? "active" : ""}`}
-          onClick={() => setFeedMode("active")}
-          aria-label="메모 피드"
-        >
-          ■
-        </button>
-        <button className="side-icon" onClick={addNote} aria-label="새 메모">
+
+        <div className="board-switcher">
+          {boards.map((boardItem) => (
+            <button
+              key={boardItem.id}
+              className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
+              onClick={() => {
+                setSelectedBoardId(boardItem.id);
+                setSelectedNoteId(null);
+                setFeedMode("active");
+              }}
+              aria-label={boardItem.title}
+              title={boardItem.title}
+            >
+              {getBoardBadge(boardItem.title)}
+            </button>
+          ))}
+        </div>
+
+        <button className="side-icon" onClick={() => void addBoard()} aria-label="새 보드">
           +
         </button>
+
         <button
           className={`side-icon ${feedMode === "archived" ? "active" : ""}`}
-          onClick={() => setFeedMode("archived")}
-          aria-label="보관된 메모"
+          onClick={() => setFeedMode((prev) => (prev === "archived" ? "active" : "archived"))}
+          aria-label="보관 메모"
         >
           □
         </button>
+
         <div className="sidebar-spacer" />
-        <button className="side-icon subtle" aria-label="설정">
-          ···
+
+        <button className="side-icon subtle" onClick={addNote} aria-label="새 메모">
+          …
         </button>
       </aside>
 
@@ -552,7 +662,7 @@ const App = () => {
           <section className="feed-head">
             <div>
               <p className="feed-kicker">{feedMode === "active" ? "Personal + Group Memo" : "Archive"}</p>
-              <h1>{feedMode === "active" ? board.title || "My Board" : "보관된 메모"}</h1>
+              <h1>{feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}</h1>
             </div>
             <div className="feed-meta">
               <span>{feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`}</span>
@@ -571,9 +681,11 @@ const App = () => {
           >
             {loading ? (
               <div className="feed-empty">메모를 불러오는 중입니다.</div>
+            ) : !selectedBoard ? (
+              <div className="feed-empty">왼쪽의 + 버튼으로 첫 보드를 만들어보세요.</div>
             ) : visibleNotes.length === 0 ? (
               <div className="feed-empty">
-                {feedMode === "active" ? "첫 메모를 추가해보세요." : "보관된 메모가 없습니다."}
+                {feedMode === "active" ? "이 보드의 첫 메모를 추가해보세요." : "보관된 메모가 없습니다."}
               </div>
             ) : (
               visibleNotes.map((note) => {
@@ -630,7 +742,7 @@ const App = () => {
                           aria-label={feedMode === "active" ? "핀 고정" : "메모 복구"}
                           title={feedMode === "active" ? "핀 고정" : "메모 복구"}
                         >
-                          {feedMode === "active" ? (note.pinned ? "P" : "p") : "R"}
+                          {feedMode === "active" ? "⌖" : "↺"}
                         </button>
                         <button
                           className="pin-icon-button danger"
@@ -645,7 +757,7 @@ const App = () => {
                           aria-label={feedMode === "active" ? "메모 보관" : "메모 삭제"}
                           title={feedMode === "active" ? "메모 보관" : "메모 삭제"}
                         >
-                          {feedMode === "active" ? "X" : "D"}
+                          {feedMode === "active" ? "✕" : "⌫"}
                         </button>
                       </div>
                     </div>
@@ -711,7 +823,7 @@ const App = () => {
           <div className="infinite-scroll-status" aria-live="polite">
             {visibleNoteCount < filteredNotes.length
               ? "아래로 스크롤하면 메모가 계속 로드됩니다."
-              : `${filteredNotes.length}개의 메모가 표시되었습니다.`}
+              : `${filteredNotes.length}개의 메모가 모두 표시되었습니다.`}
           </div>
         </main>
       </div>
