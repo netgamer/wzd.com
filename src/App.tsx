@@ -863,6 +863,17 @@ const App = () => {
                       <span>{isOrganizeMode ? "드래그해서 순서 변경" : note.pinned ? "고정됨" : "드래그해서 이동"}</span>
                       <div className="note-actions">
                         <button
+                          className={`note-color-toggle chip-${note.color}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            const currentIndex = NOTE_COLORS.findIndex((item) => item.id === note.color);
+                            const nextColor = NOTE_COLORS[(currentIndex + 1) % NOTE_COLORS.length]?.id ?? "yellow";
+                            updateNote(note.id, { color: nextColor });
+                          }}
+                          aria-label="메모 색상 변경"
+                          title="메모 색상 변경"
+                        />
+                        <button
                           className="icon-btn"
                           onClick={(event) => {
                             event.stopPropagation();
@@ -921,17 +932,6 @@ const App = () => {
                 <p className="inspector-line">
                   선택된 메모: <strong>{selectedNote.id.slice(0, 8)}</strong>
                 </p>
-
-                <div className="palette-grid">
-                  {NOTE_COLORS.map((item) => (
-                    <button
-                      key={item.id}
-                      className={`color-chip chip-${item.id} ${selectedNote.color === item.id ? "active" : ""}`}
-                      onClick={() => updateNote(selectedNote.id, { color: item.id })}
-                      aria-label={`${item.label} 색상`}
-                    />
-                  ))}
-                </div>
 
                 <div className="size-row">
                   {NOTE_FONT_SIZES.map((sizeOption) => (

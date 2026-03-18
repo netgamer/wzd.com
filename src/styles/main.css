@@ -401,6 +401,7 @@ textarea {
 .note-actions {
   display: none;
   gap: 4px;
+  align-items: center;
 }
 
 .note-pin-badge {
@@ -409,6 +410,15 @@ textarea {
   background: rgba(255, 255, 255, 0.72);
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+
+.note-color-toggle {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(60, 38, 24, 0.18);
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
 .sticky-editor {
@@ -458,13 +468,6 @@ textarea {
   font-size: 13px;
   margin: 8px 0;
   color: #4a3527;
-}
-
-.palette-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin: 10px 0 12px;
 }
 
 .color-chip {
