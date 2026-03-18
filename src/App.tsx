@@ -298,6 +298,10 @@ const getBookmarkUrl = (note: NoteV2) =>
   typeof note.metadata?.bookmarkUrl === "string" && note.metadata.bookmarkUrl.trim()
     ? note.metadata.bookmarkUrl.trim()
     : DEFAULT_BOOKMARK_URL;
+const getAttachedImageUrl = (note: NoteV2) =>
+  typeof note.metadata?.pastedImageUrl === "string" && note.metadata.pastedImageUrl.trim()
+    ? note.metadata.pastedImageUrl.trim()
+    : "";
 const isDisposableEmptyNote = (note: NoteV2) => {
   if (getWidgetType(note) !== "note") {
     return false;
@@ -1243,13 +1247,28 @@ const App = () => {
     }
   };
 
-  const insertTextAtCursor = (element: HTMLTextAreaElement, text: string) => {
-    const start = element.selectionStart ?? element.value.length;
-    const end = element.selectionEnd ?? element.value.length;
-    return `${element.value.slice(0, start)}${text}${element.value.slice(end)}`;
+  const uploadPastedImage = async (note: NoteV2, file: File) => {
+    if (!supabase || !user?.id) {
+      return null;
+    }
+
+    const extension = (file.type.split("/")[1] || "png").replace(/[^a-z0-9]/gi, "").toLowerCase() || "png";
+    const path = `${user.id}/${note.boardId}/${note.id}-${Date.now()}.${extension}`;
+    const bucket = "note-images";
+    const uploadResult = await supabase.storage.from(bucket).upload(path, file, {
+      upsert: false,
+      contentType: file.type
+    });
+
+    if (uploadResult.error) {
+      throw uploadResult.error;
+    }
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    return data.publicUrl || null;
   };
 
-  const onEditorPaste = (note: NoteV2, event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+  const onEditorPaste = async (note: NoteV2, event: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
     if (!imageItem) {
       return;
@@ -1261,17 +1280,35 @@ const App = () => {
     }
 
     event.preventDefault();
+
+    try {
+      const uploadedUrl = await uploadPastedImage(note, file);
+      if (uploadedUrl) {
+        updateNote(note.id, {
+          metadata: {
+            ...note.metadata,
+            pastedImageUrl: uploadedUrl
+          }
+        });
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to upload pasted image", error);
+    }
+
     const reader = new FileReader();
-    const textarea = event.currentTarget;
     reader.onload = () => {
       const result = typeof reader.result === "string" ? reader.result : "";
       if (!result) {
         return;
       }
 
-      const prefix = textarea.value.trim().length > 0 ? "\n" : "";
-      const nextContent = insertTextAtCursor(textarea, `${prefix}${result}\n`);
-      updateNote(note.id, { content: nextContent });
+      updateNote(note.id, {
+        metadata: {
+          ...note.metadata,
+          pastedImageUrl: result
+        }
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -1857,7 +1894,8 @@ const App = () => {
                     const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
                     const bookmarkUrl = isBookmarkWidget ? getBookmarkUrl(note) : "";
                     const bookmarkPreview = bookmarkUrl ? linkPreviews[bookmarkUrl] : undefined;
-                    const previewUrl = extractFirstUrl(note.content);
+                    const attachedImageUrl = getAttachedImageUrl(note);
+                    const previewUrl = attachedImageUrl || extractFirstUrl(note.content);
                     const previewText = stripUrls(note.content);
                     const linkPreview = previewUrl && !isImageUrl(previewUrl) ? linkPreviews[previewUrl] : undefined;
                     const hasImagePreview = Boolean(previewUrl && isImageUrl(previewUrl));
@@ -2100,21 +2138,34 @@ const App = () => {
                             {(!useImageHeroCard || hasTextPreview) && <p className="pin-title">{getNoteTitle(note.content)}</p>}
 
                             {selected ? (
-                                  <textarea
-                                    className="pin-editor"
-                                    value={note.content}
-                                    style={{ fontSize: `${fontSize}px` }}
-                                    onMouseDown={(event) => event.stopPropagation()}
-                                    onPaste={(event) => onEditorPaste(note, event)}
-                                    onFocus={() => setSelectedNoteId(note.id)}
-                                    onChange={(event) => {
-                                      updateNote(note.id, { content: event.target.value });
-                                  event.currentTarget.style.height = "0px";
-                                  event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-                                }}
-                                placeholder="??, ??, ??? URL? ?????"
-                                rows={1}
-                              />
+                                  <>
+                                    {attachedImageUrl && (
+                                      <div className="editor-image-preview">
+                                        <img
+                                          className="editor-image-preview-media"
+                                          src={getImageProxyUrl(attachedImageUrl)}
+                                          alt={getNoteTitle(note.content)}
+                                        />
+                                      </div>
+                                    )}
+                                    <textarea
+                                      className="pin-editor"
+                                      value={note.content}
+                                      style={{ fontSize: `${fontSize}px` }}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onPaste={(event) => {
+                                        void onEditorPaste(note, event);
+                                      }}
+                                      onFocus={() => setSelectedNoteId(note.id)}
+                                      onChange={(event) => {
+                                        updateNote(note.id, { content: event.target.value });
+                                        event.currentTarget.style.height = "0px";
+                                        event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+                                      }}
+                                      placeholder="??, ??, ??? URL? ?????"
+                                      rows={1}
+                                    />
+                                  </>
                             ) : (
                               <>
                                 {previewUrl && !hasImagePreview &&
