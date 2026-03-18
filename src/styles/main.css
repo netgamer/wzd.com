@@ -81,6 +81,10 @@ button {
   width: 100%;
 }
 
+.board-switcher > div {
+  width: 100%;
+}
+
 .board-menu {
   width: 100%;
   display: flex;
@@ -167,6 +171,19 @@ button {
 
 .board-chip.active:hover {
   background: var(--accent);
+}
+
+.board-chip.dragging {
+  opacity: 0.34;
+}
+
+.board-chip-drop-preview {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 22px;
+  border: 2px dashed rgba(29, 111, 216, 0.35);
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(6px);
 }
 
 .pin-sidebar.expanded .board-switcher {

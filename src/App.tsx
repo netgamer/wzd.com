@@ -248,6 +248,16 @@ const getNoteTitle = (content: string) => {
 };
 
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
+const getBoardOrder = (board: BoardV2) =>
+  typeof board.settings?.sidebarOrder === "number" ? board.settings.sidebarOrder : Number.MAX_SAFE_INTEGER;
+const sortBoards = (boards: BoardV2[]) =>
+  [...boards].sort((a, b) => {
+    const orderDiff = getBoardOrder(a) - getBoardOrder(b);
+    if (orderDiff !== 0) {
+      return orderDiff;
+    }
+    return a.updatedAt.localeCompare(b.updatedAt);
+  });
 const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "rss" || note.metadata?.widgetType === "bookmark" ? note.metadata.widgetType : "note";
 const getRssFeedUrl = (note: NoteV2) =>
@@ -417,6 +427,9 @@ const App = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
+  const [draggingBoardId, setDraggingBoardId] = useState<string | null>(null);
+  const [dragPreviewBoardId, setDragPreviewBoardId] = useState<string | null>(null);
+  const [dragArmedBoardId, setDragArmedBoardId] = useState<string | null>(null);
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -425,11 +438,13 @@ const App = () => {
   const latestUserIdRef = useRef<string | null>(user?.id ?? null);
   const saveStateResetTimerRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const boardLongPressTimerRef = useRef<number | null>(null);
 
   const selectedBoard = useMemo(
     () => boards.find((board) => board.id === selectedBoardId) ?? boards[0] ?? null,
     [boards, selectedBoardId]
   );
+  const orderedBoards = useMemo(() => sortBoards(boards), [boards]);
 
   useEffect(() => {
     latestBoardsRef.current = boards;
@@ -687,6 +702,9 @@ const App = () => {
       if (saveStateResetTimerRef.current) {
         window.clearTimeout(saveStateResetTimerRef.current);
       }
+      if (boardLongPressTimerRef.current) {
+        window.clearTimeout(boardLongPressTimerRef.current);
+      }
     };
   }, []);
 
@@ -866,11 +884,12 @@ const App = () => {
 
   const addBoard = async () => {
     const title = makeBoardTitle(boards);
+    const nextOrder = orderedBoards.length;
 
     if (supabase && user?.id) {
       try {
         const board = await createBoardV2(user.id, title);
-        setBoards((prev) => [board, ...prev]);
+        setBoards((prev) => [{ ...board, settings: { ...board.settings, sidebarOrder: nextOrder } }, ...prev]);
         setSelectedBoardId(board.id);
         setSelectedNoteId(null);
         setFeedMode("active");
@@ -881,6 +900,7 @@ const App = () => {
     }
 
     const board = createDefaultBoard(user?.id ?? "local", title);
+    board.settings = { ...board.settings, sidebarOrder: nextOrder };
     setBoards((prev) => [board, ...prev]);
     setSelectedBoardId(board.id);
     setSelectedNoteId(null);
@@ -1135,6 +1155,75 @@ const App = () => {
     updateDragPreview(null, null);
   };
 
+  const clearBoardLongPress = () => {
+    if (boardLongPressTimerRef.current) {
+      window.clearTimeout(boardLongPressTimerRef.current);
+      boardLongPressTimerRef.current = null;
+    }
+  };
+
+  const armBoardDrag = (boardId: string) => {
+    clearBoardLongPress();
+    boardLongPressTimerRef.current = window.setTimeout(() => {
+      setDragArmedBoardId(boardId);
+      boardLongPressTimerRef.current = null;
+    }, 220);
+  };
+
+  const reorderBoards = (draggedBoardId: string, targetBoardId?: string) => {
+    const sorted = sortBoards(boards);
+    const draggedBoard = sorted.find((board) => board.id === draggedBoardId);
+    if (!draggedBoard) {
+      return;
+    }
+
+    const remaining = sorted.filter((board) => board.id !== draggedBoardId);
+    const targetIndex = targetBoardId ? remaining.findIndex((board) => board.id === targetBoardId) : remaining.length;
+    const insertIndex = targetIndex >= 0 ? targetIndex : remaining.length;
+    remaining.splice(insertIndex, 0, draggedBoard);
+
+    const updatedAt = nowIso();
+    setBoards(
+      remaining.map((board, index) => ({
+        ...board,
+        settings: {
+          ...board.settings,
+          sidebarOrder: index
+        },
+        updatedAt: board.id === draggedBoardId ? updatedAt : board.updatedAt
+      }))
+    );
+  };
+
+  const onBoardChipDragStart = (event: ReactDragEvent<HTMLButtonElement>, boardId: string) => {
+    if (dragArmedBoardId !== boardId) {
+      event.preventDefault();
+      return;
+    }
+
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/board-id", boardId);
+    setDraggingBoardId(boardId);
+    setDragPreviewBoardId(boardId);
+  };
+
+  const onBoardChipDrop = (event: ReactDragEvent<HTMLElement>, targetBoardId?: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const draggedBoardId = event.dataTransfer.getData("text/board-id") || draggingBoardId;
+    if (!draggedBoardId || draggedBoardId === targetBoardId) {
+      setDraggingBoardId(null);
+      setDragPreviewBoardId(null);
+      setDragArmedBoardId(null);
+      return;
+    }
+
+    reorderBoards(draggedBoardId, targetBoardId);
+    setDraggingBoardId(null);
+    setDragPreviewBoardId(null);
+    setDragArmedBoardId(null);
+  };
+
   const onBoardBackgroundMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target !== event.currentTarget) {
       return;
@@ -1172,26 +1261,69 @@ const App = () => {
         </button>
 
         <div className="board-menu">
-          <div className="board-switcher">
-            {boards.map((boardItem) => (
-              <button
-                key={boardItem.id}
-                className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
-                onClick={() => {
-                  if (boardItem.id === selectedBoard?.id) {
-                    setSidebarExpanded((prev) => !prev);
-                  }
+          <div
+            className="board-switcher"
+            onDragOver={(event) => {
+              if (draggingBoardId) {
+                event.preventDefault();
+                if (event.target === event.currentTarget) {
+                  setDragPreviewBoardId(null);
+                }
+              }
+            }}
+            onDrop={(event) => onBoardChipDrop(event)}
+          >
+            {orderedBoards.map((boardItem) => (
+              <div key={boardItem.id}>
+                {draggingBoardId && dragPreviewBoardId === boardItem.id && draggingBoardId !== boardItem.id && (
+                  <div className="board-chip-drop-preview" aria-hidden="true" />
+                )}
+                <button
+                  className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""} ${
+                    draggingBoardId === boardItem.id ? "dragging" : ""
+                  }`}
+                  draggable={showExpandedSidebar && dragArmedBoardId === boardItem.id}
+                  onMouseDown={() => armBoardDrag(boardItem.id)}
+                  onMouseUp={clearBoardLongPress}
+                  onMouseLeave={clearBoardLongPress}
+                  onDragStart={(event) => onBoardChipDragStart(event, boardItem.id)}
+                  onDragEnd={() => {
+                    clearBoardLongPress();
+                    setDraggingBoardId(null);
+                    setDragPreviewBoardId(null);
+                    setDragArmedBoardId(null);
+                  }}
+                  onDragEnter={() => {
+                    if (draggingBoardId && draggingBoardId !== boardItem.id) {
+                      setDragPreviewBoardId(boardItem.id);
+                    }
+                  }}
+                  onDragOver={(event) => {
+                    if (draggingBoardId) {
+                      event.preventDefault();
+                    }
+                  }}
+                  onDrop={(event) => onBoardChipDrop(event, boardItem.id)}
+                  onClick={() => {
+                    if (dragArmedBoardId === boardItem.id || draggingBoardId === boardItem.id) {
+                      return;
+                    }
 
-                  setSelectedBoardId(boardItem.id);
-                  setSelectedNoteId(null);
-                  setFeedMode("active");
-                }}
-                aria-label={boardItem.title}
-                title={boardItem.title}
-              >
-                <span className="board-chip-badge">{getBoardBadge(boardItem.title)}</span>
-                <span className="board-chip-label">{boardItem.title}</span>
-              </button>
+                    if (boardItem.id === selectedBoard?.id) {
+                      setSidebarExpanded((prev) => !prev);
+                    }
+
+                    setSelectedBoardId(boardItem.id);
+                    setSelectedNoteId(null);
+                    setFeedMode("active");
+                  }}
+                  aria-label={boardItem.title}
+                  title={boardItem.title}
+                >
+                  <span className="board-chip-badge">{getBoardBadge(boardItem.title)}</span>
+                  <span className="board-chip-label">{boardItem.title}</span>
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -1341,7 +1473,7 @@ const App = () => {
         {mobileBoardMenuOpen && (
           <div className="mobile-board-sheet">
             <div className="mobile-board-list">
-              {boards.map((boardItem) => (
+              {orderedBoards.map((boardItem) => (
                 <button
                   key={`mobile-${boardItem.id}`}
                   className={`mobile-board-item ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
