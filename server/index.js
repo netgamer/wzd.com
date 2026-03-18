@@ -25,6 +25,23 @@ const matchMetaContent = (html, patterns) => {
   return "";
 };
 
+const buildFallbackPreview = (targetUrl) => {
+  const hostname = targetUrl.hostname.replace(/^www\./i, "");
+  const compactPath = `${targetUrl.pathname}${targetUrl.search}`.replace(/\/+$/, "") || "/";
+  const titleBase = compactPath === "/" ? hostname : compactPath.split("/").filter(Boolean).pop() || hostname;
+  const title = decodeURIComponent(titleBase).replace(/[-_]+/g, " ").slice(0, 80) || hostname;
+
+  return {
+    url: targetUrl.toString(),
+    finalUrl: targetUrl.toString(),
+    hostname,
+    title,
+    description: `${hostname}${compactPath}`.slice(0, 140),
+    image: "",
+    siteName: hostname
+  };
+};
+
 app.use(
   cors({
     origin: [config.allowedOrigin, "http://localhost:5173"],
@@ -66,6 +83,11 @@ app.get("/api/link-preview", async (req, res) => {
       }
     });
 
+    if (!response.ok) {
+      res.json({ ok: true, preview: buildFallbackPreview(targetUrl) });
+      return;
+    }
+
     const html = await response.text();
     const finalUrl = new URL(response.url);
     const title =
@@ -102,8 +124,14 @@ app.get("/api/link-preview", async (req, res) => {
       }
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "unknown error";
-    res.status(500).json({ ok: false, error: message });
+    try {
+      const rawUrl = typeof req.query.url === "string" ? req.query.url.trim() : "";
+      const targetUrl = new URL(rawUrl);
+      res.json({ ok: true, preview: buildFallbackPreview(targetUrl) });
+    } catch {
+      const message = error instanceof Error ? error.message : "unknown error";
+      res.status(500).json({ ok: false, error: message });
+    }
   }
 });
 

@@ -17,6 +17,23 @@ const matchMetaContent = (html, patterns) => {
   return "";
 };
 
+const buildFallbackPreview = (targetUrl) => {
+  const hostname = targetUrl.hostname.replace(/^www\./i, "");
+  const compactPath = `${targetUrl.pathname}${targetUrl.search}`.replace(/\/+$/, "") || "/";
+  const titleBase = compactPath === "/" ? hostname : compactPath.split("/").filter(Boolean).pop() || hostname;
+  const title = decodeURIComponent(titleBase).replace(/[-_]+/g, " ").slice(0, 80) || hostname;
+
+  return {
+    url: targetUrl.toString(),
+    finalUrl: targetUrl.toString(),
+    hostname,
+    title,
+    description: `${hostname}${compactPath}`.slice(0, 140),
+    image: "",
+    siteName: hostname
+  };
+};
+
 export const onRequestGet = async ({ request }) => {
   try {
     const requestUrl = new URL(request.url);
@@ -42,6 +59,10 @@ export const onRequestGet = async ({ request }) => {
         "user-agent": "WZD Link Preview Bot/1.0"
       }
     });
+
+    if (!response.ok) {
+      return Response.json({ ok: true, preview: buildFallbackPreview(targetUrl) });
+    }
 
     const html = await response.text();
     const finalUrl = new URL(response.url);
@@ -79,7 +100,14 @@ export const onRequestGet = async ({ request }) => {
       }
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "unknown error";
-    return Response.json({ ok: false, error: message }, { status: 500 });
+    try {
+      const requestUrl = new URL(request.url);
+      const rawUrl = requestUrl.searchParams.get("url")?.trim() || "";
+      const targetUrl = new URL(rawUrl);
+      return Response.json({ ok: true, preview: buildFallbackPreview(targetUrl) });
+    } catch {
+      const message = error instanceof Error ? error.message : "unknown error";
+      return Response.json({ ok: false, error: message }, { status: 500 });
+    }
   }
 };
