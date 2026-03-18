@@ -28,6 +28,7 @@ interface LocalSnapshot {
 
 type NoteFontSize = 14 | 16 | 18 | 20;
 type FeedMode = "active" | "archived";
+type CloudSaveState = "idle" | "saving" | "saved" | "error";
 
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
@@ -289,11 +290,13 @@ const App = () => {
   const [dragPreviewNoteId, setDragPreviewNoteId] = useState<string | null>(null);
   const [visibleNoteCount, setVisibleNoteCount] = useState(INITIAL_VISIBLE_NOTE_COUNT);
   const [feedMode, setFeedMode] = useState<FeedMode>("active");
+  const [cloudSaveState, setCloudSaveState] = useState<CloudSaveState>("idle");
 
   const skipNextCloudSaveRef = useRef(false);
   const latestBoardsRef = useRef<BoardV2[]>(boards);
   const latestNotesRef = useRef<NoteV2[]>(notes);
   const latestUserIdRef = useRef<string | null>(user?.id ?? null);
+  const saveStateResetTimerRef = useRef<number | null>(null);
 
   const selectedBoard = useMemo(
     () => boards.find((board) => board.id === selectedBoardId) ?? boards[0] ?? null,
@@ -321,6 +324,19 @@ const App = () => {
       boards: latestBoardsRef.current,
       notes: latestNotesRef.current
     });
+  };
+
+  const markCloudSaved = () => {
+    setCloudSaveState("saved");
+
+    if (saveStateResetTimerRef.current) {
+      window.clearTimeout(saveStateResetTimerRef.current);
+    }
+
+    saveStateResetTimerRef.current = window.setTimeout(() => {
+      setCloudSaveState("idle");
+      saveStateResetTimerRef.current = null;
+    }, 2200);
   };
 
   const mergeLocalSnapshotToCloud = async (userId: string, remoteBoards: BoardV2[], remoteNotes: NoteV2[]) => {
@@ -473,6 +489,7 @@ const App = () => {
 
     if (!user?.id || !supabase) {
       saveLocalSnapshot({ boards, notes, selectedBoardId: currentBoardId });
+      setCloudSaveState("idle");
       return;
     }
 
@@ -481,16 +498,30 @@ const App = () => {
       return;
     }
 
+    setCloudSaveState("saving");
     const timer = window.setTimeout(() => {
-      void persistCloudSnapshot().catch((error) => {
-        console.error("Failed to save boards", error);
-      });
+      void persistCloudSnapshot()
+        .then(() => {
+          markCloudSaved();
+        })
+        .catch((error) => {
+          setCloudSaveState("error");
+          console.error("Failed to save boards", error);
+        });
     }, CLOUD_SAVE_DEBOUNCE_MS);
 
     return () => {
       window.clearTimeout(timer);
     };
   }, [boards, notes, selectedBoard?.id, user?.id]);
+
+  useEffect(() => {
+    return () => {
+      if (saveStateResetTimerRef.current) {
+        window.clearTimeout(saveStateResetTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!supabase || !user?.id) {
@@ -924,7 +955,21 @@ const App = () => {
         <main className="pin-main">
           <section className="feed-head">
             <div className="feed-meta">
-              <span>{feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`}</span>
+              <span>
+                {hasSupabaseConfig && user
+                  ? cloudSaveState === "saving"
+                    ? "클라우드에 저장 중입니다"
+                    : cloudSaveState === "saved"
+                      ? "클라우드에 저장되었습니다"
+                      : cloudSaveState === "error"
+                        ? "클라우드 저장에 실패했습니다"
+                        : feedMode === "active"
+                          ? `${activeNotes.length}개의 핀`
+                          : `${archivedNotes.length}개의 보관 메모`
+                  : feedMode === "active"
+                    ? `${activeNotes.length}개의 핀`
+                    : `${archivedNotes.length}개의 보관 메모`}
+              </span>
             </div>
           </section>
 
