@@ -431,9 +431,10 @@ button {
 
 .pin-board {
   display: grid;
-  grid-template-columns: repeat(var(--pin-columns, 4), minmax(0, 244px));
+  grid-template-columns: repeat(var(--pin-columns, 4), minmax(0, 1fr));
   align-items: stretch;
   gap: 18px;
+  width: 100%;
 }
 
 .pin-column {
@@ -446,7 +447,7 @@ button {
 
 .pin-card {
   width: 100%;
-  max-width: 244px;
+  max-width: none;
   display: inline-flex;
   flex-direction: column;
   margin: 0;

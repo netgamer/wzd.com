@@ -270,15 +270,8 @@ const getColumnCount = () => {
     return 1;
   }
 
-  if (window.innerWidth < 1080) {
-    return 2;
-  }
-
-  if (window.innerWidth < 1480) {
-    return 3;
-  }
-
-  return 4;
+  const estimatedColumns = Math.floor((window.innerWidth - 120) / 280);
+  return Math.max(2, Math.min(7, estimatedColumns));
 };
 
 const getNoteColumn = (note: NoteV2, columnCount: number) => {
