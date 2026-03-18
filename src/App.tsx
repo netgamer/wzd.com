@@ -271,6 +271,9 @@ const makeBoardTitle = (boards: BoardV2[]) => {
   return title;
 };
 
+const isInteractiveElement = (target: EventTarget | null) =>
+  target instanceof HTMLElement && Boolean(target.closest("textarea, input, button, a"));
+
 const App = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [boards, setBoards] = useState<BoardV2[]>(() => createDefaultSnapshot().boards);
@@ -678,6 +681,11 @@ const App = () => {
       return;
     }
 
+    if (isInteractiveElement(event.target)) {
+      event.preventDefault();
+      return;
+    }
+
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", noteId);
     setRunningDragNoteId(noteId);
@@ -892,7 +900,7 @@ const App = () => {
                     className={`pin-card note-${note.color} ${selected ? "selected" : ""} ${
                       runningDragNoteId === note.id ? "dragging" : ""
                     }`}
-                    draggable={feedMode === "active" && !selected}
+                    draggable={feedMode === "active"}
                     onDragStart={(event) => onPinDragStart(event, note.id)}
                     onDragEnd={() => setRunningDragNoteId(null)}
                     onDragOver={(event) => {
