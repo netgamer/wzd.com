@@ -1,4 +1,4 @@
-import {
+﻿import {
   type CSSProperties,
   type DragEvent as ReactDragEvent,
   useEffect,
@@ -46,7 +46,7 @@ const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
-const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
+const DEFAULT_NEW_NOTE_CONTENT = "??硫붾え\n\nhttps://";
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -98,7 +98,7 @@ const createDefaultSnapshot = (): LocalSnapshot => {
       zIndex: 1,
       color: "yellow",
       content:
-        "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
+        "媛쒖씤 硫붾え??n\n媛꾨떒??硫붾え, 遺곷쭏?? ?대?吏 URL??紐⑥븘?먮뒗 怨듦컙?낅땲??\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
     }),
     createNote({
       boardId: board.id,
@@ -106,7 +106,7 @@ const createDefaultSnapshot = (): LocalSnapshot => {
       zIndex: 2,
       color: "mint",
       content:
-        "그룹 메모장\n\n주제별 보드에서 각자 찾은 링크와 자료를 함께 공유해보세요.\n예: AI Studio 레퍼런스 모음"
+        "洹몃９ 硫붾え??n\n二쇱젣蹂?蹂대뱶?먯꽌 媛곸옄 李얠? 留곹겕? ?먮즺瑜??④퍡 怨듭쑀?대낫?몄슂.\n?? AI Studio ?덊띁?곗뒪 紐⑥쓬"
     })
   ];
 
@@ -243,7 +243,7 @@ const getUrlSnippet = (url: string) => {
 
 const getNoteTitle = (content: string) => {
   const cleaned = stripUrls(content);
-  const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "새 메모";
+  const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "??硫붾え";
   return firstLine.slice(0, 48);
 };
 
@@ -298,6 +298,22 @@ const getBookmarkUrl = (note: NoteV2) =>
   typeof note.metadata?.bookmarkUrl === "string" && note.metadata.bookmarkUrl.trim()
     ? note.metadata.bookmarkUrl.trim()
     : DEFAULT_BOOKMARK_URL;
+const getBookmarkUrls = (note: NoteV2) => {
+  const rawList = note.metadata?.bookmarkUrls;
+  if (Array.isArray(rawList)) {
+    return rawList.filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+  }
+
+  if (typeof rawList === "string" && rawList.trim()) {
+    return rawList
+      .split(/\r?\n/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+  }
+
+  const single = getBookmarkUrl(note);
+  return single && single !== DEFAULT_BOOKMARK_URL ? [single] : [];
+};
 const getAttachedImageUrl = (note: NoteV2) =>
   typeof note.metadata?.pastedImageUrl === "string" && note.metadata.pastedImageUrl.trim()
     ? note.metadata.pastedImageUrl.trim()
@@ -312,7 +328,7 @@ const isDisposableEmptyNote = (note: NoteV2) => {
     return true;
   }
 
-  return trimmed === "새 메모" || trimmed === "https://" || trimmed === DEFAULT_NEW_NOTE_CONTENT.trim();
+  return trimmed === "??硫붾え" || trimmed === "https://" || trimmed === DEFAULT_NEW_NOTE_CONTENT.trim();
 };
 
 const sanitizeNotes = (notes: NoteV2[]) =>
@@ -890,10 +906,11 @@ const App = () => {
             urls.push(noteUrl);
           }
           if (getWidgetType(note) === "bookmark") {
-            const bookmarkUrl = getBookmarkUrl(note);
-            if (bookmarkUrl && !isImageUrl(bookmarkUrl)) {
-              urls.push(bookmarkUrl);
-            }
+            getBookmarkUrls(note).forEach((bookmarkUrl) => {
+              if (bookmarkUrl && !isImageUrl(bookmarkUrl)) {
+                urls.push(bookmarkUrl);
+              }
+            });
           }
           return urls;
         })
@@ -1018,8 +1035,8 @@ const App = () => {
     const hasRecoverableContent = boardHasRecoverableContent(selectedBoard.id);
     const shouldDelete = window.confirm(
       hasRecoverableContent
-        ? `'${selectedBoard.title}' 보드를 삭제할까요? 30일 동안 설정의 휴지통에서 복구할 수 있습니다.`
-        : `'${selectedBoard.title}' 보드를 삭제할까요?`
+        ? `'${selectedBoard.title}' 蹂대뱶瑜???젣?좉퉴?? 30???숈븞 ?ㅼ젙???댁??듭뿉??蹂듦뎄?????덉뒿?덈떎.`
+        : `'${selectedBoard.title}' 蹂대뱶瑜???젣?좉퉴??`
     );
     if (!shouldDelete) {
       return;
@@ -1137,7 +1154,7 @@ const App = () => {
       userId: selectedBoard.userId,
       zIndex: boardMaxZ + 1,
       color: "white",
-      content: "AI 뉴스"
+      content: "AI ?댁뒪"
     });
 
     note.metadata = {
@@ -1174,7 +1191,8 @@ const App = () => {
     note.metadata = {
       ...note.metadata,
       widgetType: "bookmark",
-      bookmarkUrl: DEFAULT_BOOKMARK_URL
+      bookmarkUrl: DEFAULT_BOOKMARK_URL,
+      bookmarkUrls: []
     };
 
     setNotes((prev) => [note, ...prev]);
@@ -1581,16 +1599,16 @@ const App = () => {
           </div>
         </div>
 
-        <button className="side-icon" onClick={() => void addBoard()} aria-label="새 보드">
+        <button className="side-icon" onClick={() => void addBoard()} aria-label="??蹂대뱶">
           +
         </button>
 
         <button
           className={`side-icon ${feedMode === "archived" ? "active" : ""}`}
           onClick={() => setFeedMode((prev) => (prev === "archived" ? "active" : "archived"))}
-          aria-label="보관 메모"
+          aria-label="蹂닿? 硫붾え"
         >
-          □
+          ??
         </button>
 
         <div className="sidebar-spacer" />
@@ -1611,11 +1629,11 @@ const App = () => {
               <button
                 className="mobile-icon-action mobile-board-toggle"
                 onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
-                aria-label="보드 메뉴"
+                aria-label="蹂대뱶 硫붾돱"
               >
-                ≡
+                ??
               </button>
-              <p className="feed-kicker">{feedMode === "active" ? "개인 보드" : "보관 메모"}</p>
+              <p className="feed-kicker">{feedMode === "active" ? "媛쒖씤 蹂대뱶" : "蹂닿? 硫붾え"}</p>
               {feedMode === "active" && editingBoardTitle ? (
                 <input
                   className="board-title-input"
@@ -1646,21 +1664,21 @@ const App = () => {
                     setEditingBoardTitle(true);
                   }}
                 >
-                  {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}
+                  {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "蹂닿? 硫붾え"}
                 </h1>
               )}
             </div>
 
             <div className={`search-shell ${mobileSearchOpen ? "mobile-open" : ""}`}>
               <span className="search-icon" aria-hidden="true">
-                ⌕
+                ??
               </span>
               <input
                 ref={searchInputRef}
                 className="search-input pinterest-search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder={feedMode === "active" ? "내 메모와 링크 검색" : "보관된 메모 검색"}
+                placeholder={feedMode === "active" ? "내 메모와 링크 검색" : "보관 메모 검색"}
               />
             </div>
           </div>
@@ -1679,35 +1697,35 @@ const App = () => {
               }}
               aria-label="검색"
             >
-              ⌕
+              검색
             </button>
             <button className="new-note-pill" onClick={addNote}>
-              새 메모
+              ??硫붾え
             </button>
             {feedMode === "active" && selectedBoard && (
               <button className="ghost-action ghost-danger" onClick={() => void deleteBoard()}>
-                보드 삭제
+                蹂대뱶 ??젣
               </button>
             )}
             <div className="widget-menu-wrap">
               <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
-                위젯 추가
+                ?꾩젽 異붽?
               </button>
               {widgetMenuOpen && (
                 <div className="widget-menu">
                   <button className="widget-menu-item" onClick={addRssWidget}>
-                    RSS 리더
+                    RSS 由щ뜑
                   </button>
                   <button className="widget-menu-item" onClick={addBookmarkWidget}>
-                    북마크
+                    遺곷쭏??
                   </button>
                 </div>
               )}
             </div>
-            <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="새 메모">
+            <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="??硫붾え">
               +
             </button>
-            <button className="mobile-icon-action" onClick={() => setWidgetMenuOpen((prev) => !prev)} aria-label="위젯 추가">
+            <button className="mobile-icon-action" onClick={() => setWidgetMenuOpen((prev) => !prev)} aria-label="?꾩젽 異붽?">
               W
             </button>
             {hasSupabaseConfig ? (
@@ -1718,16 +1736,16 @@ const App = () => {
                     <span className="profile-email">{user.email}</span>
                   </div>
                   <button className="ghost-action" onClick={onLogout}>
-                    로그아웃
+                    濡쒓렇?꾩썐
                   </button>
                 </>
               ) : (
                 <button className="ghost-action" onClick={onGoogleLogin}>
-                  구글 로그인
+                  援ш? 濡쒓렇??
                 </button>
               )
             ) : (
-              <div className="profile-pill muted">로컬 모드</div>
+              <div className="profile-pill muted">濡쒖뺄 紐⑤뱶</div>
             )}
           </div>
         </header>
@@ -1829,17 +1847,17 @@ const App = () => {
               <span>
                 {hasSupabaseConfig && user
                   ? cloudSaveState === "saving"
-                    ? "클라우드에 저장 중입니다"
+                    ? "?대씪?곕뱶?????以묒엯?덈떎"
                     : cloudSaveState === "saved"
-                      ? "클라우드에 저장되었습니다"
+                      ? "?대씪?곕뱶????λ릺?덉뒿?덈떎"
                       : cloudSaveState === "error"
-                        ? "클라우드 저장에 실패했습니다"
+                        ? "?대씪?곕뱶 ??μ뿉 ?ㅽ뙣?덉뒿?덈떎"
                         : feedMode === "active"
-                          ? `${activeNotes.length}개의 핀`
-                          : `${archivedNotes.length}개의 보관 메모`
+                          ? `${activeNotes.length}媛쒖쓽 ?`
+                          : `${archivedNotes.length}媛쒖쓽 蹂닿? 硫붾え`
                   : feedMode === "active"
-                    ? `${activeNotes.length}개의 핀`
-                    : `${archivedNotes.length}개의 보관 메모`}
+                    ? `${activeNotes.length}媛쒖쓽 ?`
+                    : `${archivedNotes.length}媛쒖쓽 蹂닿? 硫붾え`}
               </span>
             </div>
           </section>
@@ -1892,8 +1910,7 @@ const App = () => {
                     const isBookmarkWidget = widgetType === "bookmark";
                     const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
                     const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
-                    const bookmarkUrl = isBookmarkWidget ? getBookmarkUrl(note) : "";
-                    const bookmarkPreview = bookmarkUrl ? linkPreviews[bookmarkUrl] : undefined;
+                    const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
                     const attachedImageUrl = getAttachedImageUrl(note);
                     const previewUrl = attachedImageUrl || extractFirstUrl(note.content);
                     const previewText = stripUrls(note.content);
@@ -2003,7 +2020,7 @@ const App = () => {
                               <>
                                 <div className="widget-header">
                                   <span className="widget-badge">RSS</span>
-                                  <p className="pin-title">{note.content.trim() || "RSS 리더"}</p>
+                                  <p className="pin-title">{note.content.trim() || "RSS 由щ뜑"}</p>
                                 </div>
                                 {selected ? (
                                   <div className="widget-editor-stack">
@@ -2020,7 +2037,7 @@ const App = () => {
                                           }
                                         })
                                       }
-                                      placeholder="RSS 피드 URL"
+                                      placeholder="RSS ?쇰뱶 URL"
                                     />
                                     <button
                                       className="widget-confirm"
@@ -2029,7 +2046,7 @@ const App = () => {
                                         setSelectedNoteId(null);
                                       }}
                                     >
-                                      확인
+                                      ?뺤씤
                                     </button>
                                   </div>
                                 ) : (
@@ -2041,7 +2058,7 @@ const App = () => {
                                       rel="noreferrer"
                                       onClick={(event) => event.stopPropagation()}
                                     >
-                                      {rssFeed?.title || "RSS 피드 열기"}
+                                      {rssFeed?.title || "RSS ?쇰뱶 ?닿린"}
                                     </a>
                                     {rssFeed?.items?.length ? (
                                       rssFeed.items.slice(0, 5).map((item) => (
@@ -2058,7 +2075,7 @@ const App = () => {
                                         </a>
                                       ))
                                     ) : (
-                                      <p className="rss-empty">RSS 항목을 불러오는 중이거나 피드를 읽을 수 없습니다.</p>
+                                      <p className="rss-empty">RSS ??ぉ??遺덈윭?ㅻ뒗 以묒씠嫄곕굹 ?쇰뱶瑜??쎌쓣 ???놁뒿?덈떎.</p>
                                     )}
                                   </div>
                                 )}
@@ -2067,24 +2084,40 @@ const App = () => {
                               <>
                                 <div className="widget-header">
                                   <span className="widget-badge">LINK</span>
-                                  <p className="pin-title">{bookmarkPreview?.title || "북마크"}</p>
+                                  <p className="pin-title">{note.content.trim() || "북마크"}</p>
                                 </div>
                                 {selected ? (
                                   <div className="widget-editor-stack">
                                     <input
                                       className="widget-input"
-                                      value={bookmarkUrl}
+                                      value={note.content}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                                      placeholder="북마크 제목"
+                                    />
+                                    <textarea
+                                      className="widget-textarea"
+                                      value={bookmarkUrls.join("\n")}
                                       onMouseDown={(event) => event.stopPropagation()}
                                       onChange={(event) =>
                                         updateNote(note.id, {
                                           metadata: {
                                             ...note.metadata,
                                             widgetType: "bookmark",
-                                            bookmarkUrl: event.target.value
+                                            bookmarkUrls: event.target.value
+                                              .split(/\r?\n/)
+                                              .map((value) => value.trim())
+                                              .filter(Boolean),
+                                            bookmarkUrl:
+                                              event.target.value
+                                                .split(/\r?\n/)
+                                                .map((value) => value.trim())
+                                                .find(Boolean) ?? DEFAULT_BOOKMARK_URL
                                           }
                                         })
                                       }
-                                      placeholder="북마크 URL"
+                                      placeholder={"링크를 한 줄에 하나씩 추가해 주세요"}
+                                      rows={4}
                                     />
                                     <button
                                       className="widget-confirm"
@@ -2096,48 +2129,61 @@ const App = () => {
                                       확인
                                     </button>
                                   </div>
-                                ) : bookmarkPreview ? (
-                                  <a
-                                    className="link-preview-card bookmark-widget-card"
-                                    href={bookmarkPreview.finalUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    onClick={(event) => event.stopPropagation()}
-                                  >
-                                    {bookmarkPreview.image && (
-                                      <img
-                                        className="link-preview-image"
-                                        src={getImageProxyUrl(bookmarkPreview.image)}
-                                        alt={bookmarkPreview.title}
-                                      />
-                                    )}
-                                    <span className="link-preview-meta">
-                                      <span className="link-preview-site">
-                                        {bookmarkPreview.siteName || bookmarkPreview.hostname}
-                                      </span>
-                                      <span className="link-preview-title">{bookmarkPreview.title}</span>
-                                      {bookmarkPreview.description && (
-                                        <span className="link-preview-description">{bookmarkPreview.description}</span>
-                                      )}
-                                    </span>
-                                  </a>
                                 ) : (
-                                  <a
-                                    className="link-chip"
-                                    href={bookmarkUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    onClick={(event) => event.stopPropagation()}
-                                  >
-                                    {bookmarkUrl}
-                                  </a>
+                                  <div className="bookmark-list">
+                                    {bookmarkUrls.length > 0 ? (
+                                      bookmarkUrls.map((url) => {
+                                        const preview = linkPreviews[url];
+                                        return preview ? (
+                                          <a
+                                            key={`${note.id}-${url}`}
+                                            className="link-preview-card bookmark-widget-card"
+                                            href={preview.finalUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            onClick={(event) => event.stopPropagation()}
+                                          >
+                                            {preview.image && (
+                                              <img
+                                                className="link-preview-image"
+                                                src={getImageProxyUrl(preview.image)}
+                                                alt={preview.title}
+                                              />
+                                            )}
+                                            <span className="link-preview-meta">
+                                              <span className="link-preview-site">
+                                                {preview.siteName || preview.hostname}
+                                              </span>
+                                              <span className="link-preview-title">{preview.title}</span>
+                                              {preview.description && (
+                                                <span className="link-preview-description">{preview.description}</span>
+                                              )}
+                                            </span>
+                                          </a>
+                                        ) : (
+                                          <a
+                                            key={`${note.id}-${url}`}
+                                            className="link-chip"
+                                            href={url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            onClick={(event) => event.stopPropagation()}
+                                          >
+                                            {url}
+                                          </a>
+                                        );
+                                      })
+                                    ) : (
+                                      <p className="rss-empty">링크를 추가하면 북마크 카드가 표시됩니다.</p>
+                                    )}
+                                  </div>
                                 )}
                               </>
                             ) : (
                               <div className="pin-note-stack">
-                            {(!useImageHeroCard || hasTextPreview) && <p className="pin-title">{getNoteTitle(note.content)}</p>}
+                                {(!useImageHeroCard || hasTextPreview) && <p className="pin-title">{getNoteTitle(note.content)}</p>}
 
-                            {selected ? (
+                                {selected ? (
                                   <>
                                     {attachedImageUrl && (
                                       <div className="editor-image-preview">
@@ -2162,56 +2208,56 @@ const App = () => {
                                         event.currentTarget.style.height = "0px";
                                         event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
                                       }}
-                                      placeholder="??, ??, ??? URL? ?????"
+                                      placeholder="메모, 링크, 이미지 URL을 입력하세요"
                                       rows={1}
                                     />
                                   </>
-                            ) : (
-                              <>
-                                {previewUrl && !hasImagePreview &&
-                                  (linkPreview ? (
-                                    <a
-                                      className="link-preview-card"
-                                      href={linkPreview.finalUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      onClick={(event) => event.stopPropagation()}
-                                    >
-                                      {linkPreview.image && (
-                                        <img
-                                          className="link-preview-image"
-                                          src={getImageProxyUrl(linkPreview.image)}
-                                          alt={linkPreview.title}
-                                        />
-                                      )}
-                                      <span className="link-preview-meta">
-                                        <span className="link-preview-site">
-                                          {linkPreview.siteName || linkPreview.hostname}
-                                        </span>
-                                        <span className="link-preview-title">{linkPreview.title}</span>
-                                        {linkPreview.description && (
-                                          <span className="link-preview-description">{linkPreview.description}</span>
-                                        )}
-                                      </span>
-                                    </a>
-                                  ) : (
-                                    <a
-                                      className="link-chip"
-                                      href={previewUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      onClick={(event) => event.stopPropagation()}
-                                    >
-                                      {previewUrl}
-                                    </a>
-                                  ))}
-                                {(!useImageHeroCard || hasTextPreview) && (
-                                  <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                                    {previewText || (previewUrl ? getUrlSnippet(previewUrl) : "메모를 클릭해서 편집하세요.")}
-                                  </p>
+                                ) : (
+                                  <>
+                                    {previewUrl && !hasImagePreview &&
+                                      (linkPreview ? (
+                                        <a
+                                          className="link-preview-card"
+                                          href={linkPreview.finalUrl}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          onClick={(event) => event.stopPropagation()}
+                                        >
+                                          {linkPreview.image && (
+                                            <img
+                                              className="link-preview-image"
+                                              src={getImageProxyUrl(linkPreview.image)}
+                                              alt={linkPreview.title}
+                                            />
+                                          )}
+                                          <span className="link-preview-meta">
+                                            <span className="link-preview-site">
+                                              {linkPreview.siteName || linkPreview.hostname}
+                                            </span>
+                                            <span className="link-preview-title">{linkPreview.title}</span>
+                                            {linkPreview.description && (
+                                              <span className="link-preview-description">{linkPreview.description}</span>
+                                            )}
+                                          </span>
+                                        </a>
+                                      ) : (
+                                        <a
+                                          className="link-chip"
+                                          href={previewUrl}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          onClick={(event) => event.stopPropagation()}
+                                        >
+                                          {previewUrl}
+                                        </a>
+                                      ))}
+                                    {(!useImageHeroCard || hasTextPreview) && (
+                                      <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
+                                        {previewText || (previewUrl ? getUrlSnippet(previewUrl) : "메모를 클릭해서 편집하세요.")}
+                                      </p>
+                                    )}
+                                  </>
                                 )}
-                              </>
-                            )}
                               </div>
                             )}
                           </div>
@@ -2228,8 +2274,8 @@ const App = () => {
           </section>
           <div className="infinite-scroll-status" aria-live="polite">
             {visibleNoteCount < filteredNotes.length
-              ? "아래로 스크롤하면 메모가 계속 로드됩니다."
-              : `${filteredNotes.length}개의 메모가 모두 표시되었습니다.`}
+              ? "?꾨옒濡??ㅽ겕濡ㅽ븯硫?硫붾え媛 怨꾩냽 濡쒕뱶?⑸땲??"
+              : `${filteredNotes.length}媛쒖쓽 硫붾え媛 紐⑤몢 ?쒖떆?섏뿀?듬땲??`}
           </div>
         </main>
       </div>

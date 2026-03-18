@@ -835,6 +835,12 @@ button {
   gap: 10px;
 }
 
+.bookmark-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .widget-input {
   width: 100%;
   min-height: 40px;
@@ -843,6 +849,17 @@ button {
   padding: 0 12px;
   background: rgba(255, 255, 255, 0.75);
   outline: none;
+}
+
+.widget-textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.75);
+  outline: none;
+  resize: vertical;
 }
 
 .widget-confirm {
