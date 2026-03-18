@@ -1,6 +1,18 @@
-import { type DragEvent as ReactDragEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type DragEvent as ReactDragEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
-import { type BoardBackgroundStyle, type BoardV2, loadOrCreateBoardV2, type NoteColor, type NoteV2, saveBoardV2 } from "./lib/supabase-board-v2";
+import {
+  type BoardV2,
+  loadOrCreateBoardV2,
+  type NoteColor,
+  type NoteV2,
+  saveBoardV2
+} from "./lib/supabase-board-v2";
 
 interface UserProfile {
   id: string;
@@ -12,36 +24,15 @@ interface LocalSnapshot {
   notes: NoteV2[];
 }
 
-interface DragState {
-  noteId: string;
-  offsetX: number;
-  offsetY: number;
-}
-
-type LayoutMode = "free" | "organize";
 type NoteFontSize = 14 | 16 | 18 | 20;
+type FeedMode = "active" | "archived";
 
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
-const DEFAULT_NOTE_WIDTH = 240;
-const DEFAULT_NOTE_HEIGHT = 220;
-const MOBILE_BREAKPOINT = 760;
-const DEFAULT_FREE_CANVAS_HEIGHT = 980;
-const MOBILE_FREE_CANVAS_HEIGHT = 1700;
-const FREE_CANVAS_BOTTOM_PADDING = 280;
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
 const VISIBLE_NOTE_BATCH_SIZE = 16;
 const DEFAULT_FONT_SIZE: NoteFontSize = 16;
 
-const NOTE_COLORS: { id: NoteColor; label: string }[] = [
-  { id: "yellow", label: "노랑" },
-  { id: "pink", label: "핑크" },
-  { id: "blue", label: "블루" },
-  { id: "green", label: "그린" },
-  { id: "orange", label: "오렌지" },
-  { id: "purple", label: "보라" },
-  { id: "mint", label: "민트" },
-  { id: "white", label: "화이트" }
-];
+const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "purple", "mint", "white"];
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -50,29 +41,12 @@ const makeId = () =>
 
 const nowIso = () => new Date().toISOString();
 
-const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
-
-const clampNotePosition = (
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  canvas: HTMLDivElement
-): { x: number; y: number } => {
-  const maxX = Math.max(0, canvas.clientWidth - w);
-  const maxY = Math.max(0, canvas.clientHeight - h);
-  return {
-    x: clamp(Math.round(x), 0, maxX),
-    y: clamp(Math.round(y), 0, maxY)
-  };
-};
-
 const createDefaultBoard = (userId: string): BoardV2 => ({
   id: makeId(),
   userId,
   title: "My Board",
   description: "",
-  backgroundStyle: "cork",
+  backgroundStyle: "paper",
   settings: {},
   updatedAt: nowIso()
 });
@@ -81,8 +55,6 @@ const createNote = (params: {
   boardId: string;
   userId: string;
   zIndex: number;
-  x: number;
-  y: number;
   content?: string;
   color?: NoteColor;
 }): NoteV2 => ({
@@ -91,10 +63,10 @@ const createNote = (params: {
   userId: params.userId,
   content: params.content ?? "",
   color: params.color ?? "yellow",
-  x: Math.round(params.x),
-  y: Math.round(params.y),
-  w: DEFAULT_NOTE_WIDTH,
-  h: DEFAULT_NOTE_HEIGHT,
+  x: 0,
+  y: 0,
+  w: 244,
+  h: 0,
   zIndex: params.zIndex,
   rotation: 0,
   pinned: false,
@@ -109,19 +81,17 @@ const createDefaultSnapshot = (): LocalSnapshot => {
     boardId: board.id,
     userId: "local",
     zIndex: 1,
-    x: 120,
-    y: 120,
-    content: "메모 길이에 따라 카드 높이가 자연스럽게 늘어나는 핀터레스트형 보드입니다.",
-    color: "yellow"
+    color: "yellow",
+    content:
+      "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 한곳에 모아두는 용도입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
   });
   const secondNote = createNote({
     boardId: board.id,
     userId: "local",
     zIndex: 2,
-    x: 410,
-    y: 180,
-    content: "정리 모드에서는 카드 너비가 고정되고, 드래그해서 순서를 바꿀 수 있습니다.",
-    color: "mint"
+    color: "mint",
+    content:
+      "그룹 메모장\n\n주제별 그룹 보드에서 각자 찾은 링크를 함께 공유할 수 있습니다.\n예: AI Studio 레퍼런스 모음"
   });
   return { board, notes: [firstNote, secondNote] };
 };
@@ -160,29 +130,29 @@ const getNoteFontSize = (note: NoteV2): NoteFontSize => {
 };
 
 const reorderNotes = (notes: NoteV2[], draggedNoteId: string, targetNoteId?: string): NoteV2[] => {
-  const activeNotes = [...notes.filter((note) => !note.archived)].sort((a, b) => a.zIndex - b.zIndex);
-  const archivedNotes = notes.filter((note) => note.archived);
-  const sourceIndex = activeNotes.findIndex((note) => note.id === draggedNoteId);
+  const ordered = [...notes.filter((note) => !note.archived)].sort((a, b) => a.zIndex - b.zIndex);
+  const archived = notes.filter((note) => note.archived);
+  const sourceIndex = ordered.findIndex((note) => note.id === draggedNoteId);
 
   if (sourceIndex < 0) {
     return notes;
   }
 
-  const [moved] = activeNotes.splice(sourceIndex, 1);
+  const [moved] = ordered.splice(sourceIndex, 1);
 
   if (targetNoteId) {
-    const targetIndex = activeNotes.findIndex((note) => note.id === targetNoteId);
+    const targetIndex = ordered.findIndex((note) => note.id === targetNoteId);
     if (targetIndex >= 0) {
-      activeNotes.splice(targetIndex, 0, moved);
+      ordered.splice(targetIndex, 0, moved);
     } else {
-      activeNotes.push(moved);
+      ordered.push(moved);
     }
   } else {
-    activeNotes.push(moved);
+    ordered.push(moved);
   }
 
   const activeMap = new Map(
-    activeNotes.map((note, index) => [
+    ordered.map((note, index) => [
       note.id,
       {
         ...note,
@@ -192,7 +162,23 @@ const reorderNotes = (notes: NoteV2[], draggedNoteId: string, targetNoteId?: str
     ])
   );
 
-  return notes.map((note) => activeMap.get(note.id) ?? archivedNotes.find((item) => item.id === note.id) ?? note);
+  return [...ordered.map((note) => activeMap.get(note.id) ?? note), ...archived];
+};
+
+const extractFirstUrl = (content: string) => {
+  const match = content.match(/https?:\/\/\S+/i);
+  return match?.[0] ?? "";
+};
+
+const isImageUrl = (url: string) =>
+  /(\.png|\.jpe?g|\.gif|\.webp|\.avif|\.svg)(\?.*)?$/i.test(url) || url.includes("images.unsplash.com");
+
+const stripUrls = (content: string) => content.replace(/https?:\/\/\S+/gi, "").trim();
+
+const getNoteTitle = (content: string) => {
+  const cleaned = stripUrls(content);
+  const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "새 메모";
+  return firstLine.slice(0, 48);
 };
 
 const App = () => {
@@ -202,42 +188,29 @@ const App = () => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
-  const [organizeDragNoteId, setOrganizeDragNoteId] = useState<string | null>(null);
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>("organize");
-  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() =>
-    typeof window !== "undefined" ? window.innerWidth <= MOBILE_BREAKPOINT : false
-  );
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [runningDragNoteId, setRunningDragNoteId] = useState<string | null>(null);
   const [visibleNoteCount, setVisibleNoteCount] = useState(INITIAL_VISIBLE_NOTE_COUNT);
+  const [feedMode, setFeedMode] = useState<FeedMode>("active");
 
-  const canvasRef = useRef<HTMLDivElement | null>(null);
-  const dragRef = useRef<DragState | null>(null);
   const skipNextCloudSaveRef = useRef(false);
-  const cloudEnabled = Boolean(user?.id && supabase);
-  const isOrganizeMode = layoutMode === "organize";
 
   const activeNotes = useMemo(() => notes.filter((note) => !note.archived), [notes]);
-  const isToolbarVisible = !isMobileViewport || mobileMenuOpen;
-  const freeCanvasHeight = useMemo(() => {
-    const minHeight = isMobileViewport ? MOBILE_FREE_CANVAS_HEIGHT : DEFAULT_FREE_CANVAS_HEIGHT;
-    const maxBottom = activeNotes.reduce((max, note) => Math.max(max, note.y + note.h), 0);
-    return Math.max(minHeight, maxBottom + FREE_CANVAS_BOTTOM_PADDING);
-  }, [activeNotes, isMobileViewport]);
+  const archivedNotes = useMemo(() => notes.filter((note) => note.archived), [notes]);
+  const currentNotes = feedMode === "active" ? activeNotes : archivedNotes;
 
   const filteredNotes = useMemo(() => {
     const keyword = search.trim().toLowerCase();
-    const filtered = keyword
-      ? activeNotes.filter((note) => note.content.toLowerCase().includes(keyword))
-      : activeNotes;
-    return [...filtered].sort((a, b) => a.zIndex - b.zIndex);
-  }, [activeNotes, search]);
+    const base = [...currentNotes].sort((a, b) => a.zIndex - b.zIndex);
+    if (!keyword) {
+      return base;
+    }
+    return base.filter((note) => note.content.toLowerCase().includes(keyword));
+  }, [currentNotes, feedMode, search]);
 
   const visibleNotes = useMemo(
-    () => (isOrganizeMode ? filteredNotes.slice(0, visibleNoteCount) : filteredNotes),
-    [filteredNotes, isOrganizeMode, visibleNoteCount]
+    () => filteredNotes.slice(0, visibleNoteCount),
+    [filteredNotes, visibleNoteCount]
   );
-  const hasMoreVisibleNotes = isOrganizeMode && visibleNoteCount < filteredNotes.length;
 
   useEffect(() => {
     if (!supabase) {
@@ -283,6 +256,7 @@ const App = () => {
     }
 
     setLoading(true);
+
     loadOrCreateBoardV2(user.id)
       .then((payload) => {
         if (!active) {
@@ -292,7 +266,7 @@ const App = () => {
         setBoard(payload.board);
         setNotes(payload.notes);
         setSelectedNoteId(payload.notes.find((note) => !note.archived)?.id ?? null);
-          setLoading(false);
+        setLoading(false);
       })
       .catch(() => {
         if (!active) {
@@ -307,37 +281,8 @@ const App = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    if (cloudEnabled) {
-      return;
-    }
-    saveLocalSnapshot({ board, notes });
-  }, [board, cloudEnabled, notes]);
-
-  useEffect(() => {
-    if (!selectedNoteId) {
-      return;
-    }
-    const exists = activeNotes.some((note) => note.id === selectedNoteId);
-    if (!exists) {
-      setSelectedNoteId(activeNotes[0]?.id ?? null);
-    }
-  }, [activeNotes, selectedNoteId]);
-
-  useEffect(() => {
-    const onResize = () => {
-      const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
-      setIsMobileViewport(mobile);
-      if (!mobile) {
-        setMobileMenuOpen(false);
-      }
-    };
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  useEffect(() => {
-    if (!cloudEnabled || !user?.id) {
+    if (!user?.id || !supabase) {
+      saveLocalSnapshot({ board, notes });
       return;
     }
 
@@ -347,115 +292,26 @@ const App = () => {
     }
 
     const timer = window.setTimeout(() => {
-      void saveBoardV2({ board, notes })
-        .then(() => {
-            })
-        .catch(() => {
-        });
-    }, 500);
-
-    return () => window.clearTimeout(timer);
-  }, [board, cloudEnabled, notes, user?.id]);
-
-  useEffect(() => {
-    if (isOrganizeMode) {
-      return;
-    }
-
-    const onPointerMove = (event: PointerEvent) => {
-      const drag = dragRef.current;
-      const canvas = canvasRef.current;
-      if (!drag || !canvas) {
-        return;
-      }
-      const rect = canvas.getBoundingClientRect();
-      const rawX = event.clientX - rect.left - drag.offsetX;
-      const rawY = event.clientY - rect.top - drag.offsetY;
-
-      setNotes((prev) =>
-        prev.map((note) => {
-          if (note.id !== drag.noteId) {
-            return note;
-          }
-          const clamped = clampNotePosition(rawX, rawY, note.w, note.h, canvas);
-          return { ...note, x: clamped.x, y: clamped.y, updatedAt: nowIso() };
-        })
-      );
-    };
-
-    const onPointerUp = () => {
-      dragRef.current = null;
-      setDraggingNoteId(null);
-    };
-
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
+      void saveBoardV2({ board, notes }).catch(() => {});
+    }, 400);
 
     return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
+      window.clearTimeout(timer);
     };
-  }, [isOrganizeMode]);
+  }, [board, notes, user?.id]);
 
   useEffect(() => {
-    if (!isOrganizeMode) {
-      return;
-    }
-    dragRef.current = null;
-    setDraggingNoteId(null);
-  }, [isOrganizeMode]);
-
-  useEffect(() => {
-    const clampAllActiveNotes = () => {
-      const canvas = canvasRef.current;
-      if (!canvas || isOrganizeMode) {
-        return;
-      }
-      setNotes((prev) => {
-        let changed = false;
-        const next = prev.map((note) => {
-          if (note.archived) {
-            return note;
-          }
-          const clamped = clampNotePosition(note.x, note.y, note.w, note.h, canvas);
-          if (clamped.x === note.x && clamped.y === note.y) {
-            return note;
-          }
-          changed = true;
-          return { ...note, x: clamped.x, y: clamped.y, updatedAt: nowIso() };
-        });
-        return changed ? next : prev;
-      });
-    };
-
-    const frame = window.requestAnimationFrame(clampAllActiveNotes);
-    window.addEventListener("resize", clampAllActiveNotes);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", clampAllActiveNotes);
-    };
-  }, [isOrganizeMode, loading]);
-
-  useEffect(() => {
-    if (!isOrganizeMode) {
-      return;
-    }
-
     setVisibleNoteCount((prev) => {
       if (filteredNotes.length <= INITIAL_VISIBLE_NOTE_COUNT) {
         return filteredNotes.length;
       }
       return Math.max(INITIAL_VISIBLE_NOTE_COUNT, Math.min(prev, filteredNotes.length));
     });
-  }, [filteredNotes.length, isOrganizeMode]);
+  }, [filteredNotes.length, feedMode]);
 
   useEffect(() => {
-    if (!isOrganizeMode) {
-      return;
-    }
-
     const onScroll = () => {
-      if (!hasMoreVisibleNotes) {
+      if (visibleNoteCount >= filteredNotes.length) {
         return;
       }
 
@@ -473,144 +329,143 @@ const App = () => {
     return () => {
       window.removeEventListener("scroll", onScroll);
     };
-  }, [filteredNotes.length, hasMoreVisibleNotes, isOrganizeMode]);
+  }, [filteredNotes.length, visibleNoteCount]);
 
   useEffect(() => {
-    if (!isOrganizeMode) {
-      return;
-    }
-
-    const editors = document.querySelectorAll<HTMLTextAreaElement>(".organized-editor");
+    const editors = document.querySelectorAll<HTMLTextAreaElement>(".pin-editor");
     editors.forEach((editor) => {
       editor.style.height = "0px";
       editor.style.height = `${editor.scrollHeight}px`;
     });
-  }, [isOrganizeMode, visibleNotes]);
+  }, [visibleNotes, selectedNoteId]);
 
-  const bringToFront = (noteId: string) => {
-    setNotes((prev) => {
-      const maxZ = prev.reduce((max, note) => Math.max(max, note.zIndex), 0);
-      return prev.map((note) =>
-        note.id === noteId && note.zIndex !== maxZ
-          ? {
-              ...note,
-              zIndex: maxZ + 1,
-              updatedAt: nowIso()
-            }
-          : note
-      );
-    });
-  };
-
-  const addNote = (x?: number, y?: number) => {
+  const addNote = () => {
     const maxZ = notes.reduce((max, note) => Math.max(max, note.zIndex), 0);
-    const fallbackX = 120 + (notes.length % 4) * 36;
-    const fallbackY = 110 + (notes.length % 4) * 30;
-    const baseX = x ?? fallbackX;
-    const baseY = y ?? fallbackY;
-    const canvas = canvasRef.current;
-    const clamped = canvas && !isOrganizeMode
-      ? clampNotePosition(baseX, baseY, DEFAULT_NOTE_WIDTH, DEFAULT_NOTE_HEIGHT, canvas)
-      : { x: baseX, y: baseY };
-
-    const newNote = createNote({
+    const note = createNote({
       boardId: board.id,
       userId: board.userId,
       zIndex: maxZ + 1,
-      x: clamped.x,
-      y: clamped.y
+      content: "새 메모\n\nhttps://"
     });
-    setNotes((prev) => [...prev, newNote]);
-    setSelectedNoteId(newNote.id);
-    if (isOrganizeMode) {
-      setVisibleNoteCount((prev) => Math.max(prev, Math.min(filteredNotes.length + 1, prev + 1)));
-    }
+
+    setNotes((prev) => [note, ...prev]);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
   };
 
   const updateNote = (noteId: string, patch: Partial<NoteV2>) => {
-    const canvas = canvasRef.current;
     setNotes((prev) =>
-      prev.map((note) => {
-        if (note.id !== noteId) {
-          return note;
-        }
-        const merged = { ...note, ...patch };
-        if (canvas && !isOrganizeMode) {
-          const clamped = clampNotePosition(merged.x, merged.y, merged.w, merged.h, canvas);
-          return { ...merged, x: clamped.x, y: clamped.y, updatedAt: nowIso() };
-        }
-        return { ...merged, updatedAt: nowIso() };
-      })
+      prev.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              ...patch,
+              updatedAt: nowIso()
+            }
+          : note
+      )
     );
   };
 
-  const removeNote = (noteId: string) => {
-    setNotes((prev) => prev.map((note) => (note.id === noteId ? { ...note, archived: true, updatedAt: nowIso() } : note)));
-    setSelectedNoteId((prev) => (prev === noteId ? null : prev));
+  const updateNoteFontSize = (noteId: string, fontSize: NoteFontSize) => {
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              metadata: {
+                ...note.metadata,
+                fontSize
+              },
+              updatedAt: nowIso()
+            }
+          : note
+      )
+    );
   };
 
-  const onCanvasDoubleClick = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if (isOrganizeMode) {
-      addNote();
-      return;
-    }
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      addNote();
-      return;
-    }
-    const rect = canvas.getBoundingClientRect();
-    addNote(event.clientX - rect.left - DEFAULT_NOTE_WIDTH / 2, event.clientY - rect.top - 42);
+  const archiveNote = (noteId: string) => {
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              archived: true,
+              updatedAt: nowIso()
+            }
+          : note
+      )
+    );
+    setSelectedNoteId(null);
   };
 
-  const onNoteHandlePointerDown = (event: ReactPointerEvent<HTMLDivElement>, note: NoteV2) => {
-    event.preventDefault();
-    if (note.pinned || isOrganizeMode) {
-      return;
-    }
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      return;
-    }
-    const rect = canvas.getBoundingClientRect();
-    dragRef.current = {
-      noteId: note.id,
-      offsetX: event.clientX - rect.left - note.x,
-      offsetY: event.clientY - rect.top - note.y
-    };
-    setDraggingNoteId(note.id);
-    setSelectedNoteId(note.id);
-    bringToFront(note.id);
-  };
-
-  const onOrganizeDragStart = (event: ReactDragEvent<HTMLElement>, noteId: string) => {
-    if (!isOrganizeMode) {
-      return;
-    }
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", noteId);
-    setOrganizeDragNoteId(noteId);
+  const restoreNote = (noteId: string) => {
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              archived: false,
+              updatedAt: nowIso()
+            }
+          : note
+      )
+    );
+    setFeedMode("active");
     setSelectedNoteId(noteId);
   };
 
-  const onOrganizeDrop = (event: ReactDragEvent<HTMLElement>, targetNoteId?: string) => {
-    if (!isOrganizeMode) {
+  const deleteArchivedNote = (noteId: string) => {
+    setNotes((prev) => prev.filter((note) => note.id !== noteId));
+    setSelectedNoteId((prev) => (prev === noteId ? null : prev));
+  };
+
+  const cycleNoteColor = (noteId: string, currentColor: NoteColor) => {
+    const currentIndex = NOTE_COLORS.findIndex((color) => color === currentColor);
+    const nextColor = NOTE_COLORS[(currentIndex + 1) % NOTE_COLORS.length] ?? "yellow";
+    updateNote(noteId, { color: nextColor });
+  };
+
+  const onPinDragStart = (event: ReactDragEvent<HTMLElement>, noteId: string) => {
+    if (feedMode !== "active") {
       return;
     }
+
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", noteId);
+    setRunningDragNoteId(noteId);
+    setSelectedNoteId(noteId);
+  };
+
+  const onPinDrop = (event: ReactDragEvent<HTMLElement>, targetNoteId?: string) => {
+    if (feedMode !== "active") {
+      return;
+    }
+
     event.preventDefault();
-    const draggedNoteId = event.dataTransfer.getData("text/plain") || organizeDragNoteId;
+    const draggedNoteId = event.dataTransfer.getData("text/plain") || runningDragNoteId;
     if (!draggedNoteId || draggedNoteId === targetNoteId) {
-      setOrganizeDragNoteId(null);
+      setRunningDragNoteId(null);
       return;
     }
+
     setNotes((prev) => reorderNotes(prev, draggedNoteId, targetNoteId));
-    setOrganizeDragNoteId(null);
+    setRunningDragNoteId(null);
+  };
+
+  const onBoardBackgroundMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+    setSelectedNoteId(null);
   };
 
   const onGoogleLogin = async () => {
     if (!supabase) {
       return;
     }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin }
@@ -624,216 +479,242 @@ const App = () => {
     await supabase.auth.signOut();
   };
 
-  const onToggleLayoutMode = () => {
-    setLayoutMode((prev) => (prev === "organize" ? "free" : "organize"));
-  };
-
-  const onToggleMobileMenu = () => {
-    setMobileMenuOpen((prev) => !prev);
-  };
-
-  const onCanvasBackgroundMouseDown = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget) {
-      return;
-    }
-    setSelectedNoteId(null);
-  };
-
   return (
-    <div className="board-app">
-      <header className="board-topbar">
-        <div className="topbar-main">
-          <div className="brand">
-            <span className="logo">WZD</span>
-            <span className="brand-subtitle">Pinterest Notes</span>
+    <div className="pin-page">
+      <aside className="pin-sidebar">
+        <button className="pin-brand" aria-label="WZD 홈">
+          <span>W</span>
+        </button>
+        <button
+          className={`side-icon ${feedMode === "active" ? "active" : ""}`}
+          onClick={() => setFeedMode("active")}
+          aria-label="메모 피드"
+        >
+          ■
+        </button>
+        <button className="side-icon" onClick={addNote} aria-label="새 메모">
+          +
+        </button>
+        <button
+          className={`side-icon ${feedMode === "archived" ? "active" : ""}`}
+          onClick={() => setFeedMode("archived")}
+          aria-label="보관된 메모"
+        >
+          □
+        </button>
+        <div className="sidebar-spacer" />
+        <button className="side-icon subtle" aria-label="설정">
+          ···
+        </button>
+      </aside>
+
+      <div className="pin-app">
+        <header className="pin-topbar">
+          <div className="search-shell">
+            <span className="search-icon" aria-hidden="true">
+              ⌕
+            </span>
+            <input
+              className="search-input pinterest-search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={feedMode === "active" ? "내 메모와 링크 검색" : "보관된 메모 검색"}
+            />
           </div>
-          <button className="mobile-menu-btn" onClick={onToggleMobileMenu} aria-label="메뉴 열기/닫기">
-            {mobileMenuOpen ? "✕" : "☰"}
-          </button>
-        </div>
 
-        <div className={`toolbar ${isToolbarVisible ? "open" : "closed"}`}>
-          <button className="primary-btn" onClick={() => addNote()}>
-            + 메모 추가
-          </button>
-          <button className={`ghost-btn ${isOrganizeMode ? "active-mode-btn" : ""}`} onClick={onToggleLayoutMode}>
-            {isOrganizeMode ? "자유배치" : "핀터레스트"}
-          </button>
-          <input
-            className="search-input"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="메모 검색"
-          />
-          <input
-            className="board-title-input"
-            value={board.title}
-            onChange={(event) => setBoard((prev) => ({ ...prev, title: event.target.value, updatedAt: nowIso() }))}
-            placeholder="보드 이름"
-            aria-label="보드 이름"
-          />
-          <select
-            className="style-select"
-            value={board.backgroundStyle}
-            onChange={(event) =>
-              setBoard((prev) => ({
-                ...prev,
-                backgroundStyle: event.target.value as BoardBackgroundStyle,
-                updatedAt: nowIso()
-              }))
-            }
-          >
-            <option value="cork">코르크</option>
-            <option value="whiteboard">화이트보드</option>
-            <option value="paper">페이퍼</option>
-          </select>
-          {hasSupabaseConfig ? (
-            user ? (
-              <>
-                <span className="user-email">{user.email}</span>
-                <button className="ghost-btn" onClick={onLogout}>
-                  로그아웃
+          <div className="topbar-actions">
+            <button className="new-note-pill" onClick={addNote}>
+              새 메모
+            </button>
+            {hasSupabaseConfig ? (
+              user ? (
+                <>
+                  <div className="profile-pill">
+                    <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+                    <span className="profile-email">{user.email}</span>
+                  </div>
+                  <button className="ghost-action" onClick={onLogout}>
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <button className="ghost-action" onClick={onGoogleLogin}>
+                  구글 로그인
                 </button>
-              </>
+              )
             ) : (
-              <button className="ghost-btn" onClick={onGoogleLogin}>
-                구글 로그인
-              </button>
-            )
-          ) : (
-            <span className="hint-text">Supabase 환경변수를 설정하면 클라우드 동기화를 사용할 수 있습니다.</span>
-          )}
-        </div>
-      </header>
+              <div className="profile-pill muted">로컬 모드</div>
+            )}
+          </div>
+        </header>
 
-      <main className="workspace">
-        <section className="canvas-wrap">
-          <div
-            ref={canvasRef}
-            className={`board-canvas canvas-${board.backgroundStyle} ${isOrganizeMode ? "organize-mode" : "free-mode"}`}
-            style={!isOrganizeMode ? { height: `${freeCanvasHeight}px` } : undefined}
-            onMouseDown={onCanvasBackgroundMouseDown}
-            onDoubleClick={onCanvasDoubleClick}
+        <main className="pin-main">
+          <section className="feed-head">
+            <div>
+              <p className="feed-kicker">{feedMode === "active" ? "Personal + Group Memo" : "Archive"}</p>
+              <h1>{feedMode === "active" ? board.title || "My Board" : "보관된 메모"}</h1>
+            </div>
+            <div className="feed-meta">
+              <span>{feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`}</span>
+            </div>
+          </section>
+
+          <section
+            className="pin-board"
+            onMouseDown={onBoardBackgroundMouseDown}
             onDragOver={(event) => {
-              if (isOrganizeMode) {
+              if (feedMode === "active") {
                 event.preventDefault();
               }
             }}
-            onDrop={(event) => onOrganizeDrop(event)}
-            aria-label="메모 보드 캔버스"
+            onDrop={(event) => onPinDrop(event)}
           >
             {loading ? (
-              <div className="canvas-empty">보드를 불러오는 중...</div>
+              <div className="feed-empty">메모를 불러오는 중입니다.</div>
             ) : visibleNotes.length === 0 ? (
-              <div className="canvas-empty">새 메모를 추가해보세요.</div>
+              <div className="feed-empty">
+                {feedMode === "active" ? "첫 메모를 추가해보세요." : "보관된 메모가 없습니다."}
+              </div>
             ) : (
               visibleNotes.map((note) => {
                 const selected = selectedNoteId === note.id;
+                const fontSize = getNoteFontSize(note);
+                const previewUrl = extractFirstUrl(note.content);
+                const previewText = stripUrls(note.content);
+
                 return (
                   <article
                     key={note.id}
-                    className={`sticky-note note-${note.color} ${selected ? "selected" : ""} ${
-                      draggingNoteId === note.id || organizeDragNoteId === note.id ? "dragging" : ""
-                    } ${isOrganizeMode ? "organized-note" : ""}`}
-                    style={
-                      isOrganizeMode
-                        ? {
-                            zIndex: note.zIndex
-                          }
-                        : {
-                            left: `${note.x}px`,
-                            top: `${note.y}px`,
-                            width: `${note.w}px`,
-                            height: `${note.h}px`,
-                            zIndex: note.zIndex,
-                            transform: `rotate(${note.rotation}deg)`
-                          }
-                    }
-                    draggable={isOrganizeMode}
-                    onDragStart={(event) => onOrganizeDragStart(event, note.id)}
-                    onDragEnd={() => setOrganizeDragNoteId(null)}
+                    className={`pin-card note-${note.color} ${selected ? "selected" : ""} ${
+                      runningDragNoteId === note.id ? "dragging" : ""
+                    }`}
+                    draggable={feedMode === "active"}
+                    onDragStart={(event) => onPinDragStart(event, note.id)}
+                    onDragEnd={() => setRunningDragNoteId(null)}
                     onDragOver={(event) => {
-                      if (isOrganizeMode) {
+                      if (feedMode === "active") {
                         event.preventDefault();
                       }
                     }}
-                    onDrop={(event) => onOrganizeDrop(event, note.id)}
-                    onMouseDown={() => {
-                      setSelectedNoteId(note.id);
-                      if (!isOrganizeMode) {
-                        bringToFront(note.id);
-                      }
-                    }}
+                    onDrop={(event) => onPinDrop(event, note.id)}
+                    onMouseDown={() => setSelectedNoteId(note.id)}
                   >
-                    <div className="sticky-handle" onPointerDown={(event) => onNoteHandlePointerDown(event, note)}>
-                      <span className="handle-dots" aria-hidden="true">...</span>
-                      <div className="note-actions">
+                    {previewUrl && isImageUrl(previewUrl) && (
+                      <div className="pin-image-wrap">
+                        <img className="pin-image" src={previewUrl} alt={getNoteTitle(note.content)} />
+                      </div>
+                    )}
+
+                    <div className="pin-card-head">
+                      <span className="pin-dot chip-badge">{note.color}</span>
+                      <div className="pin-actions">
                         <button
                           className={`note-color-toggle chip-${note.color}`}
                           onClick={(event) => {
                             event.stopPropagation();
-                            const currentIndex = NOTE_COLORS.findIndex((item) => item.id === note.color);
-                            const nextColor = NOTE_COLORS[(currentIndex + 1) % NOTE_COLORS.length]?.id ?? "yellow";
-                            updateNote(note.id, { color: nextColor });
+                            cycleNoteColor(note.id, note.color);
                           }}
-                          aria-label="?? ?? ??"
-                          title="?? ?? ??"
+                          aria-label="메모 색상 변경"
+                          title="메모 색상 변경"
                         />
                         <button
-                          className="icon-btn icon-only"
+                          className="pin-icon-button"
                           onClick={(event) => {
                             event.stopPropagation();
-                            updateNote(note.id, { pinned: !note.pinned });
+                            if (feedMode === "active") {
+                              updateNote(note.id, { pinned: !note.pinned });
+                            } else {
+                              restoreNote(note.id);
+                            }
                           }}
-                          aria-label={note.pinned ? "? ??" : "? ??"}
-                          title={note.pinned ? "? ??" : "? ??"}
+                          aria-label={feedMode === "active" ? "핀 고정" : "메모 복구"}
+                          title={feedMode === "active" ? "핀 고정" : "메모 복구"}
                         >
-                          {note.pinned ? "??" : "??"}
+                          {feedMode === "active" ? (note.pinned ? "P" : "p") : "R"}
                         </button>
                         <button
-                          className="icon-btn danger icon-only"
+                          className="pin-icon-button danger"
                           onClick={(event) => {
                             event.stopPropagation();
-                            removeNote(note.id);
+                            if (feedMode === "active") {
+                              archiveNote(note.id);
+                            } else {
+                              deleteArchivedNote(note.id);
+                            }
                           }}
-                          aria-label="???"
-                          title="???"
+                          aria-label={feedMode === "active" ? "메모 보관" : "메모 삭제"}
+                          title={feedMode === "active" ? "메모 보관" : "메모 삭제"}
                         >
-                          ??
+                          {feedMode === "active" ? "X" : "D"}
                         </button>
                       </div>
                     </div>
-                    <textarea
-                      className={`sticky-editor ${isOrganizeMode ? "organized-editor" : ""}`}
-                      value={note.content}
-                      style={{ fontSize: `${getNoteFontSize(note)}px` }}
-                      onFocus={() => {
-                        setSelectedNoteId(note.id);
-                        }}
-                      onChange={(event) => {
-                        updateNote(note.id, { content: event.target.value });
-                        if (isOrganizeMode) {
-                          event.currentTarget.style.height = "0px";
-                          event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-                        }
-                      }}
-                      placeholder="메모를 입력하세요..."
-                      rows={isOrganizeMode ? 1 : undefined}
-                    />
+
+                    <div className="pin-card-body">
+                      <p className="pin-title">{getNoteTitle(note.content)}</p>
+
+                      {selected ? (
+                        <>
+                          <div className="font-scale">
+                            {[14, 16, 18, 20].map((size) => (
+                              <button
+                                key={size}
+                                className={`font-chip ${fontSize === size ? "active" : ""}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  updateNoteFontSize(note.id, size as NoteFontSize);
+                                }}
+                              >
+                                {size}
+                              </button>
+                            ))}
+                          </div>
+                          <textarea
+                            className="pin-editor"
+                            value={note.content}
+                            style={{ fontSize: `${fontSize}px` }}
+                            onFocus={() => setSelectedNoteId(note.id)}
+                            onChange={(event) => {
+                              updateNote(note.id, { content: event.target.value });
+                              event.currentTarget.style.height = "0px";
+                              event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+                            }}
+                            placeholder="메모, 링크, 이미지 URL을 입력하세요"
+                            rows={1}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          {previewUrl && !isImageUrl(previewUrl) && (
+                            <a
+                              className="link-chip"
+                              href={previewUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              {previewUrl}
+                            </a>
+                          )}
+                          <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
+                            {previewText || "메모를 클릭해서 편집하세요."}
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </article>
                 );
               })
             )}
+          </section>
+
+          <div className="infinite-scroll-status" aria-live="polite">
+            {visibleNoteCount < filteredNotes.length
+              ? "아래로 스크롤하면 메모가 계속 로드됩니다."
+              : `${filteredNotes.length}개의 메모가 표시되었습니다.`}
           </div>
-
-          {isOrganizeMode && (
-            <div className="infinite-scroll-status" aria-live="polite">
-              {hasMoreVisibleNotes ? "아래로 스크롤하면 메모가 계속 로드됩니다." : `${filteredNotes.length}개의 메모가 모두 표시되었습니다.`}
-            </div>
-          )}
-        </section>
-
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
