@@ -274,7 +274,7 @@ button {
 }
 
 .pin-main {
-  padding: 22px 14px 28px;
+  padding: 8px 14px 28px;
 }
 
 .feed-head {
@@ -282,7 +282,7 @@ button {
   justify-content: flex-end;
   align-items: flex-end;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .feed-kicker {
