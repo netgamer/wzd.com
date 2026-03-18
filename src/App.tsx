@@ -216,6 +216,20 @@ const isImageUrl = (url: string) =>
 
 const stripUrls = (content: string) => content.replace(/https?:\/\/\S+/gi, "").trim();
 
+const getUrlSnippet = (url: string) => {
+  if (!url) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(url);
+    const compact = `${parsed.hostname.replace(/^www\./i, "")}${parsed.pathname}${parsed.search}`;
+    return compact.length > 48 ? `${compact.slice(0, 48)}...` : compact;
+  } catch {
+    return url.length > 48 ? `${url.slice(0, 48)}...` : url;
+  }
+};
+
 const getNoteTitle = (content: string) => {
   const cleaned = stripUrls(content);
   const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "새 메모";
@@ -1299,7 +1313,7 @@ const App = () => {
                                     </a>
                                   ))}
                                 <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                                  {previewText || "??? ???? ?????."}
+                                  {previewText || (previewUrl ? getUrlSnippet(previewUrl) : "메모를 클릭해서 편집하세요.")}
                                 </p>
                               </>
                             )}
