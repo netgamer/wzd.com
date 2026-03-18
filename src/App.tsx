@@ -703,7 +703,7 @@ const App = () => {
                     className={`pin-card note-${note.color} ${selected ? "selected" : ""} ${
                       runningDragNoteId === note.id ? "dragging" : ""
                     }`}
-                    draggable={feedMode === "active"}
+                    draggable={feedMode === "active" && !selected}
                     onDragStart={(event) => onPinDragStart(event, note.id)}
                     onDragEnd={() => setRunningDragNoteId(null)}
                     onDragOver={(event) => {
@@ -788,6 +788,7 @@ const App = () => {
                             className="pin-editor"
                             value={note.content}
                             style={{ fontSize: `${fontSize}px` }}
+                            onMouseDown={(event) => event.stopPropagation()}
                             onFocus={() => setSelectedNoteId(note.id)}
                             onChange={(event) => {
                               updateNote(note.id, { content: event.target.value });
