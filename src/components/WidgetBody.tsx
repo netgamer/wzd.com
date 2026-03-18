@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import type { AgentItem, WidgetData } from "../types";
 
 interface WidgetBodyProps {

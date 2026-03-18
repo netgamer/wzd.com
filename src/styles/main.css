@@ -1,13 +1,14 @@
 :root {
-  --bg: #7a5338;
-  --bg-deep: #5f3b27;
-  --panel: #f4eee4;
-  --panel-soft: #f8f3ea;
-  --line: #b98f66;
-  --text: #2b1f17;
-  --muted: #6d5443;
+  --bg: #f5efe5;
+  --bg-deep: #d7b994;
+  --panel: rgba(255, 251, 244, 0.96);
+  --panel-soft: rgba(255, 248, 239, 0.88);
+  --line: rgba(119, 86, 50, 0.22);
+  --text: #2c2118;
+  --muted: #6c5643;
   --focus: #1469d7;
   --danger: #bf2d2d;
+  --shadow: 0 18px 38px rgba(72, 44, 18, 0.18);
 }
 
 * {
@@ -22,9 +23,13 @@ body,
   font-family: "Pretendard Variable", "SUIT Variable", "Noto Sans KR", "Malgun Gothic", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at 18% 12%, rgba(255, 232, 196, 0.3), transparent 30%),
-    radial-gradient(circle at 85% 0%, rgba(255, 236, 213, 0.22), transparent 28%),
-    linear-gradient(165deg, #8d613f, var(--bg-deep));
+    radial-gradient(circle at 16% 10%, rgba(255, 247, 231, 0.7), transparent 26%),
+    radial-gradient(circle at 82% 0%, rgba(255, 231, 209, 0.48), transparent 24%),
+    linear-gradient(180deg, #fcf6ed 0%, var(--bg) 54%, var(--bg-deep) 100%);
+}
+
+body {
+  min-height: 100vh;
 }
 
 button,
@@ -41,14 +46,17 @@ textarea {
 }
 
 .board-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 14px;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(88, 56, 33, 0.55);
-  background: linear-gradient(180deg, rgba(248, 237, 219, 0.94), rgba(236, 220, 197, 0.94));
-  backdrop-filter: blur(3px);
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(88, 56, 33, 0.14);
+  background: rgba(252, 246, 237, 0.86);
+  backdrop-filter: blur(18px);
 }
 
 .topbar-main {
@@ -94,9 +102,9 @@ textarea {
   display: none;
   width: 38px;
   height: 38px;
-  border: 1px solid #9f754f;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #fff8ea, #efddc6);
+  border: 1px solid #ccb08b;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
   color: var(--text);
   font-size: 20px;
   line-height: 1;
@@ -107,20 +115,26 @@ textarea {
 .ghost-btn,
 .icon-btn,
 .rainbow-btn {
-  border: 1px solid #9f754f;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #fff8ea, #efddc6);
+  border: 1px solid rgba(146, 105, 64, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
   color: var(--text);
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
 }
 
 .primary-btn,
 .ghost-btn {
-  height: 36px;
+  height: 38px;
   padding: 0 14px;
   font-size: 13px;
   font-weight: 650;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #d2783d, #b5552c);
+  color: #fff8f2;
+  border-color: transparent;
 }
 
 .icon-btn {
@@ -130,8 +144,8 @@ textarea {
 }
 
 .rainbow-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
   padding: 0;
   display: grid;
@@ -139,14 +153,14 @@ textarea {
 }
 
 .rainbow-btn.active {
-  box-shadow: 0 0 0 2px rgba(20, 105, 215, 0.4);
+  box-shadow: 0 0 0 2px rgba(20, 105, 215, 0.22);
 }
 
 .rainbow-dot {
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  border: 1px solid rgba(68, 43, 27, 0.35);
+  border: 1px solid rgba(68, 43, 27, 0.2);
   background: conic-gradient(
     #ff5f6d 0deg 45deg,
     #ffb26f 45deg 90deg,
@@ -170,7 +184,7 @@ textarea {
 }
 
 .icon-btn.danger {
-  border-color: #c27a7a;
+  border-color: rgba(191, 45, 45, 0.24);
   color: var(--danger);
 }
 
@@ -179,13 +193,12 @@ textarea {
 .icon-btn:hover,
 .rainbow-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(69, 38, 18, 0.18);
+  box-shadow: 0 10px 18px rgba(80, 48, 20, 0.12);
 }
 
 .active-mode-btn {
-  border-color: #8b5429;
-  background: linear-gradient(180deg, #fff2d2, #ebd3a8);
-  box-shadow: inset 0 0 0 1px rgba(139, 84, 41, 0.2);
+  border-color: rgba(140, 84, 41, 0.28);
+  background: linear-gradient(180deg, #fff3db, #ecd7b7);
 }
 
 .primary-btn:focus-visible,
@@ -204,12 +217,12 @@ textarea {
 .search-input,
 .board-title-input,
 .style-select {
-  border: 1px solid #af8460;
-  border-radius: 10px;
-  background: rgba(255, 252, 246, 0.95);
+  border: 1px solid rgba(146, 105, 64, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.88);
   color: var(--text);
-  padding: 0 10px;
-  height: 36px;
+  padding: 0 12px;
+  height: 38px;
   min-width: 140px;
 }
 
@@ -244,50 +257,40 @@ textarea {
   position: relative;
   width: 100%;
   min-height: calc(100vh - 170px);
-  border-radius: 18px;
+  border-radius: 24px;
   overflow: hidden;
-  border: 1px solid rgba(90, 58, 38, 0.45);
-  box-shadow: inset 0 0 0 1px rgba(255, 240, 220, 0.15), 0 10px 28px rgba(43, 21, 8, 0.25);
+  border: 1px solid rgba(90, 58, 38, 0.14);
+  box-shadow: var(--shadow);
 }
 
 .board-canvas.organize-mode {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-  align-content: start;
-  padding: 16px;
+  padding: 18px;
+  column-gap: 18px;
+  column-width: 244px;
   min-height: calc(100vh - 170px);
-  height: auto !important;
 }
 
 .canvas-cork {
   background:
     radial-gradient(circle at 20% 14%, rgba(255, 203, 145, 0.18), transparent 40%),
     radial-gradient(circle at 88% 84%, rgba(255, 224, 185, 0.14), transparent 34%),
-    repeating-linear-gradient(
-      35deg,
-      rgba(97, 60, 35, 0.23) 0,
-      rgba(97, 60, 35, 0.23) 2px,
-      rgba(129, 86, 56, 0.24) 2px,
-      rgba(129, 86, 56, 0.24) 6px
-    ),
-    linear-gradient(180deg, #9b6a44, #7a4f32);
+    linear-gradient(180deg, #fbf3e7, #ecd9bc);
 }
 
 .canvas-whiteboard {
   background:
-    radial-gradient(circle at 14% 16%, rgba(77, 151, 232, 0.12), transparent 35%),
-    radial-gradient(circle at 85% 88%, rgba(117, 204, 192, 0.14), transparent 30%),
+    radial-gradient(circle at 14% 16%, rgba(77, 151, 232, 0.08), transparent 35%),
+    radial-gradient(circle at 85% 88%, rgba(117, 204, 192, 0.1), transparent 30%),
     linear-gradient(180deg, #eff4f8, #dbe6f2);
 }
 
 .canvas-paper {
   background:
-    radial-gradient(circle at 10% 8%, rgba(188, 152, 108, 0.14), transparent 32%),
+    radial-gradient(circle at 10% 8%, rgba(188, 152, 108, 0.1), transparent 32%),
     repeating-linear-gradient(
       0deg,
-      rgba(190, 162, 124, 0.22) 0px,
-      rgba(190, 162, 124, 0.22) 1px,
+      rgba(190, 162, 124, 0.18) 0px,
+      rgba(190, 162, 124, 0.18) 1px,
       rgba(239, 228, 211, 0.85) 1px,
       rgba(239, 228, 211, 0.85) 24px
     ),
@@ -307,30 +310,34 @@ textarea {
   position: absolute;
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
-  border: 1px solid rgba(26, 20, 14, 0.22);
-  box-shadow: 0 11px 22px rgba(21, 14, 10, 0.26);
+  border-radius: 24px;
+  border: 1px solid rgba(26, 20, 14, 0.1);
+  box-shadow: 0 14px 26px rgba(21, 14, 10, 0.16);
   transform-origin: center top;
-  transition: box-shadow 0.12s ease, transform 0.12s ease;
+  transition: box-shadow 0.12s ease, transform 0.12s ease, opacity 0.12s ease;
 }
 
 .organized-note {
   position: relative;
+  display: inline-flex;
+  width: 100%;
+  max-width: 244px;
+  margin: 0 0 18px;
   left: auto !important;
   top: auto !important;
-  width: 100% !important;
-  min-height: 220px;
-  height: 240px !important;
+  height: auto !important;
+  min-height: 0;
+  break-inside: avoid;
   transform: none !important;
 }
 
 .sticky-note.selected {
-  box-shadow: 0 0 0 2px rgba(20, 105, 215, 0.44), 0 14px 26px rgba(28, 20, 14, 0.34);
+  box-shadow: 0 0 0 2px rgba(20, 105, 215, 0.28), 0 16px 28px rgba(28, 20, 14, 0.22);
 }
 
 .sticky-note.dragging {
-  opacity: 0.95;
-  box-shadow: 0 18px 34px rgba(17, 10, 7, 0.36);
+  opacity: 0.82;
+  box-shadow: 0 24px 42px rgba(17, 10, 7, 0.22);
 }
 
 .note-yellow {
@@ -366,13 +373,13 @@ textarea {
 }
 
 .sticky-handle {
-  min-height: 34px;
+  min-height: 38px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
-  border-bottom: 1px dashed rgba(43, 29, 18, 0.26);
+  padding: 10px 12px 8px;
+  border-bottom: 1px dashed rgba(43, 29, 18, 0.18);
   cursor: grab;
   font-size: 11px;
   color: rgba(44, 30, 20, 0.84);
@@ -383,11 +390,7 @@ textarea {
 }
 
 .board-canvas.organize-mode .sticky-handle {
-  cursor: default;
-}
-
-.board-canvas.organize-mode .sticky-handle:active {
-  cursor: default;
+  cursor: grab;
 }
 
 .note-actions {
@@ -401,22 +404,34 @@ textarea {
   border: none;
   background: transparent;
   resize: none;
-  padding: 10px;
-  line-height: 1.5;
+  padding: 12px 14px 14px;
+  line-height: 1.6;
   font-size: 15px;
   color: #2f2016;
+}
+
+.organized-editor {
+  min-height: 120px;
+  overflow: hidden;
 }
 
 .sticky-editor::placeholder {
   color: rgba(75, 54, 38, 0.58);
 }
 
+.infinite-scroll-status {
+  padding: 10px 0 2px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .inspector {
-  border: 1px solid rgba(104, 68, 44, 0.6);
-  border-radius: 16px;
-  padding: 12px;
+  border: 1px solid rgba(104, 68, 44, 0.18);
+  border-radius: 20px;
+  padding: 14px;
   background: linear-gradient(180deg, var(--panel), var(--panel-soft));
-  box-shadow: 0 10px 24px rgba(44, 24, 12, 0.22);
+  box-shadow: 0 14px 30px rgba(44, 24, 12, 0.12);
   overflow: auto;
 }
 
@@ -440,7 +455,7 @@ textarea {
 }
 
 .color-chip {
-  border: 1px solid rgba(60, 38, 24, 0.4);
+  border: 1px solid rgba(60, 38, 24, 0.2);
   border-radius: 999px;
   width: 100%;
   aspect-ratio: 1;
@@ -448,7 +463,7 @@ textarea {
 }
 
 .color-chip.active {
-  box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px rgba(24, 31, 43, 0.7);
+  box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px rgba(24, 31, 43, 0.4);
 }
 
 .chip-yellow {
@@ -517,8 +532,8 @@ textarea {
 }
 
 .trash-item {
-  border: 1px dashed rgba(96, 64, 40, 0.38);
-  border-radius: 10px;
+  border: 1px dashed rgba(96, 64, 40, 0.24);
+  border-radius: 14px;
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -534,7 +549,7 @@ textarea {
 
 hr {
   border: none;
-  border-top: 1px solid rgba(98, 64, 44, 0.24);
+  border-top: 1px solid rgba(98, 64, 44, 0.14);
   margin: 12px 0;
 }
 
@@ -543,8 +558,13 @@ hr {
     grid-template-columns: 1fr;
   }
 
-  .board-canvas {
-    min-height: calc(100vh - 320px);
+  .board-canvas.organize-mode {
+    column-width: 220px;
+    padding: 16px;
+  }
+
+  .organized-note {
+    max-width: 220px;
   }
 }
 
@@ -575,7 +595,7 @@ hr {
 
   .toolbar .rainbow-btn {
     width: 100%;
-    border-radius: 10px;
+    border-radius: 14px;
   }
 
   .toolbar .rainbow-dot {
@@ -594,7 +614,16 @@ hr {
   }
 
   .board-canvas {
-    border-radius: 12px;
-    min-height: 1700px;
+    border-radius: 18px;
+  }
+
+  .board-canvas.organize-mode {
+    column-width: auto;
+    columns: 1;
+    padding: 14px;
+  }
+
+  .organized-note {
+    max-width: none;
   }
 }

@@ -1,4 +1,4 @@
-import { type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type DragEvent as ReactDragEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { type BoardBackgroundStyle, type BoardV2, loadOrCreateBoardV2, type NoteColor, type NoteV2, saveBoardV2 } from "./lib/supabase-board-v2";
 
@@ -23,11 +23,12 @@ type LayoutMode = "free" | "organize";
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const DEFAULT_NOTE_WIDTH = 240;
 const DEFAULT_NOTE_HEIGHT = 220;
-const AUTO_ORGANIZE_BREAKPOINT = 1100;
 const MOBILE_BREAKPOINT = 760;
 const DEFAULT_FREE_CANVAS_HEIGHT = 980;
 const MOBILE_FREE_CANVAS_HEIGHT = 1700;
 const FREE_CANVAS_BOTTOM_PADDING = 280;
+const INITIAL_VISIBLE_NOTE_COUNT = 24;
+const VISIBLE_NOTE_BATCH_SIZE = 16;
 
 const NOTE_COLORS: { id: NoteColor; label: string }[] = [
   { id: "yellow", label: "노랑" },
@@ -108,7 +109,7 @@ const createDefaultSnapshot = (): LocalSnapshot => {
     zIndex: 1,
     x: 120,
     y: 120,
-    content: "더블클릭으로 새 포스트잇을 만들 수 있습니다.",
+    content: "메모 길이에 따라 카드 높이가 자연스럽게 늘어나는 핀터레스트형 보드입니다.",
     color: "yellow"
   });
   const secondNote = createNote({
@@ -117,7 +118,7 @@ const createDefaultSnapshot = (): LocalSnapshot => {
     zIndex: 2,
     x: 410,
     y: 180,
-    content: "로그인하면 어디서든 같은 보드를 볼 수 있어요.",
+    content: "정리 모드에서는 카드 너비가 고정되고, 드래그해서 순서를 바꿀 수 있습니다.",
     color: "mint"
   });
   return { board, notes: [firstNote, secondNote] };
@@ -151,6 +152,42 @@ const saveLocalSnapshot = (snapshot: LocalSnapshot) => {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshot));
 };
 
+const reorderNotes = (notes: NoteV2[], draggedNoteId: string, targetNoteId?: string): NoteV2[] => {
+  const activeNotes = [...notes.filter((note) => !note.archived)].sort((a, b) => a.zIndex - b.zIndex);
+  const archivedNotes = notes.filter((note) => note.archived);
+  const sourceIndex = activeNotes.findIndex((note) => note.id === draggedNoteId);
+
+  if (sourceIndex < 0) {
+    return notes;
+  }
+
+  const [moved] = activeNotes.splice(sourceIndex, 1);
+
+  if (targetNoteId) {
+    const targetIndex = activeNotes.findIndex((note) => note.id === targetNoteId);
+    if (targetIndex >= 0) {
+      activeNotes.splice(targetIndex, 0, moved);
+    } else {
+      activeNotes.push(moved);
+    }
+  } else {
+    activeNotes.push(moved);
+  }
+
+  const activeMap = new Map(
+    activeNotes.map((note, index) => [
+      note.id,
+      {
+        ...note,
+        zIndex: index + 1,
+        updatedAt: nowIso()
+      }
+    ])
+  );
+
+  return notes.map((note) => activeMap.get(note.id) ?? archivedNotes.find((item) => item.id === note.id) ?? note);
+};
+
 const App = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [board, setBoard] = useState<BoardV2>(() => createDefaultSnapshot().board);
@@ -161,23 +198,21 @@ const App = () => {
   const [syncMessage, setSyncMessage] = useState("로컬 모드");
   const [syncError, setSyncError] = useState("");
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
+  const [organizeDragNoteId, setOrganizeDragNoteId] = useState<string | null>(null);
   const [trashOpen, setTrashOpen] = useState(false);
   const [showInspector, setShowInspector] = useState(false);
-  const [manualLayoutMode, setManualLayoutMode] = useState<LayoutMode | null>(null);
-  const [isNarrowViewport, setIsNarrowViewport] = useState<boolean>(() =>
-    typeof window !== "undefined" ? window.innerWidth <= AUTO_ORGANIZE_BREAKPOINT : false
-  );
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("organize");
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() =>
     typeof window !== "undefined" ? window.innerWidth <= MOBILE_BREAKPOINT : false
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [visibleNoteCount, setVisibleNoteCount] = useState(INITIAL_VISIBLE_NOTE_COUNT);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const skipNextCloudSaveRef = useRef(false);
   const cloudEnabled = Boolean(user?.id && supabase);
-  const effectiveLayoutMode: LayoutMode = manualLayoutMode ?? (isNarrowViewport ? "organize" : "free");
-  const isOrganizeMode = effectiveLayoutMode === "organize";
+  const isOrganizeMode = layoutMode === "organize";
 
   const activeNotes = useMemo(() => notes.filter((note) => !note.archived), [notes]);
   const trashNotes = useMemo(
@@ -195,13 +230,19 @@ const App = () => {
     return Math.max(minHeight, maxBottom + FREE_CANVAS_BOTTOM_PADDING);
   }, [activeNotes, isMobileViewport]);
 
-  const renderedNotes = useMemo(() => {
+  const filteredNotes = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     const filtered = keyword
       ? activeNotes.filter((note) => note.content.toLowerCase().includes(keyword))
       : activeNotes;
     return [...filtered].sort((a, b) => a.zIndex - b.zIndex);
   }, [activeNotes, search]);
+
+  const visibleNotes = useMemo(
+    () => (isOrganizeMode ? filteredNotes.slice(0, visibleNoteCount) : filteredNotes),
+    [filteredNotes, isOrganizeMode, visibleNoteCount]
+  );
+  const hasMoreVisibleNotes = isOrganizeMode && visibleNoteCount < filteredNotes.length;
 
   useEffect(() => {
     if (!supabase) {
@@ -296,7 +337,6 @@ const App = () => {
 
   useEffect(() => {
     const onResize = () => {
-      setIsNarrowViewport(window.innerWidth <= AUTO_ORGANIZE_BREAKPOINT);
       const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
       setIsMobileViewport(mobile);
       if (!mobile) {
@@ -373,7 +413,7 @@ const App = () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
     };
-  }, [isOrganizeMode, freeCanvasHeight]);
+  }, [isOrganizeMode]);
 
   useEffect(() => {
     if (!isOrganizeMode) {
@@ -386,7 +426,7 @@ const App = () => {
   useEffect(() => {
     const clampAllActiveNotes = () => {
       const canvas = canvasRef.current;
-      if (!canvas) {
+      if (!canvas || isOrganizeMode) {
         return;
       }
       setNotes((prev) => {
@@ -412,7 +452,58 @@ const App = () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", clampAllActiveNotes);
     };
-  }, [loading]);
+  }, [isOrganizeMode, loading]);
+
+  useEffect(() => {
+    if (!isOrganizeMode) {
+      return;
+    }
+
+    setVisibleNoteCount((prev) => {
+      if (filteredNotes.length <= INITIAL_VISIBLE_NOTE_COUNT) {
+        return filteredNotes.length;
+      }
+      return Math.max(INITIAL_VISIBLE_NOTE_COUNT, Math.min(prev, filteredNotes.length));
+    });
+  }, [filteredNotes.length, isOrganizeMode]);
+
+  useEffect(() => {
+    if (!isOrganizeMode) {
+      return;
+    }
+
+    const onScroll = () => {
+      if (!hasMoreVisibleNotes) {
+        return;
+      }
+
+      const threshold = document.documentElement.scrollHeight - 720;
+      if (window.innerHeight + window.scrollY < threshold) {
+        return;
+      }
+
+      setVisibleNoteCount((prev) => Math.min(prev + VISIBLE_NOTE_BATCH_SIZE, filteredNotes.length));
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [filteredNotes.length, hasMoreVisibleNotes, isOrganizeMode]);
+
+  useEffect(() => {
+    if (!isOrganizeMode) {
+      return;
+    }
+
+    const editors = document.querySelectorAll<HTMLTextAreaElement>(".organized-editor");
+    editors.forEach((editor) => {
+      editor.style.height = "0px";
+      editor.style.height = `${editor.scrollHeight}px`;
+    });
+  }, [isOrganizeMode, visibleNotes]);
 
   const bringToFront = (noteId: string) => {
     setNotes((prev) => {
@@ -436,7 +527,7 @@ const App = () => {
     const baseX = x ?? fallbackX;
     const baseY = y ?? fallbackY;
     const canvas = canvasRef.current;
-    const clamped = canvas
+    const clamped = canvas && !isOrganizeMode
       ? clampNotePosition(baseX, baseY, DEFAULT_NOTE_WIDTH, DEFAULT_NOTE_HEIGHT, canvas)
       : { x: baseX, y: baseY };
 
@@ -449,6 +540,9 @@ const App = () => {
     });
     setNotes((prev) => [...prev, newNote]);
     setSelectedNoteId(newNote.id);
+    if (isOrganizeMode) {
+      setVisibleNoteCount((prev) => Math.max(prev, Math.min(filteredNotes.length + 1, prev + 1)));
+    }
   };
 
   const updateNote = (noteId: string, patch: Partial<NoteV2>) => {
@@ -459,7 +553,7 @@ const App = () => {
           return note;
         }
         const merged = { ...note, ...patch };
-        if (canvas) {
+        if (canvas && !isOrganizeMode) {
           const clamped = clampNotePosition(merged.x, merged.y, merged.w, merged.h, canvas);
           return { ...merged, x: clamped.x, y: clamped.y, updatedAt: nowIso() };
         }
@@ -481,7 +575,7 @@ const App = () => {
         note.id === noteId
           ? {
               ...note,
-              ...(canvas ? clampNotePosition(note.x, note.y, note.w, note.h, canvas) : {}),
+              ...(canvas && !isOrganizeMode ? clampNotePosition(note.x, note.y, note.w, note.h, canvas) : {}),
               archived: false,
               zIndex: maxZ + 1,
               updatedAt: nowIso()
@@ -502,6 +596,10 @@ const App = () => {
   };
 
   const onCanvasDoubleClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (isOrganizeMode) {
+      addNote();
+      return;
+    }
     const canvas = canvasRef.current;
     if (!canvas) {
       addNote();
@@ -531,6 +629,30 @@ const App = () => {
     bringToFront(note.id);
   };
 
+  const onOrganizeDragStart = (event: ReactDragEvent<HTMLElement>, noteId: string) => {
+    if (!isOrganizeMode) {
+      return;
+    }
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", noteId);
+    setOrganizeDragNoteId(noteId);
+    setSelectedNoteId(noteId);
+  };
+
+  const onOrganizeDrop = (event: ReactDragEvent<HTMLElement>, targetNoteId?: string) => {
+    if (!isOrganizeMode) {
+      return;
+    }
+    event.preventDefault();
+    const draggedNoteId = event.dataTransfer.getData("text/plain") || organizeDragNoteId;
+    if (!draggedNoteId || draggedNoteId === targetNoteId) {
+      setOrganizeDragNoteId(null);
+      return;
+    }
+    setNotes((prev) => reorderNotes(prev, draggedNoteId, targetNoteId));
+    setOrganizeDragNoteId(null);
+  };
+
   const onGoogleLogin = async () => {
     if (!supabase) {
       return;
@@ -553,16 +675,7 @@ const App = () => {
   };
 
   const onToggleLayoutMode = () => {
-    setManualLayoutMode((prev) => {
-      if (prev === null) {
-        return isOrganizeMode ? "free" : "organize";
-      }
-      return prev === "free" ? "organize" : "free";
-    });
-  };
-
-  const onResetLayoutMode = () => {
-    setManualLayoutMode(null);
+    setLayoutMode((prev) => (prev === "organize" ? "free" : "organize"));
   };
 
   const onToggleMobileMenu = () => {
@@ -575,7 +688,7 @@ const App = () => {
         <div className="topbar-main">
           <div className="brand">
             <span className="logo">WZD</span>
-            <span className="brand-subtitle">Cork Board</span>
+            <span className="brand-subtitle">Pinterest Notes</span>
           </div>
           <button className="mobile-menu-btn" onClick={onToggleMobileMenu} aria-label="메뉴 열기/닫기">
             {mobileMenuOpen ? "✕" : "☰"}
@@ -584,21 +697,16 @@ const App = () => {
 
         <div className={`toolbar ${isToolbarVisible ? "open" : "closed"}`}>
           <button className="primary-btn" onClick={() => addNote()}>
-            + 포스트잇 추가
+            + 메모 추가
           </button>
           <button className={`ghost-btn ${isOrganizeMode ? "active-mode-btn" : ""}`} onClick={onToggleLayoutMode}>
-            {isOrganizeMode ? "자유배치" : "정리모드"}
+            {isOrganizeMode ? "자유배치" : "핀터레스트"}
           </button>
-          {manualLayoutMode && (
-            <button className="ghost-btn" onClick={onResetLayoutMode} title="화면 크기에 따라 자동 전환">
-              자동
-            </button>
-          )}
           <button
             className={`rainbow-btn ${showInspector ? "active" : ""}`}
             onClick={onToggleInspector}
-            aria-label="포스트잇 설정 열기"
-            title="포스트잇 설정"
+            aria-label="메모 설정 열기"
+            title="메모 설정"
           >
             <span className="rainbow-dot" aria-hidden="true" />
           </button>
@@ -609,7 +717,7 @@ const App = () => {
             className="search-input"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="포스트잇 검색"
+            placeholder="메모 검색"
           />
           <input
             className="board-title-input"
@@ -659,20 +767,26 @@ const App = () => {
             className={`board-canvas canvas-${board.backgroundStyle} ${isOrganizeMode ? "organize-mode" : "free-mode"}`}
             style={!isOrganizeMode ? { height: `${freeCanvasHeight}px` } : undefined}
             onDoubleClick={onCanvasDoubleClick}
-            aria-label="코르크 보드 캔버스"
+            onDragOver={(event) => {
+              if (isOrganizeMode) {
+                event.preventDefault();
+              }
+            }}
+            onDrop={(event) => onOrganizeDrop(event)}
+            aria-label="메모 보드 캔버스"
           >
             {loading ? (
               <div className="canvas-empty">보드를 불러오는 중...</div>
-            ) : renderedNotes.length === 0 ? (
-              <div className="canvas-empty">더블클릭해서 첫 포스트잇을 추가해보세요.</div>
+            ) : visibleNotes.length === 0 ? (
+              <div className="canvas-empty">새 메모를 추가해보세요.</div>
             ) : (
-              renderedNotes.map((note) => {
+              visibleNotes.map((note) => {
                 const selected = selectedNoteId === note.id;
                 return (
                   <article
                     key={note.id}
                     className={`sticky-note note-${note.color} ${selected ? "selected" : ""} ${
-                      draggingNoteId === note.id ? "dragging" : ""
+                      draggingNoteId === note.id || organizeDragNoteId === note.id ? "dragging" : ""
                     } ${isOrganizeMode ? "organized-note" : ""}`}
                     style={
                       isOrganizeMode
@@ -688,6 +802,15 @@ const App = () => {
                             transform: `rotate(${note.rotation}deg)`
                           }
                     }
+                    draggable={isOrganizeMode}
+                    onDragStart={(event) => onOrganizeDragStart(event, note.id)}
+                    onDragEnd={() => setOrganizeDragNoteId(null)}
+                    onDragOver={(event) => {
+                      if (isOrganizeMode) {
+                        event.preventDefault();
+                      }
+                    }}
+                    onDrop={(event) => onOrganizeDrop(event, note.id)}
                     onMouseDown={() => {
                       setSelectedNoteId(note.id);
                       if (!isOrganizeMode) {
@@ -696,7 +819,7 @@ const App = () => {
                     }}
                   >
                     <div className="sticky-handle" onPointerDown={(event) => onNoteHandlePointerDown(event, note)}>
-                      <span>{isOrganizeMode ? "정리모드" : note.pinned ? "고정됨" : "드래그해서 이동"}</span>
+                      <span>{isOrganizeMode ? "드래그해서 순서 변경" : note.pinned ? "고정됨" : "드래그해서 이동"}</span>
                       <div className="note-actions">
                         <button
                           className="icon-btn"
@@ -719,21 +842,34 @@ const App = () => {
                       </div>
                     </div>
                     <textarea
-                      className="sticky-editor"
+                      className={`sticky-editor ${isOrganizeMode ? "organized-editor" : ""}`}
                       value={note.content}
-                      onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                      onChange={(event) => {
+                        updateNote(note.id, { content: event.target.value });
+                        if (isOrganizeMode) {
+                          event.currentTarget.style.height = "0px";
+                          event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+                        }
+                      }}
                       placeholder="메모를 입력하세요..."
+                      rows={isOrganizeMode ? 1 : undefined}
                     />
                   </article>
                 );
               })
             )}
           </div>
+
+          {isOrganizeMode && (
+            <div className="infinite-scroll-status" aria-live="polite">
+              {hasMoreVisibleNotes ? "아래로 스크롤하면 메모가 계속 로드됩니다." : `${filteredNotes.length}개의 메모가 모두 표시되었습니다.`}
+            </div>
+          )}
         </section>
 
         {showInspector && (
           <aside className="inspector">
-            <h2>포스트잇 설정</h2>
+            <h2>메모 설정</h2>
             {selectedNote ? (
               <>
                 <p className="inspector-line">
@@ -764,7 +900,7 @@ const App = () => {
                 </div>
               </>
             ) : (
-              <p className="inspector-line">포스트잇을 선택하면 색상과 크기를 바꿀 수 있습니다.</p>
+              <p className="inspector-line">메모를 선택하면 색상과 크기를 바꿀 수 있습니다.</p>
             )}
 
             <hr />
