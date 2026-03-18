@@ -34,6 +34,7 @@ const INITIAL_VISIBLE_NOTE_COUNT = 24;
 const VISIBLE_NOTE_BATCH_SIZE = 16;
 const DEFAULT_FONT_SIZE: NoteFontSize = 16;
 const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "purple", "mint", "white"];
+const CLOUD_SAVE_DEBOUNCE_MS = 120;
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -290,11 +291,37 @@ const App = () => {
   const [feedMode, setFeedMode] = useState<FeedMode>("active");
 
   const skipNextCloudSaveRef = useRef(false);
+  const latestBoardsRef = useRef<BoardV2[]>(boards);
+  const latestNotesRef = useRef<NoteV2[]>(notes);
+  const latestUserIdRef = useRef<string | null>(user?.id ?? null);
 
   const selectedBoard = useMemo(
     () => boards.find((board) => board.id === selectedBoardId) ?? boards[0] ?? null,
     [boards, selectedBoardId]
   );
+
+  useEffect(() => {
+    latestBoardsRef.current = boards;
+  }, [boards]);
+
+  useEffect(() => {
+    latestNotesRef.current = notes;
+  }, [notes]);
+
+  useEffect(() => {
+    latestUserIdRef.current = user?.id ?? null;
+  }, [user?.id]);
+
+  const persistCloudSnapshot = async () => {
+    if (!supabase || !latestUserIdRef.current) {
+      return;
+    }
+
+    await saveBoardsV2({
+      boards: latestBoardsRef.current,
+      notes: latestNotesRef.current
+    });
+  };
 
   const mergeLocalSnapshotToCloud = async (userId: string, remoteBoards: BoardV2[], remoteNotes: NoteV2[]) => {
     const localSnapshot = readStoredLocalSnapshot();
@@ -455,13 +482,41 @@ const App = () => {
     }
 
     const timer = window.setTimeout(() => {
-      void saveBoardsV2({ boards, notes }).catch(() => {});
-    }, 400);
+      void persistCloudSnapshot().catch((error) => {
+        console.error("Failed to save boards", error);
+      });
+    }, CLOUD_SAVE_DEBOUNCE_MS);
 
     return () => {
       window.clearTimeout(timer);
     };
   }, [boards, notes, selectedBoard?.id, user?.id]);
+
+  useEffect(() => {
+    if (!supabase || !user?.id) {
+      return;
+    }
+
+    const flushOnLeave = () => {
+      void persistCloudSnapshot().catch((error) => {
+        console.error("Failed to flush boards before leaving", error);
+      });
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        flushOnLeave();
+      }
+    };
+
+    window.addEventListener("pagehide", flushOnLeave);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pagehide", flushOnLeave);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!selectedBoard && boards.length > 0) {
