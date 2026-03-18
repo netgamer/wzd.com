@@ -46,6 +46,7 @@ button {
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr);
   background: linear-gradient(180deg, #fffefb, #fbf7f0);
+  transition: grid-template-columns 240ms ease;
 }
 
 .pin-page.sidebar-expanded {
@@ -64,6 +65,7 @@ button {
   background: rgba(255, 255, 255, 0.92);
   border-right: 1px solid var(--line);
   overflow: hidden;
+  transition: padding 240ms ease, background-color 240ms ease;
 }
 
 .pin-sidebar.expanded {
@@ -97,7 +99,8 @@ button {
   background: transparent;
   color: var(--text);
   cursor: pointer;
-  transition: transform 120ms ease, background-color 120ms ease;
+  transition: transform 120ms ease, background-color 120ms ease, width 240ms ease, border-radius 240ms ease,
+    padding 240ms ease;
 }
 
 .pin-brand {
@@ -105,6 +108,10 @@ button {
   color: #fff;
   font-size: 22px;
   font-weight: 800;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: transform 120ms ease, background-color 120ms ease, width 240ms ease, border-radius 240ms ease,
+    letter-spacing 240ms ease;
 }
 
 .side-icon {
@@ -129,7 +136,6 @@ button {
 }
 
 .board-chip-label {
-  display: none;
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -138,6 +144,10 @@ button {
   text-align: left;
   font-size: 14px;
   font-weight: 600;
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: max-width 240ms ease, opacity 180ms ease, transform 240ms ease;
 }
 
 .board-chip.active {
@@ -162,7 +172,9 @@ button {
 }
 
 .pin-sidebar.expanded .board-chip-label {
-  display: block;
+  max-width: 148px;
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .pin-sidebar.expanded .board-chip {
@@ -192,6 +204,12 @@ button {
 .pin-sidebar.expanded .pin-brand,
 .pin-sidebar.expanded .side-icon {
   margin-inline: auto;
+}
+
+.pin-sidebar.expanded .pin-brand {
+  width: 74px;
+  font-size: 18px;
+  letter-spacing: 0.06em;
 }
 
 .sidebar-spacer {

@@ -992,7 +992,7 @@ const App = () => {
     <div className={`pin-page ${showExpandedSidebar ? "sidebar-expanded" : ""}`}>
       <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`}>
         <button className="pin-brand" aria-label="WZD 홈">
-          <span>W</span>
+          <span>{showExpandedSidebar ? "WZD" : "W"}</span>
         </button>
 
         <div className="board-menu">
