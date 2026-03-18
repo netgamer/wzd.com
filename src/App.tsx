@@ -388,6 +388,7 @@ const App = () => {
     typeof window !== "undefined" ? window.innerWidth < 1180 : false
   );
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -420,6 +421,7 @@ const App = () => {
       setCompactSidebar(window.innerWidth < 1180);
       if (window.innerWidth > 720) {
         setMobileSearchOpen(false);
+        setMobileBoardMenuOpen(false);
       }
     };
 
@@ -1111,6 +1113,13 @@ const App = () => {
         <header className="pin-topbar">
           <div className="topbar-primary">
             <div className="topbar-board-title">
+              <button
+                className="mobile-icon-action mobile-board-toggle"
+                onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+                aria-label="보드 메뉴"
+              >
+                ≡
+              </button>
               <p className="feed-kicker">{feedMode === "active" ? "개인 보드" : "보관 메모"}</p>
               {feedMode === "active" && editingBoardTitle ? (
                 <input
@@ -1210,6 +1219,28 @@ const App = () => {
             )}
           </div>
         </header>
+
+        {mobileBoardMenuOpen && (
+          <div className="mobile-board-sheet">
+            <div className="mobile-board-list">
+              {boards.map((boardItem) => (
+                <button
+                  key={`mobile-${boardItem.id}`}
+                  className={`mobile-board-item ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
+                  onClick={() => {
+                    setSelectedBoardId(boardItem.id);
+                    setSelectedNoteId(null);
+                    setFeedMode("active");
+                    setMobileBoardMenuOpen(false);
+                  }}
+                >
+                  <span className="mobile-board-badge">{getBoardBadge(boardItem.title)}</span>
+                  <span className="mobile-board-name">{boardItem.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <main className="pin-main">
           <section className="feed-head">

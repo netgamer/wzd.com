@@ -249,6 +249,10 @@ button {
   flex: 0 0 auto;
 }
 
+.mobile-board-toggle {
+  display: none;
+}
+
 .topbar-board-title h1 {
   margin: 0;
   font-size: 31px;
@@ -354,6 +358,10 @@ button {
   color: #fff;
   font-size: 24px;
   line-height: 1;
+}
+
+.mobile-board-sheet {
+  display: none;
 }
 
 .new-note-pill:hover,
@@ -944,6 +952,14 @@ button {
     gap: 0;
   }
 
+  .topbar-board-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
   .topbar-board-title h1 {
     font-size: 25px;
     white-space: nowrap;
@@ -977,6 +993,11 @@ button {
     display: inline-flex;
   }
 
+  .mobile-board-toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+  }
+
   .new-note-pill,
   .ghost-action {
     display: none;
@@ -1004,6 +1025,66 @@ button {
 
   .topbar-board-title .feed-kicker {
     display: none;
+  }
+
+  .mobile-board-sheet {
+    display: block;
+    padding: 0 12px 6px;
+  }
+
+  .mobile-board-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(31, 26, 19, 0.08);
+    box-shadow: var(--shadow);
+  }
+
+  .mobile-board-item {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    background: var(--surface-soft);
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .mobile-board-item.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .mobile-board-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: rgba(31, 26, 19, 0.08);
+    font-size: 13px;
+    font-weight: 700;
+    flex: 0 0 auto;
+  }
+
+  .mobile-board-item.active .mobile-board-badge {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .mobile-board-name {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    font-weight: 600;
   }
 
   .pin-board {
