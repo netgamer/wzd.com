@@ -869,6 +869,7 @@ const App = () => {
     }
 
     event.preventDefault();
+    event.stopPropagation();
     const draggedNoteId = event.dataTransfer.getData("text/plain") || runningDragNoteId;
     if (!draggedNoteId || draggedNoteId === targetNoteId) {
       setRunningDragNoteId(null);
