@@ -19,6 +19,7 @@ interface DragState {
 }
 
 type LayoutMode = "free" | "organize";
+type NoteFontSize = 14 | 16 | 18 | 20;
 
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const DEFAULT_NOTE_WIDTH = 240;
@@ -29,6 +30,7 @@ const MOBILE_FREE_CANVAS_HEIGHT = 1700;
 const FREE_CANVAS_BOTTOM_PADDING = 280;
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
 const VISIBLE_NOTE_BATCH_SIZE = 16;
+const DEFAULT_FONT_SIZE: NoteFontSize = 16;
 
 const NOTE_COLORS: { id: NoteColor; label: string }[] = [
   { id: "yellow", label: "노랑" },
@@ -39,6 +41,13 @@ const NOTE_COLORS: { id: NoteColor; label: string }[] = [
   { id: "purple", label: "보라" },
   { id: "mint", label: "민트" },
   { id: "white", label: "화이트" }
+];
+
+const NOTE_FONT_SIZES: { value: NoteFontSize; label: string }[] = [
+  { value: 14, label: "S" },
+  { value: 16, label: "M" },
+  { value: 18, label: "L" },
+  { value: 20, label: "XL" }
 ];
 
 const makeId = () =>
@@ -97,7 +106,7 @@ const createNote = (params: {
   rotation: 0,
   pinned: false,
   archived: false,
-  metadata: {},
+  metadata: { fontSize: DEFAULT_FONT_SIZE },
   updatedAt: nowIso()
 });
 
@@ -150,6 +159,11 @@ const saveLocalSnapshot = (snapshot: LocalSnapshot) => {
     return;
   }
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshot));
+};
+
+const getNoteFontSize = (note: NoteV2): NoteFontSize => {
+  const value = note.metadata?.fontSize;
+  return value === 14 || value === 16 || value === 18 || value === 20 ? value : DEFAULT_FONT_SIZE;
 };
 
 const reorderNotes = (notes: NoteV2[], draggedNoteId: string, targetNoteId?: string): NoteV2[] => {
@@ -562,6 +576,23 @@ const App = () => {
     );
   };
 
+  const updateNoteFontSize = (noteId: string, fontSize: NoteFontSize) => {
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              metadata: {
+                ...note.metadata,
+                fontSize
+              },
+              updatedAt: nowIso()
+            }
+          : note
+      )
+    );
+  };
+
   const removeNote = (noteId: string) => {
     setNotes((prev) => prev.map((note) => (note.id === noteId ? { ...note, archived: true, updatedAt: nowIso() } : note)));
     setSelectedNoteId((prev) => (prev === noteId ? null : prev));
@@ -813,6 +844,7 @@ const App = () => {
                     onDrop={(event) => onOrganizeDrop(event, note.id)}
                     onMouseDown={() => {
                       setSelectedNoteId(note.id);
+                      setShowInspector(true);
                       if (!isOrganizeMode) {
                         bringToFront(note.id);
                       }
@@ -844,6 +876,11 @@ const App = () => {
                     <textarea
                       className={`sticky-editor ${isOrganizeMode ? "organized-editor" : ""}`}
                       value={note.content}
+                      style={{ fontSize: `${getNoteFontSize(note)}px` }}
+                      onFocus={() => {
+                        setSelectedNoteId(note.id);
+                        setShowInspector(true);
+                      }}
                       onChange={(event) => {
                         updateNote(note.id, { content: event.target.value });
                         if (isOrganizeMode) {
@@ -888,16 +925,17 @@ const App = () => {
                 </div>
 
                 <div className="size-row">
-                  <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 200, h: 180 })}>
-                    S
-                  </button>
-                  <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 240, h: 220 })}>
-                    M
-                  </button>
-                  <button className="ghost-btn" onClick={() => updateNote(selectedNote.id, { w: 300, h: 260 })}>
-                    L
-                  </button>
+                  {NOTE_FONT_SIZES.map((sizeOption) => (
+                    <button
+                      key={sizeOption.value}
+                      className={`ghost-btn ${getNoteFontSize(selectedNote) === sizeOption.value ? "active-font-btn" : ""}`}
+                      onClick={() => updateNoteFontSize(selectedNote.id, sizeOption.value)}
+                    >
+                      {sizeOption.label}
+                    </button>
+                  ))}
                 </div>
+                <p className="inspector-line">폰트 크기: {getNoteFontSize(selectedNote)}px</p>
               </>
             ) : (
               <p className="inspector-line">메모를 선택하면 색상과 크기를 바꿀 수 있습니다.</p>
