@@ -308,6 +308,27 @@ button {
   color: var(--text);
 }
 
+.mobile-icon-action {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-soft);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+
+.mobile-add-note {
+  background: var(--accent);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+}
+
 .new-note-pill:hover,
 .ghost-action:hover,
 .pin-icon-button:hover,
@@ -765,6 +786,7 @@ button {
 .pin-editor:focus-visible,
 .new-note-pill:focus-visible,
 .ghost-action:focus-visible,
+.mobile-icon-action:focus-visible,
 .pin-icon-button:focus-visible,
 .font-chip:focus-visible,
 .note-color-toggle:focus-visible,
@@ -810,41 +832,76 @@ button {
 
 @media (max-width: 720px) {
   .pin-topbar {
-    position: static;
-    flex-direction: column;
-    align-items: stretch;
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
+    padding: 10px 12px;
   }
 
   .topbar-primary {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    flex: 1;
+    min-width: 0;
+    gap: 0;
   }
 
   .topbar-board-title h1 {
     font-size: 25px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .search-shell {
-    flex: none;
-    width: 100%;
-    min-height: 48px;
+    display: none;
+  }
+
+  .search-shell.mobile-open {
+    display: flex;
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: calc(100% + 8px);
+    z-index: 25;
+    box-shadow: var(--shadow);
+    background: var(--surface);
   }
 
   .topbar-actions {
-    justify-content: space-between;
+    flex: 0 0 auto;
     align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
 
-  .profile-email {
-    max-width: 120px;
+  .mobile-icon-action {
+    display: inline-flex;
   }
 
   .new-note-pill,
-  .ghost-action,
+  .ghost-action {
+    display: none;
+  }
+
   .profile-pill {
+    display: inline-flex;
     min-height: 40px;
+    padding: 0 6px;
+  }
+
+  .profile-email {
+    display: none;
+  }
+
+  .profile-pill.muted {
+    display: inline-flex;
+    min-height: 40px;
+    padding: 0 12px;
+  }
+
+  .topbar-board-title .feed-kicker {
+    display: none;
   }
 
   .pin-board {
@@ -857,5 +914,11 @@ button {
 
   .pin-main {
     padding-top: 10px;
+  }
+
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
   }
 }

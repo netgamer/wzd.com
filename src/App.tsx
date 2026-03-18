@@ -385,6 +385,7 @@ const App = () => {
   const [compactSidebar, setCompactSidebar] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 1180 : false
   );
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -392,6 +393,7 @@ const App = () => {
   const latestNotesRef = useRef<NoteV2[]>(notes);
   const latestUserIdRef = useRef<string | null>(user?.id ?? null);
   const saveStateResetTimerRef = useRef<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const selectedBoard = useMemo(
     () => boards.find((board) => board.id === selectedBoardId) ?? boards[0] ?? null,
@@ -414,6 +416,9 @@ const App = () => {
     const onResize = () => {
       setColumnCount(getColumnCount());
       setCompactSidebar(window.innerWidth < 1180);
+      if (window.innerWidth > 720) {
+        setMobileSearchOpen(false);
+      }
     };
 
     window.addEventListener("resize", onResize);
@@ -1074,11 +1079,12 @@ const App = () => {
               )}
             </div>
 
-            <div className="search-shell">
+            <div className={`search-shell ${mobileSearchOpen ? "mobile-open" : ""}`}>
               <span className="search-icon" aria-hidden="true">
                 ⌕
               </span>
               <input
+                ref={searchInputRef}
                 className="search-input pinterest-search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -1088,8 +1094,26 @@ const App = () => {
           </div>
 
           <div className="topbar-actions">
+            <button
+              className="mobile-icon-action"
+              onClick={() => {
+                setMobileSearchOpen((prev) => {
+                  const next = !prev;
+                  if (!prev) {
+                    window.setTimeout(() => searchInputRef.current?.focus(), 40);
+                  }
+                  return next;
+                });
+              }}
+              aria-label="검색"
+            >
+              ⌕
+            </button>
             <button className="new-note-pill" onClick={addNote}>
               새 메모
+            </button>
+            <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="새 메모">
+              +
             </button>
             {hasSupabaseConfig ? (
               user ? (
