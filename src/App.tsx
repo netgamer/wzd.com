@@ -144,8 +144,7 @@ const loadLocalSnapshot = (): LocalSnapshot => {
   }
 
   try {
-    const snapshot = migrateLocalSnapshot(raw);
-    return { ...snapshot, notes: sanitizeNotes(snapshot.notes) };
+    return pruneEmptyBoards(migrateLocalSnapshot(raw));
   } catch {
     return createDefaultSnapshot();
   }
@@ -162,8 +161,7 @@ const readStoredLocalSnapshot = (): LocalSnapshot | null => {
   }
 
   try {
-    const snapshot = migrateLocalSnapshot(raw);
-    return { ...snapshot, notes: sanitizeNotes(snapshot.notes) };
+    return pruneEmptyBoards(migrateLocalSnapshot(raw));
   } catch {
     return null;
   }
@@ -174,7 +172,7 @@ const saveLocalSnapshot = (snapshot: LocalSnapshot) => {
     return;
   }
 
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ ...snapshot, notes: sanitizeNotes(snapshot.notes) }));
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(pruneEmptyBoards(snapshot)));
 };
 
 const clearLocalSnapshot = () => {
@@ -282,6 +280,15 @@ const isDisposableEmptyNote = (note: NoteV2) => {
 };
 
 const sanitizeNotes = (notes: NoteV2[]) => notes.filter((note) => !isDisposableEmptyNote(note));
+const pruneEmptyBoards = (snapshot: LocalSnapshot): LocalSnapshot => {
+  const notes = sanitizeNotes(snapshot.notes);
+  const usedBoardIds = new Set(notes.map((note) => note.boardId));
+  const boards = snapshot.boards.filter((board) => usedBoardIds.has(board.id));
+  const selectedBoardId =
+    boards.some((board) => board.id === snapshot.selectedBoardId) ? snapshot.selectedBoardId : boards[0]?.id ?? null;
+
+  return { boards, notes, selectedBoardId };
+};
 
 const makeBoardTitle = (boards: BoardV2[]) => {
   let index = boards.length + 1;
@@ -488,10 +495,15 @@ const App = () => {
       return;
     }
 
-    const cleanedNotes = sanitizeNotes(latestNotesRef.current);
-    await saveBoardsV2({
+    const pruned = pruneEmptyBoards({
       boards: latestBoardsRef.current,
-      notes: cleanedNotes
+      notes: latestNotesRef.current,
+      selectedBoardId: selectedBoardId
+    });
+    await saveBoardsV2({
+      boards: pruned.boards,
+      notes: pruned.notes,
+      userId: latestUserIdRef.current ?? undefined
     });
   };
 
@@ -516,7 +528,11 @@ const App = () => {
   const mergeLocalSnapshotToCloud = async (userId: string, remoteBoards: BoardV2[], remoteNotes: NoteV2[]) => {
     const localSnapshot = readStoredLocalSnapshot();
     if (!hasCustomLocalSnapshot(localSnapshot)) {
-      return { boards: remoteBoards, notes: remoteNotes, selectedBoardId: remoteBoards[0]?.id ?? null };
+      return pruneEmptyBoards({
+        boards: remoteBoards,
+        notes: remoteNotes,
+        selectedBoardId: remoteBoards[0]?.id ?? null
+      });
     }
 
     const timestamp = nowIso();
@@ -539,17 +555,16 @@ const App = () => {
       updatedAt: timestamp
     }));
 
-    const mergedBoards = [...importedBoards, ...remoteBoards];
-    const mergedNotes = [...importedNotes, ...remoteNotes];
+    const merged = pruneEmptyBoards({
+      boards: [...importedBoards, ...remoteBoards],
+      notes: [...importedNotes, ...remoteNotes],
+      selectedBoardId: importedBoards[0]?.id ?? remoteBoards[0]?.id ?? null
+    });
 
-    await saveBoardsV2({ boards: mergedBoards, notes: mergedNotes });
+    await saveBoardsV2({ boards: merged.boards, notes: merged.notes, userId });
     clearLocalSnapshot();
 
-    return {
-      boards: mergedBoards,
-      notes: mergedNotes,
-      selectedBoardId: importedBoards[0]?.id ?? remoteBoards[0]?.id ?? null
-    };
+    return merged;
   };
 
   const boardNotes = useMemo(
