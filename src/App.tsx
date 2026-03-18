@@ -7,6 +7,7 @@ import {
   useState
 } from "react";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
+import { fetchLinkPreview, type LinkPreview } from "./lib/link-preview";
 import {
   createBoardV2,
   type BoardV2,
@@ -30,6 +31,7 @@ interface LocalSnapshot {
 type NoteFontSize = 14 | 16 | 18 | 20;
 type FeedMode = "active" | "archived";
 type CloudSaveState = "idle" | "saving" | "saved" | "error";
+type LinkPreviewState = LinkPreview | null;
 
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
@@ -364,6 +366,7 @@ const App = () => {
   const [feedMode, setFeedMode] = useState<FeedMode>("active");
   const [cloudSaveState, setCloudSaveState] = useState<CloudSaveState>("idle");
   const [columnCount, setColumnCount] = useState(() => getColumnCount());
+  const [linkPreviews, setLinkPreviews] = useState<Record<string, LinkPreviewState>>({});
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -711,6 +714,44 @@ const App = () => {
       editor.style.height = `${editor.scrollHeight}px`;
     });
   }, [visibleNotes, selectedNoteId]);
+
+  useEffect(() => {
+    const urls = Array.from(
+      new Set(
+        visibleNotes
+          .map((note) => extractFirstUrl(note.content))
+          .filter((url) => url && !isImageUrl(url))
+      )
+    ).filter((url) => !(url in linkPreviews));
+
+    if (urls.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    urls.forEach((url) => {
+      void fetchLinkPreview(url)
+        .then((preview) => {
+          if (cancelled) {
+            return;
+          }
+
+          setLinkPreviews((prev) => ({ ...prev, [url]: preview }));
+        })
+        .catch(() => {
+          if (cancelled) {
+            return;
+          }
+
+          setLinkPreviews((prev) => ({ ...prev, [url]: null }));
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleNotes, linkPreviews]);
 
   const addBoard = async () => {
     const title = makeBoardTitle(boards);
@@ -1104,6 +1145,7 @@ const App = () => {
                     const fontSize = getNoteFontSize(note);
                     const previewUrl = extractFirstUrl(note.content);
                     const previewText = stripUrls(note.content);
+                    const linkPreview = previewUrl && !isImageUrl(previewUrl) ? linkPreviews[previewUrl] : undefined;
                     const showDropPreview =
                       runningDragNoteId !== null &&
                       dragPreviewNoteId === note.id &&
@@ -1215,17 +1257,43 @@ const App = () => {
                               />
                             ) : (
                               <>
-                                {previewUrl && !isImageUrl(previewUrl) && (
-                                  <a
-                                    className="link-chip"
-                                    href={previewUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    onClick={(event) => event.stopPropagation()}
-                                  >
-                                    {previewUrl}
-                                  </a>
-                                )}
+                                {previewUrl && !isImageUrl(previewUrl) &&
+                                  (linkPreview ? (
+                                    <a
+                                      className="link-preview-card"
+                                      href={linkPreview.finalUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      onClick={(event) => event.stopPropagation()}
+                                    >
+                                      {linkPreview.image && (
+                                        <img
+                                          className="link-preview-image"
+                                          src={linkPreview.image}
+                                          alt={linkPreview.title}
+                                        />
+                                      )}
+                                      <span className="link-preview-meta">
+                                        <span className="link-preview-site">
+                                          {linkPreview.siteName || linkPreview.hostname}
+                                        </span>
+                                        <span className="link-preview-title">{linkPreview.title}</span>
+                                        {linkPreview.description && (
+                                          <span className="link-preview-description">{linkPreview.description}</span>
+                                        )}
+                                      </span>
+                                    </a>
+                                  ) : (
+                                    <a
+                                      className="link-chip"
+                                      href={previewUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      onClick={(event) => event.stopPropagation()}
+                                    >
+                                      {previewUrl}
+                                    </a>
+                                  ))}
                                 <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
                                   {previewText || "??? ???? ?????."}
                                 </p>

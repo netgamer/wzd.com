@@ -495,6 +495,51 @@ button {
   white-space: nowrap;
 }
 
+.link-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.link-preview-image {
+  width: 100%;
+  aspect-ratio: 1.6 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+.link-preview-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 12px 12px;
+}
+
+.link-preview-site {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.link-preview-title {
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.link-preview-description {
+  color: #4d4033;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .feed-empty {
   min-height: 360px;
   border-radius: 28px;
