@@ -128,7 +128,9 @@ button {
   font-size: 17px;
   font-weight: 700;
   gap: 12px;
+  position: relative;
   justify-items: center;
+  overflow: hidden;
 }
 
 .board-chip-badge {
@@ -154,6 +156,28 @@ button {
   opacity: 0;
   transform: translateX(-8px);
   transition: max-width 240ms ease, opacity 180ms ease, transform 240ms ease;
+}
+
+.pin-sidebar:not(.expanded) .board-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.pin-sidebar:not(.expanded) .board-chip-badge {
+  margin: 0;
+}
+
+.pin-sidebar:not(.expanded) .board-chip-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
 }
 
 .board-chip.active {
