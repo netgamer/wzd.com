@@ -495,6 +495,7 @@ const App = () => {
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [trashDropActive, setTrashDropActive] = useState(false);
   const [draggingBoardId, setDraggingBoardId] = useState<string | null>(null);
   const [dragPreviewBoardId, setDragPreviewBoardId] = useState<string | null>(null);
   const [dragArmedBoardId, setDragArmedBoardId] = useState<string | null>(null);
@@ -1426,6 +1427,28 @@ const App = () => {
     updateDragPreview(null, null);
   };
 
+  const onTrashDrop = (event: ReactDragEvent<HTMLElement>) => {
+    if (feedMode !== "active") {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    const draggedNoteId = event.dataTransfer.getData("text/plain") || runningDragNoteId;
+    if (!draggedNoteId) {
+      setTrashDropActive(false);
+      setRunningDragNoteId(null);
+      updateDragPreview(null, null);
+      return;
+    }
+
+    archiveNote(draggedNoteId);
+    suppressNextCardClickRef.current = true;
+    setTrashDropActive(false);
+    setRunningDragNoteId(null);
+    updateDragPreview(null, null);
+  };
+
   const clearBoardLongPress = () => {
     if (boardLongPressTimerRef.current) {
       window.clearTimeout(boardLongPressTimerRef.current);
@@ -1937,6 +1960,7 @@ const App = () => {
                           onDragStart={(event) => onPinDragStart(event, note.id)}
                           onDragEnd={() => {
                             suppressNextCardClickRef.current = true;
+                            setTrashDropActive(false);
                             setRunningDragNoteId(null);
                             updateDragPreview(null, null);
                           }}
@@ -2278,6 +2302,36 @@ const App = () => {
               : `${filteredNotes.length}媛쒖쓽 硫붾え媛 紐⑤몢 ?쒖떆?섏뿀?듬땲??`}
           </div>
         </main>
+
+        {feedMode === "active" && runningDragNoteId && (
+          <button
+            className={`floating-trash ${trashDropActive ? "active" : ""}`}
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!trashDropActive) {
+                setTrashDropActive(true);
+              }
+            }}
+            onDragEnter={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setTrashDropActive(true);
+            }}
+            onDragLeave={(event) => {
+              event.preventDefault();
+              if (event.currentTarget === event.target) {
+                setTrashDropActive(false);
+              }
+            }}
+            onDrop={onTrashDrop}
+            aria-label="휴지통으로 삭제"
+            title="휴지통으로 삭제"
+          >
+            <span className="floating-trash-icon">🗑</span>
+            <span className="floating-trash-label">휴지통</span>
+          </button>
+        )}
       </div>
     </div>
   );

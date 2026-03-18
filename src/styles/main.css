@@ -591,6 +591,42 @@ button {
   flex: 0 0 auto;
 }
 
+.floating-trash {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 32;
+  min-width: 116px;
+  min-height: 56px;
+  padding: 0 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(31, 26, 19, 0.9);
+  color: #fff;
+  box-shadow: 0 18px 34px rgba(31, 26, 19, 0.22);
+  cursor: pointer;
+  transform: translateY(0);
+  transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.floating-trash.active {
+  background: var(--accent);
+  box-shadow: 0 20px 36px rgba(230, 0, 35, 0.28);
+  transform: scale(1.04);
+}
+
+.floating-trash-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.floating-trash-label {
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .pin-main {
   padding: 8px 14px 28px;
 }
@@ -1135,7 +1171,8 @@ button {
 .side-icon:focus-visible,
 .pin-brand:focus-visible,
 .settings-close:focus-visible,
-.trash-restore:focus-visible {
+.trash-restore:focus-visible,
+.floating-trash:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
@@ -1182,6 +1219,11 @@ button {
   .settings-panel {
     width: min(520px, 100%);
     max-height: calc(100vh - 96px);
+  }
+
+  .floating-trash {
+    right: 16px;
+    bottom: 88px;
   }
 }
 
