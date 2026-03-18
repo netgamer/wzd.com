@@ -213,14 +213,17 @@ const getNoteFontSize = (note: NoteV2): NoteFontSize => {
 };
 
 const extractFirstUrl = (content: string) => {
-  const match = content.match(/https?:\/\/\S+/i);
+  const match = content.match(/(?:https?:\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/i);
   return match?.[0] ?? "";
 };
 
 const isImageUrl = (url: string) =>
-  /(\.png|\.jpe?g|\.gif|\.webp|\.avif|\.svg)(\?.*)?$/i.test(url) || url.includes("images.unsplash.com");
+  url.startsWith("data:image/") ||
+  /(\.png|\.jpe?g|\.gif|\.webp|\.avif|\.svg)(\?.*)?$/i.test(url) ||
+  url.includes("images.unsplash.com");
 
-const stripUrls = (content: string) => content.replace(/https?:\/\/\S+/gi, "").trim();
+const stripUrls = (content: string) =>
+  content.replace(/(?:https?:\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/gi, "").trim();
 
 const getUrlSnippet = (url: string) => {
   if (!url) {
@@ -979,6 +982,39 @@ const App = () => {
     }
   };
 
+  const insertTextAtCursor = (element: HTMLTextAreaElement, text: string) => {
+    const start = element.selectionStart ?? element.value.length;
+    const end = element.selectionEnd ?? element.value.length;
+    return `${element.value.slice(0, start)}${text}${element.value.slice(end)}`;
+  };
+
+  const onEditorPaste = (note: NoteV2, event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
+    if (!imageItem) {
+      return;
+    }
+
+    const file = imageItem.getAsFile();
+    if (!file) {
+      return;
+    }
+
+    event.preventDefault();
+    const reader = new FileReader();
+    const textarea = event.currentTarget;
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (!result) {
+        return;
+      }
+
+      const prefix = textarea.value.trim().length > 0 ? "\n" : "";
+      const nextContent = insertTextAtCursor(textarea, `${prefix}${result}\n`);
+      updateNote(note.id, { content: nextContent });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const archiveNote = (noteId: string) => {
     updateNote(noteId, { archived: true });
     setSelectedNoteId(null);
@@ -1501,14 +1537,15 @@ const App = () => {
                             {(!useImageHeroCard || hasTextPreview) && <p className="pin-title">{getNoteTitle(note.content)}</p>}
 
                             {selected ? (
-                              <textarea
-                                className="pin-editor"
-                                value={note.content}
-                                style={{ fontSize: `${fontSize}px` }}
-                                onMouseDown={(event) => event.stopPropagation()}
-                                onFocus={() => setSelectedNoteId(note.id)}
-                                onChange={(event) => {
-                                  updateNote(note.id, { content: event.target.value });
+                                  <textarea
+                                    className="pin-editor"
+                                    value={note.content}
+                                    style={{ fontSize: `${fontSize}px` }}
+                                    onMouseDown={(event) => event.stopPropagation()}
+                                    onPaste={(event) => onEditorPaste(note, event)}
+                                    onFocus={() => setSelectedNoteId(note.id)}
+                                    onChange={(event) => {
+                                      updateNote(note.id, { content: event.target.value });
                                   event.currentTarget.style.height = "0px";
                                   event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
                                 }}

@@ -13,7 +13,7 @@ const API_BASE =
   window.location.origin;
 
 export const getImageProxyUrl = (url: string) =>
-  `${API_BASE}/api/image-proxy?url=${encodeURIComponent(url)}`;
+  url.startsWith("data:image/") ? url : `${API_BASE}/api/image-proxy?url=${encodeURIComponent(url)}`;
 
 export const fetchLinkPreview = async (url: string): Promise<LinkPreview> => {
   const endpoint = `${API_BASE}/api/link-preview?url=${encodeURIComponent(url)}`;
