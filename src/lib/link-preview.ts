@@ -12,6 +12,9 @@ const API_BASE =
   (import.meta.env.VITE_AGENT_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ||
   window.location.origin;
 
+export const getImageProxyUrl = (url: string) =>
+  `${API_BASE}/api/image-proxy?url=${encodeURIComponent(url)}`;
+
 export const fetchLinkPreview = async (url: string): Promise<LinkPreview> => {
   const endpoint = `${API_BASE}/api/link-preview?url=${encodeURIComponent(url)}`;
   const response = await fetch(endpoint);

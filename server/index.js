@@ -107,6 +107,65 @@ app.get("/api/link-preview", async (req, res) => {
   }
 });
 
+app.get("/api/image-proxy", async (req, res) => {
+  try {
+    const rawUrl = typeof req.query.url === "string" ? req.query.url.trim() : "";
+    if (!rawUrl) {
+      res.status(400).send("url is required");
+      return;
+    }
+
+    let targetUrl;
+    try {
+      targetUrl = new URL(rawUrl);
+    } catch {
+      res.status(400).send("invalid url");
+      return;
+    }
+
+    if (!["http:", "https:"].includes(targetUrl.protocol)) {
+      res.status(400).send("unsupported protocol");
+      return;
+    }
+
+    const response = await fetch(targetUrl, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(12000),
+      headers: {
+        "user-agent": "WZD Image Proxy/1.0",
+        referer: targetUrl.origin
+      }
+    });
+
+    if (!response.ok || !response.body) {
+      res.status(response.status || 502).send("failed to load image");
+      return;
+    }
+
+    const contentType = response.headers.get("content-type") || "application/octet-stream";
+    res.setHeader("content-type", contentType);
+    res.setHeader("cache-control", "public, max-age=3600");
+    response.body.pipeTo(
+      new WritableStream({
+        write(chunk) {
+          res.write(chunk);
+        },
+        close() {
+          res.end();
+        },
+        abort(error) {
+          res.destroy(error);
+        }
+      })
+    ).catch((error) => {
+      res.destroy(error);
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown error";
+    res.status(500).send(message);
+  }
+});
+
 app.post("/api/agent/chat", async (req, res) => {
   try {
     const { agentType, prompt, context, scheduleCron, workflowName } = req.body ?? {};

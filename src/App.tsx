@@ -7,7 +7,7 @@ import {
   useState
 } from "react";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
-import { fetchLinkPreview, type LinkPreview } from "./lib/link-preview";
+import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
 import {
   createBoardV2,
   type BoardV2,
@@ -1188,7 +1188,11 @@ const App = () => {
                         >
                           {previewUrl && isImageUrl(previewUrl) && (
                             <div className="pin-image-wrap">
-                              <img className="pin-image" src={previewUrl} alt={getNoteTitle(note.content)} />
+                              <img
+                                className="pin-image"
+                                src={getImageProxyUrl(previewUrl)}
+                                alt={getNoteTitle(note.content)}
+                              />
                             </div>
                           )}
 
@@ -1269,7 +1273,7 @@ const App = () => {
                                       {linkPreview.image && (
                                         <img
                                           className="link-preview-image"
-                                          src={linkPreview.image}
+                                          src={getImageProxyUrl(linkPreview.image)}
                                           alt={linkPreview.title}
                                         />
                                       )}
