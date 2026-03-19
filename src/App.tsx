@@ -1982,13 +1982,14 @@ const App = () => {
                     const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
                     const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
                     const attachedImageUrl = getAttachedImageUrl(note);
-                    const previewUrl = attachedImageUrl || extractFirstUrl(note.content);
+                    const noteUrl = extractFirstUrl(note.content);
+                    const cardImageUrl = attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : "");
                     const previewText = stripUrls(note.content);
-                    const linkPreview = previewUrl && !isImageUrl(previewUrl) ? linkPreviews[previewUrl] : undefined;
-                    const hasImagePreview = Boolean(previewUrl && isImageUrl(previewUrl));
+                    const linkPreview = noteUrl && !isImageUrl(noteUrl) ? linkPreviews[noteUrl] : undefined;
+                    const hasImagePreview = Boolean(cardImageUrl);
                     const hasTextPreview = previewText.trim().length > 0;
                     const useImageHeroCard = hasImagePreview && !selected;
-                    const isFramedLinkNote = feedMode === "active" && Boolean(previewUrl && hasImagePreview);
+                    const isFramedLinkNote = feedMode === "active" && Boolean(noteUrl && !isImageUrl(noteUrl));
                     const showDropPreview =
                       runningDragNoteId !== null &&
                       dragPreviewNoteId === note.id &&
@@ -2029,8 +2030,8 @@ const App = () => {
                               return;
                             }
 
-                            if (!selected && isFramedLinkNote && previewUrl) {
-                              window.open(previewUrl, "_blank", "noopener,noreferrer");
+                            if (!selected && isFramedLinkNote && noteUrl) {
+                              window.open(noteUrl, "_blank", "noopener,noreferrer");
                               return;
                             }
 
@@ -2041,7 +2042,7 @@ const App = () => {
                             <div className="pin-image-wrap">
                               <img
                                 className="pin-image"
-                                src={getImageProxyUrl(previewUrl)}
+                                src={getImageProxyUrl(cardImageUrl)}
                                 alt={getNoteTitle(note.content)}
                               />
                             </div>
@@ -2291,7 +2292,7 @@ const App = () => {
                                   </>
                                 ) : (
                                   <>
-                                    {previewUrl && !hasImagePreview &&
+                                    {noteUrl && !hasImagePreview &&
                                       (linkPreview ? (
                                         <a
                                           className="link-preview-card"
@@ -2320,17 +2321,17 @@ const App = () => {
                                       ) : (
                                         <a
                                           className="link-chip"
-                                          href={previewUrl}
+                                          href={noteUrl}
                                           target="_blank"
                                           rel="noreferrer"
                                           onClick={(event) => event.stopPropagation()}
                                         >
-                                          {previewUrl}
+                                          {noteUrl}
                                         </a>
                                       ))}
                                     {(!useImageHeroCard || hasTextPreview) && (
                                       <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                                        {previewText || (previewUrl ? getUrlSnippet(previewUrl) : "메모를 클릭해서 편집하세요.")}
+                                        {previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.")}
                                       </p>
                                     )}
                                   </>
