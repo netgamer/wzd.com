@@ -135,6 +135,7 @@ const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "
 const CLOUD_SAVE_DEBOUNCE_MS = 120;
 const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+const MOBILE_LAYOUT_BREAKPOINT = 960;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
 const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
@@ -576,7 +577,7 @@ const getColumnCount = () => {
     return 4;
   }
 
-  if (window.innerWidth < 720) {
+  if (window.innerWidth < MOBILE_LAYOUT_BREAKPOINT) {
     return 1;
   }
 
@@ -698,7 +699,7 @@ const App = () => {
     typeof window !== "undefined" ? window.innerWidth < 1180 : false
   );
   const [mobileViewport, setMobileViewport] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth <= 720 : false
+    typeof window !== "undefined" ? window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT : false
   );
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
@@ -788,8 +789,8 @@ const App = () => {
     const onResize = () => {
       setColumnCount(getColumnCount());
       setCompactSidebar(window.innerWidth < 1180);
-      setMobileViewport(window.innerWidth <= 720);
-      if (window.innerWidth > 720) {
+      setMobileViewport(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
+      if (window.innerWidth > MOBILE_LAYOUT_BREAKPOINT) {
         setMobileSearchOpen(false);
         setMobileBoardMenuOpen(false);
       }

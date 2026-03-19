@@ -1488,7 +1488,7 @@ button {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 960px) {
   .pin-topbar {
     position: relative;
     flex-direction: row;
