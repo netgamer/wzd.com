@@ -18,6 +18,7 @@ import {
   isBoardShareSlugTaken,
   listBoardMembers,
   loadBoardsV2,
+  loadEditableSharedBoardV2,
   loadSharedBoardV2,
   type NoteColor,
   type NoteV2,
@@ -711,6 +712,7 @@ const App = () => {
   const [dragPreviewBoardId, setDragPreviewBoardId] = useState<string | null>(null);
   const [dragArmedBoardId, setDragArmedBoardId] = useState<string | null>(null);
   const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
+  const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(() => Boolean(getSharedBoardSlugFromLocation()));
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -725,7 +727,7 @@ const App = () => {
   const orderedBoards = useMemo(() => sortBoards(boards), [boards]);
   const activeBoards = useMemo(() => orderedBoards.filter((board) => !isBoardTrashed(board)), [orderedBoards]);
   const trashedBoards = useMemo(() => orderedBoards.filter((board) => isBoardTrashed(board)), [orderedBoards]);
-  const isSharedView = Boolean(sharedBoardSlug);
+  const isSharedView = Boolean(sharedBoardSlug && sharedBoardReadOnly);
   const selectedBoard = useMemo(
     () => activeBoards.find((board) => board.id === selectedBoardId) ?? activeBoards[0] ?? null,
     [activeBoards, selectedBoardId]
@@ -788,7 +790,11 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const syncSharedSlug = () => setSharedBoardSlug(getSharedBoardSlugFromLocation());
+    const syncSharedSlug = () => {
+      const nextSlug = getSharedBoardSlugFromLocation();
+      setSharedBoardSlug(nextSlug);
+      setSharedBoardReadOnly(Boolean(nextSlug));
+    };
     window.addEventListener("popstate", syncSharedSlug);
     return () => {
       window.removeEventListener("popstate", syncSharedSlug);
@@ -986,13 +992,24 @@ const App = () => {
       }
 
       setLoading(true);
-      loadSharedBoardV2(sharedBoardSlug)
-        .then((payload) => {
+      const loadSharedBoard = async () => {
+        const editablePayload = user?.id ? await loadEditableSharedBoardV2(sharedBoardSlug) : null;
+        if (editablePayload) {
+          return { payload: editablePayload, readOnly: false };
+        }
+
+        const readonlyPayload = await loadSharedBoardV2(sharedBoardSlug);
+        return { payload: readonlyPayload, readOnly: true };
+      };
+
+      loadSharedBoard()
+        .then(({ payload, readOnly }) => {
           if (!active) {
             return;
           }
 
           if (!payload) {
+            setSharedBoardReadOnly(true);
             setBoards([]);
             setNotes([]);
             setSelectedBoardId(null);
@@ -1001,6 +1018,7 @@ const App = () => {
             return;
           }
 
+          setSharedBoardReadOnly(readOnly);
           setBoards([payload.board]);
           setNotes(sanitizeNotes(payload.notes));
           setSelectedBoardId(payload.board.id);
@@ -1010,6 +1028,7 @@ const App = () => {
         })
         .catch(() => {
           if (active) {
+            setSharedBoardReadOnly(true);
             setBoards([]);
             setNotes([]);
             setSelectedBoardId(null);
@@ -1022,6 +1041,8 @@ const App = () => {
         active = false;
       };
     }
+
+    setSharedBoardReadOnly(false);
 
     if (!user?.id || !supabase) {
       const local = loadLocalSnapshot();
