@@ -2139,11 +2139,13 @@ const App = () => {
                     const noteUrl = extractFirstUrl(note.content);
                     const cardImageUrl = attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : "");
                     const previewText = stripUrls(note.content);
-                    const linkPreview = noteUrl && !isImageUrl(noteUrl) ? linkPreviews[noteUrl] : undefined;
+                    const hasExternalLink = Boolean(noteUrl && !isImageUrl(noteUrl));
+                    const linkPreview = hasExternalLink ? linkPreviews[noteUrl] : undefined;
                     const hasImagePreview = Boolean(cardImageUrl);
                     const hasTextPreview = previewText.trim().length > 0;
+                    const hasLinkPreview = hasExternalLink;
                     const useImageHeroCard = hasImagePreview && !selected;
-                    const isFramedLinkNote = feedMode === "active" && Boolean(noteUrl && !isImageUrl(noteUrl));
+                    const isFramedLinkNote = feedMode === "active" && hasExternalLink;
                     const showDropPreview =
                       runningDragNoteId !== null &&
                       dragPreviewNoteId === note.id &&
@@ -2155,7 +2157,7 @@ const App = () => {
                         {showDropPreview && <article className="pin-card pin-drop-preview" aria-hidden="true" />}
                         <article
                           className={`pin-card note-${note.color} ${useImageHeroCard ? "image-note" : ""} ${
-                            hasTextPreview ? "has-hover-copy" : "image-only"
+                            hasTextPreview || hasLinkPreview ? "has-hover-copy" : "image-only"
                           } ${isRssWidget ? "widget-note rss-widget" : ""} ${selected ? "selected" : ""} ${
                             runningDragNoteId === note.id ? "dragging" : ""
                           }`}
@@ -2419,7 +2421,9 @@ const App = () => {
                               </>
                             ) : (
                               <div className="pin-note-stack">
-                                {(!useImageHeroCard || hasTextPreview) && <p className="pin-title">{getNoteTitle(note.content)}</p>}
+                                {(!useImageHeroCard || hasTextPreview || hasLinkPreview) && (
+                                  <p className="pin-title">{getNoteTitle(note.content)}</p>
+                                )}
 
                                 {selected ? (
                                   <>
@@ -2452,7 +2456,7 @@ const App = () => {
                                   </>
                                 ) : (
                                   <>
-                                    {noteUrl && !hasImagePreview &&
+                                    {hasExternalLink &&
                                       (linkPreview ? (
                                         <a
                                           className="link-preview-card"
@@ -2489,7 +2493,7 @@ const App = () => {
                                           {noteUrl}
                                         </a>
                                       ))}
-                                    {(!useImageHeroCard || hasTextPreview) && (
+                                    {(!useImageHeroCard || hasTextPreview || hasLinkPreview) && (
                                       <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
                                         {previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.")}
                                       </p>
