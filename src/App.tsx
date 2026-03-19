@@ -1965,11 +1965,6 @@ const App = () => {
                 새 메모
               </button>
             )}
-            {feedMode === "active" && selectedBoard && !isSharedView && (
-              <button className="ghost-action" onClick={() => void shareBoard()}>
-                보드 공유
-              </button>
-            )}
             {!isSharedView && (
               <div className="widget-menu-wrap">
                 <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
@@ -1986,6 +1981,11 @@ const App = () => {
                   </div>
                 )}
               </div>
+            )}
+            {feedMode === "active" && selectedBoard && !isSharedView && (
+              <button className="ghost-action" onClick={() => void shareBoard()}>
+                보드 공유
+              </button>
             )}
             {!isSharedView && (
               <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="새 메모">
