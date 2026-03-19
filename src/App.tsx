@@ -744,6 +744,7 @@ const App = () => {
   const isBoardOwner = Boolean(user?.id && selectedBoard && selectedBoard.userId === user.id);
   const canShareBoard = feedMode === "active" && Boolean(selectedBoard) && !isSharedView && isBoardOwner;
   const canInviteBoard = canShareBoard;
+  const canBoardSettings = canShareBoard;
   const canRenameBoard = feedMode === "active" && Boolean(selectedBoard) && !isSharedView && isBoardOwner;
 
   useEffect(() => {
@@ -2244,6 +2245,11 @@ const App = () => {
                 보드 초대
               </button>
             )}
+            {canBoardSettings && (
+              <button className="ghost-action" onClick={() => setSettingsOpen(true)}>
+                보드 설정
+              </button>
+            )}
             {hasSupabaseConfig ? (
               user ? (
                 <div className="profile-menu-wrap" ref={profileMenuRef}>
@@ -2990,4 +2996,5 @@ const App = () => {
 };
 
 export default App;
+
 
