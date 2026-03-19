@@ -11,6 +11,7 @@ import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
 import { fetchRssFeed, type RssFeedPreview } from "./lib/rss";
 import {
+  type BoardBackgroundStyle,
   type BoardMemberProfile,
   type BoardUserProfile,
   createBoardV2,
@@ -45,6 +46,7 @@ type CloudSaveState = "idle" | "saving" | "saved" | "error";
 type LinkPreviewState = LinkPreview | null;
 type RssFeedState = RssFeedPreview | null;
 type WidgetType = "note" | "rss" | "bookmark";
+type BoardTemplateKey = "blank" | "links" | "content" | "study";
 
 const EditIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -144,6 +146,96 @@ const DEFAULT_PERSONAL_NOTE_CONTENT =
 const DEFAULT_GROUP_NOTE_CONTENT =
   "그룹 메모장\n\n주제별 보드에서 각자 찾은 링크와 자료를 함께 공유해보세요.\n예: AI Studio 레퍼런스 모음";
 
+const BOARD_TEMPLATES: Array<{
+  key: BoardTemplateKey;
+  title: string;
+  subtitle: string;
+  backgroundStyle: BoardBackgroundStyle;
+  notes: Array<{ color: NoteColor; content: string }>;
+}> = [
+  {
+    key: "blank",
+    title: "빈 보드",
+    subtitle: "가장 빠르게 시작하는 깨끗한 보드",
+    backgroundStyle: "paper",
+    notes: [
+      {
+        color: "yellow",
+        content: "새 메모\n\n가볍게 시작해보세요."
+      }
+    ]
+  },
+  {
+    key: "links",
+    title: "링크 모음 보드",
+    subtitle: "자료와 레퍼런스를 빠르게 수집하는 보드",
+    backgroundStyle: "paper",
+    notes: [
+      {
+        color: "yellow",
+        content:
+          "AI 레퍼런스 모음\n\n핵심 링크를 모아두는 보드입니다.\nhttps://openai.com"
+      },
+      {
+        color: "mint",
+        content:
+          "디자인 참고\n\n랜딩 페이지와 UI 레퍼런스를 저장하세요.\nhttps://www.awwwards.com"
+      },
+      {
+        color: "blue",
+        content:
+          "읽을거리\n\n다음에 읽을 아티클과 블로그 링크를 모아두세요.\nhttps://stripe.com/blog"
+      }
+    ]
+  },
+  {
+    key: "content",
+    title: "영상 기획 보드",
+    subtitle: "주제, 훅, 레퍼런스, 대본 초안을 한 곳에",
+    backgroundStyle: "whiteboard",
+    notes: [
+      {
+        color: "pink",
+        content:
+          "영상 아이디어\n\n제목 후보\n- 3분 안에 끝내는 정리법\n- 노션 대신 쓰는 개인화 보드"
+      },
+      {
+        color: "yellow",
+        content:
+          "오프닝 훅\n\n\"정리는 해야 하는데, 노션은 너무 무겁다고 느낀 적 있나요?\""
+      },
+      {
+        color: "mint",
+        content:
+          "레퍼런스 링크\n\nhttps://www.youtube.com/\nhttps://www.notion.so/"
+      }
+    ]
+  },
+  {
+    key: "study",
+    title: "공부 자료 보드",
+    subtitle: "과목별 핵심 메모와 링크를 보기 좋게 정리",
+    backgroundStyle: "cork",
+    notes: [
+      {
+        color: "yellow",
+        content:
+          "오늘 공부할 것\n\n- 핵심 개념 3개 정리\n- 예제 2개 풀기\n- 복습 포인트 체크"
+      },
+      {
+        color: "blue",
+        content:
+          "참고 링크\n\nhttps://developer.mozilla.org/\nhttps://react.dev/"
+      },
+      {
+        color: "mint",
+        content:
+          "복습 메모\n\n헷갈린 개념은 짧게 다시 적고, 다음에 볼 링크와 같이 저장해두세요."
+      }
+    ]
+  }
+];
+
 const LEGACY_TEXT_REPLACEMENTS: Array<[string, string]> = [
   [
     "媛쒖씤 硫붾え??n\n媛꾨떒??硫붾え, 遺곷쭏?? ?대?吏 URL??紐⑥븘?먮뒗 怨듦컙?낅땲??\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80",
@@ -222,6 +314,35 @@ const createDefaultSnapshot = (): LocalSnapshot => {
   ];
 
   return { boards: [board], notes, selectedBoardId: board.id };
+};
+
+const createTemplateBoardSnapshot = (
+  userId: string,
+  templateKey: BoardTemplateKey,
+  sidebarOrder: number,
+  columnCount: number
+) => {
+  const template = BOARD_TEMPLATES.find((item) => item.key === templateKey) ?? BOARD_TEMPLATES[0]!;
+  const board = createDefaultBoard(userId, template.title);
+  board.description = template.subtitle;
+  board.backgroundStyle = template.backgroundStyle;
+  board.settings = {
+    ...board.settings,
+    sidebarOrder
+  };
+
+  const notes = template.notes.map((note, index) =>
+    createNote({
+      boardId: board.id,
+      userId,
+      zIndex: index + 1,
+      color: note.color,
+      content: note.content
+    })
+  );
+
+  const organizedNotes = autoOrganizeBoardNotes(notes, board.id, columnCount).filter((note) => note.boardId === board.id);
+  return { board, notes: organizedNotes };
 };
 
 const migrateLocalSnapshot = (raw: string): LocalSnapshot => {
@@ -907,6 +1028,7 @@ const App = () => {
   );
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<"menu" | "trash">("menu");
@@ -1579,29 +1701,48 @@ const App = () => {
     };
   }, [visibleNotes, rssFeeds]);
 
-  const addBoard = async () => {
-    const title = makeBoardTitle(boards);
+  const openTemplatePicker = () => {
+    setTemplatePickerOpen(true);
+  };
+
+  const addBoard = async (templateKey: BoardTemplateKey = "blank") => {
+    const title =
+      templateKey === "blank"
+        ? makeBoardTitle(boards)
+        : BOARD_TEMPLATES.find((item) => item.key === templateKey)?.title ?? makeBoardTitle(boards);
     const nextOrder = orderedBoards.length;
 
-    if (supabase && user?.id) {
+    if (templateKey === "blank" && supabase && user?.id) {
       try {
         const board = await createBoardV2(user.id, title);
         setBoards((prev) => [{ ...board, settings: { ...board.settings, sidebarOrder: nextOrder } }, ...prev]);
         setSelectedBoardId(board.id);
         setSelectedNoteId(null);
         setFeedMode("active");
+        setTemplatePickerOpen(false);
         return;
       } catch {
         return;
       }
     }
 
-    const board = createDefaultBoard(user?.id ?? "local", title);
-    board.settings = { ...board.settings, sidebarOrder: nextOrder };
-    setBoards((prev) => [board, ...prev]);
-    setSelectedBoardId(board.id);
+    const snapshot =
+      templateKey === "blank"
+        ? (() => {
+            const board = createDefaultBoard(user?.id ?? "local", title);
+            board.settings = { ...board.settings, sidebarOrder: nextOrder };
+            return { board, notes: [] as NoteV2[] };
+          })()
+        : createTemplateBoardSnapshot(user?.id ?? "local", templateKey, nextOrder, getColumnCount());
+
+    setBoards((prev) => [snapshot.board, ...prev]);
+    if (snapshot.notes.length > 0) {
+      setNotes((prev) => [...snapshot.notes, ...prev]);
+    }
+    setSelectedBoardId(snapshot.board.id);
     setSelectedNoteId(null);
     setFeedMode("active");
+    setTemplatePickerOpen(false);
   };
 
   const restoreBoard = (boardId: string) => {
@@ -2632,7 +2773,7 @@ const App = () => {
           </div>
         </div>
 
-        <button className="side-icon" onClick={() => void addBoard()} aria-label="새 보드">
+        <button className="side-icon" onClick={openTemplatePicker} aria-label="새 보드">
           <span className="side-icon-glyph" aria-hidden="true">
             +
           </span>
@@ -2855,7 +2996,7 @@ const App = () => {
                 <button
                   className="mobile-board-action"
                   onClick={() => {
-                    void addBoard();
+                    openTemplatePicker();
                     setMobileBoardMenuOpen(false);
                   }}
                 >
@@ -2878,6 +3019,55 @@ const App = () => {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {templatePickerOpen && (
+          <div className="settings-overlay" onClick={() => setTemplatePickerOpen(false)}>
+            <section
+              className="settings-panel template-picker-panel"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="settings-panel-head">
+                <div>
+                  <p className="settings-kicker">스타터 보드</p>
+                  <h2>어떤 보드로 시작할까요?</h2>
+                </div>
+                <button
+                  className="settings-close"
+                  onClick={() => setTemplatePickerOpen(false)}
+                  aria-label="템플릿 닫기"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="template-picker-grid">
+                {BOARD_TEMPLATES.map((template) => (
+                  <button
+                    key={template.key}
+                    className="template-card"
+                    onClick={() => void addBoard(template.key)}
+                  >
+                    <div className={`template-card-preview template-${template.backgroundStyle}`}>
+                      <span className="template-card-badge">
+                        {template.key === "blank"
+                          ? "기본"
+                          : template.key === "links"
+                            ? "링크"
+                            : template.key === "content"
+                              ? "콘텐츠"
+                              : "공부"}
+                      </span>
+                      <strong>{template.title}</strong>
+                      <span>{template.subtitle}</span>
+                    </div>
+                    <span className="template-card-title">{template.title}</span>
+                    <span className="template-card-copy">{template.subtitle}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
           </div>
         )}
 
