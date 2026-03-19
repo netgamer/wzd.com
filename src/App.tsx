@@ -1730,7 +1730,10 @@ const App = () => {
         </div>
 
         <button className="side-icon" onClick={() => void addBoard()} aria-label="새 보드">
-          +
+          <span className="side-icon-glyph" aria-hidden="true">
+            +
+          </span>
+          <span className="side-icon-label">보드 추가</span>
         </button>
 
         <div className="sidebar-spacer" />
