@@ -729,6 +729,93 @@ const reorderNotes = (
   return [...otherNotes, ...reordered, ...boardArchivedNotes];
 };
 
+const getAutoLayoutPriority = (note: NoteV2) => {
+  const widgetType = getWidgetType(note);
+  if (widgetType === "rss") return 0;
+  if (widgetType === "bookmark") return 1;
+  if (getAttachedImageUrl(note)) return 2;
+
+  const noteUrl = extractFirstUrl(note.content);
+  if (noteUrl && isImageUrl(noteUrl)) return 2;
+  if (noteUrl) return 3;
+
+  return 4;
+};
+
+const estimateNoteVisualHeight = (note: NoteV2) => {
+  const widgetType = getWidgetType(note);
+  if (widgetType === "rss") return 300;
+  if (widgetType === "bookmark") return 260;
+
+  const imageUrl = getAttachedImageUrl(note);
+  const noteUrl = extractFirstUrl(note.content);
+  if (imageUrl || (noteUrl && isImageUrl(noteUrl))) {
+    return 300;
+  }
+
+  const text = asText(note.content).trim();
+  const lineCount = text ? text.split(/\r?\n/).filter((line) => line.trim().length > 0).length : 0;
+  const lengthWeight = Math.ceil(Math.min(text.length, 420) / 55);
+  return Math.max(180, Math.min(420, 170 + lineCount * 22 + lengthWeight * 16));
+};
+
+const autoOrganizeBoardNotes = (notes: NoteV2[], boardId: string, columnCount: number) => {
+  const boardActiveNotes = notes.filter((note) => note.boardId === boardId && !note.archived);
+  const boardArchivedNotes = notes.filter((note) => note.boardId === boardId && note.archived);
+  const otherNotes = notes.filter((note) => note.boardId !== boardId);
+
+  if (!boardActiveNotes.length) {
+    return notes;
+  }
+
+  const columns = Array.from({ length: Math.max(1, columnCount) }, () => [] as NoteV2[]);
+  const columnHeights = Array.from({ length: Math.max(1, columnCount) }, () => 0);
+  const updatedAt = nowIso();
+
+  const sortedNotes = [...boardActiveNotes].sort((a, b) => {
+    if (a.pinned !== b.pinned) {
+      return a.pinned ? -1 : 1;
+    }
+
+    const priorityDiff = getAutoLayoutPriority(a) - getAutoLayoutPriority(b);
+    if (priorityDiff !== 0) {
+      return priorityDiff;
+    }
+
+    const titleDiff = getNoteTitle(a.content).localeCompare(getNoteTitle(b.content), "ko");
+    if (titleDiff !== 0) {
+      return titleDiff;
+    }
+
+    return a.zIndex - b.zIndex;
+  });
+
+  sortedNotes.forEach((note) => {
+    const targetColumn = columnHeights.indexOf(Math.min(...columnHeights));
+    columns[targetColumn].push({
+      ...note,
+      x: 0,
+      y: 0,
+      updatedAt,
+      metadata: {
+        ...note.metadata,
+        column: targetColumn
+      }
+    });
+    columnHeights[targetColumn] += estimateNoteVisualHeight(note) + 28;
+  });
+
+  let nextZIndex = 1;
+  const reordered = columns.flatMap((column) =>
+    column.map((note) => ({
+      ...note,
+      zIndex: nextZIndex++
+    }))
+  );
+
+  return [...otherNotes, ...reordered, ...boardArchivedNotes];
+};
+
 const App = () => {
   const [user, setUser] = useState<AuthUserProfile | null>(null);
   const [boards, setBoards] = useState<BoardV2[]>(() => createDefaultSnapshot().boards);
@@ -1724,6 +1811,16 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const organizeCurrentBoard = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const nextColumnCount = getColumnCount();
+    setNotes((prev) => autoOrganizeBoardNotes(prev, selectedBoard.id, nextColumnCount));
+    touchBoard(selectedBoard.id);
+  };
+
   const updateBoardTitle = (boardId: string, title: string) => {
     const nextTitle = title.trim() || "Untitled Board";
     setBoards((prev) =>
@@ -2585,6 +2682,11 @@ const App = () => {
                 )}
               </div>
             )}
+            {!isSharedView && feedMode === "active" && selectedBoard && (
+              <button className="ghost-action" onClick={organizeCurrentBoard}>
+                자동 정리
+              </button>
+            )}
             {canShareBoard && (
               <button className="ghost-action" onClick={() => void shareBoard()}>
                 보드 공유
@@ -2645,6 +2747,20 @@ const App = () => {
                 </button>
               ))}
               <div className="mobile-board-actions">
+                {!isSharedView && feedMode === "active" && selectedBoard && (
+                  <button
+                    className="mobile-board-action"
+                    onClick={() => {
+                      organizeCurrentBoard();
+                      setMobileBoardMenuOpen(false);
+                    }}
+                  >
+                    <span className="mobile-board-action-icon" aria-hidden="true">
+                      ✦
+                    </span>
+                    <span>자동 정리</span>
+                  </button>
+                )}
                 {canShareBoard && (
                   <button
                     className="mobile-board-action"
