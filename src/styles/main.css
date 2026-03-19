@@ -764,12 +764,52 @@ button {
 }
 
 .pin-board-stage {
-  transform: translate3d(var(--board-swipe-offset, 0px), 0, 0);
   will-change: transform;
 }
 
 .pin-board-stage.swipe-transition {
   transition: transform 240ms ease;
+}
+
+.pin-board-track {
+  display: flex;
+  width: 100%;
+}
+
+.pin-board-panel {
+  flex: 0 0 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.swipe-preview-panel {
+  opacity: 0.92;
+}
+
+.pin-board-stage:not(.mobile-swipe-enabled) .swipe-preview-panel {
+  display: none;
+}
+
+.pin-board-preview {
+  pointer-events: none;
+}
+
+.swipe-preview-card {
+  min-height: 96px;
+}
+
+.swipe-preview-card .pin-card-head,
+.swipe-preview-card .pin-actions,
+.swipe-preview-card .note-color-toggle {
+  display: none;
+}
+
+.swipe-preview-card .pin-card-body {
+  padding-top: 18px;
+}
+
+.mobile-swipe-empty {
+  min-height: 160px;
 }
 
 .feed-head {
@@ -1480,6 +1520,24 @@ button {
 
   .pin-board-stage {
     touch-action: pan-y;
+  }
+
+  .pin-main {
+    overflow: hidden;
+  }
+
+  .pin-board-stage.mobile-swipe-enabled {
+    width: 300%;
+    transform: translate3d(calc(-100% + var(--board-swipe-offset, 0px)), 0, 0);
+  }
+
+  .pin-board-stage.mobile-swipe-enabled .pin-board-panel {
+    flex: 0 0 33.3333%;
+    max-width: 33.3333%;
+  }
+
+  .pin-board-panel {
+    padding: 0 14px;
   }
 
   .mobile-board-sheet {

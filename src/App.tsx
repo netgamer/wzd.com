@@ -1990,6 +1990,92 @@ const App = () => {
     return activeBoards[currentIndex + delta] ?? null;
   };
 
+  const buildBoardPanelData = (board: BoardV2 | null, limit = visibleNoteCount) => {
+    if (!board) {
+      return {
+        notes: [] as NoteV2[],
+        columns: groupNotesByColumn([], columnCount),
+        totalCount: 0
+      };
+    }
+
+    const boardBaseNotes = notes
+      .filter((note) => note.boardId === board.id)
+      .filter((note) => (feedMode === "active" ? !isNoteTrashed(note) : isNoteTrashed(note)))
+      .sort((a, b) => {
+        if (a.pinned !== b.pinned) {
+          return a.pinned ? -1 : 1;
+        }
+        return a.zIndex - b.zIndex;
+      });
+
+    const keyword = search.trim().toLowerCase();
+    const filtered = keyword
+      ? boardBaseNotes.filter((note) => asText(note.content).toLowerCase().includes(keyword))
+      : boardBaseNotes;
+
+    const limited = filtered.slice(0, limit);
+
+    return {
+      notes: limited,
+      columns: groupNotesByColumn(limited, columnCount),
+      totalCount: filtered.length
+    };
+  };
+
+  const renderSwipePreviewPanel = (board: BoardV2 | null, side: "prev" | "next") => {
+    const panelData = buildBoardPanelData(board, Math.max(visibleNoteCount, INITIAL_VISIBLE_NOTE_COUNT));
+
+    if (!board) {
+      return <div className="feed-empty mobile-swipe-empty">더 이상 보드가 없습니다.</div>;
+    }
+
+    return (
+      <>
+        <section className="feed-head">
+          <div className="feed-meta">
+            <span>{panelData.totalCount}개의 핀</span>
+          </div>
+        </section>
+        <section className="pin-board pin-board-preview" style={{ "--pin-columns": String(columnCount) } as CSSProperties}>
+          {panelData.notes.length === 0 ? (
+            <div className="feed-empty">{search.trim() ? "검색 결과가 없습니다." : "아직 메모가 없습니다."}</div>
+          ) : (
+            panelData.columns.map((columnNotes, columnIndex) => (
+              <div key={`${side}-column-${columnIndex}`} className="pin-column">
+                {columnNotes.map((note) => {
+                  const attachedImageUrl = getAttachedImageUrl(note);
+                  const noteUrl = extractFirstUrl(note.content);
+                  const cardImageUrl = attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : "");
+                  const previewText = stripUrls(note.content);
+
+                  return (
+                    <article
+                      key={`${side}-${note.id}`}
+                      className={`pin-card note-${note.color} ${cardImageUrl ? "image-note" : ""} swipe-preview-card`}
+                    >
+                      {cardImageUrl && (
+                        <div className="pin-image-wrap">
+                          <img className="pin-image" src={getImageProxyUrl(cardImageUrl)} alt={getNoteTitle(note.content)} />
+                        </div>
+                      )}
+                      <div className="pin-card-body">
+                        <div className="pin-note-stack">
+                          <p className="pin-title">{getNoteTitle(note.content)}</p>
+                          <p className="pin-body-preview">{previewText || (noteUrl ? getUrlSnippet(noteUrl) : "")}</p>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            ))
+          )}
+        </section>
+      </>
+    );
+  };
+
   const animateBoardSwipe = (direction: "prev" | "next") => {
     if (boardSwipeAnimatingRef.current || !mobileViewport) {
       return;
@@ -2005,7 +2091,6 @@ const App = () => {
 
     const viewportWidth = Math.max(window.innerWidth, 320);
     const exitOffset = direction === "next" ? -viewportWidth : viewportWidth;
-    const enterOffset = direction === "next" ? viewportWidth : -viewportWidth;
 
     boardSwipeAnimatingRef.current = true;
     setBoardSwipeTransition(true);
@@ -2016,20 +2101,9 @@ const App = () => {
       setSelectedNoteId(null);
       setFeedMode("active");
       setBoardSwipeTransition(false);
-      setBoardSwipeOffset(enterOffset);
-
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          setBoardSwipeTransition(true);
-          setBoardSwipeOffset(0);
-
-          window.setTimeout(() => {
-            setBoardSwipeTransition(false);
-            boardSwipeAnimatingRef.current = false;
-          }, 240);
-        });
-      });
-    }, 190);
+      setBoardSwipeOffset(0);
+      boardSwipeAnimatingRef.current = false;
+    }, 240);
   };
 
   const onBoardTouchStart = (event: ReactTouchEvent<HTMLElement>) => {
@@ -2121,6 +2195,10 @@ const App = () => {
       animateBoardSwipe("prev");
     }
   };
+
+  const previousBoard = getAdjacentBoard("prev");
+  const nextSwipeBoard = getAdjacentBoard("next");
+  const mobileSwipeEnabled = mobileViewport && feedMode === "active" && activeBoards.length > 1;
 
   const showExpandedSidebar = sidebarExpanded && !compactSidebar;
 
@@ -2567,12 +2645,15 @@ const App = () => {
 
         <main className="pin-main">
           <div
-            className={`pin-board-stage ${boardSwipeTransition ? "swipe-transition" : ""}`}
+            className={`pin-board-stage ${mobileSwipeEnabled ? "mobile-swipe-enabled" : ""} ${boardSwipeTransition ? "swipe-transition" : ""}`}
             style={{ "--board-swipe-offset": `${boardSwipeOffset}px` } as CSSProperties}
             onTouchStart={onBoardTouchStart}
             onTouchMove={onBoardTouchMove}
             onTouchEnd={onBoardTouchEnd}
           >
+          <div className="pin-board-track">
+          <div className="pin-board-panel swipe-preview-panel">{mobileSwipeEnabled ? renderSwipePreviewPanel(previousBoard, "prev") : null}</div>
+          <div className="pin-board-panel current-board-panel">
           <section className="feed-head">
             <div className="feed-meta">
               <span>
@@ -3036,6 +3117,9 @@ const App = () => {
               {visibleNoteCount < filteredNotes.length
               ? "아래로 스크롤하면 메모가 계속 로드됩니다."
               : `${filteredNotes.length}개의 메모가 모두 표시되었습니다.`}
+          </div>
+          </div>
+          <div className="pin-board-panel swipe-preview-panel">{mobileSwipeEnabled ? renderSwipePreviewPanel(nextSwipeBoard, "next") : null}</div>
           </div>
           </div>
         </main>
