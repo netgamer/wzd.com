@@ -57,6 +57,10 @@ create table if not exists public.note_tags (
 create index if not exists idx_boards_user_updated_at
   on public.boards (user_id, updated_at desc);
 
+create index if not exists idx_boards_shared_slug
+  on public.boards ((settings->>'sharedSlug'))
+  where coalesce(settings->>'sharedSlug', '') <> '';
+
 create index if not exists idx_notes_board_z
   on public.notes (board_id, z_index desc, updated_at desc);
 
@@ -88,6 +92,15 @@ on public.boards
 for select
 using (auth.uid() = user_id);
 
+drop policy if exists "boards shared read" on public.boards;
+create policy "boards shared read"
+on public.boards
+for select
+using (
+  is_archived = false
+  and coalesce(settings->>'sharedSlug', '') <> ''
+);
+
 drop policy if exists "boards owner mutate" on public.boards;
 create policy "boards owner mutate"
 on public.boards
@@ -106,6 +119,21 @@ using (
     from public.boards b
     where b.id = board_id
       and b.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "notes shared read" on public.notes;
+create policy "notes shared read"
+on public.notes
+for select
+using (
+  archived = false
+  and exists (
+    select 1
+    from public.boards b
+    where b.id = board_id
+      and b.is_archived = false
+      and coalesce(b.settings->>'sharedSlug', '') <> ''
   )
 );
 

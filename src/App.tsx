@@ -1291,6 +1291,7 @@ const App = () => {
     }
 
     let shareSlug = getBoardShareSlug(selectedBoard);
+    const timestamp = nowIso();
     if (!shareSlug) {
       shareSlug = makeShareSlug();
 
@@ -1304,22 +1305,40 @@ const App = () => {
         }
       }
 
-      const timestamp = nowIso();
-      setBoards((prev) =>
-        prev.map((board) =>
-          board.id === selectedBoard.id
-            ? {
-                ...board,
-                settings: {
-                  ...board.settings,
-                  sharedSlug: shareSlug
-                },
-                updatedAt: timestamp
-              }
-            : board
-        )
-      );
+      if (supabase && user?.id) {
+        const updateResult = await supabase
+          .from("boards")
+          .update({
+            settings: {
+              ...selectedBoard.settings,
+              sharedSlug: shareSlug
+            },
+            updated_at: timestamp
+          })
+          .eq("id", selectedBoard.id)
+          .eq("user_id", user.id);
+
+        if (updateResult.error) {
+          window.alert("공유 링크를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+          return;
+        }
+      }
     }
+
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === selectedBoard.id
+          ? {
+              ...board,
+              settings: {
+                ...board.settings,
+                sharedSlug: shareSlug
+              },
+              updatedAt: timestamp
+            }
+          : board
+      )
+    );
 
     const shareUrl = makeBoardShareUrl(shareSlug);
     try {
