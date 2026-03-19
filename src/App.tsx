@@ -2124,21 +2124,6 @@ const App = () => {
           </div>
 
           <div className="topbar-actions">
-            <button
-              className="mobile-icon-action"
-              onClick={() => {
-                setMobileSearchOpen((prev) => {
-                  const next = !prev;
-                  if (!prev) {
-                    window.setTimeout(() => searchInputRef.current?.focus(), 40);
-                  }
-                  return next;
-                });
-              }}
-              aria-label="검색"
-            >
-              검색
-            </button>
             {!isSharedView && (
               <button className="new-note-pill" onClick={addNote}>
                 새 메모
@@ -2171,16 +2156,6 @@ const App = () => {
                 보드 초대
               </button>
             )}
-            {!isSharedView && (
-              <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="새 메모">
-                +
-              </button>
-            )}
-            {!isSharedView && (
-              <button className="mobile-icon-action" onClick={() => setWidgetMenuOpen((prev) => !prev)} aria-label="위젯 추가">
-                W
-              </button>
-            )}
             {hasSupabaseConfig ? (
               user ? (
                 <div className="profile-menu-wrap" ref={profileMenuRef}>
@@ -2197,7 +2172,7 @@ const App = () => {
                   )}
                 </div>
               ) : (
-                <button className="ghost-action" onClick={onGoogleLogin}>
+                <button className="ghost-action mobile-auth-action" onClick={onGoogleLogin}>
                   구글 로그인
                 </button>
               )
