@@ -2176,16 +2176,6 @@ const App = () => {
                 +
               </button>
             )}
-            {canShareBoard && (
-              <button className="mobile-icon-action" onClick={() => void shareBoard()} aria-label="보드 공유">
-                공유
-              </button>
-            )}
-            {canInviteBoard && (
-              <button className="mobile-icon-action" onClick={() => void openInvitePanel()} aria-label="보드 초대">
-                초대
-              </button>
-            )}
             {!isSharedView && (
               <button className="mobile-icon-action" onClick={() => setWidgetMenuOpen((prev) => !prev)} aria-label="위젯 추가">
                 W
@@ -2236,6 +2226,34 @@ const App = () => {
                 </button>
               ))}
               <div className="mobile-board-actions">
+                {canShareBoard && (
+                  <button
+                    className="mobile-board-action"
+                    onClick={() => {
+                      void shareBoard();
+                      setMobileBoardMenuOpen(false);
+                    }}
+                  >
+                    <span className="mobile-board-action-icon" aria-hidden="true">
+                      ↗
+                    </span>
+                    <span>보드 공유</span>
+                  </button>
+                )}
+                {canInviteBoard && (
+                  <button
+                    className="mobile-board-action"
+                    onClick={() => {
+                      void openInvitePanel();
+                      setMobileBoardMenuOpen(false);
+                    }}
+                  >
+                    <span className="mobile-board-action-icon" aria-hidden="true">
+                      @
+                    </span>
+                    <span>보드 초대</span>
+                  </button>
+                )}
                 <button
                   className="mobile-board-action"
                   onClick={() => {
