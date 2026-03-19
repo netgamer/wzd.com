@@ -1988,6 +1988,7 @@ const App = () => {
                     const hasImagePreview = Boolean(previewUrl && isImageUrl(previewUrl));
                     const hasTextPreview = previewText.trim().length > 0;
                     const useImageHeroCard = hasImagePreview && !selected;
+                    const isFramedLinkNote = feedMode === "active" && Boolean(previewUrl && hasImagePreview);
                     const showDropPreview =
                       runningDragNoteId !== null &&
                       dragPreviewNoteId === note.id &&
@@ -2028,6 +2029,11 @@ const App = () => {
                               return;
                             }
 
+                            if (!selected && isFramedLinkNote && previewUrl) {
+                              window.open(previewUrl, "_blank", "noopener,noreferrer");
+                              return;
+                            }
+
                             setSelectedNoteId(note.id);
                           }}
                         >
@@ -2058,15 +2064,15 @@ const App = () => {
                                 onClick={(event) => {
                                   event.stopPropagation();
                                   if (feedMode === "active") {
-                                    updateNote(note.id, { pinned: !note.pinned });
+                                    setSelectedNoteId(note.id);
                                   } else {
                                     restoreNote(note.id);
                                   }
                                 }}
-                                aria-label={feedMode === "active" ? "핀 고정" : "메모 복구"}
-                                title={feedMode === "active" ? "핀 고정" : "메모 복구"}
+                                aria-label={feedMode === "active" ? "메모 수정" : "메모 복구"}
+                                title={feedMode === "active" ? "메모 수정" : "메모 복구"}
                               >
-                                {feedMode === "active" ? "핀" : "복구"}
+                                {feedMode === "active" ? "수정" : "복구"}
                               </button>
                               <button
                                 className="pin-icon-button danger"
