@@ -54,6 +54,23 @@ create table if not exists public.note_tags (
   unique (note_id, tag)
 );
 
+create table if not exists public.user_profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  email text not null unique,
+  display_name text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.board_members (
+  id uuid primary key default gen_random_uuid(),
+  board_id uuid not null references public.boards(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  role text not null default 'editor' check (role in ('editor')),
+  created_at timestamptz not null default now(),
+  unique (board_id, user_id)
+);
+
 create index if not exists idx_boards_user_updated_at
   on public.boards (user_id, updated_at desc);
 
@@ -70,6 +87,9 @@ create index if not exists idx_notes_user_updated
 create index if not exists idx_note_tags_user_tag
   on public.note_tags (user_id, tag);
 
+create index if not exists idx_board_members_user_board
+  on public.board_members (user_id, board_id);
+
 drop trigger if exists set_boards_updated_at on public.boards;
 create trigger set_boards_updated_at
 before update on public.boards
@@ -82,15 +102,36 @@ before update on public.notes
 for each row
 execute procedure public.set_updated_at();
 
+drop trigger if exists set_user_profiles_updated_at on public.user_profiles;
+create trigger set_user_profiles_updated_at
+before update on public.user_profiles
+for each row
+execute procedure public.set_updated_at();
+
 alter table public.boards enable row level security;
 alter table public.notes enable row level security;
 alter table public.note_tags enable row level security;
+alter table public.user_profiles enable row level security;
+alter table public.board_members enable row level security;
 
 drop policy if exists "boards owner read" on public.boards;
 create policy "boards owner read"
 on public.boards
 for select
 using (auth.uid() = user_id);
+
+drop policy if exists "boards member read" on public.boards;
+create policy "boards member read"
+on public.boards
+for select
+using (
+  exists (
+    select 1
+    from public.board_members bm
+    where bm.board_id = id
+      and bm.user_id = auth.uid()
+  )
+);
 
 drop policy if exists "boards shared read" on public.boards;
 create policy "boards shared read"
@@ -109,16 +150,24 @@ using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
 drop policy if exists "notes owner read" on public.notes;
-create policy "notes owner read"
+drop policy if exists "notes owner or member read" on public.notes;
+create policy "notes owner or member read"
 on public.notes
 for select
 using (
-  auth.uid() = user_id
-  and exists (
+  exists (
     select 1
     from public.boards b
     where b.id = board_id
-      and b.user_id = auth.uid()
+      and (
+        b.user_id = auth.uid()
+        or exists (
+          select 1
+          from public.board_members bm
+          where bm.board_id = b.id
+            and bm.user_id = auth.uid()
+        )
+      )
   )
 );
 
@@ -137,26 +186,83 @@ using (
   )
 );
 
-drop policy if exists "notes owner mutate" on public.notes;
-create policy "notes owner mutate"
+drop policy if exists "notes owner or member insert" on public.notes;
+create policy "notes owner or member insert"
 on public.notes
-for all
-using (
-  auth.uid() = user_id
-  and exists (
-    select 1
-    from public.boards b
-    where b.id = board_id
-      and b.user_id = auth.uid()
-  )
-)
+for insert
 with check (
   auth.uid() = user_id
   and exists (
     select 1
     from public.boards b
     where b.id = board_id
-      and b.user_id = auth.uid()
+      and (
+        b.user_id = auth.uid()
+        or exists (
+          select 1
+          from public.board_members bm
+          where bm.board_id = b.id
+            and bm.user_id = auth.uid()
+        )
+      )
+  )
+);
+
+drop policy if exists "notes owner or member update" on public.notes;
+create policy "notes owner or member update"
+on public.notes
+for update
+using (
+  exists (
+    select 1
+    from public.boards b
+    where b.id = board_id
+      and (
+        b.user_id = auth.uid()
+        or exists (
+          select 1
+          from public.board_members bm
+          where bm.board_id = b.id
+            and bm.user_id = auth.uid()
+        )
+      )
+  )
+)
+with check (
+  and exists (
+    select 1
+    from public.boards b
+    where b.id = board_id
+      and (
+        b.user_id = auth.uid()
+        or exists (
+          select 1
+          from public.board_members bm
+          where bm.board_id = b.id
+            and bm.user_id = auth.uid()
+        )
+      )
+  )
+);
+
+drop policy if exists "notes owner or member delete" on public.notes;
+create policy "notes owner or member delete"
+on public.notes
+for delete
+using (
+  exists (
+    select 1
+    from public.boards b
+    where b.id = board_id
+      and (
+        b.user_id = auth.uid()
+        or exists (
+          select 1
+          from public.board_members bm
+          where bm.board_id = b.id
+            and bm.user_id = auth.uid()
+        )
+      )
   )
 );
 
@@ -194,5 +300,58 @@ with check (
     from public.notes n
     where n.id = note_id
       and n.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "profiles authenticated read" on public.user_profiles;
+create policy "profiles authenticated read"
+on public.user_profiles
+for select
+using (auth.role() = 'authenticated');
+
+drop policy if exists "profiles owner mutate" on public.user_profiles;
+create policy "profiles owner mutate"
+on public.user_profiles
+for all
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+drop policy if exists "board members owner read" on public.board_members;
+create policy "board members owner read"
+on public.board_members
+for select
+using (
+  exists (
+    select 1
+    from public.boards b
+    where b.id = board_id
+      and b.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "board members self read" on public.board_members;
+create policy "board members self read"
+on public.board_members
+for select
+using (auth.uid() = user_id);
+
+drop policy if exists "board members owner mutate" on public.board_members;
+create policy "board members owner mutate"
+on public.board_members
+for all
+using (
+  exists (
+    select 1
+    from public.boards b
+    where b.id = board_id
+      and b.user_id = auth.uid()
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.boards b
+    where b.id = board_id
+      and b.user_id = auth.uid()
   )
 );

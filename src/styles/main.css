@@ -507,10 +507,37 @@ button {
   align-items: center;
   gap: 10px;
   padding: 0 10px 0 8px;
+  cursor: pointer;
 }
 
 .profile-pill.muted {
   color: var(--muted);
+}
+
+.profile-menu-wrap {
+  position: relative;
+}
+
+.profile-menu-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 140px;
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  box-shadow: var(--shadow);
+}
+
+.profile-menu-item {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text);
+  cursor: pointer;
 }
 
 .profile-avatar {
@@ -596,6 +623,58 @@ button {
   margin-top: 18px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
+}
+
+.invite-search-row {
+  margin-top: 12px;
+}
+
+.invite-feedback {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.invite-feedback.error {
+  color: var(--accent);
+}
+
+.invite-result-list,
+.invite-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.invite-result-item,
+.invite-member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--surface-soft);
+}
+
+.invite-user-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.invite-user-copy strong,
+.invite-user-copy span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.invite-user-copy span {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .settings-section-head strong {
@@ -1359,6 +1438,10 @@ button {
     display: inline-flex;
     min-height: 40px;
     padding: 0 6px;
+  }
+
+  .profile-menu-popover {
+    right: 0;
   }
 
   .profile-email {

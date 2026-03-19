@@ -31,6 +31,16 @@ export interface NoteV2 {
   updatedAt: string;
 }
 
+export interface BoardUserProfile {
+  userId: string;
+  email: string;
+  displayName: string;
+}
+
+export interface BoardMemberProfile extends BoardUserProfile {
+  role: "editor";
+}
+
 interface BoardRow {
   id: string;
   user_id: string;
@@ -59,6 +69,18 @@ interface NoteRow {
   updated_at: string;
 }
 
+interface UserProfileRow {
+  user_id: string;
+  email: string;
+  display_name: string | null;
+}
+
+interface BoardMemberRow {
+  board_id: string;
+  user_id: string;
+  role: "editor";
+}
+
 const mapBoardRow = (row: BoardRow): BoardV2 => ({
   id: row.id,
   userId: row.user_id,
@@ -85,6 +107,12 @@ const mapNoteRow = (row: NoteRow): NoteV2 => ({
   archived: row.archived,
   metadata: row.metadata ?? {},
   updatedAt: row.updated_at
+});
+
+const mapUserProfileRow = (row: UserProfileRow): BoardUserProfile => ({
+  userId: row.user_id,
+  email: row.email,
+  displayName: row.display_name ?? ""
 });
 
 const ensureSupabase = () => {
@@ -117,15 +145,129 @@ export const createBoardV2 = async (userId: string, title = "My Board"): Promise
   return mapBoardRow(data as BoardRow);
 };
 
+export const syncUserProfile = async (userId: string, email: string, displayName = ""): Promise<void> => {
+  ensureSupabase();
+
+  const { error } = await supabase!.from("user_profiles").upsert({
+    user_id: userId,
+    email,
+    display_name: displayName
+  });
+
+  if (error) {
+    throw error;
+  }
+};
+
+export const searchUserProfiles = async (
+  query: string,
+  excludeUserIds: string[] = []
+): Promise<BoardUserProfile[]> => {
+  ensureSupabase();
+
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) {
+    return [];
+  }
+
+  const { data, error } = await supabase!
+    .from("user_profiles")
+    .select("user_id,email,display_name")
+    .ilike("email", `%${trimmedQuery}%`)
+    .order("email", { ascending: true })
+    .limit(10);
+
+  if (error) {
+    throw error;
+  }
+
+  const excludeSet = new Set(excludeUserIds);
+  return ((data ?? []) as UserProfileRow[]).map(mapUserProfileRow).filter((profile) => !excludeSet.has(profile.userId));
+};
+
+export const listBoardMembers = async (boardId: string): Promise<BoardMemberProfile[]> => {
+  ensureSupabase();
+
+  const membershipQuery = await supabase!
+    .from("board_members")
+    .select("board_id,user_id,role")
+    .eq("board_id", boardId)
+    .order("created_at", { ascending: true });
+
+  if (membershipQuery.error) {
+    throw membershipQuery.error;
+  }
+
+  const memberships = (membershipQuery.data ?? []) as BoardMemberRow[];
+  if (memberships.length === 0) {
+    return [];
+  }
+
+  const memberIds = memberships.map((row) => row.user_id);
+  const profileQuery = await supabase!
+    .from("user_profiles")
+    .select("user_id,email,display_name")
+    .in("user_id", memberIds);
+
+  if (profileQuery.error) {
+    throw profileQuery.error;
+  }
+
+  const profilesById = new Map(
+    ((profileQuery.data ?? []) as UserProfileRow[]).map((row) => [row.user_id, mapUserProfileRow(row)])
+  );
+
+  return memberships.map((membership) => {
+    const profile = profilesById.get(membership.user_id);
+    return {
+      userId: membership.user_id,
+      email: profile?.email ?? "",
+      displayName: profile?.displayName ?? "",
+      role: membership.role
+    };
+  });
+};
+
+export const inviteBoardMember = async (boardId: string, userId: string): Promise<void> => {
+  ensureSupabase();
+
+  const { error } = await supabase!.from("board_members").upsert(
+    {
+      board_id: boardId,
+      user_id: userId,
+      role: "editor"
+    },
+    { onConflict: "board_id,user_id" }
+  );
+
+  if (error) {
+    throw error;
+  }
+};
+
 export const loadBoardsV2 = async (userId: string): Promise<{ boards: BoardV2[]; notes: NoteV2[] }> => {
   ensureSupabase();
 
-  const boardQuery = await supabase!
+  const memberQuery = await supabase!.from("board_members").select("board_id").eq("user_id", userId);
+
+  if (memberQuery.error) {
+    throw memberQuery.error;
+  }
+
+  const memberBoardIds = (memberQuery.data ?? [])
+    .map((row: { board_id: string | null }) => row.board_id)
+    .filter((boardId): boardId is string => typeof boardId === "string" && boardId.length > 0);
+
+  const boardQueryBuilder = supabase!
     .from("boards")
     .select("id,user_id,title,description,background_style,settings,updated_at")
-    .eq("user_id", userId)
     .eq("is_archived", false)
     .order("updated_at", { ascending: false });
+
+  const boardQuery =
+    memberBoardIds.length > 0
+      ? await boardQueryBuilder.or(`user_id.eq.${userId},id.in.(${memberBoardIds.join(",")})`)
+      : await boardQueryBuilder.eq("user_id", userId);
 
   if (boardQuery.error) {
     throw boardQuery.error;
@@ -143,7 +285,6 @@ export const loadBoardsV2 = async (userId: string): Promise<{ boards: BoardV2[];
     .from("notes")
     .select("id,board_id,user_id,content,color,x,y,w,h,z_index,rotation,pinned,archived,metadata,updated_at")
     .in("board_id", boardIds)
-    .eq("user_id", userId)
     .order("z_index", { ascending: true })
     .order("updated_at", { ascending: true });
 
@@ -216,15 +357,20 @@ export const isBoardShareSlugTaken = async (slug: string, excludeBoardId?: strin
   return excludeBoardId ? match.id !== excludeBoardId : true;
 };
 
-export const saveBoardsV2 = async (params: { boards: BoardV2[]; notes: NoteV2[] }): Promise<void> => {
+export const saveBoardsV2 = async (params: {
+  boards: BoardV2[];
+  notes: NoteV2[];
+  currentUserId?: string | null;
+}): Promise<void> => {
   if (!supabase) {
     return;
   }
 
-  const { boards, notes } = params;
+  const { boards, notes, currentUserId = null } = params;
+  const boardsToPersist = currentUserId ? boards.filter((board) => board.userId === currentUserId) : boards;
 
-  if (boards.length > 0) {
-    const boardRows = boards.map((board) => ({
+  if (boardsToPersist.length > 0) {
+    const boardRows = boardsToPersist.map((board) => ({
       id: board.id,
       user_id: board.userId,
       title: board.title,

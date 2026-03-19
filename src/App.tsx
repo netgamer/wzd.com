@@ -10,17 +10,23 @@ import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
 import { fetchRssFeed, type RssFeedPreview } from "./lib/rss";
 import {
+  type BoardMemberProfile,
+  type BoardUserProfile,
   createBoardV2,
   type BoardV2,
+  inviteBoardMember,
   isBoardShareSlugTaken,
+  listBoardMembers,
   loadBoardsV2,
   loadSharedBoardV2,
   type NoteColor,
   type NoteV2,
-  saveBoardsV2
+  saveBoardsV2,
+  searchUserProfiles,
+  syncUserProfile
 } from "./lib/supabase-board-v2";
 
-interface UserProfile {
+interface AuthUserProfile {
   id: string;
   email: string;
 }
@@ -667,7 +673,7 @@ const reorderNotes = (
 };
 
 const App = () => {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<AuthUserProfile | null>(null);
   const [boards, setBoards] = useState<BoardV2[]>(() => createDefaultSnapshot().boards);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(() => createDefaultSnapshot().selectedBoardId);
   const [boardTitleDraft, setBoardTitleDraft] = useState("");
@@ -693,6 +699,13 @@ const App = () => {
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteQuery, setInviteQuery] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteResults, setInviteResults] = useState<BoardUserProfile[]>([]);
+  const [boardMembers, setBoardMembers] = useState<BoardMemberProfile[]>([]);
   const [trashDropActive, setTrashDropActive] = useState(false);
   const [draggingBoardId, setDraggingBoardId] = useState<string | null>(null);
   const [dragPreviewBoardId, setDragPreviewBoardId] = useState<string | null>(null);
@@ -704,6 +717,7 @@ const App = () => {
   const latestBoardsRef = useRef<BoardV2[]>(boards);
   const latestNotesRef = useRef<NoteV2[]>(notes);
   const latestUserIdRef = useRef<string | null>(user?.id ?? null);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const saveStateResetTimerRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const boardLongPressTimerRef = useRef<number | null>(null);
@@ -716,6 +730,10 @@ const App = () => {
     () => activeBoards.find((board) => board.id === selectedBoardId) ?? activeBoards[0] ?? null,
     [activeBoards, selectedBoardId]
   );
+  const isBoardOwner = Boolean(user?.id && selectedBoard && selectedBoard.userId === user.id);
+  const canShareBoard = feedMode === "active" && Boolean(selectedBoard) && !isSharedView && isBoardOwner;
+  const canInviteBoard = canShareBoard;
+  const canRenameBoard = feedMode === "active" && Boolean(selectedBoard) && !isSharedView && isBoardOwner;
 
   useEffect(() => {
     latestBoardsRef.current = boards;
@@ -728,6 +746,27 @@ const App = () => {
   useEffect(() => {
     latestUserIdRef.current = user?.id ?? null;
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!(event.target instanceof Node)) {
+        return;
+      }
+
+      if (!profileMenuRef.current?.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [profileMenuOpen]);
 
   useEffect(() => {
     const onResize = () => {
@@ -774,7 +813,8 @@ const App = () => {
     });
     await saveBoardsV2({
       boards: pruned.boards,
-      notes: pruned.notes
+      notes: pruned.notes,
+      currentUserId: latestUserIdRef.current
     });
   };
 
@@ -832,7 +872,7 @@ const App = () => {
       selectedBoardId: importedBoards[0]?.id ?? remoteBoards[0]?.id ?? null
     });
 
-    await saveBoardsV2({ boards: merged.boards, notes: merged.notes });
+    await saveBoardsV2({ boards: merged.boards, notes: merged.notes, currentUserId: userId });
     clearLocalSnapshot();
 
     return merged;
@@ -907,6 +947,9 @@ const App = () => {
       const sessionUser = data.session?.user;
       if (sessionUser?.email) {
         setUser({ id: sessionUser.id, email: sessionUser.email });
+        void syncUserProfile(sessionUser.id, sessionUser.email).catch((error) => {
+          console.error("Failed to sync user profile", error);
+        });
       }
     });
 
@@ -920,6 +963,9 @@ const App = () => {
       }
 
       setUser({ id: sessionUser.id, email: sessionUser.email });
+      void syncUserProfile(sessionUser.id, sessionUser.email).catch((error) => {
+        console.error("Failed to sync user profile", error);
+      });
     });
 
     return () => {
@@ -1016,6 +1062,25 @@ const App = () => {
       active = false;
     };
   }, [user?.id, sharedBoardSlug]);
+
+  useEffect(() => {
+    setProfileMenuOpen(false);
+    if (!canInviteBoard) {
+      setInviteOpen(false);
+      setInviteQuery("");
+      setInviteResults([]);
+      setBoardMembers([]);
+      setInviteError(null);
+    }
+  }, [canInviteBoard, selectedBoard?.id]);
+
+  useEffect(() => {
+    if (!inviteOpen) {
+      return;
+    }
+
+    void searchInviteCandidates(inviteQuery);
+  }, [inviteOpen, inviteQuery, boardMembers, selectedBoard?.id]);
 
   useEffect(() => {
     const currentBoardId = selectedBoard?.id ?? boards[0]?.id ?? null;
@@ -1286,7 +1351,7 @@ const App = () => {
   };
 
   const shareBoard = async () => {
-    if (!selectedBoard || isSharedView) {
+    if (!selectedBoard || isSharedView || !isBoardOwner) {
       return;
     }
 
@@ -1349,6 +1414,76 @@ const App = () => {
     }
   };
 
+  const refreshBoardMembers = async (boardId: string) => {
+    if (!supabase) {
+      setBoardMembers([]);
+      return;
+    }
+
+    const members = await listBoardMembers(boardId);
+    setBoardMembers(members);
+  };
+
+  const searchInviteCandidates = async (query: string) => {
+    if (!supabase || !selectedBoard || !query.trim()) {
+      setInviteResults([]);
+      return;
+    }
+
+    setInviteLoading(true);
+    setInviteError(null);
+    try {
+      const results = await searchUserProfiles(query, [
+        selectedBoard.userId,
+        ...boardMembers.map((member) => member.userId)
+      ]);
+      setInviteResults(results);
+    } catch (error) {
+      console.error("Failed to search invite users", error);
+      setInviteError("사용자를 찾지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const openInvitePanel = async () => {
+    if (!selectedBoard || !canInviteBoard) {
+      return;
+    }
+
+    setInviteOpen(true);
+    setInviteQuery("");
+    setInviteError(null);
+    setInviteResults([]);
+
+    try {
+      await refreshBoardMembers(selectedBoard.id);
+    } catch (error) {
+      console.error("Failed to load board members", error);
+      setInviteError("현재 초대 목록을 불러오지 못했습니다.");
+    }
+  };
+
+  const handleInviteUser = async (profile: BoardUserProfile) => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    setInviteLoading(true);
+    setInviteError(null);
+    try {
+      await inviteBoardMember(selectedBoard.id, profile.userId);
+      await refreshBoardMembers(selectedBoard.id);
+      setInviteResults((prev) => prev.filter((item) => item.userId !== profile.userId));
+      setInviteQuery("");
+    } catch (error) {
+      console.error("Failed to invite board member", error);
+      setInviteError("보드 초대에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
   const addNote = () => {
     if (!selectedBoard) {
       return;
@@ -1360,7 +1495,7 @@ const App = () => {
 
     const note = createNote({
       boardId: selectedBoard.id,
-      userId: selectedBoard.userId,
+      userId: user?.id ?? selectedBoard.userId,
       zIndex: boardMaxZ + 1,
       content: DEFAULT_NEW_NOTE_CONTENT
     });
@@ -1383,7 +1518,7 @@ const App = () => {
 
     const note = createNote({
       boardId: selectedBoard.id,
-      userId: selectedBoard.userId,
+      userId: user?.id ?? selectedBoard.userId,
       zIndex: boardMaxZ + 1,
       color: "white",
       content: "AI 뉴스"
@@ -1414,7 +1549,7 @@ const App = () => {
 
     const note = createNote({
       boardId: selectedBoard.id,
-      userId: selectedBoard.userId,
+      userId: user?.id ?? selectedBoard.userId,
       zIndex: boardMaxZ + 1,
       color: "white",
       content: "북마크"
@@ -1780,6 +1915,7 @@ const App = () => {
       return;
     }
 
+    setProfileMenuOpen(false);
     await supabase.auth.signOut();
   };
 
@@ -1895,7 +2031,7 @@ const App = () => {
               <p className="feed-kicker">
                 {isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
               </p>
-              {feedMode === "active" && editingBoardTitle && !isSharedView ? (
+              {canRenameBoard && editingBoardTitle ? (
                 <input
                   className="board-title-input"
                   value={boardTitleDraft}
@@ -1916,9 +2052,9 @@ const App = () => {
                 />
               ) : (
                 <h1
-                  className={feedMode === "active" && !isSharedView ? "editable-board-title" : undefined}
+                  className={canRenameBoard ? "editable-board-title" : undefined}
                   onClick={() => {
-                    if (feedMode !== "active" || isSharedView) {
+                    if (!canRenameBoard) {
                       return;
                     }
                     setBoardTitleDraft(selectedBoard?.title ?? "");
@@ -1982,9 +2118,14 @@ const App = () => {
                 )}
               </div>
             )}
-            {feedMode === "active" && selectedBoard && !isSharedView && (
+            {canShareBoard && (
               <button className="ghost-action" onClick={() => void shareBoard()}>
                 보드 공유
+              </button>
+            )}
+            {canInviteBoard && (
+              <button className="ghost-action" onClick={() => void openInvitePanel()}>
+                보드 초대
               </button>
             )}
             {!isSharedView && (
@@ -1992,9 +2133,14 @@ const App = () => {
                 +
               </button>
             )}
-            {feedMode === "active" && selectedBoard && !isSharedView && (
+            {canShareBoard && (
               <button className="mobile-icon-action" onClick={() => void shareBoard()} aria-label="보드 공유">
                 공유
+              </button>
+            )}
+            {canInviteBoard && (
+              <button className="mobile-icon-action" onClick={() => void openInvitePanel()} aria-label="보드 초대">
+                초대
               </button>
             )}
             {!isSharedView && (
@@ -2004,15 +2150,19 @@ const App = () => {
             )}
             {hasSupabaseConfig ? (
               user ? (
-                <>
-                  <div className="profile-pill">
+                <div className="profile-menu-wrap" ref={profileMenuRef}>
+                  <button className="profile-pill" onClick={() => setProfileMenuOpen((prev) => !prev)} aria-expanded={profileMenuOpen}>
                     <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
                     <span className="profile-email">{user.email}</span>
-                  </div>
-                  <button className="ghost-action" onClick={onLogout}>
-                    로그아웃
                   </button>
-                </>
+                  {profileMenuOpen && (
+                    <div className="profile-menu-popover">
+                      <button className="profile-menu-item" onClick={() => void onLogout()}>
+                        로그아웃
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <button className="ghost-action" onClick={onGoogleLogin}>
                   구글 로그인
@@ -2134,6 +2284,79 @@ const App = () => {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {inviteOpen && selectedBoard && (
+          <div className="settings-overlay" onClick={() => setInviteOpen(false)}>
+            <section className="settings-panel invite-panel" onClick={(event) => event.stopPropagation()}>
+              <div className="settings-panel-head">
+                <div>
+                  <p className="settings-kicker">협업</p>
+                  <h2>보드 초대</h2>
+                </div>
+                <button className="settings-close" onClick={() => setInviteOpen(false)} aria-label="초대 창 닫기">
+                  ×
+                </button>
+              </div>
+
+              <div className="settings-section invite-search-section">
+                <div className="settings-section-head">
+                  <strong>{selectedBoard.title}</strong>
+                  <span>유저 이메일(아이디)로 검색해 초대하세요.</span>
+                </div>
+                <div className="invite-search-row">
+                  <input
+                    className="widget-input invite-input"
+                    value={inviteQuery}
+                    onChange={(event) => setInviteQuery(event.target.value)}
+                    placeholder="유저 이메일 검색"
+                  />
+                </div>
+                {inviteError && <p className="invite-feedback error">{inviteError}</p>}
+                {inviteLoading && <p className="invite-feedback">검색 중입니다...</p>}
+                {!inviteLoading && inviteQuery.trim() && inviteResults.length === 0 && !inviteError && (
+                  <p className="invite-feedback">검색 결과가 없습니다.</p>
+                )}
+                {inviteResults.length > 0 && (
+                  <div className="invite-result-list">
+                    {inviteResults.map((profile) => (
+                      <div className="invite-result-item" key={profile.userId}>
+                        <div className="invite-user-copy">
+                          <strong>{profile.displayName || profile.email}</strong>
+                          {profile.displayName && <span>{profile.email}</span>}
+                        </div>
+                        <button className="ghost-action" onClick={() => void handleInviteUser(profile)}>
+                          초대
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="settings-section">
+                <div className="settings-section-head">
+                  <strong>현재 초대된 사용자</strong>
+                  <span>{boardMembers.length}명</span>
+                </div>
+                {boardMembers.length === 0 ? (
+                  <p className="settings-empty">아직 초대된 사용자가 없습니다.</p>
+                ) : (
+                  <div className="invite-member-list">
+                    {boardMembers.map((member) => (
+                      <div className="invite-member-item" key={member.userId}>
+                        <div className="invite-user-copy">
+                          <strong>{member.displayName || member.email}</strong>
+                          {member.displayName && <span>{member.email}</span>}
+                        </div>
+                        <span className="chip-badge">편집 가능</span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
