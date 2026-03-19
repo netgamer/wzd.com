@@ -12,7 +12,9 @@ import { fetchRssFeed, type RssFeedPreview } from "./lib/rss";
 import {
   createBoardV2,
   type BoardV2,
+  isBoardShareSlugTaken,
   loadBoardsV2,
+  loadSharedBoardV2,
   type NoteColor,
   type NoteV2,
   saveBoardsV2
@@ -408,6 +410,31 @@ const getNoteTitle = (content: unknown) => {
 };
 
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
+const getSharedBoardSlugFromLocation = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const match = window.location.pathname.match(/^\/board\/([a-z0-9_-]+)$/i);
+  return match?.[1] ?? null;
+};
+const getBoardShareSlug = (board: BoardV2 | null) =>
+  typeof board?.settings?.sharedSlug === "string" && board.settings.sharedSlug.trim() ? board.settings.sharedSlug.trim() : "";
+const makeBoardShareUrl = (slug: string) => {
+  if (!slug) {
+    return "";
+  }
+
+  if (typeof window === "undefined") {
+    return `https://www.wzd.kr/board/${slug}`;
+  }
+
+  return `${window.location.origin}/board/${slug}`;
+};
+const makeShareSlug = (length = 8) => {
+  const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+  return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+};
 const normalizeLegacyText = (value: unknown) =>
   LEGACY_TEXT_REPLACEMENTS.reduce((current, [from, to]) => current.split(from).join(to), asText(value));
 const getTrashDateValue = (value: unknown) => {
@@ -670,6 +697,7 @@ const App = () => {
   const [draggingBoardId, setDraggingBoardId] = useState<string | null>(null);
   const [dragPreviewBoardId, setDragPreviewBoardId] = useState<string | null>(null);
   const [dragArmedBoardId, setDragArmedBoardId] = useState<string | null>(null);
+  const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -683,6 +711,7 @@ const App = () => {
   const orderedBoards = useMemo(() => sortBoards(boards), [boards]);
   const activeBoards = useMemo(() => orderedBoards.filter((board) => !isBoardTrashed(board)), [orderedBoards]);
   const trashedBoards = useMemo(() => orderedBoards.filter((board) => isBoardTrashed(board)), [orderedBoards]);
+  const isSharedView = Boolean(sharedBoardSlug);
   const selectedBoard = useMemo(
     () => activeBoards.find((board) => board.id === selectedBoardId) ?? activeBoards[0] ?? null,
     [activeBoards, selectedBoardId]
@@ -716,6 +745,14 @@ const App = () => {
 
     return () => {
       window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncSharedSlug = () => setSharedBoardSlug(getSharedBoardSlugFromLocation());
+    window.addEventListener("popstate", syncSharedSlug);
+    return () => {
+      window.removeEventListener("popstate", syncSharedSlug);
     };
   }, []);
 
@@ -893,6 +930,53 @@ const App = () => {
   useEffect(() => {
     let active = true;
 
+    if (sharedBoardSlug) {
+      if (!supabase) {
+        setBoards([]);
+        setNotes([]);
+        setSelectedBoardId(null);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      loadSharedBoardV2(sharedBoardSlug)
+        .then((payload) => {
+          if (!active) {
+            return;
+          }
+
+          if (!payload) {
+            setBoards([]);
+            setNotes([]);
+            setSelectedBoardId(null);
+            setSelectedNoteId(null);
+            setLoading(false);
+            return;
+          }
+
+          setBoards([payload.board]);
+          setNotes(sanitizeNotes(payload.notes));
+          setSelectedBoardId(payload.board.id);
+          setSelectedNoteId(null);
+          setFeedMode("active");
+          setLoading(false);
+        })
+        .catch(() => {
+          if (active) {
+            setBoards([]);
+            setNotes([]);
+            setSelectedBoardId(null);
+            setSelectedNoteId(null);
+            setLoading(false);
+          }
+        });
+
+      return () => {
+        active = false;
+      };
+    }
+
     if (!user?.id || !supabase) {
       const local = loadLocalSnapshot();
       setBoards(local.boards);
@@ -931,10 +1015,15 @@ const App = () => {
     return () => {
       active = false;
     };
-  }, [user?.id]);
+  }, [user?.id, sharedBoardSlug]);
 
   useEffect(() => {
     const currentBoardId = selectedBoard?.id ?? boards[0]?.id ?? null;
+
+    if (isSharedView) {
+      setCloudSaveState("idle");
+      return;
+    }
 
     if (!user?.id || !supabase) {
       saveLocalSnapshot({ boards, notes, selectedBoardId: currentBoardId });
@@ -966,7 +1055,7 @@ const App = () => {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [boards, notes, selectedBoard?.id, user?.id, loading]);
+  }, [boards, notes, selectedBoard?.id, user?.id, loading, isSharedView]);
 
   useEffect(() => {
     return () => {
@@ -1179,9 +1268,6 @@ const App = () => {
     setFeedMode("active");
   };
 
-  const boardHasRecoverableContent = (boardId: string) =>
-    notes.some((note) => note.boardId === boardId && !isNoteTrashed(note) && !isDisposableEmptyNote(note));
-
   const restoreBoard = (boardId: string) => {
     setBoards((prev) =>
       prev.map((board) =>
@@ -1199,25 +1285,26 @@ const App = () => {
     setSettingsOpen(false);
   };
 
-  const deleteBoard = async () => {
-    if (!selectedBoard) {
+  const shareBoard = async () => {
+    if (!selectedBoard || isSharedView) {
       return;
     }
 
-    const hasRecoverableContent = boardHasRecoverableContent(selectedBoard.id);
-    const shouldDelete = window.confirm(
-      hasRecoverableContent
-        ? `'${selectedBoard.title}' 보드를 삭제할까요? 30일 동안 설정의 휴지통에서 복구할 수 있습니다.`
-        : `'${selectedBoard.title}' 보드를 삭제할까요?`
-    );
-    if (!shouldDelete) {
-      return;
-    }
+    let shareSlug = getBoardShareSlug(selectedBoard);
+    if (!shareSlug) {
+      shareSlug = makeShareSlug();
 
-    if (hasRecoverableContent) {
-      const trashedAt = nowIso();
-      const remainingActiveBoards = activeBoards.filter((board) => board.id !== selectedBoard.id);
+      if (supabase) {
+        for (let attempts = 0; attempts < 5; attempts += 1) {
+          const taken = await isBoardShareSlugTaken(shareSlug, selectedBoard.id);
+          if (!taken) {
+            break;
+          }
+          shareSlug = makeShareSlug();
+        }
+      }
 
+      const timestamp = nowIso();
       setBoards((prev) =>
         prev.map((board) =>
           board.id === selectedBoard.id
@@ -1225,68 +1312,22 @@ const App = () => {
                 ...board,
                 settings: {
                   ...board.settings,
-                  trashedAt
+                  sharedSlug: shareSlug
                 },
-                updatedAt: trashedAt
+                updatedAt: timestamp
               }
             : board
         )
       );
-      setSelectedNoteId(null);
-      setFeedMode("active");
-
-      if (remainingActiveBoards.length > 0) {
-        setSelectedBoardId(remainingActiveBoards[0].id);
-        return;
-      }
-
-      const replacementBoard = createDefaultBoard(user?.id ?? "local");
-      replacementBoard.settings = { ...replacementBoard.settings, sidebarOrder: orderedBoards.length };
-      setBoards((prev) => [replacementBoard, ...prev]);
-      setSelectedBoardId(replacementBoard.id);
-      return;
     }
 
-    const remainingBoards = boards.filter((board) => board.id !== selectedBoard.id);
-    const remainingNotes = notes.filter((note) => note.boardId !== selectedBoard.id);
-
-    if (supabase && user?.id) {
-      const deleteNotesResult = await supabase
-        .from("notes")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("board_id", selectedBoard.id);
-
-      if (deleteNotesResult.error) {
-        setCloudSaveState("error");
-        return;
-      }
-
-      const deleteBoardResult = await supabase.from("boards").delete().eq("user_id", user.id).eq("id", selectedBoard.id);
-      if (deleteBoardResult.error) {
-        setCloudSaveState("error");
-        return;
-      }
+    const shareUrl = makeBoardShareUrl(shareSlug);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      window.alert(`공유 링크를 복사했습니다.\n${shareUrl}`);
+    } catch {
+      window.prompt("공유 링크를 복사해 주세요.", shareUrl);
     }
-
-    const remainingActiveBoards = remainingBoards.filter((board) => !isBoardTrashed(board));
-
-    if (remainingActiveBoards.length === 0) {
-      const replacementBoard = createDefaultBoard(user?.id ?? "local");
-      replacementBoard.settings = { ...replacementBoard.settings, sidebarOrder: 0 };
-      setBoards([...remainingBoards, replacementBoard]);
-      setNotes(remainingNotes);
-      setSelectedBoardId(replacementBoard.id);
-      setSelectedNoteId(null);
-      setFeedMode("active");
-      return;
-    }
-
-    setBoards(remainingBoards);
-    setNotes(remainingNotes);
-    setSelectedBoardId(remainingActiveBoards[0]?.id ?? null);
-    setSelectedNoteId(null);
-    setFeedMode("active");
   };
 
   const addNote = () => {
@@ -1832,8 +1873,10 @@ const App = () => {
               >
                 ≡
               </button>
-              <p className="feed-kicker">{feedMode === "active" ? "개인 보드" : "보관 메모"}</p>
-              {feedMode === "active" && editingBoardTitle ? (
+              <p className="feed-kicker">
+                {isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
+              </p>
+              {feedMode === "active" && editingBoardTitle && !isSharedView ? (
                 <input
                   className="board-title-input"
                   value={boardTitleDraft}
@@ -1854,9 +1897,9 @@ const App = () => {
                 />
               ) : (
                 <h1
-                  className={feedMode === "active" ? "editable-board-title" : undefined}
+                  className={feedMode === "active" && !isSharedView ? "editable-board-title" : undefined}
                   onClick={() => {
-                    if (feedMode !== "active") {
+                    if (feedMode !== "active" || isSharedView) {
                       return;
                     }
                     setBoardTitleDraft(selectedBoard?.title ?? "");
@@ -1898,35 +1941,48 @@ const App = () => {
             >
               검색
             </button>
-            <button className="new-note-pill" onClick={addNote}>
-              새 메모
-            </button>
-            {feedMode === "active" && selectedBoard && (
-              <button className="ghost-action ghost-danger" onClick={() => void deleteBoard()}>
-                보드 삭제
+            {!isSharedView && (
+              <button className="new-note-pill" onClick={addNote}>
+                새 메모
               </button>
             )}
-            <div className="widget-menu-wrap">
-              <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
-                위젯 추가
+            {feedMode === "active" && selectedBoard && !isSharedView && (
+              <button className="ghost-action" onClick={() => void shareBoard()}>
+                보드 공유
               </button>
-              {widgetMenuOpen && (
-                <div className="widget-menu">
-                  <button className="widget-menu-item" onClick={addRssWidget}>
-                    RSS 리더
-                  </button>
-                  <button className="widget-menu-item" onClick={addBookmarkWidget}>
-                    북마크
-                  </button>
-                </div>
-              )}
-            </div>
-            <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="새 메모">
-              +
-            </button>
-            <button className="mobile-icon-action" onClick={() => setWidgetMenuOpen((prev) => !prev)} aria-label="위젯 추가">
-              W
-            </button>
+            )}
+            {!isSharedView && (
+              <div className="widget-menu-wrap">
+                <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
+                  위젯 추가
+                </button>
+                {widgetMenuOpen && (
+                  <div className="widget-menu">
+                    <button className="widget-menu-item" onClick={addRssWidget}>
+                      RSS 리더
+                    </button>
+                    <button className="widget-menu-item" onClick={addBookmarkWidget}>
+                      북마크
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            {!isSharedView && (
+              <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="새 메모">
+                +
+              </button>
+            )}
+            {feedMode === "active" && selectedBoard && !isSharedView && (
+              <button className="mobile-icon-action" onClick={() => void shareBoard()} aria-label="보드 공유">
+                공유
+              </button>
+            )}
+            {!isSharedView && (
+              <button className="mobile-icon-action" onClick={() => setWidgetMenuOpen((prev) => !prev)} aria-label="위젯 추가">
+                W
+              </button>
+            )}
             {hasSupabaseConfig ? (
               user ? (
                 <>
@@ -2164,7 +2220,7 @@ const App = () => {
                           } ${isRssWidget ? "widget-note rss-widget" : ""} ${selected ? "selected" : ""} ${
                             runningDragNoteId === note.id ? "dragging" : ""
                           }`}
-                          draggable={feedMode === "active" && !selected}
+                          draggable={feedMode === "active" && !selected && !isSharedView}
                           onDragStart={(event) => onPinDragStart(event, note.id)}
                           onDragEnd={() => {
                             suppressNextCardClickRef.current = true;
@@ -2189,6 +2245,13 @@ const App = () => {
                               return;
                             }
 
+                            if (isSharedView) {
+                              if (isFramedLinkNote && noteUrl) {
+                                window.open(noteUrl, "_blank", "noopener,noreferrer");
+                              }
+                              return;
+                            }
+
                             if (!selected && isFramedLinkNote && noteUrl) {
                               window.open(noteUrl, "_blank", "noopener,noreferrer");
                               return;
@@ -2209,53 +2272,55 @@ const App = () => {
 
                           <div className="pin-card-head">
                             <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
-                            <div className="pin-actions">
-                              {!useImageHeroCard && (
+                            {!isSharedView && (
+                              <div className="pin-actions">
+                                {!useImageHeroCard && (
+                                  <button
+                                    className={`note-color-toggle chip-${note.color}`}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      cycleNoteColor(note.id, note.color);
+                                    }}
+                                    aria-label="메모 색상 변경"
+                                    title="메모 색상 변경"
+                                  />
+                                )}
                                 <button
-                                  className={`note-color-toggle chip-${note.color}`}
+                                  className="pin-icon-button"
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    cycleNoteColor(note.id, note.color);
+                                    if (feedMode === "active") {
+                                      setSelectedNoteId(note.id);
+                                    } else {
+                                      restoreNote(note.id);
+                                    }
                                   }}
-                                  aria-label="메모 색상 변경"
-                                  title="메모 색상 변경"
-                                />
-                              )}
-                              <button
-                                className="pin-icon-button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  if (feedMode === "active") {
-                                    setSelectedNoteId(note.id);
-                                  } else {
-                                    restoreNote(note.id);
-                                  }
-                                }}
-                                aria-label={feedMode === "active" ? "메모 수정" : "메모 복구"}
-                                title={feedMode === "active" ? "메모 수정" : "메모 복구"}
-                              >
-                                <span className="pin-icon-glyph">
-                                  <EditIcon />
-                                </span>
-                              </button>
-                              <button
-                                className="pin-icon-button danger"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  if (feedMode === "active") {
-                                    archiveNote(note.id);
-                                  } else {
-                                    deleteArchivedNote(note.id);
-                                  }
-                                }}
-                                aria-label={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
-                                title={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
-                              >
-                                <span className="pin-icon-glyph">
-                                  <TrashIcon />
-                                </span>
-                              </button>
-                            </div>
+                                  aria-label={feedMode === "active" ? "메모 수정" : "메모 복구"}
+                                  title={feedMode === "active" ? "메모 수정" : "메모 복구"}
+                                >
+                                  <span className="pin-icon-glyph">
+                                    <EditIcon />
+                                  </span>
+                                </button>
+                                <button
+                                  className="pin-icon-button danger"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    if (feedMode === "active") {
+                                      archiveNote(note.id);
+                                    } else {
+                                      deleteArchivedNote(note.id);
+                                    }
+                                  }}
+                                  aria-label={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
+                                  title={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
+                                >
+                                  <span className="pin-icon-glyph">
+                                    <TrashIcon />
+                                  </span>
+                                </button>
+                              </div>
+                            )}
                           </div>
 
                           <div className="pin-card-body">
