@@ -1625,7 +1625,7 @@ const App = () => {
     setDragArmedBoardId(null);
   };
 
-  const onBoardBackgroundMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+  const onBoardBackgroundMouseDown = (event: React.MouseEvent<HTMLElement>) => {
     if (event.target !== event.currentTarget) {
       return;
     }
@@ -2037,6 +2037,7 @@ const App = () => {
                 <div
                   key={`column-${columnIndex}`}
                   className="pin-column"
+                  onMouseDown={onBoardBackgroundMouseDown}
                   onDragOver={(event) => {
                     if (feedMode === "active") {
                       event.preventDefault();
