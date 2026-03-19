@@ -1123,6 +1123,28 @@ const App = () => {
   }, [boards, notes, selectedBoard?.id, user?.id, loading, isSharedView]);
 
   useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const boardTitle = selectedBoard?.title?.trim();
+    const title = boardTitle ? `${boardTitle} | WZD` : "WZD 개인 시작페이지";
+    const description =
+      selectedBoard?.description?.trim() || "WZD에서 메모, 링크, 위젯이 담긴 보드를 만들고 공유해보세요.";
+
+    document.title = title;
+
+    let descriptionMeta = document.querySelector('meta[name="description"]');
+    if (!descriptionMeta) {
+      descriptionMeta = document.createElement("meta");
+      descriptionMeta.setAttribute("name", "description");
+      document.head.appendChild(descriptionMeta);
+    }
+
+    descriptionMeta.setAttribute("content", description);
+  }, [selectedBoard]);
+
+  useEffect(() => {
     return () => {
       if (saveStateResetTimerRef.current) {
         window.clearTimeout(saveStateResetTimerRef.current);
