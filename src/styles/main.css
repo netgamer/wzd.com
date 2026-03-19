@@ -1224,17 +1224,7 @@ button {
   }
 
   .pin-sidebar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: auto;
-    height: 68px;
-    flex-direction: row;
-    justify-content: center;
-    padding: 10px 14px;
-    border-right: none;
-    border-top: 1px solid var(--line);
+    display: none;
   }
 
   .sidebar-spacer,
@@ -1248,7 +1238,7 @@ button {
   }
 
   .pin-main {
-    padding-bottom: 90px;
+    padding-bottom: 24px;
   }
 
   .settings-overlay {
@@ -1373,6 +1363,44 @@ button {
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba(31, 26, 19, 0.08);
     box-shadow: var(--shadow);
+  }
+
+  .mobile-board-actions {
+    display: grid;
+    gap: 8px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(31, 26, 19, 0.08);
+  }
+
+  .mobile-board-action {
+    width: 100%;
+    min-height: 46px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    background: var(--surface-soft);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-board-action.active {
+    background: rgba(230, 0, 35, 0.1);
+    color: var(--accent);
+  }
+
+  .mobile-board-action-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: rgba(31, 26, 19, 0.08);
+    font-size: 13px;
+    font-weight: 700;
+    flex: 0 0 auto;
   }
 
   .mobile-board-item {

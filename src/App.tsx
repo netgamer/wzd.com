@@ -1820,6 +1820,45 @@ const App = () => {
                   <span className="mobile-board-name">{boardItem.title}</span>
                 </button>
               ))}
+              <div className="mobile-board-actions">
+                <button
+                  className="mobile-board-action"
+                  onClick={() => {
+                    void addBoard();
+                    setMobileBoardMenuOpen(false);
+                  }}
+                >
+                  <span className="mobile-board-action-icon" aria-hidden="true">
+                    +
+                  </span>
+                  <span>보드 추가</span>
+                </button>
+                <button
+                  className={`mobile-board-action ${feedMode === "archived" ? "active" : ""}`}
+                  onClick={() => {
+                    setFeedMode((prev) => (prev === "archived" ? "active" : "archived"));
+                    setSelectedNoteId(null);
+                    setMobileBoardMenuOpen(false);
+                  }}
+                >
+                  <span className="mobile-board-action-icon" aria-hidden="true">
+                    □
+                  </span>
+                  <span>보관 메모</span>
+                </button>
+                <button
+                  className={`mobile-board-action ${settingsOpen ? "active" : ""}`}
+                  onClick={() => {
+                    setSettingsOpen(true);
+                    setMobileBoardMenuOpen(false);
+                  }}
+                >
+                  <span className="mobile-board-action-icon" aria-hidden="true">
+                    ⚙
+                  </span>
+                  <span>설정</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
