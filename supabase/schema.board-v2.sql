@@ -229,7 +229,7 @@ using (
   )
 )
 with check (
-  and exists (
+  exists (
     select 1
     from public.boards b
     where b.id = board_id
