@@ -760,6 +760,16 @@ button {
 
 .pin-main {
   padding: 8px 14px 28px;
+  overflow-x: hidden;
+}
+
+.pin-board-stage {
+  transform: translate3d(var(--board-swipe-offset, 0px), 0, 0);
+  will-change: transform;
+}
+
+.pin-board-stage.swipe-transition {
+  transition: transform 240ms ease;
 }
 
 .feed-head {
@@ -1466,6 +1476,10 @@ button {
 
   .topbar-board-title .feed-kicker {
     display: none;
+  }
+
+  .pin-board-stage {
+    touch-action: pan-y;
   }
 
   .mobile-board-sheet {

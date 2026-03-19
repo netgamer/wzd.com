@@ -705,6 +705,8 @@ const App = () => {
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [boardSwipeOffset, setBoardSwipeOffset] = useState(0);
+  const [boardSwipeTransition, setBoardSwipeTransition] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteQuery, setInviteQuery] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -732,6 +734,7 @@ const App = () => {
     y: 0,
     active: false
   });
+  const boardSwipeAnimatingRef = useRef(false);
 
   const orderedBoards = useMemo(() => sortBoards(boards), [boards]);
   const activeBoards = useMemo(() => orderedBoards.filter((board) => !isBoardTrashed(board)), [orderedBoards]);
@@ -1973,29 +1976,64 @@ const App = () => {
     await supabase.auth.signOut();
   };
 
-  const moveSelectedBoard = (direction: "prev" | "next") => {
+  const getAdjacentBoard = (direction: "prev" | "next") => {
     if (!selectedBoard || activeBoards.length < 2 || feedMode !== "active") {
-      return;
+      return null;
     }
 
     const currentIndex = activeBoards.findIndex((board) => board.id === selectedBoard.id);
     if (currentIndex < 0) {
-      return;
+      return null;
     }
 
     const delta = direction === "next" ? 1 : -1;
-    const nextBoard = activeBoards[currentIndex + delta];
-    if (!nextBoard) {
+    return activeBoards[currentIndex + delta] ?? null;
+  };
+
+  const animateBoardSwipe = (direction: "prev" | "next") => {
+    if (boardSwipeAnimatingRef.current || !mobileViewport) {
       return;
     }
 
-    setSelectedBoardId(nextBoard.id);
-    setSelectedNoteId(null);
-    setFeedMode("active");
+    const nextBoard = getAdjacentBoard(direction);
+    if (!nextBoard) {
+      setBoardSwipeTransition(true);
+      setBoardSwipeOffset(0);
+      window.setTimeout(() => setBoardSwipeTransition(false), 220);
+      return;
+    }
+
+    const viewportWidth = Math.max(window.innerWidth, 320);
+    const exitOffset = direction === "next" ? -viewportWidth : viewportWidth;
+    const enterOffset = direction === "next" ? viewportWidth : -viewportWidth;
+
+    boardSwipeAnimatingRef.current = true;
+    setBoardSwipeTransition(true);
+    setBoardSwipeOffset(exitOffset);
+
+    window.setTimeout(() => {
+      setSelectedBoardId(nextBoard.id);
+      setSelectedNoteId(null);
+      setFeedMode("active");
+      setBoardSwipeTransition(false);
+      setBoardSwipeOffset(enterOffset);
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          setBoardSwipeTransition(true);
+          setBoardSwipeOffset(0);
+
+          window.setTimeout(() => {
+            setBoardSwipeTransition(false);
+            boardSwipeAnimatingRef.current = false;
+          }, 240);
+        });
+      });
+    }, 190);
   };
 
   const onBoardTouchStart = (event: ReactTouchEvent<HTMLElement>) => {
-    if (!mobileViewport || feedMode !== "active" || activeBoards.length < 2) {
+    if (!mobileViewport || feedMode !== "active" || activeBoards.length < 2 || boardSwipeAnimatingRef.current) {
       boardSwipeStartRef.current.active = false;
       return;
     }
@@ -2022,6 +2060,36 @@ const App = () => {
       y: touch.clientY,
       active: true
     };
+    setBoardSwipeTransition(false);
+  };
+
+  const onBoardTouchMove = (event: ReactTouchEvent<HTMLElement>) => {
+    if (!boardSwipeStartRef.current.active || !mobileViewport || boardSwipeAnimatingRef.current) {
+      return;
+    }
+
+    const touch = event.touches[0];
+    if (!touch) {
+      return;
+    }
+
+    const deltaX = touch.clientX - boardSwipeStartRef.current.x;
+    const deltaY = touch.clientY - boardSwipeStartRef.current.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (absX < 10 || absX <= absY * 1.1) {
+      return;
+    }
+
+    const direction = deltaX < 0 ? "next" : "prev";
+    const hasAdjacentBoard = Boolean(getAdjacentBoard(direction));
+    const limitedOffset = hasAdjacentBoard ? deltaX : deltaX * 0.35;
+    setBoardSwipeOffset(limitedOffset);
+
+    if (event.cancelable) {
+      event.preventDefault();
+    }
   };
 
   const onBoardTouchEnd = (event: ReactTouchEvent<HTMLElement>) => {
@@ -2041,13 +2109,16 @@ const App = () => {
     const absY = Math.abs(deltaY);
 
     if (absX < 72 || absX <= absY * 1.3) {
+      setBoardSwipeTransition(true);
+      setBoardSwipeOffset(0);
+      window.setTimeout(() => setBoardSwipeTransition(false), 220);
       return;
     }
 
     if (deltaX < 0) {
-      moveSelectedBoard("next");
+      animateBoardSwipe("next");
     } else {
-      moveSelectedBoard("prev");
+      animateBoardSwipe("prev");
     }
   };
 
@@ -2494,7 +2565,14 @@ const App = () => {
           </div>
         )}
 
-        <main className="pin-main" onTouchStart={onBoardTouchStart} onTouchEnd={onBoardTouchEnd}>
+        <main className="pin-main">
+          <div
+            className={`pin-board-stage ${boardSwipeTransition ? "swipe-transition" : ""}`}
+            style={{ "--board-swipe-offset": `${boardSwipeOffset}px` } as CSSProperties}
+            onTouchStart={onBoardTouchStart}
+            onTouchMove={onBoardTouchMove}
+            onTouchEnd={onBoardTouchEnd}
+          >
           <section className="feed-head">
             <div className="feed-meta">
               <span>
@@ -2958,6 +3036,7 @@ const App = () => {
               {visibleNoteCount < filteredNotes.length
               ? "아래로 스크롤하면 메모가 계속 로드됩니다."
               : `${filteredNotes.length}개의 메모가 모두 표시되었습니다.`}
+          </div>
           </div>
         </main>
 
