@@ -704,6 +704,7 @@ const App = () => {
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsSection, setSettingsSection] = useState<"menu" | "trash">("menu");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [boardSwipeOffset, setBoardSwipeOffset] = useState(0);
   const [boardSwipeTransition, setBoardSwipeTransition] = useState(false);
@@ -1110,6 +1111,14 @@ const App = () => {
   }, [canInviteBoard, selectedBoard?.id]);
 
   useEffect(() => {
+    if (!settingsOpen || !selectedBoard || !isBoardOwner) {
+      return;
+    }
+
+    void refreshBoardMembers(selectedBoard.id);
+  }, [settingsOpen, selectedBoard?.id, isBoardOwner]);
+
+  useEffect(() => {
     if (!inviteOpen) {
       return;
     }
@@ -1405,6 +1414,34 @@ const App = () => {
     setSelectedBoardId(boardId);
     setFeedMode("active");
     setSettingsOpen(false);
+  };
+
+  const archiveSelectedBoard = () => {
+    if (!selectedBoard || !isBoardOwner) {
+      return;
+    }
+
+    const trashAt = nowIso();
+    const remainingBoards = activeBoards.filter((board) => board.id !== selectedBoard.id);
+    const fallbackBoardId = remainingBoards[0]?.id ?? null;
+
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === selectedBoard.id
+          ? {
+              ...board,
+              updatedAt: trashAt,
+              settings: {
+                ...board.settings,
+                trashedAt: trashAt
+              }
+            }
+          : board
+      )
+    );
+    setSelectedBoardId(fallbackBoardId);
+    setSelectedNoteId(null);
+    setSettingsSection("trash");
   };
 
   const shareBoard = async () => {
@@ -1976,6 +2013,11 @@ const App = () => {
     await supabase.auth.signOut();
   };
 
+  const openBoardSettings = () => {
+    setSettingsSection("menu");
+    setSettingsOpen(true);
+  };
+
   const getAdjacentBoard = (direction: "prev" | "next") => {
     if (!selectedBoard || activeBoards.length < 2 || feedMode !== "active") {
       return null;
@@ -2263,6 +2305,11 @@ const App = () => {
   const previousBoard = getAdjacentBoard("prev");
   const nextSwipeBoard = getAdjacentBoard("next");
   const mobileSwipeEnabled = mobileViewport && feedMode === "active" && activeBoards.length > 1;
+  const boardOwnerLabel = selectedBoard
+    ? isBoardOwner
+      ? user?.email || "현재 사용자"
+      : selectedBoard.userId
+    : "";
 
   const showExpandedSidebar = sidebarExpanded && !compactSidebar;
 
@@ -2352,7 +2399,13 @@ const App = () => {
 
         <button
           className={`side-icon subtle settings-icon ${settingsOpen ? "active" : ""}`}
-          onClick={() => setSettingsOpen((prev) => !prev)}
+          onClick={() => {
+            if (settingsOpen) {
+              setSettingsOpen(false);
+            } else {
+              openBoardSettings();
+            }
+          }}
           aria-label="설정"
         >
           <span className="side-icon-glyph settings-glyph" aria-hidden="true">
@@ -2459,7 +2512,7 @@ const App = () => {
               </button>
             )}
             {canBoardSettings && (
-              <button className="ghost-action" onClick={() => setSettingsOpen(true)}>
+              <button className="ghost-action" onClick={openBoardSettings}>
                 보드 설정
               </button>
             )}
@@ -2551,7 +2604,7 @@ const App = () => {
                 <button
                   className={`mobile-board-action ${settingsOpen ? "active" : ""}`}
                   onClick={() => {
-                    setSettingsOpen(true);
+                    openBoardSettings();
                     setMobileBoardMenuOpen(false);
                   }}
                 >
@@ -2571,65 +2624,152 @@ const App = () => {
               <div className="settings-panel-head">
                 <div>
                   <p className="settings-kicker">설정</p>
-                  <h2>휴지통</h2>
+                  <h2>{settingsSection === "trash" ? "휴지통" : "보드 설정"}</h2>
                 </div>
-                <button className="settings-close" onClick={() => setSettingsOpen(false)} aria-label="설정 닫기">
-                  ×
-                </button>
+                <div className="settings-head-actions">
+                  {settingsSection === "trash" && (
+                    <button className="settings-back" onClick={() => setSettingsSection("menu")}>
+                      뒤로
+                    </button>
+                  )}
+                  <button className="settings-close" onClick={() => setSettingsOpen(false)} aria-label="설정 닫기">
+                    ×
+                  </button>
+                </div>
               </div>
 
-              <div className="settings-section">
-                <div className="settings-section-head">
-                  <strong>삭제된 보드</strong>
-                  <span>{sortedTrashedBoards.length}개</span>
-                </div>
-                {sortedTrashedBoards.length === 0 ? (
-                  <p className="settings-empty">30일 안에 복구할 보드가 없습니다.</p>
-                ) : (
-                  <div className="trash-list">
-                    {sortedTrashedBoards.map((board) => (
-                      <div key={`trash-board-${board.id}`} className="trash-item">
-                        <div className="trash-copy">
-                          <strong>{board.title}</strong>
-                          <span>{getBoardTrashedAt(board)?.slice(0, 10)}까지 복구 가능</span>
-                        </div>
-                        <button className="trash-restore" onClick={() => restoreBoard(board.id)}>
-                          복구
-                        </button>
-                      </div>
-                    ))}
+              {settingsSection === "menu" ? (
+                <>
+                  <div className="settings-menu-grid">
+                    <button className="settings-menu-card" onClick={() => setSettingsSection("trash")}>
+                      <span className="settings-menu-title">휴지통</span>
+                      <span className="settings-menu-meta">
+                        삭제된 보드 {sortedTrashedBoards.length}개 · 삭제된 메모 {sortedTrashedNotes.length}개
+                      </span>
+                    </button>
                   </div>
-                )}
-              </div>
 
-              <div className="settings-section">
-                <div className="settings-section-head">
-                  <strong>삭제된 메모</strong>
-                  <span>{sortedTrashedNotes.length}개</span>
-                </div>
-                {sortedTrashedNotes.length === 0 ? (
-                  <p className="settings-empty">30일 안에 복구할 메모가 없습니다.</p>
-                ) : (
-                  <div className="trash-list">
-                    {sortedTrashedNotes.map((note) => {
-                      const noteBoard = boards.find((board) => board.id === note.boardId);
-                      return (
-                        <div key={`trash-note-${note.id}`} className="trash-item">
-                          <div className="trash-copy">
-                            <strong>{getNoteTitle(note.content)}</strong>
-                            <span>
-                              {noteBoard?.title ?? "알 수 없는 보드"} · {getNoteTrashedAt(note)?.slice(0, 10)}까지 복구 가능
-                            </span>
+                  {selectedBoard && (
+                    <>
+                      <div className="settings-section">
+                        <div className="settings-section-head">
+                          <strong>보드 관리</strong>
+                        </div>
+                        <div className="settings-info-list">
+                          <div className="settings-info-item">
+                            <span className="settings-info-label">보드 소유자</span>
+                            <strong>{boardOwnerLabel}</strong>
                           </div>
-                          <button className="trash-restore" onClick={() => restoreNote(note.id)}>
-                            복구
+                          <div className="settings-info-item">
+                            <span className="settings-info-label">편집자</span>
+                            <strong>{boardMembers.length}명</strong>
+                          </div>
+                        </div>
+                        <div className="invite-member-list compact">
+                          {boardMembers.length === 0 ? (
+                            <p className="settings-empty">아직 초대된 편집자가 없습니다.</p>
+                          ) : (
+                            boardMembers.map((member) => (
+                              <div className="invite-member-item" key={member.userId}>
+                                <div className="invite-user-copy">
+                                  <strong>{member.displayName || member.email}</strong>
+                                  {member.displayName && <span>{member.email}</span>}
+                                </div>
+                                <span className="chip-badge">편집 가능</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        {canInviteBoard && (
+                          <button
+                            className="ghost-action"
+                            onClick={() => {
+                              setSettingsOpen(false);
+                              void openInvitePanel();
+                            }}
+                          >
+                            편집자 초대 관리
+                          </button>
+                        )}
+                      </div>
+
+                      {isBoardOwner && (
+                        <div className="settings-section">
+                          <div className="settings-section-head">
+                            <strong>보드 삭제</strong>
+                          </div>
+                          <p className="settings-empty">
+                            보드를 삭제하면 휴지통으로 이동하며 {TRASH_RETENTION_DAYS}일 안에 복구할 수 있습니다.
+                          </p>
+                          <button
+                            className="ghost-action ghost-danger"
+                            onClick={() => {
+                              archiveSelectedBoard();
+                            }}
+                          >
+                            보드 삭제
                           </button>
                         </div>
-                      );
-                    })}
+                      )}
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="settings-section">
+                    <div className="settings-section-head">
+                      <strong>삭제된 보드</strong>
+                      <span>{sortedTrashedBoards.length}개</span>
+                    </div>
+                    {sortedTrashedBoards.length === 0 ? (
+                      <p className="settings-empty">30일 안에 복구할 보드가 없습니다.</p>
+                    ) : (
+                      <div className="trash-list">
+                        {sortedTrashedBoards.map((board) => (
+                          <div key={`trash-board-${board.id}`} className="trash-item">
+                            <div className="trash-copy">
+                              <strong>{board.title}</strong>
+                              <span>{getBoardTrashedAt(board)?.slice(0, 10)}까지 복구 가능</span>
+                            </div>
+                            <button className="trash-restore" onClick={() => restoreBoard(board.id)}>
+                              복구
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+
+                  <div className="settings-section">
+                    <div className="settings-section-head">
+                      <strong>삭제된 메모</strong>
+                      <span>{sortedTrashedNotes.length}개</span>
+                    </div>
+                    {sortedTrashedNotes.length === 0 ? (
+                      <p className="settings-empty">30일 안에 복구할 메모가 없습니다.</p>
+                    ) : (
+                      <div className="trash-list">
+                        {sortedTrashedNotes.map((note) => {
+                          const noteBoard = boards.find((board) => board.id === note.boardId);
+                          return (
+                            <div key={`trash-note-${note.id}`} className="trash-item">
+                              <div className="trash-copy">
+                                <strong>{getNoteTitle(note.content)}</strong>
+                                <span>
+                                  {noteBoard?.title ?? "알 수 없는 보드"} · {getNoteTrashedAt(note)?.slice(0, 10)}까지 복구 가능
+                                </span>
+                              </div>
+                              <button className="trash-restore" onClick={() => restoreNote(note.id)}>
+                                복구
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </section>
           </div>
         )}

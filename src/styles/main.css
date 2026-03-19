@@ -604,8 +604,15 @@ button {
   font-size: 28px;
 }
 
+.settings-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .settings-close,
-.trash-restore {
+.trash-restore,
+.settings-back {
   min-height: 40px;
   padding: 0 14px;
   border-radius: 999px;
@@ -619,10 +626,68 @@ button {
   line-height: 1;
 }
 
+.settings-back {
+  background: var(--surface-soft);
+  color: var(--text);
+  font-weight: 700;
+}
+
 .settings-section {
   margin-top: 18px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
+}
+
+.settings-menu-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.settings-menu-card {
+  width: 100%;
+  text-align: left;
+  padding: 18px;
+  border-radius: 22px;
+  background: var(--surface-soft);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.settings-menu-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.settings-menu-meta,
+.settings-info-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.settings-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.settings-info-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--surface-soft);
+}
+
+.settings-info-item strong {
+  text-align: right;
+  word-break: break-all;
 }
 
 .invite-search-row {
@@ -645,6 +710,10 @@ button {
   flex-direction: column;
   gap: 10px;
   margin-top: 12px;
+}
+
+.invite-member-list.compact {
+  margin-bottom: 12px;
 }
 
 .invite-result-item,
@@ -1371,6 +1440,8 @@ button {
 .side-icon:focus-visible,
 .pin-brand:focus-visible,
 .settings-close:focus-visible,
+.settings-back:focus-visible,
+.settings-menu-card:focus-visible,
 .trash-restore:focus-visible,
 .floating-trash:focus-visible {
   outline: 2px solid var(--focus);
