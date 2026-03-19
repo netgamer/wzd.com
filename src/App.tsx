@@ -1422,6 +1422,11 @@ const App = () => {
       return;
     }
 
+    const confirmed = window.confirm("보드는 30일동안 보관되며 복구가 불가능합니다. 정말 삭제하시겠습니까?");
+    if (!confirmed) {
+      return;
+    }
+
     const trashAt = nowIso();
     const remainingBoards = activeBoards.filter((board) => board.id !== selectedBoard.id);
     const fallbackBoardId = remainingBoards[0]?.id ?? null;
