@@ -431,6 +431,14 @@ const getLinkDisplaySite = (preview: LinkPreview | null | undefined) => {
   return (preview.siteName || preview.hostname).replace(/^www\./i, "");
 };
 
+const getLinkDisplayHost = (preview: LinkPreview | null | undefined) => {
+  if (!preview) {
+    return "";
+  }
+
+  return preview.hostname.replace(/^www\./i, "");
+};
+
 const getLinkDisplayTitle = (content: unknown, noteUrl: string, preview: LinkPreview | null | undefined) => {
   const noteTitle = getNoteTitle(content);
 
@@ -2158,6 +2166,7 @@ const App = () => {
                     ? getLinkDisplayDescription(note.content, noteUrl, linkPreview)
                     : previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.");
                   const displaySite = hasExternalLink ? getLinkDisplaySite(linkPreview) : "";
+                  const displayHost = hasExternalLink ? getLinkDisplayHost(linkPreview) : "";
 
                   return (
                     <article
@@ -2214,7 +2223,20 @@ const App = () => {
                                     />
                                   )}
                                   <span className="link-preview-meta">
-                                    <span className="link-preview-site">{displaySite || linkPreview.hostname}</span>
+                                    <span className="link-preview-site-row">
+                                      {linkPreview.favicon && (
+                                        <img
+                                          className="link-preview-favicon"
+                                          src={getImageProxyUrl(linkPreview.favicon)}
+                                          alt=""
+                                          aria-hidden="true"
+                                        />
+                                      )}
+                                      <span className="link-preview-site">{displaySite || linkPreview.hostname}</span>
+                                      {displayHost && displayHost !== displaySite && (
+                                        <span className="link-preview-host">{displayHost}</span>
+                                      )}
+                                    </span>
                                     <span className="link-preview-title">{displayTitle}</span>
                                     {displayDescription && (
                                       <span className="link-preview-description">{displayDescription}</span>
@@ -3006,6 +3028,7 @@ const App = () => {
                       ? getLinkDisplayDescription(note.content, noteUrl, linkPreview)
                       : previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.");
                     const displaySite = hasExternalLink ? getLinkDisplaySite(linkPreview) : "";
+                    const displayHost = hasExternalLink ? getLinkDisplayHost(linkPreview) : "";
                     const hideHoverMetadata = Boolean(attachedImageUrl && hasExternalLink && !selected);
                     const useImageHeroCard = hasImagePreview && !selected;
                     const isFramedLinkNote = feedMode === "active" && hasExternalLink;
@@ -3345,8 +3368,21 @@ const App = () => {
                                             />
                                           )}
                                           <span className="link-preview-meta">
-                                            <span className="link-preview-site">
-                                              {displaySite || linkPreview.hostname}
+                                            <span className="link-preview-site-row">
+                                              {linkPreview.favicon && (
+                                                <img
+                                                  className="link-preview-favicon"
+                                                  src={getImageProxyUrl(linkPreview.favicon)}
+                                                  alt=""
+                                                  aria-hidden="true"
+                                                />
+                                              )}
+                                              <span className="link-preview-site">
+                                                {displaySite || linkPreview.hostname}
+                                              </span>
+                                              {displayHost && displayHost !== displaySite && (
+                                                <span className="link-preview-host">{displayHost}</span>
+                                              )}
                                             </span>
                                             <span className="link-preview-title">{displayTitle}</span>
                                             {displayDescription && (

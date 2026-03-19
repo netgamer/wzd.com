@@ -1370,11 +1370,40 @@ button {
   padding: 0 12px 12px;
 }
 
+.link-preview-site-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.link-preview-favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  background: rgba(31, 26, 19, 0.06);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+}
+
 .link-preview-site {
   color: var(--muted);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-preview-host {
+  color: rgba(77, 64, 51, 0.58);
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .link-preview-title {

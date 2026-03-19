@@ -6,6 +6,7 @@ export interface LinkPreview {
   description: string;
   image: string;
   siteName: string;
+  favicon: string;
 }
 
 const API_BASE =

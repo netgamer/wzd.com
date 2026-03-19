@@ -21,7 +21,10 @@ const buildFallbackPreview = (targetUrl) => {
   const hostname = targetUrl.hostname.replace(/^www\./i, "");
   const compactPath = `${targetUrl.pathname}${targetUrl.search}`.replace(/\/+$/, "") || "/";
   const titleBase = compactPath === "/" ? hostname : compactPath.split("/").filter(Boolean).pop() || hostname;
-  const title = decodeURIComponent(titleBase).replace(/[-_]+/g, " ").slice(0, 80) || hostname;
+  const title = decodeURIComponent(titleBase)
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .slice(0, 80) || hostname;
 
   return {
     url: targetUrl.toString(),
@@ -30,7 +33,8 @@ const buildFallbackPreview = (targetUrl) => {
     title,
     description: `${hostname}${compactPath}`.slice(0, 140),
     image: "",
-    siteName: hostname
+    siteName: hostname,
+    favicon: `${targetUrl.origin}/favicon.ico`
   };
 };
 
@@ -82,6 +86,12 @@ export const onRequestGet = async ({ request }) => {
       /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["'][^>]*>/i,
       /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["'][^>]*>/i
     ]);
+    const favicon = matchMetaContent(html, [
+      /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>/i,
+      /<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*icon[^"']*["'][^>]*>/i,
+      /<link[^>]+rel=["']apple-touch-icon[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>/i,
+      /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']apple-touch-icon[^"']*["'][^>]*>/i
+    ]);
     const siteName = matchMetaContent(html, [
       /<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["'][^>]*>/i,
       /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:site_name["'][^>]*>/i
@@ -96,7 +106,8 @@ export const onRequestGet = async ({ request }) => {
         title,
         description,
         image: image ? new URL(image, finalUrl).toString() : "",
-        siteName
+        siteName,
+        favicon: favicon ? new URL(favicon, finalUrl).toString() : `${finalUrl.origin}/favicon.ico`
       }
     });
   } catch (error) {
