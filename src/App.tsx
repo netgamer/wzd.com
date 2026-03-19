@@ -36,6 +36,64 @@ type LinkPreviewState = LinkPreview | null;
 type RssFeedState = RssFeedPreview | null;
 type WidgetType = "note" | "rss" | "bookmark";
 
+const EditIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M4 20h4l10.5-10.5a1.41 1.41 0 0 0 0-2L16.5 5a1.41 1.41 0 0 0-2 0L4 15.5V20Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M13.5 6.5l4 4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M4 7h16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M10 3h4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6 7l1 13h10l1-13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M10 11v5M14 11v5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
 const VISIBLE_NOTE_BATCH_SIZE = 16;
@@ -2073,7 +2131,9 @@ const App = () => {
                                 aria-label={feedMode === "active" ? "메모 수정" : "메모 복구"}
                                 title={feedMode === "active" ? "메모 수정" : "메모 복구"}
                               >
-                                {feedMode === "active" ? "수정" : "복구"}
+                                <span className="pin-icon-glyph">
+                                  <EditIcon />
+                                </span>
                               </button>
                               <button
                                 className="pin-icon-button danger"
@@ -2088,7 +2148,9 @@ const App = () => {
                                 aria-label={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
                                 title={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
                               >
-                                {feedMode === "active" ? "삭제" : "영구"}
+                                <span className="pin-icon-glyph">
+                                  <TrashIcon />
+                                </span>
                               </button>
                             </div>
                           </div>

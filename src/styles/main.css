@@ -857,6 +857,20 @@ button {
   color: var(--accent);
 }
 
+.pin-icon-glyph {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-icon-glyph svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
 .pin-card-body {
   padding: 0 14px 14px;
   display: flex;
