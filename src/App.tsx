@@ -1652,14 +1652,6 @@ const App = () => {
           +
         </button>
 
-        <button
-          className={`side-icon ${feedMode === "archived" ? "active" : ""}`}
-          onClick={() => setFeedMode((prev) => (prev === "archived" ? "active" : "archived"))}
-          aria-label="보관 메모"
-        >
-          □
-        </button>
-
         <div className="sidebar-spacer" />
 
         <button
@@ -1832,19 +1824,6 @@ const App = () => {
                     +
                   </span>
                   <span>보드 추가</span>
-                </button>
-                <button
-                  className={`mobile-board-action ${feedMode === "archived" ? "active" : ""}`}
-                  onClick={() => {
-                    setFeedMode((prev) => (prev === "archived" ? "active" : "archived"));
-                    setSelectedNoteId(null);
-                    setMobileBoardMenuOpen(false);
-                  }}
-                >
-                  <span className="mobile-board-action-icon" aria-hidden="true">
-                    □
-                  </span>
-                  <span>보관 메모</span>
                 </button>
                 <button
                   className={`mobile-board-action ${settingsOpen ? "active" : ""}`}
