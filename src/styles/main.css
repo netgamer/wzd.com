@@ -794,7 +794,7 @@ button {
   right: 0;
   z-index: 2;
   padding: 12px;
-  background: linear-gradient(180deg, rgba(8, 8, 8, 0.34), rgba(8, 8, 8, 0));
+  background: transparent;
 }
 
 .pin-card.image-note .pin-dot {
@@ -989,8 +989,8 @@ button {
   bottom: 0;
   z-index: 2;
   padding: 44px 16px 16px;
-  color: #fff;
-  background: linear-gradient(180deg, rgba(9, 9, 9, 0) 0%, rgba(9, 9, 9, 0.32) 35%, rgba(9, 9, 9, 0.78) 100%);
+  color: var(--text);
+  background: transparent;
   transform: translateY(18px);
   opacity: 0;
   transition: transform 180ms ease, opacity 180ms ease;
@@ -1015,8 +1015,8 @@ button {
 
 .pin-card.image-note .pin-title,
 .pin-card.image-note .pin-body-preview {
-  color: #fff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  text-shadow: none;
 }
 
 .pin-body-preview {
