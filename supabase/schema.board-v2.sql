@@ -13,6 +13,21 @@ begin
 end;
 $$;
 
+create or replace function public.is_board_owner(target_board_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.boards b
+    where b.id = target_board_id
+      and b.user_id = auth.uid()
+  );
+$$;
+
 create table if not exists public.boards (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -320,14 +335,7 @@ drop policy if exists "board members owner read" on public.board_members;
 create policy "board members owner read"
 on public.board_members
 for select
-using (
-  exists (
-    select 1
-    from public.boards b
-    where b.id = board_id
-      and b.user_id = auth.uid()
-  )
-);
+using (public.is_board_owner(board_id));
 
 drop policy if exists "board members self read" on public.board_members;
 create policy "board members self read"
@@ -339,19 +347,5 @@ drop policy if exists "board members owner mutate" on public.board_members;
 create policy "board members owner mutate"
 on public.board_members
 for all
-using (
-  exists (
-    select 1
-    from public.boards b
-    where b.id = board_id
-      and b.user_id = auth.uid()
-  )
-)
-with check (
-  exists (
-    select 1
-    from public.boards b
-    where b.id = board_id
-      and b.user_id = auth.uid()
-  )
-);
+using (public.is_board_owner(board_id))
+with check (public.is_board_owner(board_id));
