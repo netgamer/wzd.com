@@ -83,6 +83,8 @@ button {
 
 .board-switcher > div {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .board-menu {
@@ -159,14 +161,14 @@ button {
 }
 
 .pin-sidebar:not(.expanded) .board-chip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   padding: 0;
 }
 
 .pin-sidebar:not(.expanded) .board-chip-badge {
   margin: 0;
+  line-height: 1;
 }
 
 .pin-sidebar:not(.expanded) .board-chip-label {
@@ -212,6 +214,10 @@ button {
 
 .pin-sidebar.expanded .board-switcher {
   align-items: stretch;
+}
+
+.pin-sidebar.expanded .board-switcher > div {
+  justify-content: stretch;
 }
 
 .pin-sidebar.expanded .board-chip-label {
