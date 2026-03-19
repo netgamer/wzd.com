@@ -418,6 +418,52 @@ const getNoteTitle = (content: unknown) => {
   return firstLine.slice(0, 48);
 };
 
+const isPlaceholderNoteTitle = (value: string) => {
+  const trimmed = value.trim();
+  return !trimmed || trimmed === "새 메모";
+};
+
+const getLinkDisplaySite = (preview: LinkPreview | null | undefined) => {
+  if (!preview) {
+    return "";
+  }
+
+  return (preview.siteName || preview.hostname).replace(/^www\./i, "");
+};
+
+const getLinkDisplayTitle = (content: unknown, noteUrl: string, preview: LinkPreview | null | undefined) => {
+  const noteTitle = getNoteTitle(content);
+
+  if (!preview) {
+    return noteTitle;
+  }
+
+  if (!isPlaceholderNoteTitle(noteTitle)) {
+    return noteTitle;
+  }
+
+  return preview.title || getLinkDisplaySite(preview) || getUrlSnippet(noteUrl) || noteTitle;
+};
+
+const getLinkDisplayDescription = (content: unknown, noteUrl: string, preview: LinkPreview | null | undefined) => {
+  const cleaned = stripUrls(content)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const noteTitle = getNoteTitle(content);
+  const bodyText = cleaned.filter((line, index) => !(index === 0 && line === noteTitle)).join(" ").trim();
+
+  if (bodyText) {
+    return bodyText;
+  }
+
+  if (preview?.description?.trim()) {
+    return preview.description.trim();
+  }
+
+  return getUrlSnippet(noteUrl);
+};
+
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
 const getSharedBoardSlugFromLocation = () => {
   if (typeof window === "undefined") {
@@ -2105,6 +2151,13 @@ const App = () => {
                   const previewText = stripUrls(note.content);
                   const hasExternalLink = Boolean(noteUrl && !isImageUrl(noteUrl));
                   const linkPreview = hasExternalLink ? linkPreviews[noteUrl] : undefined;
+                  const displayTitle = hasExternalLink
+                    ? getLinkDisplayTitle(note.content, noteUrl, linkPreview)
+                    : getNoteTitle(note.content);
+                  const displayDescription = hasExternalLink
+                    ? getLinkDisplayDescription(note.content, noteUrl, linkPreview)
+                    : previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.");
+                  const displaySite = hasExternalLink ? getLinkDisplaySite(linkPreview) : "";
 
                   return (
                     <article
@@ -2149,7 +2202,7 @@ const App = () => {
                           </>
                         ) : (
                           <div className="pin-note-stack">
-                            <p className="pin-title">{getNoteTitle(note.content)}</p>
+                            <p className="pin-title">{displayTitle}</p>
                             {hasExternalLink &&
                               (linkPreview ? (
                                 <a className="link-preview-card" href={linkPreview.finalUrl} target="_blank" rel="noreferrer">
@@ -2161,18 +2214,19 @@ const App = () => {
                                     />
                                   )}
                                   <span className="link-preview-meta">
-                                    <span className="link-preview-site">{linkPreview.siteName || linkPreview.hostname}</span>
-                                    <span className="link-preview-title">{linkPreview.title}</span>
-                                    {linkPreview.description && (
-                                      <span className="link-preview-description">{linkPreview.description}</span>
+                                    <span className="link-preview-site">{displaySite || linkPreview.hostname}</span>
+                                    <span className="link-preview-title">{displayTitle}</span>
+                                    {displayDescription && (
+                                      <span className="link-preview-description">{displayDescription}</span>
                                     )}
+                                    <span className="link-preview-url">{getUrlSnippet(noteUrl)}</span>
                                   </span>
                                 </a>
                               ) : (
                                 <span className="link-chip">{noteUrl}</span>
                               ))}
                             <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                              {previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.")}
+                              {displayDescription}
                             </p>
                           </div>
                         )}
@@ -2945,6 +2999,13 @@ const App = () => {
                     const hasImagePreview = Boolean(cardImageUrl);
                     const hasTextPreview = previewText.trim().length > 0;
                     const hasLinkPreview = hasExternalLink;
+                    const displayTitle = hasExternalLink
+                      ? getLinkDisplayTitle(note.content, noteUrl, linkPreview)
+                      : getNoteTitle(note.content);
+                    const displayDescription = hasExternalLink
+                      ? getLinkDisplayDescription(note.content, noteUrl, linkPreview)
+                      : previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.");
+                    const displaySite = hasExternalLink ? getLinkDisplaySite(linkPreview) : "";
                     const hideHoverMetadata = Boolean(attachedImageUrl && hasExternalLink && !selected);
                     const useImageHeroCard = hasImagePreview && !selected;
                     const isFramedLinkNote = feedMode === "active" && hasExternalLink;
@@ -3233,7 +3294,7 @@ const App = () => {
                             ) : (
                               <div className="pin-note-stack">
                                 {(!useImageHeroCard || (!hideHoverMetadata && (hasTextPreview || hasLinkPreview))) && (
-                                  <p className="pin-title">{getNoteTitle(note.content)}</p>
+                                  <p className="pin-title">{displayTitle}</p>
                                 )}
 
                                 {selected ? (
@@ -3285,12 +3346,13 @@ const App = () => {
                                           )}
                                           <span className="link-preview-meta">
                                             <span className="link-preview-site">
-                                              {linkPreview.siteName || linkPreview.hostname}
+                                              {displaySite || linkPreview.hostname}
                                             </span>
-                                            <span className="link-preview-title">{linkPreview.title}</span>
-                                            {linkPreview.description && (
-                                              <span className="link-preview-description">{linkPreview.description}</span>
+                                            <span className="link-preview-title">{displayTitle}</span>
+                                            {displayDescription && (
+                                              <span className="link-preview-description">{displayDescription}</span>
                                             )}
+                                            <span className="link-preview-url">{getUrlSnippet(noteUrl)}</span>
                                           </span>
                                         </a>
                                       ) : (
@@ -3306,7 +3368,7 @@ const App = () => {
                                       ))}
                                     {(!useImageHeroCard || (!hideHoverMetadata && (hasTextPreview || hasLinkPreview))) && (
                                       <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                                        {previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.")}
+                                        {displayDescription}
                                       </p>
                                     )}
                                   </>
