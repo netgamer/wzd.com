@@ -47,6 +47,27 @@ const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
 const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
+const DEFAULT_PERSONAL_NOTE_CONTENT =
+  "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80";
+const DEFAULT_GROUP_NOTE_CONTENT =
+  "그룹 메모장\n\n주제별 보드에서 각자 찾은 링크와 자료를 함께 공유해보세요.\n예: AI Studio 레퍼런스 모음";
+
+const LEGACY_TEXT_REPLACEMENTS: Array<[string, string]> = [
+  [
+    "媛쒖씤 硫붾え??n\n媛꾨떒??硫붾え, 遺곷쭏?? ?대?吏 URL??紐⑥븘?먮뒗 怨듦컙?낅땲??\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80",
+    DEFAULT_PERSONAL_NOTE_CONTENT
+  ],
+  [
+    "洹몃９ 硫붾え??n\n二쇱젣蹂?蹂대뱶?먯꽌 媛곸옄 李얠? 留곹겕? ?먮즺瑜??④퍡 怨듭쑀?대낫?몄슂.\n?? AI Studio ?덊띁?곗뒪 紐⑥쓬",
+    DEFAULT_GROUP_NOTE_CONTENT
+  ],
+  ["媛쒖씤 硫붾어", "개인 메모장"],
+  ["洹몃９ 硫붾어", "그룹 메모장"],
+  ["媛꾨떒??硫붾어, 遺곷쭏?? ?대?吏 URL??紐⑥븘?먮뒗 怨듦컙?낅땲??", "간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다."],
+  ["二쇱젣蹂?蹂대뱶?먯꽌 媛곸옄 李얠? 留곹겕? ?먮즺瑜??④퍡 怨듭쑀?대낫?몄슂.", "주제별 보드에서 각자 찾은 링크와 자료를 함께 공유해보세요."],
+  ["?? AI Studio ?덊띁?곗뒪 紐⑥쓬", "예: AI Studio 레퍼런스 모음"],
+  ["AI ?댁뒪", "AI 뉴스"]
+];
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -97,16 +118,14 @@ const createDefaultSnapshot = (): LocalSnapshot => {
       userId: "local",
       zIndex: 1,
       color: "yellow",
-      content:
-        "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
+      content: DEFAULT_PERSONAL_NOTE_CONTENT
     }),
     createNote({
       boardId: board.id,
       userId: "local",
       zIndex: 2,
       color: "mint",
-      content:
-        "그룹 메모장\n\n주제별 보드에서 각자 찾은 링크와 자료를 함께 공유해보세요.\n예: AI Studio 레퍼런스 모음"
+      content: DEFAULT_GROUP_NOTE_CONTENT
     })
   ];
 
@@ -248,6 +267,8 @@ const getNoteTitle = (content: string) => {
 };
 
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
+const normalizeLegacyText = (value: string) =>
+  LEGACY_TEXT_REPLACEMENTS.reduce((current, [from, to]) => current.split(from).join(to), value);
 const getTrashDateValue = (value: unknown) => {
   if (typeof value !== "string" || !value) {
     return null;
@@ -332,7 +353,12 @@ const isDisposableEmptyNote = (note: NoteV2) => {
 };
 
 const sanitizeNotes = (notes: NoteV2[]) =>
-  notes.filter((note) => !isDisposableEmptyNote(note) && !isTrashExpired(getNoteTrashedAt(note)));
+  notes
+    .map((note) => ({
+      ...note,
+      content: normalizeLegacyText(note.content)
+    }))
+    .filter((note) => !isDisposableEmptyNote(note) && !isTrashExpired(getNoteTrashedAt(note)));
 const pruneEmptyBoards = (snapshot: LocalSnapshot): LocalSnapshot => {
   const boards = snapshot.boards.filter((board) => !isTrashExpired(getBoardTrashedAt(board)));
   const boardIds = new Set(boards.map((board) => board.id));
@@ -1155,7 +1181,7 @@ const App = () => {
       userId: selectedBoard.userId,
       zIndex: boardMaxZ + 1,
       color: "white",
-      content: "AI ?댁뒪"
+      content: "AI 뉴스"
     });
 
     note.metadata = {
