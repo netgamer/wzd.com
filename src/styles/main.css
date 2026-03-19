@@ -799,14 +799,17 @@ button {
   min-height: 96px;
 }
 
-.swipe-preview-card .pin-card-head,
-.swipe-preview-card .pin-actions,
-.swipe-preview-card .note-color-toggle {
-  display: none;
+.preview-actions-spacer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.swipe-preview-card .pin-card-head {
+  min-height: 32px;
 }
 
 .swipe-preview-card .pin-card-body {
-  padding-top: 18px;
+  padding-top: 0;
 }
 
 .mobile-swipe-empty {

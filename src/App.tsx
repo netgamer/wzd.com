@@ -2044,26 +2044,90 @@ const App = () => {
             panelData.columns.map((columnNotes, columnIndex) => (
               <div key={`${side}-column-${columnIndex}`} className="pin-column">
                 {columnNotes.map((note) => {
+                  const fontSize = getNoteFontSize(note);
+                  const widgetType = getWidgetType(note);
+                  const isRssWidget = widgetType === "rss";
+                  const isBookmarkWidget = widgetType === "bookmark";
+                  const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
+                  const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
+                  const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
                   const attachedImageUrl = getAttachedImageUrl(note);
                   const noteUrl = extractFirstUrl(note.content);
                   const cardImageUrl = attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : "");
                   const previewText = stripUrls(note.content);
+                  const hasExternalLink = Boolean(noteUrl && !isImageUrl(noteUrl));
+                  const linkPreview = hasExternalLink ? linkPreviews[noteUrl] : undefined;
 
                   return (
                     <article
                       key={`${side}-${note.id}`}
                       className={`pin-card note-${note.color} ${cardImageUrl ? "image-note" : ""} swipe-preview-card`}
                     >
+                      <div className="pin-card-head">
+                        <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
+                        <div className="pin-actions preview-actions-spacer" aria-hidden="true" />
+                      </div>
                       {cardImageUrl && (
                         <div className="pin-image-wrap">
                           <img className="pin-image" src={getImageProxyUrl(cardImageUrl)} alt={getNoteTitle(note.content)} />
                         </div>
                       )}
                       <div className="pin-card-body">
-                        <div className="pin-note-stack">
-                          <p className="pin-title">{getNoteTitle(note.content)}</p>
-                          <p className="pin-body-preview">{previewText || (noteUrl ? getUrlSnippet(noteUrl) : "")}</p>
-                        </div>
+                        {isRssWidget ? (
+                          <>
+                            <div className="widget-header">
+                              <span className="widget-badge">RSS</span>
+                              <p className="pin-title">{asText(note.content).trim() || "RSS 리더"}</p>
+                            </div>
+                            <div className="rss-widget-feed">
+                              <a className="rss-feed-source" href={rssFeed?.link || rssFeedUrl} target="_blank" rel="noreferrer">
+                                {rssFeed?.title || "RSS 피드 열기"}
+                              </a>
+                            </div>
+                          </>
+                        ) : isBookmarkWidget ? (
+                          <>
+                            <div className="widget-header">
+                              <span className="widget-badge">LINK</span>
+                              <p className="pin-title">{asText(note.content).trim() || "북마크"}</p>
+                            </div>
+                            <div className="bookmark-list">
+                              {bookmarkUrls.length > 0 ? (
+                                <span className="link-chip">{bookmarkUrls[0]}</span>
+                              ) : (
+                                <p className="rss-empty">링크를 추가하면 북마크 카드가 표시됩니다.</p>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="pin-note-stack">
+                            <p className="pin-title">{getNoteTitle(note.content)}</p>
+                            {hasExternalLink &&
+                              (linkPreview ? (
+                                <a className="link-preview-card" href={linkPreview.finalUrl} target="_blank" rel="noreferrer">
+                                  {linkPreview.image && (
+                                    <img
+                                      className="link-preview-image"
+                                      src={getImageProxyUrl(linkPreview.image)}
+                                      alt={linkPreview.title}
+                                    />
+                                  )}
+                                  <span className="link-preview-meta">
+                                    <span className="link-preview-site">{linkPreview.siteName || linkPreview.hostname}</span>
+                                    <span className="link-preview-title">{linkPreview.title}</span>
+                                    {linkPreview.description && (
+                                      <span className="link-preview-description">{linkPreview.description}</span>
+                                    )}
+                                  </span>
+                                </a>
+                              ) : (
+                                <span className="link-chip">{noteUrl}</span>
+                              ))}
+                            <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
+                              {previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.")}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </article>
                   );
