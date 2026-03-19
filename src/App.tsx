@@ -151,6 +151,9 @@ const BOARD_TEMPLATES: Array<{
   key: BoardTemplateKey;
   title: string;
   subtitle: string;
+  tag: string;
+  audience: string;
+  highlights: string[];
   backgroundStyle: BoardBackgroundStyle;
   layoutStyle?: BoardLayoutStyle;
   notes: Array<{ color: NoteColor; content: string }>;
@@ -159,6 +162,9 @@ const BOARD_TEMPLATES: Array<{
     key: "blank",
     title: "빈 보드",
     subtitle: "가장 빠르게 시작하는 깨끗한 보드",
+    tag: "빠른 시작",
+    audience: "메모를 직접 구성하고 싶은 분",
+    highlights: ["가볍게 시작", "자유로운 구성", "기본 레이아웃"],
     backgroundStyle: "paper",
     layoutStyle: "balanced",
     notes: [
@@ -172,6 +178,9 @@ const BOARD_TEMPLATES: Array<{
     key: "links",
     title: "링크 모음 보드",
     subtitle: "자료와 레퍼런스를 빠르게 수집하는 보드",
+    tag: "추천",
+    audience: "자료를 모아두는 개인 허브",
+    highlights: ["링크 수집", "레퍼런스 정리", "공유용 보드"],
     backgroundStyle: "paper",
     layoutStyle: "compact",
     notes: [
@@ -196,6 +205,9 @@ const BOARD_TEMPLATES: Array<{
     key: "content",
     title: "영상 기획 보드",
     subtitle: "주제, 훅, 레퍼런스, 대본 초안을 한 곳에",
+    tag: "콘텐츠",
+    audience: "유튜브·블로그·콘텐츠 제작자",
+    highlights: ["아이디어 정리", "훅 메모", "레퍼런스 수집"],
     backgroundStyle: "whiteboard",
     layoutStyle: "visual",
     notes: [
@@ -220,6 +232,9 @@ const BOARD_TEMPLATES: Array<{
     key: "study",
     title: "공부 자료 보드",
     subtitle: "과목별 핵심 메모와 링크를 보기 좋게 정리",
+    tag: "학습",
+    audience: "강의·자료·복습 메모를 모으는 분",
+    highlights: ["복습 포인트", "자료 링크", "체크리스트"],
     backgroundStyle: "cork",
     layoutStyle: "balanced",
     notes: [
@@ -3131,20 +3146,20 @@ const App = () => {
                     onClick={() => void addBoard(template.key)}
                   >
                     <div className={`template-card-preview template-${template.backgroundStyle}`}>
-                      <span className="template-card-badge">
-                        {template.key === "blank"
-                          ? "기본"
-                          : template.key === "links"
-                            ? "링크"
-                            : template.key === "content"
-                              ? "콘텐츠"
-                              : "공부"}
-                      </span>
+                      <span className="template-card-badge">{template.tag}</span>
                       <strong>{template.title}</strong>
                       <span>{template.subtitle}</span>
                     </div>
                     <span className="template-card-title">{template.title}</span>
                     <span className="template-card-copy">{template.subtitle}</span>
+                    <span className="template-card-audience">{template.audience}</span>
+                    <div className="template-card-highlights">
+                      {template.highlights.map((highlight) => (
+                        <span key={`${template.key}-${highlight}`} className="template-card-chip">
+                          {highlight}
+                        </span>
+                      ))}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -3461,10 +3476,12 @@ const App = () => {
                       onClick={() => void addBoard(template.key)}
                     >
                       <div className={`template-card-preview template-${template.backgroundStyle}`}>
-                        <span className="template-card-badge">{template.title}</span>
+                        <span className="template-card-badge">{template.tag}</span>
                         <strong>{template.title}</strong>
                         <span>{template.subtitle}</span>
                       </div>
+                      <span className="template-card-title">{template.title}</span>
+                      <span className="template-card-copy">{template.audience}</span>
                     </button>
                   ))}
                 </div>
@@ -3495,10 +3512,12 @@ const App = () => {
                         onClick={() => void addBoard(template.key)}
                       >
                         <div className={`template-card-preview template-${template.backgroundStyle}`}>
-                          <span className="template-card-badge">{template.title}</span>
+                          <span className="template-card-badge">{template.tag}</span>
                           <strong>{template.title}</strong>
                           <span>{template.subtitle}</span>
                         </div>
+                        <span className="template-card-title">{template.title}</span>
+                        <span className="template-card-copy">{template.audience}</span>
                       </button>
                     ))}
                   </div>
