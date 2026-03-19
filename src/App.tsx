@@ -46,7 +46,7 @@ const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
-const DEFAULT_NEW_NOTE_CONTENT = "??硫붾え\n\nhttps://";
+const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -98,7 +98,7 @@ const createDefaultSnapshot = (): LocalSnapshot => {
       zIndex: 1,
       color: "yellow",
       content:
-        "媛쒖씤 硫붾え??n\n媛꾨떒??硫붾え, 遺곷쭏?? ?대?吏 URL??紐⑥븘?먮뒗 怨듦컙?낅땲??\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
+        "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
     }),
     createNote({
       boardId: board.id,
@@ -106,7 +106,7 @@ const createDefaultSnapshot = (): LocalSnapshot => {
       zIndex: 2,
       color: "mint",
       content:
-        "洹몃９ 硫붾え??n\n二쇱젣蹂?蹂대뱶?먯꽌 媛곸옄 李얠? 留곹겕? ?먮즺瑜??④퍡 怨듭쑀?대낫?몄슂.\n?? AI Studio ?덊띁?곗뒪 紐⑥쓬"
+        "그룹 메모장\n\n주제별 보드에서 각자 찾은 링크와 자료를 함께 공유해보세요.\n예: AI Studio 레퍼런스 모음"
     })
   ];
 
@@ -243,7 +243,7 @@ const getUrlSnippet = (url: string) => {
 
 const getNoteTitle = (content: string) => {
   const cleaned = stripUrls(content);
-  const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "??硫붾え";
+  const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "새 메모";
   return firstLine.slice(0, 48);
 };
 
@@ -328,7 +328,7 @@ const isDisposableEmptyNote = (note: NoteV2) => {
     return true;
   }
 
-  return trimmed === "??硫붾え" || trimmed === "https://" || trimmed === DEFAULT_NEW_NOTE_CONTENT.trim();
+  return trimmed === "새 메모" || trimmed === "https://" || trimmed === DEFAULT_NEW_NOTE_CONTENT.trim();
 };
 
 const sanitizeNotes = (notes: NoteV2[]) =>
@@ -1036,8 +1036,8 @@ const App = () => {
     const hasRecoverableContent = boardHasRecoverableContent(selectedBoard.id);
     const shouldDelete = window.confirm(
       hasRecoverableContent
-        ? `'${selectedBoard.title}' 蹂대뱶瑜???젣?좉퉴?? 30???숈븞 ?ㅼ젙???댁??듭뿉??蹂듦뎄?????덉뒿?덈떎.`
-        : `'${selectedBoard.title}' 蹂대뱶瑜???젣?좉퉴??`
+        ? `'${selectedBoard.title}' 보드를 삭제할까요? 30일 동안 설정의 휴지통에서 복구할 수 있습니다.`
+        : `'${selectedBoard.title}' 보드를 삭제할까요?`
     );
     if (!shouldDelete) {
       return;
@@ -1622,16 +1622,16 @@ const App = () => {
           </div>
         </div>
 
-        <button className="side-icon" onClick={() => void addBoard()} aria-label="??蹂대뱶">
+        <button className="side-icon" onClick={() => void addBoard()} aria-label="새 보드">
           +
         </button>
 
         <button
           className={`side-icon ${feedMode === "archived" ? "active" : ""}`}
           onClick={() => setFeedMode((prev) => (prev === "archived" ? "active" : "archived"))}
-          aria-label="蹂닿? 硫붾え"
+          aria-label="보관 메모"
         >
-          ??
+          □
         </button>
 
         <div className="sidebar-spacer" />
@@ -1652,11 +1652,11 @@ const App = () => {
               <button
                 className="mobile-icon-action mobile-board-toggle"
                 onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
-                aria-label="蹂대뱶 硫붾돱"
+                aria-label="보드 메뉴"
               >
-                ??
+                ≡
               </button>
-              <p className="feed-kicker">{feedMode === "active" ? "媛쒖씤 蹂대뱶" : "蹂닿? 硫붾え"}</p>
+              <p className="feed-kicker">{feedMode === "active" ? "개인 보드" : "보관 메모"}</p>
               {feedMode === "active" && editingBoardTitle ? (
                 <input
                   className="board-title-input"
@@ -1687,14 +1687,14 @@ const App = () => {
                     setEditingBoardTitle(true);
                   }}
                 >
-                  {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "蹂닿? 硫붾え"}
+                  {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}
                 </h1>
               )}
             </div>
 
             <div className={`search-shell ${mobileSearchOpen ? "mobile-open" : ""}`}>
               <span className="search-icon" aria-hidden="true">
-                ??
+                ⌕
               </span>
               <input
                 ref={searchInputRef}
@@ -1723,32 +1723,32 @@ const App = () => {
               검색
             </button>
             <button className="new-note-pill" onClick={addNote}>
-              ??硫붾え
+              새 메모
             </button>
             {feedMode === "active" && selectedBoard && (
               <button className="ghost-action ghost-danger" onClick={() => void deleteBoard()}>
-                蹂대뱶 ??젣
+                보드 삭제
               </button>
             )}
             <div className="widget-menu-wrap">
               <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
-                ?꾩젽 異붽?
+                위젯 추가
               </button>
               {widgetMenuOpen && (
                 <div className="widget-menu">
                   <button className="widget-menu-item" onClick={addRssWidget}>
-                    RSS 由щ뜑
+                    RSS 리더
                   </button>
                   <button className="widget-menu-item" onClick={addBookmarkWidget}>
-                    遺곷쭏??
+                    북마크
                   </button>
                 </div>
               )}
             </div>
-            <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="??硫붾え">
+            <button className="mobile-icon-action mobile-add-note" onClick={addNote} aria-label="새 메모">
               +
             </button>
-            <button className="mobile-icon-action" onClick={() => setWidgetMenuOpen((prev) => !prev)} aria-label="?꾩젽 異붽?">
+            <button className="mobile-icon-action" onClick={() => setWidgetMenuOpen((prev) => !prev)} aria-label="위젯 추가">
               W
             </button>
             {hasSupabaseConfig ? (
@@ -1759,16 +1759,16 @@ const App = () => {
                     <span className="profile-email">{user.email}</span>
                   </div>
                   <button className="ghost-action" onClick={onLogout}>
-                    濡쒓렇?꾩썐
+                    로그아웃
                   </button>
                 </>
               ) : (
                 <button className="ghost-action" onClick={onGoogleLogin}>
-                  援ш? 濡쒓렇??
+                  구글 로그인
                 </button>
               )
             ) : (
-              <div className="profile-pill muted">濡쒖뺄 紐⑤뱶</div>
+              <div className="profile-pill muted">로컬 모드</div>
             )}
           </div>
         </header>
@@ -1870,17 +1870,17 @@ const App = () => {
               <span>
                 {hasSupabaseConfig && user
                   ? cloudSaveState === "saving"
-                    ? "?대씪?곕뱶?????以묒엯?덈떎"
+                    ? "클라우드에 저장 중입니다"
                     : cloudSaveState === "saved"
-                      ? "?대씪?곕뱶????λ릺?덉뒿?덈떎"
+                      ? "클라우드에 저장되었습니다"
                       : cloudSaveState === "error"
-                        ? "?대씪?곕뱶 ??μ뿉 ?ㅽ뙣?덉뒿?덈떎"
+                        ? "클라우드 저장에 실패했습니다"
                         : feedMode === "active"
-                          ? `${activeNotes.length}媛쒖쓽 ?`
-                          : `${archivedNotes.length}媛쒖쓽 蹂닿? 硫붾え`
+                          ? `${activeNotes.length}개의 핀`
+                          : `${archivedNotes.length}개의 보관 메모`
                   : feedMode === "active"
-                    ? `${activeNotes.length}媛쒖쓽 ?`
-                    : `${archivedNotes.length}媛쒖쓽 蹂닿? 硫붾え`}
+                    ? `${activeNotes.length}개의 핀`
+                    : `${archivedNotes.length}개의 보관 메모`}
               </span>
             </div>
           </section>
@@ -1897,12 +1897,12 @@ const App = () => {
             onDrop={(event) => onPinDrop(event, undefined, dragPreviewColumn ?? 0)}
           >
             {loading ? (
-              <div className="feed-empty">??? ???? ????.</div>
+              <div className="feed-empty">보드를 불러오는 중입니다.</div>
             ) : !selectedBoard ? (
-              <div className="feed-empty">??? + ???? ? ??? ??????.</div>
+              <div className="feed-empty">보드를 선택하거나 새 보드를 만들어주세요.</div>
             ) : visibleNotes.length === 0 ? (
               <div className="feed-empty">
-                {feedMode === "active" ? "? ??? ? ??? ??????." : "??? ??? ????."}
+                {feedMode === "active" ? "아직 메모가 없습니다." : "보관된 메모가 없습니다."}
               </div>
             ) : (
               visibleColumns.map((columnNotes, columnIndex) => (
@@ -2003,8 +2003,8 @@ const App = () => {
                                   event.stopPropagation();
                                   cycleNoteColor(note.id, note.color);
                                 }}
-                                aria-label="?? ?? ??"
-                                title="?? ?? ??"
+                                aria-label="메모 색상 변경"
+                                title="메모 색상 변경"
                               />
                               <button
                                 className="pin-icon-button"
@@ -2016,10 +2016,10 @@ const App = () => {
                                     restoreNote(note.id);
                                   }
                                 }}
-                                aria-label={feedMode === "active" ? "? ??" : "?? ??"}
-                                title={feedMode === "active" ? "? ??" : "?? ??"}
+                                aria-label={feedMode === "active" ? "핀 고정" : "메모 복구"}
+                                title={feedMode === "active" ? "핀 고정" : "메모 복구"}
                               >
-                                {feedMode === "active" ? "?" : "?"}
+                                {feedMode === "active" ? "핀" : "복구"}
                               </button>
                               <button
                                 className="pin-icon-button danger"
@@ -2031,10 +2031,10 @@ const App = () => {
                                     deleteArchivedNote(note.id);
                                   }
                                 }}
-                                aria-label={feedMode === "active" ? "?? ??" : "?? ??"}
-                                title={feedMode === "active" ? "?? ??" : "?? ??"}
+                                aria-label={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
+                                title={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
                               >
-                                {feedMode === "active" ? "?" : "?"}
+                                {feedMode === "active" ? "삭제" : "영구"}
                               </button>
                             </div>
                           </div>
@@ -2044,7 +2044,7 @@ const App = () => {
                               <>
                                 <div className="widget-header">
                                   <span className="widget-badge">RSS</span>
-                                  <p className="pin-title">{note.content.trim() || "RSS 由щ뜑"}</p>
+                                  <p className="pin-title">{note.content.trim() || "RSS 리더"}</p>
                                 </div>
                                 {selected ? (
                                   <div className="widget-editor-stack">
@@ -2061,7 +2061,7 @@ const App = () => {
                                           }
                                         })
                                       }
-                                      placeholder="RSS ?쇰뱶 URL"
+                                      placeholder="RSS 피드 URL"
                                     />
                                     <button
                                       className="widget-confirm"
@@ -2070,7 +2070,7 @@ const App = () => {
                                         setSelectedNoteId(null);
                                       }}
                                     >
-                                      ?뺤씤
+                                      확인
                                     </button>
                                   </div>
                                 ) : (
@@ -2082,7 +2082,7 @@ const App = () => {
                                       rel="noreferrer"
                                       onClick={(event) => event.stopPropagation()}
                                     >
-                                      {rssFeed?.title || "RSS ?쇰뱶 ?닿린"}
+                                      {rssFeed?.title || "RSS 피드 열기"}
                                     </a>
                                     {rssFeed?.items?.length ? (
                                       rssFeed.items.slice(0, 5).map((item) => (
@@ -2099,7 +2099,7 @@ const App = () => {
                                         </a>
                                       ))
                                     ) : (
-                                      <p className="rss-empty">RSS ??ぉ??遺덈윭?ㅻ뒗 以묒씠嫄곕굹 ?쇰뱶瑜??쎌쓣 ???놁뒿?덈떎.</p>
+                                      <p className="rss-empty">RSS 항목을 불러오는 중이거나 피드를 찾을 수 없습니다.</p>
                                     )}
                                   </div>
                                 )}
@@ -2297,9 +2297,9 @@ const App = () => {
             )}
           </section>
           <div className="infinite-scroll-status" aria-live="polite">
-            {visibleNoteCount < filteredNotes.length
-              ? "?꾨옒濡??ㅽ겕濡ㅽ븯硫?硫붾え媛 怨꾩냽 濡쒕뱶?⑸땲??"
-              : `${filteredNotes.length}媛쒖쓽 硫붾え媛 紐⑤몢 ?쒖떆?섏뿀?듬땲??`}
+              {visibleNoteCount < filteredNotes.length
+              ? "아래로 스크롤하면 메모가 계속 로드됩니다."
+              : `${filteredNotes.length}개의 메모가 모두 표시되었습니다.`}
           </div>
         </main>
 
