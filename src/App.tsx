@@ -314,8 +314,10 @@ const getNoteFontSize = (note: NoteV2): NoteFontSize => {
   return value === 14 || value === 16 || value === 18 || value === 20 ? value : DEFAULT_FONT_SIZE;
 };
 
-const normalizeExternalUrl = (value: string) => {
-  let normalized = value.trim();
+const asText = (value: unknown) => (typeof value === "string" ? value : "");
+
+const normalizeExternalUrl = (value: unknown) => {
+  let normalized = asText(value).trim();
   if (!normalized || normalized.startsWith("data:image/")) {
     return normalized;
   }
@@ -332,8 +334,8 @@ const normalizeExternalUrl = (value: string) => {
   return normalized;
 };
 
-const normalizeUrlsInText = (value: string) =>
-  value.replace(
+const normalizeUrlsInText = (value: unknown) =>
+  asText(value).replace(
     /(?:https?:\/\/https?:\/\/\S+|https?:\/\/https?\/\/\S+|https?:\/\/\S+|https?\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/gi,
     (match) => normalizeExternalUrl(match)
   );
@@ -364,8 +366,8 @@ const normalizeBookmarkMetadata = (metadata: NoteV2["metadata"]) => {
   return nextMetadata;
 };
 
-const extractFirstUrl = (content: string) => {
-  const match = content.match(
+const extractFirstUrl = (content: unknown) => {
+  const match = asText(content).match(
     /(?:https?:\/\/https?:\/\/\S+|https?:\/\/https?\/\/\S+|https?:\/\/\S+|https?\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/i
   );
   return match ? normalizeExternalUrl(match[0]) : "";
@@ -376,8 +378,8 @@ const isImageUrl = (url: string) =>
   /(\.png|\.jpe?g|\.gif|\.webp|\.avif|\.svg)(\?.*)?$/i.test(url) ||
   url.includes("images.unsplash.com");
 
-const stripUrls = (content: string) =>
-  content
+const stripUrls = (content: unknown) =>
+  asText(content)
     .replace(
       /(?:https?:\/\/https?:\/\/\S+|https?:\/\/https?\/\/\S+|https?:\/\/\S+|https?\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/gi,
       ""
@@ -399,15 +401,15 @@ const getUrlSnippet = (url: string) => {
   }
 };
 
-const getNoteTitle = (content: string) => {
+const getNoteTitle = (content: unknown) => {
   const cleaned = stripUrls(content);
   const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "새 메모";
   return firstLine.slice(0, 48);
 };
 
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
-const normalizeLegacyText = (value: string) =>
-  LEGACY_TEXT_REPLACEMENTS.reduce((current, [from, to]) => current.split(from).join(to), value);
+const normalizeLegacyText = (value: unknown) =>
+  LEGACY_TEXT_REPLACEMENTS.reduce((current, [from, to]) => current.split(from).join(to), asText(value));
 const getTrashDateValue = (value: unknown) => {
   if (typeof value !== "string" || !value) {
     return null;
@@ -486,7 +488,7 @@ const isDisposableEmptyNote = (note: NoteV2) => {
     return false;
   }
 
-  const trimmed = note.content.trim();
+  const trimmed = asText(note.content).trim();
   if (!trimmed) {
     return true;
   }
@@ -842,7 +844,7 @@ const App = () => {
       return base;
     }
 
-    return base.filter((note) => note.content.toLowerCase().includes(keyword));
+    return base.filter((note) => asText(note.content).toLowerCase().includes(keyword));
   }, [currentNotes, search]);
 
   const visibleNotes = useMemo(
@@ -2256,7 +2258,7 @@ const App = () => {
                               <>
                                 <div className="widget-header">
                                   <span className="widget-badge">RSS</span>
-                                  <p className="pin-title">{note.content.trim() || "RSS 리더"}</p>
+                                  <p className="pin-title">{asText(note.content).trim() || "RSS 리더"}</p>
                                 </div>
                                 {selected ? (
                                   <div className="widget-editor-stack">
@@ -2320,7 +2322,7 @@ const App = () => {
                               <>
                                 <div className="widget-header">
                                   <span className="widget-badge">LINK</span>
-                                  <p className="pin-title">{note.content.trim() || "북마크"}</p>
+                                  <p className="pin-title">{asText(note.content).trim() || "북마크"}</p>
                                 </div>
                                 {selected ? (
                                   <div className="widget-editor-stack">
