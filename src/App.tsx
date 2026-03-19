@@ -1424,11 +1424,13 @@ const App = () => {
         }
 
         touchedBoardId = note.boardId;
-        const normalizedPatch: Partial<NoteV2> = {
-          ...patch,
-          content: typeof patch.content === "string" ? normalizeUrlsInText(patch.content) : patch.content,
-          metadata: patch.metadata ? normalizeBookmarkMetadata(patch.metadata) : patch.metadata
-        };
+        const normalizedPatch: Partial<NoteV2> = { ...patch };
+        if (Object.prototype.hasOwnProperty.call(patch, "content")) {
+          normalizedPatch.content = typeof patch.content === "string" ? normalizeUrlsInText(patch.content) : note.content;
+        }
+        if (Object.prototype.hasOwnProperty.call(patch, "metadata")) {
+          normalizedPatch.metadata = patch.metadata ? normalizeBookmarkMetadata(patch.metadata) : note.metadata;
+        }
         return {
           ...note,
           ...normalizedPatch,
