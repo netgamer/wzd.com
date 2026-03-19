@@ -1667,7 +1667,10 @@ const App = () => {
           onClick={() => setSettingsOpen((prev) => !prev)}
           aria-label="설정"
         >
-          설
+          <span className="side-icon-glyph" aria-hidden="true">
+            ⚙
+          </span>
+          <span className="side-icon-label">설정</span>
         </button>
       </aside>
 

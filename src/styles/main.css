@@ -124,6 +124,23 @@ button {
   font-size: 18px;
 }
 
+.side-icon-glyph {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  line-height: 1;
+}
+
+.side-icon-label {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transform: translateX(-8px);
+  transition: max-width 240ms ease, opacity 180ms ease, transform 240ms ease;
+}
+
 .board-chip {
   background: var(--surface-soft);
   color: var(--text);
@@ -237,6 +254,18 @@ button {
   border-radius: 22px;
 }
 
+.pin-sidebar.expanded .side-icon {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  height: auto;
+  padding: 0 14px;
+  border-radius: 22px;
+}
+
 .pin-sidebar.expanded .board-chip-badge {
   background: rgba(31, 26, 19, 0.06);
 }
@@ -248,6 +277,12 @@ button {
 
 .pin-sidebar.expanded .board-chip-label {
   line-height: 1.2;
+}
+
+.pin-sidebar.expanded .side-icon-label {
+  max-width: 96px;
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .pin-sidebar.expanded .pin-brand,
