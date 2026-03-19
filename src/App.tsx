@@ -2688,6 +2688,7 @@ const App = () => {
   const previousBoard = getAdjacentBoard("prev");
   const nextSwipeBoard = getAdjacentBoard("next");
   const mobileSwipeEnabled = mobileViewport && feedMode === "active" && activeBoards.length > 1;
+  const starterTemplates = BOARD_TEMPLATES.filter((template) => template.key !== "blank");
   const boardOwnerLabel = selectedBoard
     ? isBoardOwner
       ? user?.email || "현재 사용자"
@@ -3345,11 +3346,64 @@ const App = () => {
             {loading ? (
               <div className="feed-empty">보드를 불러오는 중입니다.</div>
             ) : !selectedBoard ? (
-              <div className="feed-empty">보드를 선택하거나 새 보드를 만들어주세요.</div>
-            ) : visibleNotes.length === 0 ? (
-              <div className="feed-empty">
-                {feedMode === "active" ? "아직 메모가 없습니다." : "보관된 메모가 없습니다."}
+              <div className="feed-empty empty-templates">
+                <div className="feed-empty-copy">
+                  <strong>어떤 보드로 시작할까요?</strong>
+                  <span>용도에 맞는 스타터 보드를 고르면 예시 메모와 함께 바로 시작할 수 있어요.</span>
+                </div>
+                <div className="starter-template-grid">
+                  {starterTemplates.map((template) => (
+                    <button
+                      key={`empty-${template.key}`}
+                      className="template-card starter-template-card"
+                      onClick={() => void addBoard(template.key)}
+                    >
+                      <div className={`template-card-preview template-${template.backgroundStyle}`}>
+                        <span className="template-card-badge">{template.title}</span>
+                        <strong>{template.title}</strong>
+                        <span>{template.subtitle}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <button className="ghost-action starter-template-more" onClick={openTemplatePicker}>
+                  모든 템플릿 보기
+                </button>
               </div>
+            ) : visibleNotes.length === 0 ? (
+              feedMode === "active" ? (
+                <div className="feed-empty empty-templates">
+                  <div className="feed-empty-copy">
+                    <strong>이 보드를 채워볼까요?</strong>
+                    <span>새 메모를 바로 추가하거나, 템플릿 보드를 하나 더 만들어서 흐름을 참고할 수 있어요.</span>
+                  </div>
+                  <div className="feed-empty-actions">
+                    <button className="new-note-pill" onClick={addNote}>
+                      새 메모 만들기
+                    </button>
+                    <button className="ghost-action" onClick={openTemplatePicker}>
+                      템플릿 보드 보기
+                    </button>
+                  </div>
+                  <div className="starter-template-grid compact">
+                    {starterTemplates.slice(0, 3).map((template) => (
+                      <button
+                        key={`selected-empty-${template.key}`}
+                        className="template-card starter-template-card"
+                        onClick={() => void addBoard(template.key)}
+                      >
+                        <div className={`template-card-preview template-${template.backgroundStyle}`}>
+                          <span className="template-card-badge">{template.title}</span>
+                          <strong>{template.title}</strong>
+                          <span>{template.subtitle}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="feed-empty">보관된 메모가 없습니다.</div>
+              )
             ) : (
               visibleColumns.map((columnNotes, columnIndex) => (
                 <div
