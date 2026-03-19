@@ -742,6 +742,61 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   return 4;
 };
 
+type AutoLayoutCategory = "rss" | "bookmark" | "image" | "link" | "text";
+
+const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
+  const widgetType = getWidgetType(note);
+  if (widgetType === "rss") return "rss";
+  if (widgetType === "bookmark") return "bookmark";
+
+  const imageUrl = getAttachedImageUrl(note);
+  const noteUrl = extractFirstUrl(note.content);
+  if (imageUrl || (noteUrl && isImageUrl(noteUrl))) {
+    return "image";
+  }
+
+  if (noteUrl) {
+    return "link";
+  }
+
+  return "text";
+};
+
+const getPreferredColumns = (
+  note: NoteV2,
+  totalColumns: number,
+  columnHeights: number[]
+) => {
+  const allColumns = Array.from({ length: totalColumns }, (_, index) => index);
+  const category = getAutoLayoutCategory(note);
+
+  if (totalColumns <= 1) {
+    return allColumns;
+  }
+
+  if (note.pinned) {
+    return [...allColumns].sort((left, right) => columnHeights[left] - columnHeights[right]);
+  }
+
+  switch (category) {
+    case "image":
+      return [0, 1, ...allColumns.filter((index) => index > 1)];
+    case "link": {
+      const middle = Math.min(1, totalColumns - 1);
+      return [middle, 0, ...allColumns.filter((index) => index !== middle && index !== 0)];
+    }
+    case "text": {
+      const middle = Math.floor((totalColumns - 1) / 2);
+      return [middle, ...allColumns.filter((index) => index !== middle)];
+    }
+    case "bookmark":
+    case "rss":
+      return [...allColumns].reverse();
+    default:
+      return allColumns;
+  }
+};
+
 const estimateNoteVisualHeight = (note: NoteV2) => {
   const widgetType = getWidgetType(note);
   if (widgetType === "rss") return 300;
@@ -791,7 +846,15 @@ const autoOrganizeBoardNotes = (notes: NoteV2[], boardId: string, columnCount: n
   });
 
   sortedNotes.forEach((note) => {
-    const targetColumn = columnHeights.indexOf(Math.min(...columnHeights));
+    const preferredColumns = getPreferredColumns(note, columns.length, columnHeights);
+    const targetColumn =
+      preferredColumns.reduce((bestColumn, column) => {
+        if (columnHeights[column] < columnHeights[bestColumn]) {
+          return column;
+        }
+        return bestColumn;
+      }, preferredColumns[0] ?? 0) ?? 0;
+
     columns[targetColumn].push({
       ...note,
       x: 0,
