@@ -2264,9 +2264,9 @@ const App = () => {
                                 {selected ? (
                                   <>
                                     {attachedImageUrl && (
-                                      <div className="editor-image-preview">
+                                      <div className="pin-image-wrap editor-image-preview">
                                         <img
-                                          className="editor-image-preview-media"
+                                          className="pin-image editor-image-preview-media"
                                           src={getImageProxyUrl(attachedImageUrl)}
                                           alt={getNoteTitle(note.content)}
                                         />

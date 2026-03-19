@@ -874,13 +874,14 @@ button {
   overflow: hidden;
   border-radius: 18px;
   background: rgba(31, 26, 19, 0.04);
+  aspect-ratio: auto;
 }
 
 .editor-image-preview-media {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 320px;
+  max-height: 540px;
   object-fit: cover;
 }
 
