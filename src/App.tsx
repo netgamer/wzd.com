@@ -2133,15 +2133,17 @@ const App = () => {
                           <div className="pin-card-head">
                             <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
                             <div className="pin-actions">
-                              <button
-                                className={`note-color-toggle chip-${note.color}`}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  cycleNoteColor(note.id, note.color);
-                                }}
-                                aria-label="메모 색상 변경"
-                                title="메모 색상 변경"
-                              />
+                              {!useImageHeroCard && (
+                                <button
+                                  className={`note-color-toggle chip-${note.color}`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    cycleNoteColor(note.id, note.color);
+                                  }}
+                                  aria-label="메모 색상 변경"
+                                  title="메모 색상 변경"
+                                />
+                              )}
                               <button
                                 className="pin-icon-button"
                                 onClick={(event) => {
