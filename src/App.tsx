@@ -1,7 +1,7 @@
-import {
+ï»¿import {
   type CSSProperties,
   type DragEvent as ReactDragEvent,
-type TouchEvent as ReactTouchEvent,
+  type TouchEvent as ReactTouchEvent,
   useEffect,
   useMemo,
   useRef,
@@ -137,27 +137,27 @@ const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
-const DEFAULT_NEW_NOTE_CONTENT = "»õ ¸Ş¸ğ\n\nhttps://";
+const DEFAULT_NEW_NOTE_CONTENT = "ìƒˆ ë©”ëª¨\n\nhttps://";
 const DEFAULT_PERSONAL_NOTE_CONTENT =
-  "°³ÀÎ ¸Ş¸ğÀå\n\n°£´ÜÇÑ ¸Ş¸ğ, ºÏ¸¶Å©, ÀÌ¹ÌÁö URLÀ» ¸ğ¾ÆµÎ´Â °ø°£ÀÔ´Ï´Ù.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80";
+  "ê°œì¸ ë©”ëª¨ì¥\n\nê°„ë‹¨í•œ ë©”ëª¨, ë¶ë§ˆí¬, ì´ë¯¸ì§€ URLì„ ëª¨ì•„ë‘ëŠ” ê³µê°„ì…ë‹ˆë‹¤.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80";
 const DEFAULT_GROUP_NOTE_CONTENT =
-  "±×·ì ¸Ş¸ğÀå\n\nÁÖÁ¦º° º¸µå¿¡¼­ °¢ÀÚ Ã£Àº ¸µÅ©¿Í ÀÚ·á¸¦ ÇÔ²² °øÀ¯ÇØº¸¼¼¿ä.\n¿¹: AI Studio ·¹ÆÛ·±½º ¸ğÀ½";
+  "ê·¸ë£¹ ë©”ëª¨ì¥\n\nì£¼ì œë³„ ë³´ë“œì—ì„œ ê°ì ì°¾ì€ ë§í¬ì™€ ìë£Œë¥¼ í•¨ê»˜ ê³µìœ í•´ë³´ì„¸ìš”.\nì˜ˆ: AI Studio ë ˆí¼ëŸ°ìŠ¤ ëª¨ìŒ";
 
 const LEGACY_TEXT_REPLACEMENTS: Array<[string, string]> = [
   [
-    "ê°œì¸ ë©”ëª¨??n\nê°„ë‹¨??ë©”ëª¨, ë¶ë§ˆ?? ?´ë?ì§€ URL??ëª¨ì•„?ëŠ” ê³µê°„?…ë‹ˆ??\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80",
+    "åª›ì’–ì”¤ ï§ë¶¾ãˆ??n\nåª›ê¾¨ë–’??ï§ë¶¾ãˆ, éºê³·ì­?? ?ëŒ€?ï§Â€ URL??ï§â‘¥ë¸˜?ë¨®ë’— æ€¨ë“¦ì»™?ë‚…ë•²??\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80",
     DEFAULT_PERSONAL_NOTE_CONTENT
   ],
   [
-    "ê·¸ë£¹ ë©”ëª¨??n\nì£¼ì œë³?ë³´ë“œ?ì„œ ê°ì ì°¾ì? ë§í¬?€ ?ë£Œë¥??¨ê»˜ ê³µìœ ?´ë³´?¸ìš”.\n?? AI Studio ?ˆí¼?°ìŠ¤ ëª¨ìŒ",
+    "æ´¹ëªƒï¼™ ï§ë¶¾ãˆ??n\näºŒì‡±ì £è¹‚?è¹‚ëŒ€ë±¶?ë¨¯ê½Œ åª›ê³¸ì˜„ ï§¡ì– ? ï§ê³¹ê²•?Â€ ?ë¨®ì¦ºç‘œ??â‘£í¡ æ€¨ë“­ì‘€?ëŒ€ë‚«?ëª„ìŠ‚.\n?? AI Studio ?ëŠë?ê³—ë’ª ï§â‘¥ì“¬",
     DEFAULT_GROUP_NOTE_CONTENT
   ],
-  ["ê°œì¸ ë©”ë¾î", "°³ÀÎ ¸Ş¸ğÀå"],
-  ["ê·¸ë£¹ ë©”ë¾î", "±×·ì ¸Ş¸ğÀå"],
-  ["ê°„ë‹¨??ë©”ë¾î, ë¶ë§ˆ?? ?´ë?ì§€ URL??ëª¨ì•„?ëŠ” ê³µê°„?…ë‹ˆ??", "°£´ÜÇÑ ¸Ş¸ğ, ºÏ¸¶Å©, ÀÌ¹ÌÁö URLÀ» ¸ğ¾ÆµÎ´Â °ø°£ÀÔ´Ï´Ù."],
-  ["ì£¼ì œë³?ë³´ë“œ?ì„œ ê°ì ì°¾ì? ë§í¬?€ ?ë£Œë¥??¨ê»˜ ê³µìœ ?´ë³´?¸ìš”.", "ÁÖÁ¦º° º¸µå¿¡¼­ °¢ÀÚ Ã£Àº ¸µÅ©¿Í ÀÚ·á¸¦ ÇÔ²² °øÀ¯ÇØº¸¼¼¿ä."],
-  ["?? AI Studio ?ˆí¼?°ìŠ¤ ëª¨ìŒ", "¿¹: AI Studio ·¹ÆÛ·±½º ¸ğÀ½"],
-  ["AI ?´ìŠ¤", "AI ´º½º"]
+  ["åª›ì’–ì”¤ ï§ë¶¾ì–´", "ê°œì¸ ë©”ëª¨ì¥"],
+  ["æ´¹ëªƒï¼™ ï§ë¶¾ì–´", "ê·¸ë£¹ ë©”ëª¨ì¥"],
+  ["åª›ê¾¨ë–’??ï§ë¶¾ì–´, éºê³·ì­?? ?ëŒ€?ï§Â€ URL??ï§â‘¥ë¸˜?ë¨®ë’— æ€¨ë“¦ì»™?ë‚…ë•²??", "ê°„ë‹¨í•œ ë©”ëª¨, ë¶ë§ˆí¬, ì´ë¯¸ì§€ URLì„ ëª¨ì•„ë‘ëŠ” ê³µê°„ì…ë‹ˆë‹¤."],
+  ["äºŒì‡±ì £è¹‚?è¹‚ëŒ€ë±¶?ë¨¯ê½Œ åª›ê³¸ì˜„ ï§¡ì– ? ï§ê³¹ê²•?Â€ ?ë¨®ì¦ºç‘œ??â‘£í¡ æ€¨ë“­ì‘€?ëŒ€ë‚«?ëª„ìŠ‚.", "ì£¼ì œë³„ ë³´ë“œì—ì„œ ê°ì ì°¾ì€ ë§í¬ì™€ ìë£Œë¥¼ í•¨ê»˜ ê³µìœ í•´ë³´ì„¸ìš”."],
+  ["?? AI Studio ?ëŠë?ê³—ë’ª ï§â‘¥ì“¬", "ì˜ˆ: AI Studio ë ˆí¼ëŸ°ìŠ¤ ëª¨ìŒ"],
+  ["AI ?ëŒë’ª", "AI ë‰´ìŠ¤"]
 ];
 
 const makeId = () =>
@@ -413,7 +413,7 @@ const getUrlSnippet = (url: string) => {
 
 const getNoteTitle = (content: unknown) => {
   const cleaned = stripUrls(content);
-  const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "»õ ¸Ş¸ğ";
+  const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "ìƒˆ ë©”ëª¨";
   return firstLine.slice(0, 48);
 };
 
@@ -528,7 +528,7 @@ const isDisposableEmptyNote = (note: NoteV2) => {
     return true;
   }
 
-  return trimmed === "»õ ¸Ş¸ğ" || trimmed === "https://" || trimmed === DEFAULT_NEW_NOTE_CONTENT.trim();
+  return trimmed === "ìƒˆ ë©”ëª¨" || trimmed === "https://" || trimmed === DEFAULT_NEW_NOTE_CONTENT.trim();
 };
 
 const sanitizeNotes = (notes: NoteV2[]) =>
@@ -1160,9 +1160,9 @@ const App = () => {
     }
 
     const boardTitle = selectedBoard?.title?.trim();
-    const title = boardTitle ? `${boardTitle} | WZD` : "WZD °³ÀÎ ½ÃÀÛÆäÀÌÁö";
+    const title = boardTitle ? `${boardTitle} | WZD` : "WZD ê°œì¸ ì‹œì‘í˜ì´ì§€";
     const description =
-      selectedBoard?.description?.trim() || "WZD¿¡¼­ ¸Ş¸ğ, ¸µÅ©, À§Á¬ÀÌ ´ã±ä º¸µå¸¦ ¸¸µé°í °øÀ¯ÇØº¸¼¼¿ä.";
+      selectedBoard?.description?.trim() || "WZDì—ì„œ ë©”ëª¨, ë§í¬, ìœ„ì ¯ì´ ë‹´ê¸´ ë³´ë“œë¥¼ ë§Œë“¤ê³  ê³µìœ í•´ë³´ì„¸ìš”.";
 
     document.title = title;
 
@@ -1438,7 +1438,7 @@ const App = () => {
           .eq("user_id", user.id);
 
         if (updateResult.error) {
-          window.alert("°øÀ¯ ¸µÅ©¸¦ ÀúÀåÇÏÁö ¸øÇß½À´Ï´Ù. Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇØ ÁÖ¼¼¿ä.");
+          window.alert("ê³µìœ  ë§í¬ë¥¼ ì €ì¥í•˜ì§€ ëª»í–ˆìŠµë‹ˆë‹¤. ì ì‹œ í›„ ë‹¤ì‹œ ì‹œë„í•´ ì£¼ì„¸ìš”.");
           return;
         }
       }
@@ -1462,9 +1462,9 @@ const App = () => {
     const shareUrl = makeBoardShareUrl(shareSlug);
     try {
       await navigator.clipboard.writeText(shareUrl);
-      window.alert(`°øÀ¯ ¸µÅ©¸¦ º¹»çÇß½À´Ï´Ù.\n${shareUrl}`);
+      window.alert(`ê³µìœ  ë§í¬ë¥¼ ë³µì‚¬í–ˆìŠµë‹ˆë‹¤.\n${shareUrl}`);
     } catch {
-      window.prompt("°øÀ¯ ¸µÅ©¸¦ º¹»çÇØ ÁÖ¼¼¿ä.", shareUrl);
+      window.prompt("ê³µìœ  ë§í¬ë¥¼ ë³µì‚¬í•´ ì£¼ì„¸ìš”.", shareUrl);
     }
   };
 
@@ -1494,7 +1494,7 @@ const App = () => {
       setInviteResults(results);
     } catch (error) {
       console.error("Failed to search invite users", error);
-      setInviteError("»ç¿ëÀÚ¸¦ Ã£Áö ¸øÇß½À´Ï´Ù. Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇØ ÁÖ¼¼¿ä.");
+      setInviteError("ì‚¬ìš©ìë¥¼ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤. ì ì‹œ í›„ ë‹¤ì‹œ ì‹œë„í•´ ì£¼ì„¸ìš”.");
     } finally {
       setInviteLoading(false);
     }
@@ -1514,7 +1514,7 @@ const App = () => {
       await refreshBoardMembers(selectedBoard.id);
     } catch (error) {
       console.error("Failed to load board members", error);
-      setInviteError("ÇöÀç ÃÊ´ë ¸ñ·ÏÀ» ºÒ·¯¿ÀÁö ¸øÇß½À´Ï´Ù.");
+      setInviteError("í˜„ì¬ ì´ˆëŒ€ ëª©ë¡ì„ ë¶ˆëŸ¬ì˜¤ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
     }
   };
 
@@ -1532,7 +1532,7 @@ const App = () => {
       setInviteQuery("");
     } catch (error) {
       console.error("Failed to invite board member", error);
-      setInviteError("º¸µå ÃÊ´ë¿¡ ½ÇÆĞÇß½À´Ï´Ù. Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇØ ÁÖ¼¼¿ä.");
+      setInviteError("ë³´ë“œ ì´ˆëŒ€ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. ì ì‹œ í›„ ë‹¤ì‹œ ì‹œë„í•´ ì£¼ì„¸ìš”.");
     } finally {
       setInviteLoading(false);
     }
@@ -1575,7 +1575,7 @@ const App = () => {
       userId: user?.id ?? selectedBoard.userId,
       zIndex: boardMaxZ + 1,
       color: "white",
-      content: "AI ´º½º"
+      content: "AI ë‰´ìŠ¤"
     });
 
     note.metadata = {
@@ -1606,7 +1606,7 @@ const App = () => {
       userId: user?.id ?? selectedBoard.userId,
       zIndex: boardMaxZ + 1,
       color: "white",
-      content: "ºÏ¸¶Å©"
+      content: "ë¶ë§ˆí¬"
     });
 
     note.metadata = {
@@ -2004,7 +2004,7 @@ const App = () => {
     if (
       target instanceof Element &&
       target.closest(
-        'button, a, input, textarea, select, label, [contenteditable="true"], .note-card-actions, .widget-menu, .profile-menu-popover'
+        "button, a, input, textarea, select, label, [contenteditable=\"true\"], .note-card-actions, .widget-menu, .profile-menu-popover"
       )
     ) {
       boardSwipeStartRef.current.active = false;
@@ -2056,7 +2056,7 @@ const App = () => {
   return (
     <div className={`pin-page ${showExpandedSidebar ? "sidebar-expanded" : ""}`}>
       <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`}>
-        <button className="pin-brand" aria-label="WZD È¨">
+        <button className="pin-brand" aria-label="WZD í™ˆ">
           <span>{showExpandedSidebar ? "WZD" : "W"}</span>
         </button>
 
@@ -2128,11 +2128,11 @@ const App = () => {
           </div>
         </div>
 
-        <button className="side-icon" onClick={() => void addBoard()} aria-label="»õ º¸µå">
+        <button className="side-icon" onClick={() => void addBoard()} aria-label="ìƒˆ ë³´ë“œ">
           <span className="side-icon-glyph" aria-hidden="true">
             +
           </span>
-          <span className="side-icon-label">º¸µå Ãß°¡</span>
+          <span className="side-icon-label">ë³´ë“œ ì¶”ê°€</span>
         </button>
 
         <div className="sidebar-spacer" />
@@ -2140,12 +2140,12 @@ const App = () => {
         <button
           className={`side-icon subtle settings-icon ${settingsOpen ? "active" : ""}`}
           onClick={() => setSettingsOpen((prev) => !prev)}
-          aria-label="¼³Á¤"
+          aria-label="ì„¤ì •"
         >
           <span className="side-icon-glyph settings-glyph" aria-hidden="true">
             <SettingsIcon />
           </span>
-          <span className="side-icon-label">¼³Á¤</span>
+          <span className="side-icon-label">ì„¤ì •</span>
         </button>
       </aside>
 
@@ -2156,12 +2156,12 @@ const App = () => {
               <button
                 className="mobile-icon-action mobile-board-toggle"
                 onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
-                aria-label="º¸µå ¸Ş´º"
+                aria-label="ë³´ë“œ ë©”ë‰´"
               >
-                ¡Õ
+                â‰¡
               </button>
               <p className="feed-kicker">
-                {isSharedView ? "°øÀ¯ º¸µå" : feedMode === "active" ? "°³ÀÎ º¸µå" : "º¸°ü ¸Ş¸ğ"}
+                {isSharedView ? "ê³µìœ  ë³´ë“œ" : feedMode === "active" ? "ê°œì¸ ë³´ë“œ" : "ë³´ê´€ ë©”ëª¨"}
               </p>
               {canRenameBoard && editingBoardTitle ? (
                 <input
@@ -2193,21 +2193,21 @@ const App = () => {
                     setEditingBoardTitle(true);
                   }}
                 >
-                  {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "º¸°ü ¸Ş¸ğ"}
+                  {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "ë³´ê´€ ë©”ëª¨"}
                 </h1>
               )}
             </div>
 
             <div className={`search-shell ${mobileSearchOpen ? "mobile-open" : ""}`}>
               <span className="search-icon" aria-hidden="true">
-                ?
+                âŒ•
               </span>
               <input
                 ref={searchInputRef}
                 className="search-input pinterest-search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder={feedMode === "active" ? "³» ¸Ş¸ğ¿Í ¸µÅ© °Ë»ö" : "º¸°ü ¸Ş¸ğ °Ë»ö"}
+                placeholder={feedMode === "active" ? "ë‚´ ë©”ëª¨ì™€ ë§í¬ ê²€ìƒ‰" : "ë³´ê´€ ë©”ëª¨ ê²€ìƒ‰"}
               />
             </div>
           </div>
@@ -2215,21 +2215,21 @@ const App = () => {
           <div className="topbar-actions">
             {!isSharedView && (
               <button className="new-note-pill" onClick={addNote}>
-                »õ ¸Ş¸ğ
+                ìƒˆ ë©”ëª¨
               </button>
             )}
             {!isSharedView && (
               <div className="widget-menu-wrap">
                 <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
-                  À§Á¬ Ãß°¡
+                  ìœ„ì ¯ ì¶”ê°€
                 </button>
                 {widgetMenuOpen && (
                   <div className="widget-menu">
                     <button className="widget-menu-item" onClick={addRssWidget}>
-                      RSS ¸®´õ
+                      RSS ë¦¬ë”
                     </button>
                     <button className="widget-menu-item" onClick={addBookmarkWidget}>
-                      ºÏ¸¶Å©
+                      ë¶ë§ˆí¬
                     </button>
                   </div>
                 )}
@@ -2237,17 +2237,17 @@ const App = () => {
             )}
             {canShareBoard && (
               <button className="ghost-action" onClick={() => void shareBoard()}>
-                º¸µå °øÀ¯
+                ë³´ë“œ ê³µìœ 
               </button>
             )}
             {canInviteBoard && (
               <button className="ghost-action" onClick={() => void openInvitePanel()}>
-                º¸µå ÃÊ´ë
+                ë³´ë“œ ì´ˆëŒ€
               </button>
             )}
             {canBoardSettings && (
               <button className="ghost-action" onClick={() => setSettingsOpen(true)}>
-                º¸µå ¼³Á¤
+                ë³´ë“œ ì„¤ì •
               </button>
             )}
             {hasSupabaseConfig ? (
@@ -2260,18 +2260,18 @@ const App = () => {
                   {profileMenuOpen && (
                     <div className="profile-menu-popover">
                       <button className="profile-menu-item" onClick={() => void onLogout()}>
-                        ·Î±×¾Æ¿ô
+                        ë¡œê·¸ì•„ì›ƒ
                       </button>
                     </div>
                   )}
                 </div>
               ) : (
                 <button className="ghost-action mobile-auth-action" onClick={onGoogleLogin}>
-                  ±¸±Û ·Î±×ÀÎ
+                  êµ¬ê¸€ ë¡œê·¸ì¸
                 </button>
               )
             ) : (
-              <div className="profile-pill muted">·ÎÄÃ ¸ğµå</div>
+              <div className="profile-pill muted">ë¡œì»¬ ëª¨ë“œ</div>
             )}
           </div>
         </header>
@@ -2304,9 +2304,9 @@ const App = () => {
                     }}
                   >
                     <span className="mobile-board-action-icon" aria-hidden="true">
-                      ¢Ö
+                      â†—
                     </span>
-                    <span>º¸µå °øÀ¯</span>
+                    <span>ë³´ë“œ ê³µìœ </span>
                   </button>
                 )}
                 {canInviteBoard && (
@@ -2320,7 +2320,7 @@ const App = () => {
                     <span className="mobile-board-action-icon" aria-hidden="true">
                       @
                     </span>
-                    <span>º¸µå ÃÊ´ë</span>
+                    <span>ë³´ë“œ ì´ˆëŒ€</span>
                   </button>
                 )}
                 <button
@@ -2333,7 +2333,7 @@ const App = () => {
                   <span className="mobile-board-action-icon" aria-hidden="true">
                     +
                   </span>
-                  <span>º¸µå Ãß°¡</span>
+                  <span>ë³´ë“œ ì¶”ê°€</span>
                 </button>
                 <button
                   className={`mobile-board-action ${settingsOpen ? "active" : ""}`}
@@ -2345,7 +2345,7 @@ const App = () => {
                   <span className="mobile-board-action-icon settings-glyph" aria-hidden="true">
                     <SettingsIcon />
                   </span>
-                  <span>¼³Á¤</span>
+                  <span>ì„¤ì •</span>
                 </button>
               </div>
             </div>
@@ -2357,31 +2357,31 @@ const App = () => {
             <section className="settings-panel" onClick={(event) => event.stopPropagation()}>
               <div className="settings-panel-head">
                 <div>
-                  <p className="settings-kicker">¼³Á¤</p>
-                  <h2>ÈŞÁöÅë</h2>
+                  <p className="settings-kicker">ì„¤ì •</p>
+                  <h2>íœ´ì§€í†µ</h2>
                 </div>
-                <button className="settings-close" onClick={() => setSettingsOpen(false)} aria-label="¼³Á¤ ´İ±â">
-                  ¡¿
+                <button className="settings-close" onClick={() => setSettingsOpen(false)} aria-label="ì„¤ì • ë‹«ê¸°">
+                  Ã—
                 </button>
               </div>
 
               <div className="settings-section">
                 <div className="settings-section-head">
-                  <strong>»èÁ¦µÈ º¸µå</strong>
-                  <span>{sortedTrashedBoards.length}°³</span>
+                  <strong>ì‚­ì œëœ ë³´ë“œ</strong>
+                  <span>{sortedTrashedBoards.length}ê°œ</span>
                 </div>
                 {sortedTrashedBoards.length === 0 ? (
-                  <p className="settings-empty">30ÀÏ ¾È¿¡ º¹±¸ÇÒ º¸µå°¡ ¾ø½À´Ï´Ù.</p>
+                  <p className="settings-empty">30ì¼ ì•ˆì— ë³µêµ¬í•  ë³´ë“œê°€ ì—†ìŠµë‹ˆë‹¤.</p>
                 ) : (
                   <div className="trash-list">
                     {sortedTrashedBoards.map((board) => (
                       <div key={`trash-board-${board.id}`} className="trash-item">
                         <div className="trash-copy">
                           <strong>{board.title}</strong>
-                          <span>{getBoardTrashedAt(board)?.slice(0, 10)}±îÁö º¹±¸ °¡´É</span>
+                          <span>{getBoardTrashedAt(board)?.slice(0, 10)}ê¹Œì§€ ë³µêµ¬ ê°€ëŠ¥</span>
                         </div>
                         <button className="trash-restore" onClick={() => restoreBoard(board.id)}>
-                          º¹±¸
+                          ë³µêµ¬
                         </button>
                       </div>
                     ))}
@@ -2391,11 +2391,11 @@ const App = () => {
 
               <div className="settings-section">
                 <div className="settings-section-head">
-                  <strong>»èÁ¦µÈ ¸Ş¸ğ</strong>
-                  <span>{sortedTrashedNotes.length}°³</span>
+                  <strong>ì‚­ì œëœ ë©”ëª¨</strong>
+                  <span>{sortedTrashedNotes.length}ê°œ</span>
                 </div>
                 {sortedTrashedNotes.length === 0 ? (
-                  <p className="settings-empty">30ÀÏ ¾È¿¡ º¹±¸ÇÒ ¸Ş¸ğ°¡ ¾ø½À´Ï´Ù.</p>
+                  <p className="settings-empty">30ì¼ ì•ˆì— ë³µêµ¬í•  ë©”ëª¨ê°€ ì—†ìŠµë‹ˆë‹¤.</p>
                 ) : (
                   <div className="trash-list">
                     {sortedTrashedNotes.map((note) => {
@@ -2405,11 +2405,11 @@ const App = () => {
                           <div className="trash-copy">
                             <strong>{getNoteTitle(note.content)}</strong>
                             <span>
-                              {noteBoard?.title ?? "¾Ë ¼ö ¾ø´Â º¸µå"} ¡¤ {getNoteTrashedAt(note)?.slice(0, 10)}±îÁö º¹±¸ °¡´É
+                              {noteBoard?.title ?? "ì•Œ ìˆ˜ ì—†ëŠ” ë³´ë“œ"} Â· {getNoteTrashedAt(note)?.slice(0, 10)}ê¹Œì§€ ë³µêµ¬ ê°€ëŠ¥
                             </span>
                           </div>
                           <button className="trash-restore" onClick={() => restoreNote(note.id)}>
-                            º¹±¸
+                            ë³µêµ¬
                           </button>
                         </div>
                       );
@@ -2426,31 +2426,31 @@ const App = () => {
             <section className="settings-panel invite-panel" onClick={(event) => event.stopPropagation()}>
               <div className="settings-panel-head">
                 <div>
-                  <p className="settings-kicker">Çù¾÷</p>
-                  <h2>º¸µå ÃÊ´ë</h2>
+                  <p className="settings-kicker">í˜‘ì—…</p>
+                  <h2>ë³´ë“œ ì´ˆëŒ€</h2>
                 </div>
-                <button className="settings-close" onClick={() => setInviteOpen(false)} aria-label="ÃÊ´ë Ã¢ ´İ±â">
-                  ¡¿
+                <button className="settings-close" onClick={() => setInviteOpen(false)} aria-label="ì´ˆëŒ€ ì°½ ë‹«ê¸°">
+                  Ã—
                 </button>
               </div>
 
               <div className="settings-section invite-search-section">
                 <div className="settings-section-head">
                   <strong>{selectedBoard.title}</strong>
-                  <span>À¯Àú ÀÌ¸ŞÀÏ(¾ÆÀÌµğ)·Î °Ë»öÇØ ÃÊ´ëÇÏ¼¼¿ä.</span>
+                  <span>ìœ ì € ì´ë©”ì¼(ì•„ì´ë””)ë¡œ ê²€ìƒ‰í•´ ì´ˆëŒ€í•˜ì„¸ìš”.</span>
                 </div>
                 <div className="invite-search-row">
                   <input
                     className="widget-input invite-input"
                     value={inviteQuery}
                     onChange={(event) => setInviteQuery(event.target.value)}
-                    placeholder="À¯Àú ÀÌ¸ŞÀÏ °Ë»ö"
+                    placeholder="ìœ ì € ì´ë©”ì¼ ê²€ìƒ‰"
                   />
                 </div>
                 {inviteError && <p className="invite-feedback error">{inviteError}</p>}
-                {inviteLoading && <p className="invite-feedback">°Ë»ö ÁßÀÔ´Ï´Ù...</p>}
+                {inviteLoading && <p className="invite-feedback">ê²€ìƒ‰ ì¤‘ì…ë‹ˆë‹¤...</p>}
                 {!inviteLoading && inviteQuery.trim() && inviteResults.length === 0 && !inviteError && (
-                  <p className="invite-feedback">°Ë»ö °á°ú°¡ ¾ø½À´Ï´Ù.</p>
+                  <p className="invite-feedback">ê²€ìƒ‰ ê²°ê³¼ê°€ ì—†ìŠµë‹ˆë‹¤.</p>
                 )}
                 {inviteResults.length > 0 && (
                   <div className="invite-result-list">
@@ -2461,7 +2461,7 @@ const App = () => {
                           {profile.displayName && <span>{profile.email}</span>}
                         </div>
                         <button className="ghost-action" onClick={() => void handleInviteUser(profile)}>
-                          ÃÊ´ë
+                          ì´ˆëŒ€
                         </button>
                       </div>
                     ))}
@@ -2471,11 +2471,11 @@ const App = () => {
 
               <div className="settings-section">
                 <div className="settings-section-head">
-                  <strong>ÇöÀç ÃÊ´ëµÈ »ç¿ëÀÚ</strong>
-                  <span>{boardMembers.length}¸í</span>
+                  <strong>í˜„ì¬ ì´ˆëŒ€ëœ ì‚¬ìš©ì</strong>
+                  <span>{boardMembers.length}ëª…</span>
                 </div>
                 {boardMembers.length === 0 ? (
-                  <p className="settings-empty">¾ÆÁ÷ ÃÊ´ëµÈ »ç¿ëÀÚ°¡ ¾ø½À´Ï´Ù.</p>
+                  <p className="settings-empty">ì•„ì§ ì´ˆëŒ€ëœ ì‚¬ìš©ìê°€ ì—†ìŠµë‹ˆë‹¤.</p>
                 ) : (
                   <div className="invite-member-list">
                     {boardMembers.map((member) => (
@@ -2484,7 +2484,7 @@ const App = () => {
                           <strong>{member.displayName || member.email}</strong>
                           {member.displayName && <span>{member.email}</span>}
                         </div>
-                        <span className="chip-badge">ÆíÁı °¡´É</span>
+                        <span className="chip-badge">í¸ì§‘ ê°€ëŠ¥</span>
                       </div>
                     ))}
                   </div>
@@ -2500,17 +2500,17 @@ const App = () => {
               <span>
                 {hasSupabaseConfig && user
                   ? cloudSaveState === "saving"
-                    ? "Å¬¶ó¿ìµå¿¡ ÀúÀå ÁßÀÔ´Ï´Ù"
+                    ? "í´ë¼ìš°ë“œì— ì €ì¥ ì¤‘ì…ë‹ˆë‹¤"
                     : cloudSaveState === "saved"
-                      ? "Å¬¶ó¿ìµå¿¡ ÀúÀåµÇ¾ú½À´Ï´Ù"
+                      ? "í´ë¼ìš°ë“œì— ì €ì¥ë˜ì—ˆìŠµë‹ˆë‹¤"
                       : cloudSaveState === "error"
-                        ? "Å¬¶ó¿ìµå ÀúÀå¿¡ ½ÇÆĞÇß½À´Ï´Ù"
+                        ? "í´ë¼ìš°ë“œ ì €ì¥ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤"
                         : feedMode === "active"
-                          ? `${activeNotes.length}°³ÀÇ ÇÉ`
-                          : `${archivedNotes.length}°³ÀÇ º¸°ü ¸Ş¸ğ`
+                          ? `${activeNotes.length}ê°œì˜ í•€`
+                          : `${archivedNotes.length}ê°œì˜ ë³´ê´€ ë©”ëª¨`
                   : feedMode === "active"
-                    ? `${activeNotes.length}°³ÀÇ ÇÉ`
-                    : `${archivedNotes.length}°³ÀÇ º¸°ü ¸Ş¸ğ`}
+                    ? `${activeNotes.length}ê°œì˜ í•€`
+                    : `${archivedNotes.length}ê°œì˜ ë³´ê´€ ë©”ëª¨`}
               </span>
             </div>
           </section>
@@ -2527,12 +2527,12 @@ const App = () => {
             onDrop={(event) => onPinDrop(event, undefined, dragPreviewColumn ?? 0)}
           >
             {loading ? (
-              <div className="feed-empty">º¸µå¸¦ ºÒ·¯¿À´Â ÁßÀÔ´Ï´Ù.</div>
+              <div className="feed-empty">ë³´ë“œë¥¼ ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘ì…ë‹ˆë‹¤.</div>
             ) : !selectedBoard ? (
-              <div className="feed-empty">º¸µå¸¦ ¼±ÅÃÇÏ°Å³ª »õ º¸µå¸¦ ¸¸µé¾îÁÖ¼¼¿ä.</div>
+              <div className="feed-empty">ë³´ë“œë¥¼ ì„ íƒí•˜ê±°ë‚˜ ìƒˆ ë³´ë“œë¥¼ ë§Œë“¤ì–´ì£¼ì„¸ìš”.</div>
             ) : visibleNotes.length === 0 ? (
               <div className="feed-empty">
-                {feedMode === "active" ? "¾ÆÁ÷ ¸Ş¸ğ°¡ ¾ø½À´Ï´Ù." : "º¸°üµÈ ¸Ş¸ğ°¡ ¾ø½À´Ï´Ù."}
+                {feedMode === "active" ? "ì•„ì§ ë©”ëª¨ê°€ ì—†ìŠµë‹ˆë‹¤." : "ë³´ê´€ëœ ë©”ëª¨ê°€ ì—†ìŠµë‹ˆë‹¤."}
               </div>
             ) : (
               visibleColumns.map((columnNotes, columnIndex) => (
@@ -2653,8 +2653,8 @@ const App = () => {
                                       event.stopPropagation();
                                       cycleNoteColor(note.id, note.color);
                                     }}
-                                    aria-label="¸Ş¸ğ »ö»ó º¯°æ"
-                                    title="¸Ş¸ğ »ö»ó º¯°æ"
+                                    aria-label="ë©”ëª¨ ìƒ‰ìƒ ë³€ê²½"
+                                    title="ë©”ëª¨ ìƒ‰ìƒ ë³€ê²½"
                                   />
                                 )}
                                 <button
@@ -2667,8 +2667,8 @@ const App = () => {
                                       restoreNote(note.id);
                                     }
                                   }}
-                                  aria-label={feedMode === "active" ? "¸Ş¸ğ ¼öÁ¤" : "¸Ş¸ğ º¹±¸"}
-                                  title={feedMode === "active" ? "¸Ş¸ğ ¼öÁ¤" : "¸Ş¸ğ º¹±¸"}
+                                  aria-label={feedMode === "active" ? "ë©”ëª¨ ìˆ˜ì •" : "ë©”ëª¨ ë³µêµ¬"}
+                                  title={feedMode === "active" ? "ë©”ëª¨ ìˆ˜ì •" : "ë©”ëª¨ ë³µêµ¬"}
                                 >
                                   <span className="pin-icon-glyph">
                                     <EditIcon />
@@ -2684,8 +2684,8 @@ const App = () => {
                                       deleteArchivedNote(note.id);
                                     }
                                   }}
-                                  aria-label={feedMode === "active" ? "¸Ş¸ğ »èÁ¦" : "¿µ±¸ »èÁ¦"}
-                                  title={feedMode === "active" ? "¸Ş¸ğ »èÁ¦" : "¿µ±¸ »èÁ¦"}
+                                  aria-label={feedMode === "active" ? "ë©”ëª¨ ì‚­ì œ" : "ì˜êµ¬ ì‚­ì œ"}
+                                  title={feedMode === "active" ? "ë©”ëª¨ ì‚­ì œ" : "ì˜êµ¬ ì‚­ì œ"}
                                 >
                                   <span className="pin-icon-glyph">
                                     <TrashIcon />
@@ -2700,7 +2700,7 @@ const App = () => {
                               <>
                                 <div className="widget-header">
                                   <span className="widget-badge">RSS</span>
-                                  <p className="pin-title">{asText(note.content).trim() || "RSS ¸®´õ"}</p>
+                                  <p className="pin-title">{asText(note.content).trim() || "RSS ë¦¬ë”"}</p>
                                 </div>
                                 {selected ? (
                                   <div className="widget-editor-stack">
@@ -2717,7 +2717,7 @@ const App = () => {
                                           }
                                         })
                                       }
-                                      placeholder="RSS ÇÇµå URL"
+                                      placeholder="RSS í”¼ë“œ URL"
                                     />
                                     <button
                                       className="widget-confirm"
@@ -2726,7 +2726,7 @@ const App = () => {
                                         setSelectedNoteId(null);
                                       }}
                                     >
-                                      È®ÀÎ
+                                      í™•ì¸
                                     </button>
                                   </div>
                                 ) : (
@@ -2738,7 +2738,7 @@ const App = () => {
                                       rel="noreferrer"
                                       onClick={(event) => event.stopPropagation()}
                                     >
-                                      {rssFeed?.title || "RSS ÇÇµå ¿­±â"}
+                                      {rssFeed?.title || "RSS í”¼ë“œ ì—´ê¸°"}
                                     </a>
                                     {rssFeed?.items?.length ? (
                                       rssFeed.items.slice(0, 5).map((item) => (
@@ -2755,7 +2755,7 @@ const App = () => {
                                         </a>
                                       ))
                                     ) : (
-                                      <p className="rss-empty">RSS Ç×¸ñÀ» ºÒ·¯¿À´Â ÁßÀÌ°Å³ª ÇÇµå¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.</p>
+                                      <p className="rss-empty">RSS í•­ëª©ì„ ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘ì´ê±°ë‚˜ í”¼ë“œë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.</p>
                                     )}
                                   </div>
                                 )}
@@ -2764,7 +2764,7 @@ const App = () => {
                               <>
                                 <div className="widget-header">
                                   <span className="widget-badge">LINK</span>
-                                  <p className="pin-title">{asText(note.content).trim() || "ºÏ¸¶Å©"}</p>
+                                  <p className="pin-title">{asText(note.content).trim() || "ë¶ë§ˆí¬"}</p>
                                 </div>
                                 {selected ? (
                                   <div className="widget-editor-stack">
@@ -2773,7 +2773,7 @@ const App = () => {
                                       value={note.content}
                                       onMouseDown={(event) => event.stopPropagation()}
                                       onChange={(event) => updateNote(note.id, { content: event.target.value })}
-                                      placeholder="ºÏ¸¶Å© Á¦¸ñ"
+                                      placeholder="ë¶ë§ˆí¬ ì œëª©"
                                     />
                                     <textarea
                                       className="widget-textarea"
@@ -2796,7 +2796,7 @@ const App = () => {
                                           }
                                         })
                                       }
-                                      placeholder={"¸µÅ©¸¦ ÇÑ ÁÙ¿¡ ÇÏ³ª¾¿ Ãß°¡ÇØ ÁÖ¼¼¿ä"}
+                                      placeholder={"ë§í¬ë¥¼ í•œ ì¤„ì— í•˜ë‚˜ì”© ì¶”ê°€í•´ ì£¼ì„¸ìš”"}
                                       rows={4}
                                     />
                                     <button
@@ -2806,7 +2806,7 @@ const App = () => {
                                         setSelectedNoteId(null);
                                       }}
                                     >
-                                      È®ÀÎ
+                                      í™•ì¸
                                     </button>
                                   </div>
                                 ) : (
@@ -2854,7 +2854,7 @@ const App = () => {
                                         );
                                       })
                                     ) : (
-                                      <p className="rss-empty">¸µÅ©¸¦ Ãß°¡ÇÏ¸é ºÏ¸¶Å© Ä«µå°¡ Ç¥½ÃµË´Ï´Ù.</p>
+                                      <p className="rss-empty">ë§í¬ë¥¼ ì¶”ê°€í•˜ë©´ ë¶ë§ˆí¬ ì¹´ë“œê°€ í‘œì‹œë©ë‹ˆë‹¤.</p>
                                     )}
                                   </div>
                                 )}
@@ -2890,7 +2890,7 @@ const App = () => {
                                         event.currentTarget.style.height = "0px";
                                         event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
                                       }}
-                                      placeholder="¸Ş¸ğ, ¸µÅ©, ÀÌ¹ÌÁö URLÀ» ÀÔ·ÂÇÏ¼¼¿ä"
+                                      placeholder="ë©”ëª¨, ë§í¬, ì´ë¯¸ì§€ URLì„ ì…ë ¥í•˜ì„¸ìš”"
                                       rows={1}
                                     />
                                   </>
@@ -2935,7 +2935,7 @@ const App = () => {
                                       ))}
                                     {(!useImageHeroCard || (!hideHoverMetadata && (hasTextPreview || hasLinkPreview))) && (
                                       <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                                        {previewText || (noteUrl ? getUrlSnippet(noteUrl) : "¸Ş¸ğ¸¦ Å¬¸¯ÇØ¼­ ÆíÁıÇÏ¼¼¿ä.")}
+                                        {previewText || (noteUrl ? getUrlSnippet(noteUrl) : "ë©”ëª¨ë¥¼ í´ë¦­í•´ì„œ í¸ì§‘í•˜ì„¸ìš”.")}
                                       </p>
                                     )}
                                   </>
@@ -2956,8 +2956,8 @@ const App = () => {
           </section>
           <div className="infinite-scroll-status" aria-live="polite">
               {visibleNoteCount < filteredNotes.length
-              ? "¾Æ·¡·Î ½ºÅ©·ÑÇÏ¸é ¸Ş¸ğ°¡ °è¼Ó ·ÎµåµË´Ï´Ù."
-              : `${filteredNotes.length}°³ÀÇ ¸Ş¸ğ°¡ ¸ğµÎ Ç¥½ÃµÇ¾ú½À´Ï´Ù.`}
+              ? "ì•„ë˜ë¡œ ìŠ¤í¬ë¡¤í•˜ë©´ ë©”ëª¨ê°€ ê³„ì† ë¡œë“œë©ë‹ˆë‹¤."
+              : `${filteredNotes.length}ê°œì˜ ë©”ëª¨ê°€ ëª¨ë‘ í‘œì‹œë˜ì—ˆìŠµë‹ˆë‹¤.`}
           </div>
         </main>
 
@@ -2983,11 +2983,11 @@ const App = () => {
               }
             }}
             onDrop={onTrashDrop}
-            aria-label="ÈŞÁöÅëÀ¸·Î »èÁ¦"
-            title="ÈŞÁöÅëÀ¸·Î »èÁ¦"
+            aria-label="íœ´ì§€í†µìœ¼ë¡œ ì‚­ì œ"
+            title="íœ´ì§€í†µìœ¼ë¡œ ì‚­ì œ"
           >
-            <span className="floating-trash-icon">??</span>
-            <span className="floating-trash-label">ÈŞÁöÅë</span>
+            <span className="floating-trash-icon">ğŸ—‘</span>
+            <span className="floating-trash-label">íœ´ì§€í†µ</span>
           </button>
         )}
       </div>
@@ -2996,5 +2996,3 @@ const App = () => {
 };
 
 export default App;
-
-
