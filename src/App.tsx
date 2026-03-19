@@ -314,9 +314,61 @@ const getNoteFontSize = (note: NoteV2): NoteFontSize => {
   return value === 14 || value === 16 || value === 18 || value === 20 ? value : DEFAULT_FONT_SIZE;
 };
 
+const normalizeExternalUrl = (value: string) => {
+  let normalized = value.trim();
+  if (!normalized || normalized.startsWith("data:image/")) {
+    return normalized;
+  }
+
+  let previous = "";
+  while (previous !== normalized) {
+    previous = normalized;
+    normalized = normalized
+      .replace(/^(https?):\/\/(https?):\/\/?/i, "$2://")
+      .replace(/^(https?):\/\/(https?)\/\/?/i, "$2://")
+      .replace(/^(https?)\/\/+/i, "$1://");
+  }
+
+  return normalized;
+};
+
+const normalizeUrlsInText = (value: string) =>
+  value.replace(
+    /(?:https?:\/\/https?:\/\/\S+|https?:\/\/https?\/\/\S+|https?:\/\/\S+|https?\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/gi,
+    (match) => normalizeExternalUrl(match)
+  );
+
+const normalizeBookmarkMetadata = (metadata: NoteV2["metadata"]) => {
+  if (!metadata) {
+    return metadata;
+  }
+
+  const nextMetadata = { ...metadata };
+
+  if (typeof nextMetadata.bookmarkUrl === "string") {
+    nextMetadata.bookmarkUrl = normalizeExternalUrl(nextMetadata.bookmarkUrl);
+  }
+
+  if (Array.isArray(nextMetadata.bookmarkUrls)) {
+    nextMetadata.bookmarkUrls = nextMetadata.bookmarkUrls
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => normalizeExternalUrl(value))
+      .filter(Boolean);
+  } else if (typeof nextMetadata.bookmarkUrls === "string") {
+    nextMetadata.bookmarkUrls = nextMetadata.bookmarkUrls
+      .split(/\r?\n/)
+      .map((value) => normalizeExternalUrl(value))
+      .filter(Boolean);
+  }
+
+  return nextMetadata;
+};
+
 const extractFirstUrl = (content: string) => {
-  const match = content.match(/(?:https?:\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/i);
-  return match?.[0] ?? "";
+  const match = content.match(
+    /(?:https?:\/\/https?:\/\/\S+|https?:\/\/https?\/\/\S+|https?:\/\/\S+|https?\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/i
+  );
+  return match ? normalizeExternalUrl(match[0]) : "";
 };
 
 const isImageUrl = (url: string) =>
@@ -325,19 +377,25 @@ const isImageUrl = (url: string) =>
   url.includes("images.unsplash.com");
 
 const stripUrls = (content: string) =>
-  content.replace(/(?:https?:\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/gi, "").trim();
+  content
+    .replace(
+      /(?:https?:\/\/https?:\/\/\S+|https?:\/\/https?\/\/\S+|https?:\/\/\S+|https?\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)/gi,
+      ""
+    )
+    .trim();
 
 const getUrlSnippet = (url: string) => {
-  if (!url) {
+  const normalizedUrl = normalizeExternalUrl(url);
+  if (!normalizedUrl) {
     return "";
   }
 
   try {
-    const parsed = new URL(url);
+    const parsed = new URL(normalizedUrl);
     const compact = `${parsed.hostname.replace(/^www\./i, "")}${parsed.pathname}${parsed.search}`;
     return compact.length > 48 ? `${compact.slice(0, 48)}...` : compact;
   } catch {
-    return url.length > 48 ? `${url.slice(0, 48)}...` : url;
+    return normalizedUrl.length > 48 ? `${normalizedUrl.slice(0, 48)}...` : normalizedUrl;
   }
 };
 
@@ -398,18 +456,21 @@ const getRssFeedUrl = (note: NoteV2) =>
     : DEFAULT_RSS_FEED_URL;
 const getBookmarkUrl = (note: NoteV2) =>
   typeof note.metadata?.bookmarkUrl === "string" && note.metadata.bookmarkUrl.trim()
-    ? note.metadata.bookmarkUrl.trim()
+    ? normalizeExternalUrl(note.metadata.bookmarkUrl)
     : DEFAULT_BOOKMARK_URL;
 const getBookmarkUrls = (note: NoteV2) => {
   const rawList = note.metadata?.bookmarkUrls;
   if (Array.isArray(rawList)) {
-    return rawList.filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+    return rawList
+      .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      .map((value) => normalizeExternalUrl(value))
+      .filter(Boolean);
   }
 
   if (typeof rawList === "string" && rawList.trim()) {
     return rawList
       .split(/\r?\n/)
-      .map((value) => value.trim())
+      .map((value) => normalizeExternalUrl(value))
       .filter(Boolean);
   }
 
@@ -437,7 +498,8 @@ const sanitizeNotes = (notes: NoteV2[]) =>
   notes
     .map((note) => ({
       ...note,
-      content: normalizeLegacyText(note.content)
+      content: normalizeUrlsInText(normalizeLegacyText(note.content)),
+      metadata: normalizeBookmarkMetadata(note.metadata)
     }))
     .filter((note) => !isDisposableEmptyNote(note) && !isTrashExpired(getNoteTrashedAt(note)));
 const pruneEmptyBoards = (snapshot: LocalSnapshot): LocalSnapshot => {
@@ -1360,9 +1422,14 @@ const App = () => {
         }
 
         touchedBoardId = note.boardId;
+        const normalizedPatch: Partial<NoteV2> = {
+          ...patch,
+          content: typeof patch.content === "string" ? normalizeUrlsInText(patch.content) : patch.content,
+          metadata: patch.metadata ? normalizeBookmarkMetadata(patch.metadata) : patch.metadata
+        };
         return {
           ...note,
-          ...patch,
+          ...normalizedPatch,
           updatedAt: nowIso()
         };
       })
