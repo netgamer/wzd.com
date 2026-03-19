@@ -132,6 +132,17 @@ button {
   line-height: 1;
 }
 
+.settings-glyph svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.settings-icon .settings-glyph svg {
+  width: 24px;
+  height: 24px;
+}
+
 .side-icon-label {
   max-width: 0;
   opacity: 0;
@@ -1416,6 +1427,11 @@ button {
     font-size: 13px;
     font-weight: 700;
     flex: 0 0 auto;
+  }
+
+  .mobile-board-action-icon.settings-glyph svg {
+    width: 18px;
+    height: 18px;
   }
 
   .mobile-board-item {

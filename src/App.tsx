@@ -94,6 +94,29 @@ const TrashIcon = () => (
   </svg>
 );
 
+const SettingsIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M12 3.5l1.2 2.1 2.4.4 1.7-1.4 2.1 2.1-1.4 1.7.4 2.4 2.1 1.2-2.1 1.2-.4 2.4 1.4 1.7-2.1 2.1-1.7-1.4-2.4.4L12 20.5l-1.2-2.1-2.4-.4-1.7 1.4-2.1-2.1 1.4-1.7-.4-2.4L3.5 12l2.1-1.2.4-2.4L4.6 6.7l2.1-2.1 1.7 1.4 2.4-.4L12 3.5Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle
+      cx="12"
+      cy="12"
+      r="3.2"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
 const VISIBLE_NOTE_BATCH_SIZE = 16;
@@ -1713,12 +1736,12 @@ const App = () => {
         <div className="sidebar-spacer" />
 
         <button
-          className={`side-icon subtle ${settingsOpen ? "active" : ""}`}
+          className={`side-icon subtle settings-icon ${settingsOpen ? "active" : ""}`}
           onClick={() => setSettingsOpen((prev) => !prev)}
           aria-label="설정"
         >
-          <span className="side-icon-glyph" aria-hidden="true">
-            ⚙
+          <span className="side-icon-glyph settings-glyph" aria-hidden="true">
+            <SettingsIcon />
           </span>
           <span className="side-icon-label">설정</span>
         </button>
@@ -1890,8 +1913,8 @@ const App = () => {
                     setMobileBoardMenuOpen(false);
                   }}
                 >
-                  <span className="mobile-board-action-icon" aria-hidden="true">
-                    ⚙
+                  <span className="mobile-board-action-icon settings-glyph" aria-hidden="true">
+                    <SettingsIcon />
                   </span>
                   <span>설정</span>
                 </button>
