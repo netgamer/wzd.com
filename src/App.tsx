@@ -2340,9 +2340,11 @@ const App = () => {
             onDrop={(event) => onBoardChipDrop(event)}
           >
             {activeBoards.map((boardItem) => (
-              <div key={boardItem.id}>
+              <div key={boardItem.id} className="board-chip-slot">
                 {draggingBoardId && dragPreviewBoardId === boardItem.id && draggingBoardId !== boardItem.id && (
-                  <div className="board-chip-drop-preview" aria-hidden="true" />
+                  <div className="board-chip-drop-preview" aria-hidden="true">
+                    <span className="board-chip-drop-label">여기에 이동</span>
+                  </div>
                 )}
                 <button
                   className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""} ${
