@@ -47,6 +47,7 @@ type LinkPreviewState = LinkPreview | null;
 type RssFeedState = RssFeedPreview | null;
 type WidgetType = "note" | "rss" | "bookmark";
 type BoardTemplateKey = "blank" | "links" | "content" | "study";
+type BoardLayoutStyle = "balanced" | "compact" | "visual";
 
 const EditIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -151,6 +152,7 @@ const BOARD_TEMPLATES: Array<{
   title: string;
   subtitle: string;
   backgroundStyle: BoardBackgroundStyle;
+  layoutStyle?: BoardLayoutStyle;
   notes: Array<{ color: NoteColor; content: string }>;
 }> = [
   {
@@ -158,6 +160,7 @@ const BOARD_TEMPLATES: Array<{
     title: "빈 보드",
     subtitle: "가장 빠르게 시작하는 깨끗한 보드",
     backgroundStyle: "paper",
+    layoutStyle: "balanced",
     notes: [
       {
         color: "yellow",
@@ -170,6 +173,7 @@ const BOARD_TEMPLATES: Array<{
     title: "링크 모음 보드",
     subtitle: "자료와 레퍼런스를 빠르게 수집하는 보드",
     backgroundStyle: "paper",
+    layoutStyle: "compact",
     notes: [
       {
         color: "yellow",
@@ -193,6 +197,7 @@ const BOARD_TEMPLATES: Array<{
     title: "영상 기획 보드",
     subtitle: "주제, 훅, 레퍼런스, 대본 초안을 한 곳에",
     backgroundStyle: "whiteboard",
+    layoutStyle: "visual",
     notes: [
       {
         color: "pink",
@@ -216,6 +221,7 @@ const BOARD_TEMPLATES: Array<{
     title: "공부 자료 보드",
     subtitle: "과목별 핵심 메모와 링크를 보기 좋게 정리",
     backgroundStyle: "cork",
+    layoutStyle: "balanced",
     notes: [
       {
         color: "yellow",
@@ -328,7 +334,8 @@ const createTemplateBoardSnapshot = (
   board.backgroundStyle = template.backgroundStyle;
   board.settings = {
     ...board.settings,
-    sidebarOrder
+    sidebarOrder,
+    layoutStyle: template.layoutStyle ?? "balanced"
   };
 
   const notes = template.notes.map((note, index) =>
@@ -341,7 +348,12 @@ const createTemplateBoardSnapshot = (
     })
   );
 
-  const organizedNotes = autoOrganizeBoardNotes(notes, board.id, columnCount).filter((note) => note.boardId === board.id);
+  const organizedNotes = autoOrganizeBoardNotes(
+    notes,
+    board.id,
+    columnCount,
+    (template.layoutStyle ?? "balanced") as BoardLayoutStyle
+  ).filter((note) => note.boardId === board.id);
   return { board, notes: organizedNotes };
 };
 
@@ -865,6 +877,24 @@ const getAutoLayoutPriority = (note: NoteV2) => {
 
 type AutoLayoutCategory = "rss" | "bookmark" | "image" | "link" | "text";
 
+const BOARD_LAYOUT_STYLES: Array<{
+  key: BoardLayoutStyle;
+  label: string;
+  description: string;
+}> = [
+  { key: "balanced", label: "균형형", description: "카드 종류를 적당히 섞어 균형 있게 배치합니다." },
+  { key: "compact", label: "콤팩트형", description: "여백을 줄이고 촘촘하게 정리합니다." },
+  { key: "visual", label: "시각형", description: "이미지와 링크 카드가 더 잘 보이도록 정리합니다." }
+];
+
+const isBoardLayoutStyle = (value: unknown): value is BoardLayoutStyle =>
+  value === "balanced" || value === "compact" || value === "visual";
+
+const getBoardLayoutStyle = (board: BoardV2 | null | undefined): BoardLayoutStyle => {
+  const value = board?.settings?.layoutStyle;
+  return isBoardLayoutStyle(value) ? value : "balanced";
+};
+
 const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   const widgetType = getWidgetType(note);
   if (widgetType === "rss") return "rss";
@@ -886,7 +916,8 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
 const getPreferredColumns = (
   note: NoteV2,
   totalColumns: number,
-  columnHeights: number[]
+  columnHeights: number[],
+  layoutStyle: BoardLayoutStyle
 ) => {
   const allColumns = Array.from({ length: totalColumns }, (_, index) => index);
   const category = getAutoLayoutCategory(note);
@@ -899,12 +930,20 @@ const getPreferredColumns = (
     return [...allColumns].sort((left, right) => columnHeights[left] - columnHeights[right]);
   }
 
+  if (layoutStyle === "compact") {
+    return [...allColumns].sort((left, right) => columnHeights[left] - columnHeights[right]);
+  }
+
   switch (category) {
     case "image":
-      return [0, 1, ...allColumns.filter((index) => index > 1)];
+      return layoutStyle === "visual"
+        ? [0, 1, ...allColumns.filter((index) => index > 1)]
+        : [0, ...allColumns.filter((index) => index !== 0)];
     case "link": {
       const middle = Math.min(1, totalColumns - 1);
-      return [middle, 0, ...allColumns.filter((index) => index !== middle && index !== 0)];
+      return layoutStyle === "visual"
+        ? [middle, 0, ...allColumns.filter((index) => index !== middle && index !== 0)]
+        : [middle, ...allColumns.filter((index) => index !== middle)];
     }
     case "text": {
       const middle = Math.floor((totalColumns - 1) / 2);
@@ -918,24 +957,36 @@ const getPreferredColumns = (
   }
 };
 
-const estimateNoteVisualHeight = (note: NoteV2) => {
+const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) => {
   const widgetType = getWidgetType(note);
-  if (widgetType === "rss") return 300;
-  if (widgetType === "bookmark") return 260;
+  if (widgetType === "rss") return layoutStyle === "compact" ? 270 : 300;
+  if (widgetType === "bookmark") return layoutStyle === "compact" ? 230 : 260;
 
   const imageUrl = getAttachedImageUrl(note);
   const noteUrl = extractFirstUrl(note.content);
   if (imageUrl || (noteUrl && isImageUrl(noteUrl))) {
-    return 300;
+    return layoutStyle === "visual" ? 340 : layoutStyle === "compact" ? 260 : 300;
   }
 
   const text = asText(note.content).trim();
   const lineCount = text ? text.split(/\r?\n/).filter((line) => line.trim().length > 0).length : 0;
   const lengthWeight = Math.ceil(Math.min(text.length, 420) / 55);
-  return Math.max(180, Math.min(420, 170 + lineCount * 22 + lengthWeight * 16));
+  const baseHeight = 170 + lineCount * 22 + lengthWeight * 16;
+  if (layoutStyle === "compact") {
+    return Math.max(156, Math.min(360, baseHeight - 18));
+  }
+  if (layoutStyle === "visual") {
+    return Math.max(190, Math.min(440, baseHeight + 12));
+  }
+  return Math.max(180, Math.min(420, baseHeight));
 };
 
-const autoOrganizeBoardNotes = (notes: NoteV2[], boardId: string, columnCount: number) => {
+const autoOrganizeBoardNotes = (
+  notes: NoteV2[],
+  boardId: string,
+  columnCount: number,
+  layoutStyle: BoardLayoutStyle = "balanced"
+) => {
   const boardActiveNotes = notes.filter((note) => note.boardId === boardId && !note.archived);
   const boardArchivedNotes = notes.filter((note) => note.boardId === boardId && note.archived);
   const otherNotes = notes.filter((note) => note.boardId !== boardId);
@@ -967,7 +1018,7 @@ const autoOrganizeBoardNotes = (notes: NoteV2[], boardId: string, columnCount: n
   });
 
   sortedNotes.forEach((note) => {
-    const preferredColumns = getPreferredColumns(note, columns.length, columnHeights);
+    const preferredColumns = getPreferredColumns(note, columns.length, columnHeights, layoutStyle);
     const targetColumn =
       preferredColumns.reduce((bestColumn, column) => {
         if (columnHeights[column] < columnHeights[bestColumn]) {
@@ -986,7 +1037,8 @@ const autoOrganizeBoardNotes = (notes: NoteV2[], boardId: string, columnCount: n
         column: targetColumn
       }
     });
-    columnHeights[targetColumn] += estimateNoteVisualHeight(note) + 28;
+    const cardGap = layoutStyle === "compact" ? 18 : layoutStyle === "visual" ? 34 : 28;
+    columnHeights[targetColumn] += estimateNoteVisualHeight(note, layoutStyle) + cardGap;
   });
 
   let nextZIndex = 1;
@@ -2021,7 +2073,35 @@ const App = () => {
     }
 
     const nextColumnCount = getColumnCount();
-    setNotes((prev) => autoOrganizeBoardNotes(prev, selectedBoard.id, nextColumnCount));
+    setNotes((prev) => autoOrganizeBoardNotes(prev, selectedBoard.id, nextColumnCount, getBoardLayoutStyle(selectedBoard)));
+    touchBoard(selectedBoard.id);
+  };
+
+  const updateBoardLayoutStyle = (boardId: string, layoutStyle: BoardLayoutStyle) => {
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === boardId
+          ? {
+              ...board,
+              settings: {
+                ...board.settings,
+                layoutStyle
+              },
+              updatedAt: nowIso()
+            }
+          : board
+      )
+    );
+  };
+
+  const applyBoardLayoutStyle = (layoutStyle: BoardLayoutStyle) => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    updateBoardLayoutStyle(selectedBoard.id, layoutStyle);
+    const nextColumnCount = getColumnCount();
+    setNotes((prev) => autoOrganizeBoardNotes(prev, selectedBoard.id, nextColumnCount, layoutStyle));
     touchBoard(selectedBoard.id);
   };
 
@@ -3145,6 +3225,28 @@ const App = () => {
                             편집자 초대 관리
                           </button>
                         )}
+                      </div>
+
+                      <div className="settings-section">
+                        <div className="settings-section-head">
+                          <strong>정리 스타일</strong>
+                          <span>자동 정리 결과의 분위기를 보드 성격에 맞게 고를 수 있습니다.</span>
+                        </div>
+                        <div className="settings-layout-list">
+                          {BOARD_LAYOUT_STYLES.map((style) => {
+                            const active = getBoardLayoutStyle(selectedBoard) === style.key;
+                            return (
+                              <button
+                                key={style.key}
+                                className={`settings-layout-card ${active ? "active" : ""}`}
+                                onClick={() => applyBoardLayoutStyle(style.key)}
+                              >
+                                <span className="settings-layout-title">{style.label}</span>
+                                <span className="settings-layout-copy">{style.description}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       {isBoardOwner && (

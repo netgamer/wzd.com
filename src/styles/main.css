@@ -806,6 +806,47 @@ button {
   margin-top: 12px;
 }
 
+.settings-layout-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.settings-layout-card {
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: var(--surface-soft);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+.settings-layout-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.settings-layout-card.active {
+  border-color: rgba(230, 0, 35, 0.2);
+  background: rgba(230, 0, 35, 0.06);
+}
+
+.settings-layout-title {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.settings-layout-copy {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .settings-info-item {
   display: flex;
   align-items: center;
@@ -1675,6 +1716,7 @@ button {
 .settings-close:focus-visible,
 .settings-back:focus-visible,
 .settings-menu-card:focus-visible,
+.settings-layout-card:focus-visible,
 .trash-restore:focus-visible,
 .floating-trash:focus-visible {
   outline: 2px solid var(--focus);
