@@ -46,8 +46,48 @@ type CloudSaveState = "idle" | "saving" | "saved" | "error";
 type LinkPreviewState = LinkPreview | null;
 type RssFeedState = RssFeedPreview | null;
 type WidgetType = "note" | "rss" | "bookmark";
-type BoardTemplateKey = "blank" | "links" | "content" | "study";
+type BoardTemplateKey =
+  | "blank"
+  | "video"
+  | "work"
+  | "study"
+  | "tips"
+  | "homepage"
+  | "bookmark"
+  | "rss"
+  | "frame"
+  | "ai-share"
+  | "aistudio"
+  | "group-chat"
+  | "family"
+  | "couple";
+type BoardTemplateSectionKey = "notes" | "widgets" | "groups";
 type BoardLayoutStyle = "balanced" | "compact" | "visual";
+
+type TemplateNoteSeed = {
+  color: NoteColor;
+  content: string;
+  metadata?: Record<string, unknown>;
+};
+
+type BoardTemplateDefinition = {
+  key: BoardTemplateKey;
+  title: string;
+  subtitle: string;
+  tag: string;
+  audience: string;
+  highlights: string[];
+  backgroundStyle: BoardBackgroundStyle;
+  layoutStyle?: BoardLayoutStyle;
+  notes: TemplateNoteSeed[];
+};
+
+type BoardTemplateSection = {
+  key: BoardTemplateSectionKey;
+  title: string;
+  subtitle: string;
+  templateKeys: BoardTemplateKey[];
+};
 
 const EditIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -147,17 +187,7 @@ const DEFAULT_PERSONAL_NOTE_CONTENT =
 const DEFAULT_GROUP_NOTE_CONTENT =
   "그룹 메모장\n\n주제별 보드에서 각자 찾은 링크와 자료를 함께 공유해보세요.\n예: AI Studio 레퍼런스 모음";
 
-const BOARD_TEMPLATES: Array<{
-  key: BoardTemplateKey;
-  title: string;
-  subtitle: string;
-  tag: string;
-  audience: string;
-  highlights: string[];
-  backgroundStyle: BoardBackgroundStyle;
-  layoutStyle?: BoardLayoutStyle;
-  notes: Array<{ color: NoteColor; content: string }>;
-}> = [
+const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
   {
     key: "blank",
     title: "빈 보드",
@@ -175,9 +205,90 @@ const BOARD_TEMPLATES: Array<{
     ]
   },
   {
-    key: "links",
-    title: "링크 모음 보드",
-    subtitle: "자료와 레퍼런스를 빠르게 수집하는 보드",
+    key: "video",
+    title: "영상 기획 보드",
+    subtitle: "주제, 훅, 레퍼런스, 대본 초안을 한 곳에",
+    tag: "메모 보드",
+    audience: "유튜브·블로그·콘텐츠 제작자",
+    highlights: ["아이디어 정리", "훅 메모", "레퍼런스 수집"],
+    backgroundStyle: "whiteboard",
+    layoutStyle: "visual",
+    notes: [
+      {
+        color: "pink",
+        content:
+          "영상 아이디어\n\n제목 후보\n- 3분 안에 끝내는 정리법\n- 노션 대신 쓰는 개인화 보드"
+      },
+      {
+        color: "yellow",
+        content:
+          "오프닝 훅\n\n\"정리는 해야 하는데, 노션은 너무 무겁다고 느낀 적 있나요?\""
+      },
+      {
+        color: "mint",
+        content:
+          "레퍼런스 링크\n\nhttps://www.youtube.com/\nhttps://www.notion.so/"
+      }
+    ]
+  },
+  {
+    key: "work",
+    title: "업무 메모 보드",
+    subtitle: "회의, 작업 메모, 할 일까지 한 보드에서 정리",
+    tag: "메모 보드",
+    audience: "작업 메모를 빠르게 쌓아두는 팀과 개인",
+    highlights: ["작업 메모", "회의 기록", "체크리스트"],
+    backgroundStyle: "paper",
+    layoutStyle: "balanced",
+    notes: [
+      {
+        color: "yellow",
+        content:
+          "이번 주 우선순위\n\n- 랜딩 카피 정리\n- 공유 보드 QA\n- 모바일 제스처 개선"
+      },
+      {
+        color: "blue",
+        content:
+          "회의 메모\n\n고객 요청\n- 링크 카드 고도화\n- 공유 링크 편집 UX 개선\n- 템플릿 보드 예시 확대"
+      },
+      {
+        color: "mint",
+        content:
+          "다음 액션\n\n담당자별로 해야 할 일을 짧게 적고, 관련 링크를 같이 붙여두세요."
+      }
+    ]
+  },
+  {
+    key: "study",
+    title: "공부자료 보드",
+    subtitle: "과목별 핵심 메모와 링크를 보기 좋게 정리",
+    tag: "메모 보드",
+    audience: "강의·자료·복습 메모를 모으는 분",
+    highlights: ["복습 포인트", "자료 링크", "체크리스트"],
+    backgroundStyle: "cork",
+    layoutStyle: "balanced",
+    notes: [
+      {
+        color: "yellow",
+        content:
+          "오늘 공부할 것\n\n- 핵심 개념 3개 정리\n- 예제 2개 풀기\n- 복습 포인트 체크"
+      },
+      {
+        color: "blue",
+        content:
+          "참고 링크\n\nhttps://developer.mozilla.org/\nhttps://react.dev/"
+      },
+      {
+        color: "mint",
+        content:
+          "복습 메모\n\n헷갈린 개념은 짧게 다시 적고, 다음에 볼 링크와 같이 저장해두세요."
+      }
+    ]
+  },
+  {
+    key: "tips",
+    title: "꿀팁 링크 보드",
+    subtitle: "짧은 팁과 유용한 링크를 모아두는 개인 허브",
     tag: "추천",
     audience: "자료를 모아두는 개인 허브",
     highlights: ["링크 수집", "레퍼런스 정리", "공유용 보드"],
@@ -202,58 +313,231 @@ const BOARD_TEMPLATES: Array<{
     ]
   },
   {
-    key: "content",
-    title: "영상 기획 보드",
-    subtitle: "주제, 훅, 레퍼런스, 대본 초안을 한 곳에",
-    tag: "콘텐츠",
-    audience: "유튜브·블로그·콘텐츠 제작자",
-    highlights: ["아이디어 정리", "훅 메모", "레퍼런스 수집"],
-    backgroundStyle: "whiteboard",
-    layoutStyle: "visual",
+    key: "homepage",
+    title: "시작페이지 보드",
+    subtitle: "자주 여는 서비스와 메모를 한 화면에 모아두는 시작 페이지",
+    tag: "위젯 보드",
+    audience: "하루를 빠르게 시작하고 싶은 분",
+    highlights: ["자주 쓰는 링크", "빠른 시작", "개인 시작페이지"],
+    backgroundStyle: "paper",
+    layoutStyle: "compact",
     notes: [
       {
-        color: "pink",
-        content:
-          "영상 아이디어\n\n제목 후보\n- 3분 안에 끝내는 정리법\n- 노션 대신 쓰는 개인화 보드"
+        color: "white",
+        content: "오늘 확인할 것\n\n- 메일 확인\n- 캘린더 체크\n- 오늘 할 일 정리"
       },
       {
-        color: "yellow",
-        content:
-          "오프닝 훅\n\n\"정리는 해야 하는데, 노션은 너무 무겁다고 느낀 적 있나요?\""
-      },
-      {
-        color: "mint",
-        content:
-          "레퍼런스 링크\n\nhttps://www.youtube.com/\nhttps://www.notion.so/"
+        color: "white",
+        content: "자주 가는 링크",
+        metadata: {
+          widgetType: "bookmark",
+          bookmarkUrls: [
+            "https://mail.google.com",
+            "https://calendar.google.com",
+            "https://www.notion.so"
+          ]
+        }
       }
     ]
   },
   {
-    key: "study",
-    title: "공부 자료 보드",
-    subtitle: "과목별 핵심 메모와 링크를 보기 좋게 정리",
-    tag: "학습",
-    audience: "강의·자료·복습 메모를 모으는 분",
-    highlights: ["복습 포인트", "자료 링크", "체크리스트"],
+    key: "bookmark",
+    title: "북마크 보드",
+    subtitle: "카테고리별 즐겨찾기를 보드처럼 정리",
+    tag: "위젯 보드",
+    audience: "매일 보는 사이트를 빠르게 여는 분",
+    highlights: ["북마크 위젯", "카테고리 정리", "공유 가능"],
+    backgroundStyle: "whiteboard",
+    layoutStyle: "compact",
+    notes: [
+      {
+        color: "white",
+        content: "업무 링크",
+        metadata: {
+          widgetType: "bookmark",
+          bookmarkUrls: ["https://github.com", "https://linear.app", "https://slack.com"]
+        }
+      },
+      {
+        color: "white",
+        content: "도구 링크",
+        metadata: {
+          widgetType: "bookmark",
+          bookmarkUrls: ["https://www.figma.com", "https://openai.com", "https://www.youtube.com"]
+        }
+      }
+    ]
+  },
+  {
+    key: "rss",
+    title: "RSS 보드",
+    subtitle: "한눈에 보는 뉴스와 업데이트 피드 보드",
+    tag: "위젯 보드",
+    audience: "AI 뉴스나 업계 소식을 빠르게 확인하는 분",
+    highlights: ["RSS 위젯", "업데이트 수집", "뉴스 허브"],
+    backgroundStyle: "paper",
+    layoutStyle: "compact",
+    notes: [
+      {
+        color: "white",
+        content: "AI 뉴스",
+        metadata: {
+          widgetType: "rss",
+          feedUrl: DEFAULT_RSS_FEED_URL
+        }
+      },
+      {
+        color: "yellow",
+        content: "체크 포인트\n\n중요한 뉴스는 메모 카드로 따로 옮겨 요약해두세요."
+      }
+    ]
+  },
+  {
+    key: "frame",
+    title: "액자보드",
+    subtitle: "캡처와 이미지 중심으로 분위기 있게 모아두는 보드",
+    tag: "위젯 보드",
+    audience: "이미지 레퍼런스나 분위기 모음을 정리하는 분",
+    highlights: ["액자 카드", "이미지 중심", "무드보드"],
     backgroundStyle: "cork",
+    layoutStyle: "visual",
+    notes: [
+      {
+        color: "white",
+        content: "작업 무드보드\n\n참고가 되는 장면과 색감을 모아두세요.",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
+        }
+      },
+      {
+        color: "white",
+        content: "캠페인 레퍼런스\n\n브랜드 톤과 이미지 방향 정리",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=80"
+        }
+      }
+    ]
+  },
+  {
+    key: "ai-share",
+    title: "AI 정보공유보드",
+    subtitle: "도구, 소식, 프롬프트를 함께 모으는 공유 보드",
+    tag: "그룹 보드",
+    audience: "AI 자료를 팀원들과 모으고 싶은 분",
+    highlights: ["공동 수집", "링크 공유", "팀 허브"],
+    backgroundStyle: "whiteboard",
     layoutStyle: "balanced",
     notes: [
       {
         color: "yellow",
-        content:
-          "오늘 공부할 것\n\n- 핵심 개념 3개 정리\n- 예제 2개 풀기\n- 복습 포인트 체크"
-      },
-      {
-        color: "blue",
-        content:
-          "참고 링크\n\nhttps://developer.mozilla.org/\nhttps://react.dev/"
+        content: "이번 주 공유할 것\n\n- 새로 나온 모델 정리\n- 유용한 프롬프트 모음\n- 생산성 도구 후기"
       },
       {
         color: "mint",
-        content:
-          "복습 메모\n\n헷갈린 개념은 짧게 다시 적고, 다음에 볼 링크와 같이 저장해두세요."
+        content: "공유 링크\n\nhttps://openai.com\nhttps://aistudio.google.com"
       }
     ]
+  },
+  {
+    key: "aistudio",
+    title: "Aistudio 모음 보드",
+    subtitle: "AI Studio 관련 링크, 프롬프트, 결과물을 모으는 보드",
+    tag: "그룹 보드",
+    audience: "AI Studio 실험 기록을 모아두는 팀",
+    highlights: ["프롬프트 기록", "레퍼런스 링크", "실험 정리"],
+    backgroundStyle: "paper",
+    layoutStyle: "balanced",
+    notes: [
+      {
+        color: "blue",
+        content: "프롬프트 실험\n\n- 캐릭터 설명 방식\n- 영상 대본 생성 방식\n- 요약 결과 비교"
+      },
+      {
+        color: "yellow",
+        content: "참고 링크\n\nhttps://aistudio.google.com"
+      }
+    ]
+  },
+  {
+    key: "group-chat",
+    title: "단톡메모 보드",
+    subtitle: "여럿이 링크와 할 일을 짧게 남기는 대화형 보드",
+    tag: "그룹 보드",
+    audience: "단톡방처럼 짧게 메모를 주고받는 팀",
+    highlights: ["짧은 메모", "실시간 공유", "빠른 정리"],
+    backgroundStyle: "whiteboard",
+    layoutStyle: "compact",
+    notes: [
+      {
+        color: "pink",
+        content: "오늘 공유할 링크 있으면 여기에 바로 붙여주세요."
+      },
+      {
+        color: "yellow",
+        content: "작업 체크\n\n- 썸네일 수정\n- 스크립트 리뷰\n- 다음 업로드 일정"
+      }
+    ]
+  },
+  {
+    key: "family",
+    title: "가족 보드",
+    subtitle: "가족 일정, 장보기, 저장 링크를 함께 쓰는 생활 보드",
+    tag: "그룹 보드",
+    audience: "가족과 생활 메모를 공유하는 분",
+    highlights: ["장보기", "일정 공유", "생활 링크"],
+    backgroundStyle: "paper",
+    layoutStyle: "balanced",
+    notes: [
+      {
+        color: "yellow",
+        content: "이번 주 장보기\n\n- 우유\n- 휴지\n- 과일\n- 반찬 재료"
+      },
+      {
+        color: "mint",
+        content: "공유 일정\n\n토요일 병원 예약\n일요일 외식 약속"
+      }
+    ]
+  },
+  {
+    key: "couple",
+    title: "연인 보드",
+    subtitle: "데이트 계획, 맛집, 같이 볼 것들을 모아두는 보드",
+    tag: "그룹 보드",
+    audience: "둘이 함께 쓰는 취향 보드",
+    highlights: ["데이트 계획", "맛집 링크", "공유 메모"],
+    backgroundStyle: "cork",
+    layoutStyle: "visual",
+    notes: [
+      {
+        color: "pink",
+        content: "다음 데이트 후보\n\n- 전시회 보기\n- 브런치 카페\n- 야간 드라이브"
+      },
+      {
+        color: "yellow",
+        content: "같이 볼 것\n\nhttps://www.netflix.com/\nhttps://www.youtube.com/"
+      }
+    ]
+  }
+];
+
+const BOARD_TEMPLATE_SECTIONS: BoardTemplateSection[] = [
+  {
+    key: "notes",
+    title: "메모 보드",
+    subtitle: "텍스트와 링크를 빠르게 정리하는 기본형 보드",
+    templateKeys: ["video", "work", "study", "tips"]
+  },
+  {
+    key: "widgets",
+    title: "위젯 보드",
+    subtitle: "시작페이지, 북마크, RSS, 액자형 카드 중심 보드",
+    templateKeys: ["homepage", "bookmark", "rss", "frame"]
+  },
+  {
+    key: "groups",
+    title: "그룹 보드",
+    subtitle: "여럿이 함께 보는 공유형 보드 예시",
+    templateKeys: ["ai-share", "aistudio", "group-chat", "family", "couple"]
   }
 ];
 
@@ -353,15 +637,20 @@ const createTemplateBoardSnapshot = (
     layoutStyle: template.layoutStyle ?? "balanced"
   };
 
-  const notes = template.notes.map((note, index) =>
-    createNote({
+  const notes = template.notes.map((note, index) => {
+    const created = createNote({
       boardId: board.id,
       userId,
       zIndex: index + 1,
       color: note.color,
       content: note.content
-    })
-  );
+    });
+    created.metadata = {
+      ...created.metadata,
+      ...(note.metadata ?? {})
+    };
+    return created;
+  });
 
   const organizedNotes = autoOrganizeBoardNotes(
     notes,
@@ -2821,12 +3110,50 @@ const App = () => {
   const previousBoard = getAdjacentBoard("prev");
   const nextSwipeBoard = getAdjacentBoard("next");
   const mobileSwipeEnabled = mobileViewport && feedMode === "active" && activeBoards.length > 1;
-  const starterTemplates = BOARD_TEMPLATES.filter((template) => template.key !== "blank");
+  const starterTemplateSections = BOARD_TEMPLATE_SECTIONS.map((section) => ({
+    ...section,
+    templates: section.templateKeys
+      .map((key) => BOARD_TEMPLATES.find((template) => template.key === key))
+      .filter((template): template is BoardTemplateDefinition => Boolean(template))
+  }));
   const boardOwnerLabel = selectedBoard
     ? isBoardOwner
       ? user?.email || "현재 사용자"
       : selectedBoard.userId
     : "";
+
+  const renderTemplateCard = (template: BoardTemplateDefinition, keyPrefix: string) => (
+    <button
+      key={`${keyPrefix}-${template.key}`}
+      className="template-card starter-template-card"
+      onClick={() => void addBoard(template.key)}
+    >
+      <div className={`template-card-preview template-${template.backgroundStyle}`}>
+        <span className="template-card-badge">{template.tag}</span>
+        <strong>{template.title}</strong>
+        <span>{template.subtitle}</span>
+      </div>
+      <span className="template-card-title">{template.title}</span>
+      <span className="template-card-copy">{template.subtitle}</span>
+      <span className="template-card-audience">{template.audience}</span>
+    </button>
+  );
+
+  const renderTemplateSections = (keyPrefix: string, compact = false) => (
+    <div className="template-section-list">
+      {starterTemplateSections.map((section) => (
+        <section className="template-section" key={`${keyPrefix}-${section.key}`}>
+          <div className="template-section-head">
+            <strong>{section.title}</strong>
+            <span>{section.subtitle}</span>
+          </div>
+          <div className={`starter-template-grid ${compact ? "compact" : ""}`}>
+            {section.templates.map((template) => renderTemplateCard(template, `${keyPrefix}-${section.key}`))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
 
   const showExpandedSidebar = sidebarExpanded && !compactSidebar;
 
@@ -3176,29 +3503,71 @@ const App = () => {
                 </button>
               </div>
 
-              <div className="template-picker-grid">
-                {BOARD_TEMPLATES.map((template) => (
-                  <button
-                    key={template.key}
-                    className="template-card"
-                    onClick={() => void addBoard(template.key)}
-                  >
-                    <div className={`template-card-preview template-${template.backgroundStyle}`}>
-                      <span className="template-card-badge">{template.tag}</span>
-                      <strong>{template.title}</strong>
-                      <span>{template.subtitle}</span>
+              <div className="template-section-list">
+                <section className="template-section">
+                  <div className="template-section-head">
+                    <strong>빠른 시작</strong>
+                    <span>아무 제약 없이 바로 메모를 시작하고 싶다면 빈 보드가 가장 가볍습니다.</span>
+                  </div>
+                  <div className="template-picker-grid">
+                    {BOARD_TEMPLATES.filter((template) => template.key === "blank").map((template) => (
+                      <button
+                        key={template.key}
+                        className="template-card"
+                        onClick={() => void addBoard(template.key)}
+                      >
+                        <div className={`template-card-preview template-${template.backgroundStyle}`}>
+                          <span className="template-card-badge">{template.tag}</span>
+                          <strong>{template.title}</strong>
+                          <span>{template.subtitle}</span>
+                        </div>
+                        <span className="template-card-title">{template.title}</span>
+                        <span className="template-card-copy">{template.subtitle}</span>
+                        <span className="template-card-audience">{template.audience}</span>
+                        <div className="template-card-highlights">
+                          {template.highlights.map((highlight) => (
+                            <span key={`${template.key}-${highlight}`} className="template-card-chip">
+                              {highlight}
+                            </span>
+                          ))}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                {starterTemplateSections.map((section) => (
+                  <section className="template-section" key={`picker-${section.key}`}>
+                    <div className="template-section-head">
+                      <strong>{section.title}</strong>
+                      <span>{section.subtitle}</span>
                     </div>
-                    <span className="template-card-title">{template.title}</span>
-                    <span className="template-card-copy">{template.subtitle}</span>
-                    <span className="template-card-audience">{template.audience}</span>
-                    <div className="template-card-highlights">
-                      {template.highlights.map((highlight) => (
-                        <span key={`${template.key}-${highlight}`} className="template-card-chip">
-                          {highlight}
-                        </span>
+                    <div className="template-picker-grid">
+                      {section.templates.map((template) => (
+                        <button
+                          key={`picker-${template.key}`}
+                          className="template-card"
+                          onClick={() => void addBoard(template.key)}
+                        >
+                          <div className={`template-card-preview template-${template.backgroundStyle}`}>
+                            <span className="template-card-badge">{template.tag}</span>
+                            <strong>{template.title}</strong>
+                            <span>{template.subtitle}</span>
+                          </div>
+                          <span className="template-card-title">{template.title}</span>
+                          <span className="template-card-copy">{template.subtitle}</span>
+                          <span className="template-card-audience">{template.audience}</span>
+                          <div className="template-card-highlights">
+                            {template.highlights.map((highlight) => (
+                              <span key={`${template.key}-${highlight}`} className="template-card-chip">
+                                {highlight}
+                              </span>
+                            ))}
+                          </div>
+                        </button>
                       ))}
                     </div>
-                  </button>
+                  </section>
                 ))}
               </div>
             </section>
@@ -3501,38 +3870,24 @@ const App = () => {
             {loading ? (
               <div className="feed-empty">보드를 불러오는 중입니다.</div>
             ) : !selectedBoard ? (
-              <div className="feed-empty empty-templates">
+              <div className="feed-empty empty-templates full-span">
                 <div className="feed-empty-copy">
                   <strong>어떤 보드로 시작할까요?</strong>
                   <span>용도에 맞는 스타터 보드를 고르면 예시 메모와 함께 바로 시작할 수 있어요.</span>
                 </div>
-                <div className="starter-template-grid">
-                  {starterTemplates.map((template) => (
-                    <button
-                      key={`empty-${template.key}`}
-                      className="template-card starter-template-card"
-                      onClick={() => void addBoard(template.key)}
-                    >
-                      <div className={`template-card-preview template-${template.backgroundStyle}`}>
-                        <span className="template-card-badge">{template.tag}</span>
-                        <strong>{template.title}</strong>
-                        <span>{template.subtitle}</span>
-                      </div>
-                      <span className="template-card-title">{template.title}</span>
-                      <span className="template-card-copy">{template.audience}</span>
-                    </button>
-                  ))}
-                </div>
+                {renderTemplateSections("empty")}
                 <button className="ghost-action starter-template-more" onClick={openTemplatePicker}>
                   모든 템플릿 보기
                 </button>
               </div>
             ) : visibleNotes.length === 0 ? (
               feedMode === "active" ? (
-                <div className="feed-empty empty-templates">
+                <div className="feed-empty empty-templates full-span">
                   <div className="feed-empty-copy">
                     <strong>이 보드를 채워볼까요?</strong>
-                    <span>새 메모를 바로 추가하거나, 템플릿 보드를 하나 더 만들어서 흐름을 참고할 수 있어요.</span>
+                    <span>
+                      새 메모를 바로 추가하거나, 템플릿 보드를 하나 더 만들어서 흐름을 참고할 수 있어요.
+                    </span>
                   </div>
                   <div className="feed-empty-actions">
                     <button className="new-note-pill" onClick={addNote}>
@@ -3542,23 +3897,7 @@ const App = () => {
                       템플릿 보드 보기
                     </button>
                   </div>
-                  <div className="starter-template-grid compact">
-                    {starterTemplates.slice(0, 3).map((template) => (
-                      <button
-                        key={`selected-empty-${template.key}`}
-                        className="template-card starter-template-card"
-                        onClick={() => void addBoard(template.key)}
-                      >
-                        <div className={`template-card-preview template-${template.backgroundStyle}`}>
-                          <span className="template-card-badge">{template.tag}</span>
-                          <strong>{template.title}</strong>
-                          <span>{template.subtitle}</span>
-                        </div>
-                        <span className="template-card-title">{template.title}</span>
-                        <span className="template-card-copy">{template.audience}</span>
-                      </button>
-                    ))}
-                  </div>
+                  {renderTemplateSections("selected-empty", true)}
                 </div>
               ) : (
                 <div className="feed-empty">보관된 메모가 없습니다.</div>
