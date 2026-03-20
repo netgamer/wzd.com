@@ -1477,6 +1477,27 @@ button {
   line-height: 1.45;
 }
 
+.note-more-button {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(34, 23, 12, 0.06);
+}
+
+.note-more-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
 .bookmark-widget-card {
   background: rgba(255, 255, 255, 0.9);
 }
@@ -1523,6 +1544,14 @@ button {
   color: #3b3127;
   line-height: 1.65;
   white-space: pre-wrap;
+}
+
+.pin-body-preview.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 8;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
 }
 
 .font-scale {

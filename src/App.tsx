@@ -1407,6 +1407,7 @@ const App = () => {
   const [dragPreviewBoardId, setDragPreviewBoardId] = useState<string | null>(null);
   const [dragArmedBoardId, setDragArmedBoardId] = useState<string | null>(null);
   const [editorDropNoteId, setEditorDropNoteId] = useState<string | null>(null);
+  const [noteMoreState, setNoteMoreState] = useState<Record<string, number>>({});
   const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
   const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(() => Boolean(getSharedBoardSlugFromLocation()));
 
@@ -1544,6 +1545,13 @@ const App = () => {
   const updateDragPreview = (noteId: string | null, column: number | null) => {
     setDragPreviewNoteId((prev) => (prev === noteId ? prev : noteId));
     setDragPreviewColumn((prev) => (prev === column ? prev : column));
+  };
+
+  const revealMoreForNote = (noteId: string) => {
+    setNoteMoreState((prev) => ({
+      ...prev,
+      [noteId]: (prev[noteId] ?? 0) + 1
+    }));
   };
 
   const mergeLocalSnapshotToCloud = async (userId: string, remoteBoards: BoardV2[], remoteNotes: NoteV2[]) => {
@@ -3985,6 +3993,12 @@ const App = () => {
                     const hideHoverMetadata = Boolean(attachedImageUrl && hasExternalLink && !selected);
                     const useImageHeroCard = hasImagePreview && !selected;
                     const isFramedLinkNote = feedMode === "active" && hasExternalLink;
+                    const moreClicks = noteMoreState[note.id] ?? 0;
+                    const rssVisibleCount = 5 + moreClicks * 5;
+                    const bookmarkVisibleCount = 2 + moreClicks * 2;
+                    const textNeedsMore =
+                      displayDescription.length > 220 || displayDescription.split("\n").filter(Boolean).length > 5;
+                    const textExpanded = moreClicks > 0;
                     const showDropPreview =
                       runningDragNoteId !== null &&
                       dragPreviewNoteId === note.id &&
@@ -4151,19 +4165,35 @@ const App = () => {
                                       {rssFeed?.title || "RSS 피드 열기"}
                                     </a>
                                     {rssFeed?.items?.length ? (
-                                      rssFeed.items.slice(0, 5).map((item) => (
-                                        <a
-                                          key={`${note.id}-${item.link}-${item.title}`}
-                                          className="rss-item"
-                                          href={item.link}
-                                          target="_blank"
-                                          rel="noreferrer"
-                                          onClick={(event) => event.stopPropagation()}
-                                        >
-                                          <span className="rss-item-title">{item.title}</span>
-                                          {item.pubDate && <span className="rss-item-date">{item.pubDate}</span>}
-                                        </a>
-                                      ))
+                                      <>
+                                        {rssFeed.items.slice(0, rssVisibleCount).map((item) => (
+                                          <a
+                                            key={`${note.id}-${item.link}-${item.title}`}
+                                            className="rss-item"
+                                            href={item.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            onClick={(event) => event.stopPropagation()}
+                                          >
+                                            <span className="rss-item-title">{item.title}</span>
+                                            {item.pubDate && <span className="rss-item-date">{item.pubDate}</span>}
+                                          </a>
+                                        ))}
+                                        {rssFeed.items.length > rssVisibleCount && (
+                                          <button
+                                            className="note-more-button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              revealMoreForNote(note.id);
+                                            }}
+                                          >
+                                            <span className="note-more-icon" aria-hidden="true">
+                                              ↓
+                                            </span>
+                                            <span>More</span>
+                                          </button>
+                                        )}
+                                      </>
                                     ) : (
                                       <p className="rss-empty">RSS 항목을 불러오는 중이거나 피드를 찾을 수 없습니다.</p>
                                     )}
@@ -4222,7 +4252,8 @@ const App = () => {
                                 ) : (
                                   <div className="bookmark-list">
                                     {bookmarkUrls.length > 0 ? (
-                                      bookmarkUrls.map((url) => {
+                                      <>
+                                      {bookmarkUrls.slice(0, bookmarkVisibleCount).map((url) => {
                                         const preview = linkPreviews[url];
                                         return preview ? (
                                           <a
@@ -4262,7 +4293,22 @@ const App = () => {
                                             {url}
                                           </a>
                                         );
-                                      })
+                                      })}
+                                      {bookmarkUrls.length > bookmarkVisibleCount && (
+                                        <button
+                                          className="note-more-button"
+                                          onClick={(event) => {
+                                            event.stopPropagation();
+                                            revealMoreForNote(note.id);
+                                          }}
+                                        >
+                                          <span className="note-more-icon" aria-hidden="true">
+                                            ↓
+                                          </span>
+                                          <span>More</span>
+                                        </button>
+                                      )}
+                                      </>
                                     ) : (
                                       <p className="rss-empty">링크를 추가하면 북마크 카드가 표시됩니다.</p>
                                     )}
@@ -4365,9 +4411,28 @@ const App = () => {
                                       ))}
                                     {!isPureLinkNote &&
                                       (!useImageHeroCard || (!hideHoverMetadata && (hasTextPreview || hasLinkPreview))) && (
-                                      <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                                        {displayDescription}
-                                      </p>
+                                      <>
+                                        <p
+                                          className={`pin-body-preview ${textNeedsMore && !textExpanded ? "clamped" : ""}`}
+                                          style={{ fontSize: `${fontSize}px` }}
+                                        >
+                                          {displayDescription}
+                                        </p>
+                                        {textNeedsMore && !textExpanded && (
+                                          <button
+                                            className="note-more-button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              revealMoreForNote(note.id);
+                                            }}
+                                          >
+                                            <span className="note-more-icon" aria-hidden="true">
+                                              ↓
+                                            </span>
+                                            <span>More</span>
+                                          </button>
+                                        )}
+                                      </>
                                       )}
                                   </>
                                 )}
