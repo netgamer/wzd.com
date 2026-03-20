@@ -3325,6 +3325,11 @@ const App = () => {
           </div>
 
           <div className="topbar-actions">
+            {mobileViewport && !isSharedView && (
+              <button className="mobile-icon-action mobile-new-note-action" onClick={addNote} aria-label="새 메모 만들기">
+                +
+              </button>
+            )}
             {!isSharedView && (
               <button className="new-note-pill" onClick={addNote}>
                 새 메모

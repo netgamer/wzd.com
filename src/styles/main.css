@@ -382,6 +382,16 @@ button {
   display: none;
 }
 
+.mobile-new-note-action {
+  display: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 14px 28px rgba(227, 19, 52, 0.22);
+}
+
 .topbar-board-title h1 {
   margin: 0;
   font-size: 31px;
@@ -1916,6 +1926,11 @@ button {
   }
 
   .mobile-board-toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+  }
+
+  .mobile-new-note-action {
     display: inline-flex;
     flex: 0 0 auto;
   }
