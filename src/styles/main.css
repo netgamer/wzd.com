@@ -665,6 +665,7 @@ button {
   flex-direction: column;
   gap: 24px;
   margin-top: 16px;
+  width: 100%;
 }
 
 .template-section {
@@ -1659,10 +1660,16 @@ button {
   align-content: start;
   gap: 20px;
   padding: 28px;
+  width: 100%;
+  max-width: none;
+  justify-self: stretch;
+  box-sizing: border-box;
 }
 
 .feed-empty.full-span {
   grid-column: 1 / -1;
+  width: 100%;
+  justify-self: stretch;
 }
 
 .feed-empty-copy {
@@ -1693,6 +1700,7 @@ button {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
+  width: 100%;
 }
 
 .starter-template-grid.compact .template-card-preview {

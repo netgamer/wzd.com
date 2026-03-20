@@ -3902,7 +3902,7 @@ const App = () => {
                       템플릿 보드 보기
                     </button>
                   </div>
-                  {renderTemplateSections("selected-empty", true)}
+                  {renderTemplateSections("selected-empty")}
                 </div>
               ) : (
                 <div className="feed-empty">보관된 메모가 없습니다.</div>
