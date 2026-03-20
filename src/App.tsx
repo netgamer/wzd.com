@@ -8,8 +8,11 @@
   useState
 } from "react";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
+import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
 import { fetchRssFeed, type RssFeedPreview } from "./lib/rss";
+import { fetchTrendingKeywords, type TrendingPreview } from "./lib/trending";
+import { fetchWeatherPreview, type WeatherPreview } from "./lib/weather";
 import {
   type BoardBackgroundStyle,
   type BoardMemberProfile,
@@ -45,8 +48,22 @@ type FeedMode = "active" | "archived";
 type CloudSaveState = "idle" | "saving" | "saved" | "error";
 type LinkPreviewState = LinkPreview | null;
 type RssFeedState = RssFeedPreview | null;
-type WidgetType = "note" | "rss" | "bookmark" | "checklist" | "countdown";
+type WeatherState = WeatherPreview | null;
+type TrendingState = TrendingPreview | null;
+type DeliveryState = DeliveryTrackingPreview | null;
+type WidgetType =
+  | "note"
+  | "rss"
+  | "bookmark"
+  | "checklist"
+  | "countdown"
+  | "timetable"
+  | "weather"
+  | "trending"
+  | "delivery"
+  | "pet";
 type ChecklistItem = { text: string; checked: boolean };
+type TimetableEntry = { day: string; start: string; end: string; title: string; location: string };
 type BoardTemplateKey =
   | "blank"
   | "video"
@@ -207,6 +224,20 @@ const DEFAULT_PERSONAL_NOTE_CONTENT =
   "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80";
 const DEFAULT_GROUP_NOTE_CONTENT =
   "그룹 메모장\n\n주제별 보드에서 각자 찾은 링크와 자료를 함께 공유해보세요.\n예: AI Studio 레퍼런스 모음";
+const DEFAULT_TIMETABLE_TEXT = [
+  "월|09:00|10:00|기획 회의|회의실 A",
+  "화|10:30|11:30|자료 조사|온라인",
+  "수|13:00|14:30|콘텐츠 제작|스튜디오",
+  "목|15:00|16:00|피드백 정리|노트북",
+  "금|16:30|17:30|다음 주 준비|라운지"
+].join("\n");
+const DEFAULT_WEATHER_QUERY = "서울";
+const DEFAULT_TRENDING_REGION = "KR";
+const DEFAULT_DELIVERY_CARRIER = "kr.cjlogistics";
+const DEFAULT_PET_NAME = "모찌";
+const PET_VISIT_STORAGE_KEY = "wzd-pet-visits";
+const PET_VISIT_SESSION_PREFIX = "wzd-pet-visit-session:";
+const TIMETABLE_DAY_ORDER = ["월", "화", "수", "목", "금", "토", "일"];
 
 const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
   {
@@ -1144,7 +1175,12 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "rss" ||
   note.metadata?.widgetType === "bookmark" ||
   note.metadata?.widgetType === "checklist" ||
-  note.metadata?.widgetType === "countdown"
+  note.metadata?.widgetType === "countdown" ||
+  note.metadata?.widgetType === "timetable" ||
+  note.metadata?.widgetType === "weather" ||
+  note.metadata?.widgetType === "trending" ||
+  note.metadata?.widgetType === "delivery" ||
+  note.metadata?.widgetType === "pet"
     ? note.metadata.widgetType
     : "note";
 const getRssFeedUrl = (note: NoteV2) =>
@@ -1225,6 +1261,120 @@ const getCountdownTargetDate = (note: NoteV2) =>
 const getCountdownDescription = (note: NoteV2) =>
   typeof note.metadata?.countdownDescription === "string" ? note.metadata.countdownDescription.trim() : "";
 
+const normalizeTimetableText = (value: string) =>
+  value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
+
+const parseTimetableEntries = (value: string): TimetableEntry[] =>
+  value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [day = "", start = "", end = "", title = "", location = ""] = line.split("|").map((part) => part.trim());
+      return {
+        day,
+        start,
+        end,
+        title,
+        location
+      };
+    })
+    .filter((entry) => entry.day && entry.start && entry.end && entry.title);
+
+const getTimetableText = (note: NoteV2) =>
+  typeof note.metadata?.timetableText === "string" && note.metadata.timetableText.trim()
+    ? note.metadata.timetableText
+    : DEFAULT_TIMETABLE_TEXT;
+
+const getTimetableEntries = (note: NoteV2) => parseTimetableEntries(getTimetableText(note));
+
+const getWeatherQuery = (note: NoteV2) =>
+  typeof note.metadata?.weatherQuery === "string" && note.metadata.weatherQuery.trim()
+    ? note.metadata.weatherQuery.trim()
+    : DEFAULT_WEATHER_QUERY;
+
+const getWeatherLatitude = (note: NoteV2) =>
+  typeof note.metadata?.weatherLatitude === "number" ? note.metadata.weatherLatitude : null;
+
+const getWeatherLongitude = (note: NoteV2) =>
+  typeof note.metadata?.weatherLongitude === "number" ? note.metadata.weatherLongitude : null;
+
+const getTrendingRegion = (note: NoteV2) =>
+  typeof note.metadata?.trendingRegion === "string" && note.metadata.trendingRegion.trim()
+    ? note.metadata.trendingRegion.trim().toUpperCase()
+    : DEFAULT_TRENDING_REGION;
+
+const getDeliveryCarrierId = (note: NoteV2) =>
+  typeof note.metadata?.deliveryCarrierId === "string" && note.metadata.deliveryCarrierId.trim()
+    ? note.metadata.deliveryCarrierId.trim()
+    : DEFAULT_DELIVERY_CARRIER;
+
+const getDeliveryTrackingNumber = (note: NoteV2) =>
+  typeof note.metadata?.deliveryTrackingNumber === "string" ? note.metadata.deliveryTrackingNumber.trim() : "";
+
+const getDeliveryLabel = (note: NoteV2) =>
+  typeof note.metadata?.deliveryLabel === "string" ? note.metadata.deliveryLabel.trim() : "";
+
+const getPetName = (note: NoteV2) =>
+  typeof note.metadata?.petName === "string" && note.metadata.petName.trim() ? note.metadata.petName.trim() : DEFAULT_PET_NAME;
+
+const loadPetVisitCounts = () => {
+  if (typeof window === "undefined") {
+    return {} as Record<string, number>;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(PET_VISIT_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, number] => typeof entry[1] === "number")
+    );
+  } catch {
+    return {};
+  }
+};
+
+const savePetVisitCounts = (counts: Record<string, number>) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(PET_VISIT_STORAGE_KEY, JSON.stringify(counts));
+};
+
+const registerBoardVisit = (boardId: string) => {
+  if (typeof window === "undefined") {
+    return {} as Record<string, number>;
+  }
+
+  const sessionKey = `${PET_VISIT_SESSION_PREFIX}${boardId}`;
+  const counts = loadPetVisitCounts();
+  if (!window.sessionStorage.getItem(sessionKey)) {
+    counts[boardId] = (counts[boardId] ?? 0) + 1;
+    savePetVisitCounts(counts);
+    window.sessionStorage.setItem(sessionKey, "1");
+  }
+
+  return counts;
+};
+
+const getPetStage = (visitCount: number) => {
+  if (visitCount >= 50) return { emoji: "🐻", label: "마스터", message: "이 보드를 완전히 자기 집처럼 느끼고 있어요." };
+  if (visitCount >= 25) return { emoji: "🦊", label: "탐험가", message: "방문자가 늘수록 점점 더 활발해지고 있어요." };
+  if (visitCount >= 10) return { emoji: "🐣", label: "성장중", message: "조금만 더 돌봐주면 다음 단계로 진화해요." };
+  if (visitCount >= 3) return { emoji: "🌱", label: "새싹", message: "방문이 쌓이면서 슬슬 움직이기 시작했어요." };
+  return { emoji: "🥚", label: "알", message: "첫 방문자를 기다리며 조용히 잠들어 있어요." };
+};
+
+const formatTimeRange = (start: string, end: string) => `${start}~${end}`;
+
 const formatCountdownLabel = (targetDate: string) => {
   if (!targetDate) {
     return "날짜 선택";
@@ -1243,6 +1393,7 @@ const formatCountdownLabel = (targetDate: string) => {
   if (diffDays > 0) return `D-${diffDays}`;
   return `D+${Math.abs(diffDays)}`;
 };
+
 const getAttachedImageUrl = (note: NoteV2) =>
   typeof note.metadata?.pastedImageUrl === "string" && note.metadata.pastedImageUrl.trim()
     ? note.metadata.pastedImageUrl.trim()
@@ -1413,6 +1564,11 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   if (widgetType === "bookmark") return 1;
   if (widgetType === "checklist") return 2;
   if (widgetType === "countdown") return 2;
+  if (widgetType === "weather") return 1;
+  if (widgetType === "trending") return 1;
+  if (widgetType === "delivery") return 2;
+  if (widgetType === "timetable") return 2;
+  if (widgetType === "pet") return 3;
   if (getAttachedImageUrl(note)) return 2;
 
   const noteUrl = extractFirstUrl(note.content);
@@ -1422,7 +1578,19 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   return 4;
 };
 
-type AutoLayoutCategory = "rss" | "bookmark" | "checklist" | "countdown" | "image" | "link" | "text";
+type AutoLayoutCategory =
+  | "rss"
+  | "bookmark"
+  | "checklist"
+  | "countdown"
+  | "timetable"
+  | "weather"
+  | "trending"
+  | "delivery"
+  | "pet"
+  | "image"
+  | "link"
+  | "text";
 
 const BOARD_LAYOUT_STYLES: Array<{
   key: BoardLayoutStyle;
@@ -1448,6 +1616,11 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   if (widgetType === "bookmark") return "bookmark";
   if (widgetType === "checklist") return "checklist";
   if (widgetType === "countdown") return "countdown";
+  if (widgetType === "timetable") return "timetable";
+  if (widgetType === "weather") return "weather";
+  if (widgetType === "trending") return "trending";
+  if (widgetType === "delivery") return "delivery";
+  if (widgetType === "pet") return "pet";
 
   const imageUrl = getAttachedImageUrl(note);
   const noteUrl = extractFirstUrl(note.content);
@@ -1502,6 +1675,11 @@ const getPreferredColumns = (
     case "rss":
     case "checklist":
     case "countdown":
+    case "timetable":
+    case "weather":
+    case "trending":
+    case "delivery":
+    case "pet":
       return [...allColumns].reverse();
     default:
       return allColumns;
@@ -1514,6 +1692,11 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
   if (widgetType === "bookmark") return layoutStyle === "compact" ? 230 : 260;
   if (widgetType === "checklist") return layoutStyle === "compact" ? 250 : 290;
   if (widgetType === "countdown") return layoutStyle === "compact" ? 210 : 240;
+  if (widgetType === "timetable") return layoutStyle === "compact" ? 260 : 320;
+  if (widgetType === "weather") return layoutStyle === "compact" ? 220 : 260;
+  if (widgetType === "trending") return layoutStyle === "compact" ? 250 : 300;
+  if (widgetType === "delivery") return layoutStyle === "compact" ? 230 : 280;
+  if (widgetType === "pet") return layoutStyle === "compact" ? 220 : 260;
 
   const imageUrl = getAttachedImageUrl(note);
   const noteUrl = extractFirstUrl(note.content);
@@ -1624,6 +1807,11 @@ const App = () => {
   const [columnCount, setColumnCount] = useState(() => getColumnCount());
   const [linkPreviews, setLinkPreviews] = useState<Record<string, LinkPreviewState>>({});
   const [rssFeeds, setRssFeeds] = useState<Record<string, RssFeedState>>({});
+  const [weatherWidgets, setWeatherWidgets] = useState<Record<string, WeatherState>>({});
+  const [trendingWidgets, setTrendingWidgets] = useState<Record<string, TrendingState>>({});
+  const [deliveryWidgets, setDeliveryWidgets] = useState<Record<string, DeliveryState>>({});
+  const [deliveryCarriers, setDeliveryCarriers] = useState<DeliveryCarrier[]>([]);
+  const [petVisitCounts, setPetVisitCounts] = useState<Record<string, number>>(() => loadPetVisitCounts());
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [compactSidebar, setCompactSidebar] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < COMPACT_SIDEBAR_BREAKPOINT : false
@@ -1790,6 +1978,428 @@ const App = () => {
   const updateDragPreview = (noteId: string | null, column: number | null) => {
     setDragPreviewNoteId((prev) => (prev === noteId ? prev : noteId));
     setDragPreviewColumn((prev) => (prev === column ? prev : column));
+  };
+
+  const renderExtraWidgetBody = (note: NoteV2, selected: boolean, compact = false) => {
+    const widgetType = getWidgetType(note);
+
+    if (widgetType === "timetable") {
+      const timetableText = getTimetableText(note);
+      const entries = getTimetableEntries(note);
+      const days = TIMETABLE_DAY_ORDER.filter((day) => entries.some((entry) => entry.day === day));
+      const visibleEntries = compact ? entries.slice(0, 4) : entries;
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">시간표</span>
+            <p className="pin-title">{asText(note.content).trim() || "시간표"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="시간표 제목"
+              />
+              <textarea
+                className="widget-textarea"
+                value={timetableText}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "timetable",
+                      timetableText: normalizeTimetableText(event.target.value)
+                    }
+                  })
+                }
+                placeholder={"요일|시작|종료|과목|장소\n월|09:00|10:00|기획 회의|회의실 A"}
+                rows={6}
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : compact ? (
+            <div className="timetable-preview-list">
+              {visibleEntries.map((entry, index) => (
+                <div key={`${note.id}-tt-preview-${index}`} className="timetable-preview-item">
+                  <span className="timetable-preview-day">{entry.day}</span>
+                  <span className="timetable-preview-main">
+                    {entry.title} · {formatTimeRange(entry.start, entry.end)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="timetable-widget">
+              <div className="timetable-widget-days">
+                {days.map((day) => (
+                  <span key={`${note.id}-tt-day-${day}`} className="timetable-day-chip">
+                    {day}
+                  </span>
+                ))}
+              </div>
+              <div className="timetable-grid">
+                {entries.map((entry, index) => (
+                  <div key={`${note.id}-tt-${index}`} className="timetable-entry-card">
+                    <div className="timetable-entry-head">
+                      <strong>{entry.title}</strong>
+                      <span>{entry.day}</span>
+                    </div>
+                    <span>{formatTimeRange(entry.start, entry.end)}</span>
+                    {entry.location && <span>{entry.location}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "weather") {
+      const query = getWeatherQuery(note);
+      const weather = weatherWidgets[note.id];
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">날씨</span>
+            <p className="pin-title">{asText(note.content).trim() || "날씨"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="날씨 위젯 제목"
+              />
+              <input
+                className="widget-input"
+                value={query}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "weather",
+                      weatherQuery: event.target.value
+                    }
+                  })
+                }
+                placeholder="도시명 입력"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setWeatherWidgets((prev) => {
+                    const next = { ...prev };
+                    delete next[note.id];
+                    return next;
+                  });
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : weather ? (
+            <div className={`weather-widget ${compact ? "compact" : ""}`}>
+              <div className="weather-current">
+                <span className="weather-current-emoji">{weather.current.emoji}</span>
+                <div>
+                  <strong>{weather.location}</strong>
+                  <span>
+                    {weather.current.temperature}° · {weather.current.weatherLabel}
+                  </span>
+                </div>
+              </div>
+              <div className="weather-forecast-list">
+                {weather.days.slice(0, compact ? 3 : 4).map((day) => (
+                  <div key={`${note.id}-${day.date}`} className="weather-forecast-item">
+                    <span>{day.label}</span>
+                    <span>{day.emoji}</span>
+                    <span>
+                      {day.tempMax}° / {day.tempMin}°
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="rss-empty">날씨 정보를 불러오는 중입니다.</p>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "trending") {
+      const region = getTrendingRegion(note);
+      const trending = trendingWidgets[note.id];
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">TREND</span>
+            <p className="pin-title">{asText(note.content).trim() || "실시간 검색어"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <input
+                className="widget-input"
+                value={region}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "trending",
+                      trendingRegion: event.target.value.toUpperCase()
+                    }
+                  })
+                }
+                placeholder="국가 코드 (예: KR)"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setTrendingWidgets((prev) => {
+                    const next = { ...prev };
+                    delete next[note.id];
+                    return next;
+                  });
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : trending ? (
+            <div className="trending-widget">
+              <div className="trending-region">{trending.region} · 인기 키워드</div>
+              <div className="trending-list">
+                {trending.items.slice(0, compact ? 5 : 8).map((item, index) => (
+                  <a
+                    key={`${note.id}-trend-${item.link}-${index}`}
+                    className="trending-item"
+                    href={item.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <span className="trending-rank">{index + 1}</span>
+                    <span className="trending-title">{item.title}</span>
+                    {item.traffic && <span className="trending-traffic">{item.traffic}</span>}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="rss-empty">실시간 검색어를 불러오는 중입니다.</p>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "delivery") {
+      const trackingNumber = getDeliveryTrackingNumber(note);
+      const carrierId = getDeliveryCarrierId(note);
+      const label = getDeliveryLabel(note);
+      const delivery = deliveryWidgets[note.id];
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">배송</span>
+            <p className="pin-title">{asText(note.content).trim() || "택배 추적"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <input
+                className="widget-input"
+                value={label}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "delivery",
+                      deliveryLabel: event.target.value
+                    }
+                  })
+                }
+                placeholder="택배 이름"
+              />
+              <select
+                className="widget-input"
+                value={carrierId}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "delivery",
+                      deliveryCarrierId: event.target.value
+                    }
+                  })
+                }
+              >
+                {deliveryCarriers.map((carrier) => (
+                  <option key={carrier.id} value={carrier.id}>
+                    {carrier.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="widget-input"
+                value={trackingNumber}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "delivery",
+                      deliveryTrackingNumber: event.target.value
+                    }
+                  })
+                }
+                placeholder="운송장 번호"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setDeliveryWidgets((prev) => {
+                    const next = { ...prev };
+                    delete next[note.id];
+                    return next;
+                  });
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : trackingNumber ? (
+            <div className="delivery-widget">
+              <div className="delivery-summary">
+                <strong>{label || "택배"}</strong>
+                <span>{delivery?.carrier?.name || carrierId}</span>
+                <em>{delivery?.state?.text || "조회 중"}</em>
+              </div>
+              {delivery?.progress?.length ? (
+                <div className="delivery-progress-list">
+                  {delivery.progress.slice(0, compact ? 2 : 4).map((progress, index) => (
+                    <div key={`${note.id}-delivery-${index}`} className="delivery-progress-item">
+                      <strong>{progress.status.text}</strong>
+                      <span>{progress.location?.name || "-"}</span>
+                      <span>{progress.time || ""}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="rss-empty">배송 흐름을 불러오는 중입니다.</p>
+              )}
+            </div>
+          ) : (
+            <p className="rss-empty">운송장 번호를 입력하면 배송 상태를 볼 수 있습니다.</p>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "pet") {
+      const petName = getPetName(note);
+      const visitCount = petVisitCounts[note.boardId] ?? 0;
+      const stage = getPetStage(visitCount);
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">PET</span>
+            <p className="pin-title">{asText(note.content).trim() || "방문자 캐릭터"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <input
+                className="widget-input"
+                value={petName}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "pet",
+                      petName: event.target.value
+                    }
+                  })
+                }
+                placeholder="캐릭터 이름"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`pet-widget ${compact ? "compact" : ""}`}>
+              <div className="pet-character">{stage.emoji}</div>
+              <strong>
+                {petName} · {stage.label}
+              </strong>
+              <span>{stage.message}</span>
+              <div className="pet-stats">
+                <span>오늘 방문 {visitCount}</span>
+                <span>다음 성장까지 {Math.max(0, (visitCount < 3 ? 3 : visitCount < 10 ? 10 : visitCount < 25 ? 25 : 50) - visitCount)}</span>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    return null;
   };
 
   const revealMoreForNote = (noteId: string) => {
@@ -2316,6 +2926,162 @@ const App = () => {
     };
   }, [visibleNotes, rssFeeds]);
 
+  useEffect(() => {
+    const noteIds = visibleNotes
+      .filter((note) => getWidgetType(note) === "weather")
+      .map((note) => note.id)
+      .filter((id) => !(id in weatherWidgets));
+
+    if (noteIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void Promise.all(
+      noteIds.map(async (noteId) => {
+        const note = visibleNotes.find((item) => item.id === noteId);
+        if (!note) {
+          return;
+        }
+
+        try {
+          const weather = await fetchWeatherPreview({
+            query: getWeatherQuery(note),
+            lat: getWeatherLatitude(note) ?? undefined,
+            lon: getWeatherLongitude(note) ?? undefined
+          });
+          if (!cancelled) {
+            setWeatherWidgets((prev) => ({ ...prev, [noteId]: weather }));
+          }
+        } catch {
+          if (!cancelled) {
+            setWeatherWidgets((prev) => ({ ...prev, [noteId]: null }));
+          }
+        }
+      })
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleNotes, weatherWidgets]);
+
+  useEffect(() => {
+    const noteIds = visibleNotes
+      .filter((note) => getWidgetType(note) === "trending")
+      .map((note) => note.id)
+      .filter((id) => !(id in trendingWidgets));
+
+    if (noteIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void Promise.all(
+      noteIds.map(async (noteId) => {
+        const note = visibleNotes.find((item) => item.id === noteId);
+        if (!note) {
+          return;
+        }
+
+        try {
+          const trending = await fetchTrendingKeywords(getTrendingRegion(note));
+          if (!cancelled) {
+            setTrendingWidgets((prev) => ({ ...prev, [noteId]: trending }));
+          }
+        } catch {
+          if (!cancelled) {
+            setTrendingWidgets((prev) => ({ ...prev, [noteId]: null }));
+          }
+        }
+      })
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleNotes, trendingWidgets]);
+
+  useEffect(() => {
+    const noteIds = visibleNotes
+      .filter((note) => getWidgetType(note) === "delivery")
+      .map((note) => note.id)
+      .filter((id) => !(id in deliveryWidgets));
+
+    if (noteIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void Promise.all(
+      noteIds.map(async (noteId) => {
+        const note = visibleNotes.find((item) => item.id === noteId);
+        if (!note) {
+          return;
+        }
+
+        const trackingNumber = getDeliveryTrackingNumber(note);
+        if (!trackingNumber) {
+          if (!cancelled) {
+            setDeliveryWidgets((prev) => ({ ...prev, [noteId]: null }));
+          }
+          return;
+        }
+
+        try {
+          const tracking = await fetchDeliveryTracking(getDeliveryCarrierId(note), trackingNumber);
+          if (!cancelled) {
+            setDeliveryWidgets((prev) => ({ ...prev, [noteId]: tracking }));
+          }
+        } catch {
+          if (!cancelled) {
+            setDeliveryWidgets((prev) => ({ ...prev, [noteId]: null }));
+          }
+        }
+      })
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleNotes, deliveryWidgets]);
+
+  useEffect(() => {
+    if (deliveryCarriers.length > 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void fetchDeliveryCarriers()
+      .then((carriers) => {
+        if (!cancelled) {
+          setDeliveryCarriers(carriers);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDeliveryCarriers([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deliveryCarriers.length]);
+
+  useEffect(() => {
+    if (!selectedBoard || feedMode !== "active") {
+      return;
+    }
+
+    const nextCounts = registerBoardVisit(selectedBoard.id);
+    setPetVisitCounts(nextCounts);
+  }, [selectedBoard?.id, feedMode]);
+
   const openTemplatePicker = () => {
     setTemplatePickerOpen(true);
   };
@@ -2730,6 +3496,163 @@ const App = () => {
       widgetType: "countdown",
       targetDate: target.toISOString().slice(0, 10),
       countdownDescription: "중요한 일정이나 마감일을 기록해두세요."
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addTimetableWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "시간표"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "timetable",
+      timetableText: DEFAULT_TIMETABLE_TEXT
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addWeatherWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "날씨"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "weather",
+      weatherQuery: DEFAULT_WEATHER_QUERY
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addTrendingWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "실시간 검색어"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "trending",
+      trendingRegion: DEFAULT_TRENDING_REGION
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addDeliveryWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "택배 추적"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "delivery",
+      deliveryCarrierId: DEFAULT_DELIVERY_CARRIER,
+      deliveryTrackingNumber: "",
+      deliveryLabel: "도착 예정 택배"
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addPetWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "방문자 캐릭터"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "pet",
+      petName: DEFAULT_PET_NAME
     };
 
     setNotes((prev) => [note, ...prev]);
@@ -3347,6 +4270,7 @@ const App = () => {
                   const isBookmarkWidget = widgetType === "bookmark";
                   const isChecklistWidget = widgetType === "checklist";
                   const isCountdownWidget = widgetType === "countdown";
+                  const extraWidgetBody = renderExtraWidgetBody(note, false, true);
                   const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
                   const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
                   const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
@@ -3383,7 +4307,9 @@ const App = () => {
                         </div>
                       )}
                       <div className="pin-card-body">
-                        {isRssWidget ? (
+                        {extraWidgetBody ? (
+                          extraWidgetBody
+                        ) : isRssWidget ? (
                           <>
                             <div className="widget-header">
                               <span className="widget-badge">RSS</span>
@@ -3865,6 +4791,21 @@ const App = () => {
                     </button>
                     <button className="widget-menu-item" onClick={addCountdownWidget}>
                       디데이
+                    </button>
+                    <button className="widget-menu-item" onClick={addTimetableWidget}>
+                      시간표
+                    </button>
+                    <button className="widget-menu-item" onClick={addWeatherWidget}>
+                      날씨
+                    </button>
+                    <button className="widget-menu-item" onClick={addTrendingWidget}>
+                      실시간 검색어
+                    </button>
+                    <button className="widget-menu-item" onClick={addDeliveryWidget}>
+                      택배 추적
+                    </button>
+                    <button className="widget-menu-item" onClick={addPetWidget}>
+                      방문자 캐릭터
                     </button>
                   </div>
                 )}
@@ -4534,6 +5475,7 @@ const App = () => {
                     const isBookmarkWidget = widgetType === "bookmark";
                     const isChecklistWidget = widgetType === "checklist";
                     const isCountdownWidget = widgetType === "countdown";
+                    const extraWidgetBody = renderExtraWidgetBody(note, selected, false);
                     const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
                     const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
                     const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
@@ -4691,7 +5633,9 @@ const App = () => {
                           </div>
 
                           <div className="pin-card-body">
-                            {isRssWidget ? (
+                            {extraWidgetBody ? (
+                              extraWidgetBody
+                            ) : isRssWidget ? (
                               <>
                                 <div className="widget-header">
                                   <span className="widget-badge">RSS</span>
