@@ -63,6 +63,18 @@ type BoardTemplateKey =
   | "couple";
 type BoardTemplateSectionKey = "notes" | "widgets" | "groups";
 type BoardLayoutStyle = "balanced" | "compact" | "visual";
+type SettingsSection = "menu" | "trash" | "history";
+
+type BoardHistorySnapshot = {
+  id: string;
+  createdAt: string;
+  label: string;
+  boardTitle: string;
+  boardDescription: string;
+  backgroundStyle: BoardBackgroundStyle;
+  layoutStyle: BoardLayoutStyle;
+  notes: NoteV2[];
+};
 
 type TemplateNoteSeed = {
   color: NoteColor;
@@ -178,6 +190,7 @@ const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "
 const CLOUD_SAVE_DEBOUNCE_MS = 120;
 const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+const BOARD_HISTORY_LIMIT = 20;
 const MOBILE_LAYOUT_BREAKPOINT = 980;
 const MOBILE_SINGLE_COLUMN_BREAKPOINT = 680;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
@@ -1026,6 +1039,83 @@ const clearTrashedAt = (value: Record<string, unknown>) => {
   delete next.trashedAt;
   return next;
 };
+const cloneNoteForHistory = (note: NoteV2): NoteV2 => ({
+  ...note,
+  metadata: { ...note.metadata }
+});
+const formatHistorySnapshotLabel = (iso: string) => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "저장본";
+  }
+
+  return date.toLocaleString("ko-KR", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+const getBoardHistorySnapshots = (board: BoardV2 | null | undefined): BoardHistorySnapshot[] => {
+  const rawSnapshots = board?.settings?.historySnapshots;
+  if (!Array.isArray(rawSnapshots)) {
+    return [];
+  }
+
+  return rawSnapshots
+    .map((raw) => {
+      if (!raw || typeof raw !== "object") {
+        return null;
+      }
+
+      const snapshot = raw as Record<string, unknown>;
+      const rawNotes = Array.isArray(snapshot.notes) ? snapshot.notes : [];
+      const notes = rawNotes
+        .filter((note): note is Record<string, unknown> => Boolean(note) && typeof note === "object")
+        .map((note) => ({
+          id: typeof note.id === "string" ? note.id : makeId(),
+          boardId: typeof note.boardId === "string" ? note.boardId : board?.id ?? "",
+          userId: typeof note.userId === "string" ? note.userId : board?.userId ?? "",
+          content: normalizeUrlsInText(normalizeLegacyText(note.content)),
+          color: NOTE_COLORS.includes(note.color as NoteColor) ? (note.color as NoteColor) : "yellow",
+          x: typeof note.x === "number" ? note.x : 0,
+          y: typeof note.y === "number" ? note.y : 0,
+          w: typeof note.w === "number" ? note.w : 1,
+          h: typeof note.h === "number" ? note.h : 1,
+          zIndex: typeof note.zIndex === "number" ? note.zIndex : 1,
+          rotation: typeof note.rotation === "number" ? note.rotation : 0,
+          pinned: Boolean(note.pinned),
+          archived: Boolean(note.archived),
+          metadata: normalizeBookmarkMetadata(
+            note.metadata && typeof note.metadata === "object" ? (note.metadata as Record<string, unknown>) : {}
+          ),
+          updatedAt: typeof note.updatedAt === "string" ? note.updatedAt : nowIso()
+        }));
+
+      const createdAt = typeof snapshot.createdAt === "string" ? snapshot.createdAt : nowIso();
+
+      return {
+        id: typeof snapshot.id === "string" ? snapshot.id : makeId(),
+        createdAt,
+        label:
+          typeof snapshot.label === "string" && snapshot.label.trim()
+            ? snapshot.label
+            : `${formatHistorySnapshotLabel(createdAt)} 저장본`,
+        boardTitle: typeof snapshot.boardTitle === "string" ? snapshot.boardTitle : board?.title ?? "My Board",
+        boardDescription: typeof snapshot.boardDescription === "string" ? snapshot.boardDescription : "",
+        backgroundStyle:
+          snapshot.backgroundStyle === "cork" ||
+          snapshot.backgroundStyle === "whiteboard" ||
+          snapshot.backgroundStyle === "paper"
+            ? snapshot.backgroundStyle
+            : board?.backgroundStyle ?? "paper",
+        layoutStyle: isBoardLayoutStyle(snapshot.layoutStyle) ? snapshot.layoutStyle : getBoardLayoutStyle(board),
+        notes
+      } satisfies BoardHistorySnapshot;
+    })
+    .filter((snapshot): snapshot is BoardHistorySnapshot => Boolean(snapshot))
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+};
 const getBoardOrder = (board: BoardV2) =>
   typeof board.settings?.sidebarOrder === "number" ? board.settings.sidebarOrder : Number.MAX_SAFE_INTEGER;
 const sortBoards = (boards: BoardV2[]) =>
@@ -1450,7 +1540,7 @@ const App = () => {
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsSection, setSettingsSection] = useState<"menu" | "trash">("menu");
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>("menu");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [boardSwipeOffset, setBoardSwipeOffset] = useState(0);
   const [boardSwipeTransition, setBoardSwipeTransition] = useState(false);
@@ -1498,6 +1588,7 @@ const App = () => {
   const canInviteBoard = canShareBoard;
   const canBoardSettings = canShareBoard;
   const canRenameBoard = feedMode === "active" && Boolean(selectedBoard) && !isSharedView && isBoardOwner;
+  const boardHistorySnapshots = useMemo(() => getBoardHistorySnapshots(selectedBoard), [selectedBoard]);
 
   useEffect(() => {
     latestBoardsRef.current = boards;
@@ -2478,6 +2569,110 @@ const App = () => {
     updateBoardLayoutStyle(selectedBoard.id, layoutStyle);
     const nextColumnCount = getColumnCount();
     setNotes((prev) => autoOrganizeBoardNotes(prev, selectedBoard.id, nextColumnCount, layoutStyle));
+    touchBoard(selectedBoard.id);
+  };
+
+  const saveCurrentBoardToHistory = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const timestamp = nowIso();
+    const snapshot: BoardHistorySnapshot = {
+      id: makeId(),
+      createdAt: timestamp,
+      label: `${formatHistorySnapshotLabel(timestamp)} 저장본`,
+      boardTitle: selectedBoard.title,
+      boardDescription: selectedBoard.description,
+      backgroundStyle: selectedBoard.backgroundStyle,
+      layoutStyle: getBoardLayoutStyle(selectedBoard),
+      notes: notes
+        .filter((note) => note.boardId === selectedBoard.id && !note.archived && !isNoteTrashed(note))
+        .sort((left, right) => left.zIndex - right.zIndex)
+        .map(cloneNoteForHistory)
+    };
+
+    setBoards((prev) =>
+      prev.map((board) => {
+        if (board.id !== selectedBoard.id) {
+          return board;
+        }
+
+        const nextHistory = [snapshot, ...getBoardHistorySnapshots(board)].slice(0, BOARD_HISTORY_LIMIT);
+        return {
+          ...board,
+          settings: {
+            ...board.settings,
+            historySnapshots: nextHistory
+          },
+          updatedAt: timestamp
+        };
+      })
+    );
+    touchBoard(selectedBoard.id);
+  };
+
+  const restoreBoardHistory = (snapshotId: string) => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const snapshot = boardHistorySnapshots.find((entry) => entry.id === snapshotId);
+    if (!snapshot) {
+      return;
+    }
+
+    const timestamp = nowIso();
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === selectedBoard.id
+          ? {
+              ...board,
+              title: snapshot.boardTitle,
+              description: snapshot.boardDescription,
+              backgroundStyle: snapshot.backgroundStyle,
+              settings: {
+                ...board.settings,
+                layoutStyle: snapshot.layoutStyle,
+                historySnapshots: getBoardHistorySnapshots(board)
+              },
+              updatedAt: timestamp
+            }
+          : board
+      )
+    );
+
+    setNotes((prev) => {
+      const otherNotes = prev.filter((note) => note.boardId !== selectedBoard.id);
+      const boardArchivedNotes = prev.filter((note) => note.boardId === selectedBoard.id && note.archived);
+      const restoredNotes = snapshot.notes.map((note, index) => ({
+        ...cloneNoteForHistory(note),
+        boardId: selectedBoard.id,
+        updatedAt: timestamp,
+        archived: false,
+        zIndex: index + 1,
+        metadata: {
+          ...note.metadata,
+          trashedAt: undefined
+        }
+      }));
+
+      return [...otherNotes, ...restoredNotes, ...boardArchivedNotes].map((note) => {
+        if (note.boardId !== selectedBoard.id) {
+          return note;
+        }
+        const cleanedMetadata =
+          note.metadata && typeof note.metadata === "object"
+            ? Object.fromEntries(Object.entries(note.metadata).filter(([, value]) => value !== undefined))
+            : {};
+        return {
+          ...note,
+          metadata: cleanedMetadata
+        };
+      });
+    });
+
+    setSelectedNoteId(null);
     touchBoard(selectedBoard.id);
   };
 
@@ -3661,10 +3856,12 @@ const App = () => {
               <div className="settings-panel-head">
                 <div>
                   <p className="settings-kicker">설정</p>
-                  <h2>{settingsSection === "trash" ? "휴지통" : "보드 설정"}</h2>
+                  <h2>
+                    {settingsSection === "trash" ? "휴지통" : settingsSection === "history" ? "보드 히스토리" : "보드 설정"}
+                  </h2>
                 </div>
                 <div className="settings-head-actions">
-                  {settingsSection === "trash" && (
+                  {settingsSection !== "menu" && (
                     <button className="settings-back" onClick={() => setSettingsSection("menu")}>
                       뒤로
                     </button>
@@ -3678,6 +3875,12 @@ const App = () => {
               {settingsSection === "menu" ? (
                 <>
                   <div className="settings-menu-grid">
+                    <button className="settings-menu-card" onClick={() => setSettingsSection("history")}>
+                      <span className="settings-menu-title">보드 히스토리</span>
+                      <span className="settings-menu-meta">
+                        저장본 {boardHistorySnapshots.length}개 · 이전 상태로 언제든 복구
+                      </span>
+                    </button>
                     <button className="settings-menu-card" onClick={() => setSettingsSection("trash")}>
                       <span className="settings-menu-title">휴지통</span>
                       <span className="settings-menu-meta">
@@ -3772,6 +3975,46 @@ const App = () => {
                       )}
                     </>
                   )}
+                </>
+              ) : settingsSection === "history" ? (
+                <>
+                  <div className="settings-section">
+                    <div className="settings-section-head">
+                      <strong>현재 상태 저장</strong>
+                      <span>중요한 수정 전후로 저장해두면 언제든 이전 모습으로 되돌릴 수 있습니다.</span>
+                    </div>
+                    <div className="history-actions">
+                      <button className="ghost-action" onClick={saveCurrentBoardToHistory} disabled={!selectedBoard}>
+                        현재 상태 저장
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="settings-section">
+                    <div className="settings-section-head">
+                      <strong>저장된 히스토리</strong>
+                      <span>{boardHistorySnapshots.length}개</span>
+                    </div>
+                    {boardHistorySnapshots.length === 0 ? (
+                      <p className="settings-empty">아직 저장된 보드 히스토리가 없습니다.</p>
+                    ) : (
+                      <div className="history-list">
+                        {boardHistorySnapshots.map((snapshot) => (
+                          <div className="history-item" key={`history-${snapshot.id}`}>
+                            <div className="history-copy">
+                              <strong>{snapshot.label}</strong>
+                              <span>
+                                {snapshot.notes.length}개 메모 · {snapshot.boardTitle}
+                              </span>
+                            </div>
+                            <button className="trash-restore" onClick={() => restoreBoardHistory(snapshot.id)}>
+                              복구
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
