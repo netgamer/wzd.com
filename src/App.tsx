@@ -1069,7 +1069,7 @@ const getColumnCount = () => {
   }
 
   if (window.innerWidth < MOBILE_LAYOUT_BREAKPOINT) {
-    return 1;
+    return 2;
   }
 
   const estimatedColumns = Math.floor((window.innerWidth - 120) / 280);
@@ -3399,7 +3399,7 @@ const App = () => {
         </header>
 
         {mobileBoardMenuOpen && (
-          <div className="mobile-board-sheet">
+            <div className="mobile-board-sheet">
             <div className="mobile-board-list">
               {activeBoards.map((boardItem) => (
                 <button
@@ -3827,10 +3827,31 @@ const App = () => {
                 )}
               </div>
             </section>
-          </div>
-        )}
+            </div>
+          )}
 
-        <main className="pin-main">
+          {mobileViewport && feedMode === "active" && activeBoards.length > 1 && (
+            <div className="mobile-board-tabs" role="tablist" aria-label="보드 목록">
+              {activeBoards.map((boardItem) => (
+                <button
+                  key={`mobile-tab-${boardItem.id}`}
+                  role="tab"
+                  aria-selected={selectedBoard?.id === boardItem.id}
+                  className={`mobile-board-tab ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
+                  onClick={() => {
+                    setSelectedBoardId(boardItem.id);
+                    setSelectedNoteId(null);
+                    setFeedMode("active");
+                  }}
+                >
+                  <span className="mobile-board-tab-badge">{getBoardBadge(boardItem.title)}</span>
+                  <span className="mobile-board-tab-label">{boardItem.title}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <main className="pin-main">
           <div
             className={`pin-board-stage ${mobileSwipeEnabled ? "mobile-swipe-enabled" : ""} ${boardSwipeTransition ? "swipe-transition" : ""}`}
             style={{ "--board-swipe-offset": `${boardSwipeOffset}px` } as CSSProperties}

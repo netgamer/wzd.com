@@ -537,6 +537,10 @@ button {
   display: none;
 }
 
+.mobile-board-tabs {
+  display: none;
+}
+
 .new-note-pill:hover,
 .widget-pill:hover,
 .ghost-action:hover,
@@ -2014,8 +2018,66 @@ button {
   }
 
   .mobile-board-sheet {
-    display: block;
-    padding: 0 12px 6px;
+      display: block;
+      padding: 0 12px 6px;
+    }
+
+  .mobile-board-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 12px 10px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mobile-board-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-board-tab {
+    flex: 0 0 auto;
+    min-height: 38px;
+    max-width: 220px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px 0 8px;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(31, 26, 19, 0.08);
+    box-shadow: 0 8px 24px rgba(31, 26, 19, 0.06);
+  }
+
+  .mobile-board-tab.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(230, 0, 35, 0.18);
+  }
+
+  .mobile-board-tab-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: rgba(31, 26, 19, 0.08);
+    font-size: 12px;
+    font-weight: 700;
+    flex: 0 0 auto;
+  }
+
+  .mobile-board-tab.active .mobile-board-tab-badge {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .mobile-board-tab-label {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    font-weight: 700;
   }
 
   .mobile-board-list {
@@ -2117,12 +2179,17 @@ button {
   }
 
   .pin-board {
-    grid-template-columns: 1fr;
-  }
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
 
-  .pin-card {
-    max-width: none;
-  }
+  .pin-column {
+      gap: 14px;
+    }
+
+    .pin-card {
+      max-width: none;
+    }
 
   .pin-main {
     padding-top: 10px;
