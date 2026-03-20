@@ -1437,6 +1437,8 @@ button {
 
 .pin-card.link-only-note {
   position: relative;
+  border-top-width: 5px;
+  border-top-color: rgba(31, 26, 19, 0.18);
 }
 
 .pin-card.link-only-note .pin-note-stack {
@@ -1444,37 +1446,24 @@ button {
   min-height: 100%;
 }
 
-.pin-card.link-only-note::before {
-  content: "";
-  position: absolute;
-  top: 8px;
-  left: 14px;
-  right: 14px;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(31, 26, 19, 0.18);
-  z-index: 1;
-  pointer-events: none;
+.pin-card.link-only-note.note-yellow {
+  border-top-color: #f2c100;
 }
 
-.pin-card.link-only-note.note-yellow::before {
-  background: #f2c100;
+.pin-card.link-only-note.note-pink {
+  border-top-color: #ef7f9e;
 }
 
-.pin-card.link-only-note.note-pink::before {
-  background: #ef7f9e;
+.pin-card.link-only-note.note-blue {
+  border-top-color: #8fb5ea;
 }
 
-.pin-card.link-only-note.note-blue::before {
-  background: #8fb5ea;
+.pin-card.link-only-note.note-green {
+  border-top-color: #7fc7b4;
 }
 
-.pin-card.link-only-note.note-green::before {
-  background: #7fc7b4;
-}
-
-.pin-card.link-only-note.note-white::before {
-  background: #d4c6b7;
+.pin-card.link-only-note.note-white {
+  border-top-color: #d4c6b7;
 }
 
 .pin-card.link-only-note .link-preview-card {
@@ -1484,7 +1473,7 @@ button {
   box-shadow: none;
   border: none;
   background: transparent;
-  padding-top: 18px;
+  padding-top: 12px;
 }
 
 .pin-card.link-only-note .pin-card-head {
