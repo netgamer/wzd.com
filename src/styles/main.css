@@ -541,6 +541,69 @@ button {
   display: none;
 }
 
+.pin-topbar.compact-header {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.pin-topbar.compact-header .search-shell {
+  display: none;
+}
+
+.pin-topbar.compact-header .search-shell.mobile-open {
+  display: flex;
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: calc(100% + 8px);
+  z-index: 25;
+  box-shadow: var(--shadow);
+  background: var(--surface);
+}
+
+.pin-topbar.compact-header .topbar-actions {
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.pin-topbar.compact-header .mobile-icon-action,
+.pin-topbar.compact-header .mobile-board-toggle,
+.pin-topbar.compact-header .mobile-profile-button {
+  display: inline-flex;
+}
+
+.pin-topbar.compact-header + .mobile-board-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 12px 10px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.pin-topbar.compact-header + .mobile-board-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-profile-button {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
 .new-note-pill:hover,
 .widget-pill:hover,
 .ghost-action:hover,

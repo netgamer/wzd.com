@@ -3180,7 +3180,8 @@ const App = () => {
 
   const previousBoard = getAdjacentBoard("prev");
   const nextSwipeBoard = getAdjacentBoard("next");
-  const mobileSwipeEnabled = mobileViewport && feedMode === "active" && activeBoards.length > 1;
+  const compactHeader = mobileViewport || compactSidebar;
+  const mobileSwipeEnabled = compactHeader && feedMode === "active" && activeBoards.length > 1;
   const starterTemplateSections = BOARD_TEMPLATE_SECTIONS.map((section) => ({
     ...section,
     templates: section.templateKeys
@@ -3333,7 +3334,7 @@ const App = () => {
       </aside>
 
       <div className="pin-app">
-        <header className="pin-topbar">
+        <header className={`pin-topbar ${compactHeader ? "compact-header" : ""}`}>
           <div className="topbar-primary">
             <div className="topbar-board-title">
               <button
@@ -3395,18 +3396,18 @@ const App = () => {
             </div>
           </div>
 
-          <div className="topbar-actions">
-            {mobileViewport && !isSharedView && (
+            <div className="topbar-actions">
+            {compactHeader && !isSharedView && (
               <button className="mobile-icon-action mobile-new-note-action" onClick={addNote} aria-label="새 메모 만들기">
                 +
               </button>
             )}
-            {!isSharedView && (
+            {!compactHeader && !isSharedView && (
               <button className="new-note-pill" onClick={addNote}>
                 새 메모
               </button>
             )}
-            {!isSharedView && (
+            {!compactHeader && !isSharedView && (
               <div className="widget-menu-wrap">
                 <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
                   위젯 추가
@@ -3423,22 +3424,22 @@ const App = () => {
                 )}
               </div>
             )}
-            {!isSharedView && feedMode === "active" && selectedBoard && (
+            {!compactHeader && !isSharedView && feedMode === "active" && selectedBoard && (
               <button className="ghost-action" onClick={organizeCurrentBoard}>
                 자동 정리
               </button>
             )}
-            {canShareBoard && (
+            {!compactHeader && canShareBoard && (
               <button className="ghost-action" onClick={() => void shareBoard()}>
                 보드 공유
               </button>
             )}
-            {canInviteBoard && (
+            {!compactHeader && canInviteBoard && (
               <button className="ghost-action" onClick={() => void openInvitePanel()}>
                 보드 초대
               </button>
             )}
-            {canBoardSettings && (
+            {!compactHeader && canBoardSettings && (
               <button className="ghost-action" onClick={openBoardSettings}>
                 보드 설정
               </button>
@@ -3446,9 +3447,13 @@ const App = () => {
             {hasSupabaseConfig ? (
               user ? (
                 <div className="profile-menu-wrap" ref={profileMenuRef}>
-                  <button className="profile-pill" onClick={() => setProfileMenuOpen((prev) => !prev)} aria-expanded={profileMenuOpen}>
+                  <button
+                    className={compactHeader ? "mobile-profile-button" : "profile-pill"}
+                    onClick={() => setProfileMenuOpen((prev) => !prev)}
+                    aria-expanded={profileMenuOpen}
+                  >
                     <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
-                    <span className="profile-email">{user.email}</span>
+                    {!compactHeader && <span className="profile-email">{user.email}</span>}
                   </button>
                   {profileMenuOpen && (
                     <div className="profile-menu-popover">
@@ -3459,7 +3464,7 @@ const App = () => {
                   )}
                 </div>
               ) : (
-                <button className="ghost-action mobile-auth-action" onClick={onGoogleLogin}>
+                <button className={compactHeader ? "mobile-icon-action mobile-auth-action" : "ghost-action mobile-auth-action"} onClick={onGoogleLogin}>
                   구글 로그인
                 </button>
               )
@@ -3901,7 +3906,7 @@ const App = () => {
             </div>
           )}
 
-          {mobileViewport && feedMode === "active" && activeBoards.length > 1 && (
+          {compactHeader && feedMode === "active" && activeBoards.length > 1 && (
             <div className="mobile-board-tabs" role="tablist" aria-label="보드 목록">
               {activeBoards.map((boardItem) => (
                 <button
