@@ -45,7 +45,8 @@ type FeedMode = "active" | "archived";
 type CloudSaveState = "idle" | "saving" | "saved" | "error";
 type LinkPreviewState = LinkPreview | null;
 type RssFeedState = RssFeedPreview | null;
-type WidgetType = "note" | "rss" | "bookmark";
+type WidgetType = "note" | "rss" | "bookmark" | "checklist" | "countdown";
+type ChecklistItem = { text: string; checked: boolean };
 type BoardTemplateKey =
   | "blank"
   | "video"
@@ -195,6 +196,11 @@ const MOBILE_LAYOUT_BREAKPOINT = 980;
 const MOBILE_SINGLE_COLUMN_BREAKPOINT = 680;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
+const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
+  { text: "핵심 작업 정리", checked: false },
+  { text: "참고 링크 확인", checked: false },
+  { text: "완료 후 공유", checked: false }
+];
 const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
 const DEFAULT_PERSONAL_NOTE_CONTENT =
   "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80";
@@ -1134,7 +1140,12 @@ const sortBoards = (boards: BoardV2[]) =>
     return a.updatedAt.localeCompare(b.updatedAt);
   });
 const getWidgetType = (note: NoteV2): WidgetType =>
-  note.metadata?.widgetType === "rss" || note.metadata?.widgetType === "bookmark" ? note.metadata.widgetType : "note";
+  note.metadata?.widgetType === "rss" ||
+  note.metadata?.widgetType === "bookmark" ||
+  note.metadata?.widgetType === "checklist" ||
+  note.metadata?.widgetType === "countdown"
+    ? note.metadata.widgetType
+    : "note";
 const getRssFeedUrl = (note: NoteV2) =>
   typeof note.metadata?.feedUrl === "string" && note.metadata.feedUrl.trim()
     ? note.metadata.feedUrl.trim()
@@ -1161,6 +1172,75 @@ const getBookmarkUrls = (note: NoteV2) => {
 
   const single = getBookmarkUrl(note);
   return single && single !== DEFAULT_BOOKMARK_URL ? [single] : [];
+};
+
+const normalizeChecklistText = (value: string) => value.replace(/^\s*[-*]?\s*(\[(x|X| )\])?\s*/, "").trim();
+
+const parseChecklistItems = (value: string): ChecklistItem[] =>
+  value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const checked = /^\s*[-*]?\s*\[(x|X)\]/.test(line);
+      return {
+        text: normalizeChecklistText(line),
+        checked
+      };
+    })
+    .filter((item) => item.text.length > 0);
+
+const getChecklistItems = (note: NoteV2): ChecklistItem[] => {
+  const rawList = note.metadata?.checklistItems;
+  if (Array.isArray(rawList)) {
+    const items = rawList
+      .map((item) =>
+        typeof item === "object" && item && "text" in item
+          ? {
+              text: String((item as { text?: unknown }).text ?? "").trim(),
+              checked: Boolean((item as { checked?: unknown }).checked)
+            }
+          : null
+      )
+      .filter((item): item is ChecklistItem => Boolean(item && item.text));
+    if (items.length > 0) {
+      return items;
+    }
+  }
+
+  if (typeof note.metadata?.checklistText === "string" && note.metadata.checklistText.trim()) {
+    return parseChecklistItems(note.metadata.checklistText);
+  }
+
+  return DEFAULT_CHECKLIST_ITEMS;
+};
+
+const serializeChecklistItems = (items: ChecklistItem[]) =>
+  items.map((item) => `${item.checked ? "[x]" : "[ ]"} ${item.text}`.trim()).join("\n");
+
+const getCountdownTargetDate = (note: NoteV2) =>
+  typeof note.metadata?.targetDate === "string" && note.metadata.targetDate.trim() ? note.metadata.targetDate : "";
+
+const getCountdownDescription = (note: NoteV2) =>
+  typeof note.metadata?.countdownDescription === "string" ? note.metadata.countdownDescription.trim() : "";
+
+const formatCountdownLabel = (targetDate: string) => {
+  if (!targetDate) {
+    return "날짜 선택";
+  }
+
+  const target = new Date(targetDate);
+  if (Number.isNaN(target.getTime())) {
+    return "날짜 오류";
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "D-Day";
+  if (diffDays > 0) return `D-${diffDays}`;
+  return `D+${Math.abs(diffDays)}`;
 };
 const getAttachedImageUrl = (note: NoteV2) =>
   typeof note.metadata?.pastedImageUrl === "string" && note.metadata.pastedImageUrl.trim()
@@ -1330,6 +1410,8 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   const widgetType = getWidgetType(note);
   if (widgetType === "rss") return 0;
   if (widgetType === "bookmark") return 1;
+  if (widgetType === "checklist") return 2;
+  if (widgetType === "countdown") return 2;
   if (getAttachedImageUrl(note)) return 2;
 
   const noteUrl = extractFirstUrl(note.content);
@@ -1339,7 +1421,7 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   return 4;
 };
 
-type AutoLayoutCategory = "rss" | "bookmark" | "image" | "link" | "text";
+type AutoLayoutCategory = "rss" | "bookmark" | "checklist" | "countdown" | "image" | "link" | "text";
 
 const BOARD_LAYOUT_STYLES: Array<{
   key: BoardLayoutStyle;
@@ -1363,6 +1445,8 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   const widgetType = getWidgetType(note);
   if (widgetType === "rss") return "rss";
   if (widgetType === "bookmark") return "bookmark";
+  if (widgetType === "checklist") return "checklist";
+  if (widgetType === "countdown") return "countdown";
 
   const imageUrl = getAttachedImageUrl(note);
   const noteUrl = extractFirstUrl(note.content);
@@ -1415,6 +1499,8 @@ const getPreferredColumns = (
     }
     case "bookmark":
     case "rss":
+    case "checklist":
+    case "countdown":
       return [...allColumns].reverse();
     default:
       return allColumns;
@@ -1425,6 +1511,8 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
   const widgetType = getWidgetType(note);
   if (widgetType === "rss") return layoutStyle === "compact" ? 270 : 300;
   if (widgetType === "bookmark") return layoutStyle === "compact" ? 230 : 260;
+  if (widgetType === "checklist") return layoutStyle === "compact" ? 250 : 290;
+  if (widgetType === "countdown") return layoutStyle === "compact" ? 210 : 240;
 
   const imageUrl = getAttachedImageUrl(note);
   const noteUrl = extractFirstUrl(note.content);
@@ -2584,6 +2672,73 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addChecklistWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "체크리스트"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "checklist",
+      checklistItems: DEFAULT_CHECKLIST_ITEMS,
+      checklistText: serializeChecklistItems(DEFAULT_CHECKLIST_ITEMS)
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addCountdownWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const target = new Date();
+    target.setDate(target.getDate() + 7);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "D-day"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "countdown",
+      targetDate: target.toISOString().slice(0, 10),
+      countdownDescription: "중요한 일정이나 마감일을 기록해두세요."
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const organizeCurrentBoard = () => {
     if (!selectedBoard) {
       return;
@@ -3189,9 +3344,14 @@ const App = () => {
                   const widgetType = getWidgetType(note);
                   const isRssWidget = widgetType === "rss";
                   const isBookmarkWidget = widgetType === "bookmark";
+                  const isChecklistWidget = widgetType === "checklist";
+                  const isCountdownWidget = widgetType === "countdown";
                   const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
                   const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
                   const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
+                  const checklistItems = isChecklistWidget ? getChecklistItems(note) : [];
+                  const countdownTargetDate = isCountdownWidget ? getCountdownTargetDate(note) : "";
+                  const countdownDescription = isCountdownWidget ? getCountdownDescription(note) : "";
                   const attachedImageUrl = getAttachedImageUrl(note);
                   const noteUrl = extractFirstUrl(note.content);
                   const cardImageUrl = attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : "");
@@ -3246,6 +3406,35 @@ const App = () => {
                               ) : (
                                 <p className="rss-empty">링크를 추가하면 북마크 카드가 표시됩니다.</p>
                               )}
+                            </div>
+                          </>
+                        ) : isChecklistWidget ? (
+                          <>
+                            <div className="widget-header">
+                              <span className="widget-badge">CHECK</span>
+                              <p className="pin-title">{asText(note.content).trim() || "체크리스트"}</p>
+                            </div>
+                            <div className="checklist-widget-list">
+                              {checklistItems.slice(0, 4).map((item, index) => (
+                                <div key={`${note.id}-preview-check-${index}`} className="checklist-widget-item">
+                                  <span className={`checklist-widget-box ${item.checked ? "checked" : ""}`} aria-hidden="true">
+                                    {item.checked ? "✓" : ""}
+                                  </span>
+                                  <span className="checklist-widget-text">{item.text}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        ) : isCountdownWidget ? (
+                          <>
+                            <div className="widget-header">
+                              <span className="widget-badge">D-DAY</span>
+                              <p className="pin-title">{asText(note.content).trim() || "디데이"}</p>
+                            </div>
+                            <div className="countdown-widget-card">
+                              <strong className="countdown-widget-value">{formatCountdownLabel(countdownTargetDate)}</strong>
+                              {countdownTargetDate && <span className="countdown-widget-date">{countdownTargetDate}</span>}
+                              {countdownDescription && <p className="countdown-widget-description">{countdownDescription}</p>}
                             </div>
                           </>
                         ) : (
@@ -3664,6 +3853,12 @@ const App = () => {
                     </button>
                     <button className="widget-menu-item" onClick={addBookmarkWidget}>
                       북마크
+                    </button>
+                    <button className="widget-menu-item" onClick={addChecklistWidget}>
+                      체크리스트
+                    </button>
+                    <button className="widget-menu-item" onClick={addCountdownWidget}>
+                      디데이
                     </button>
                   </div>
                 )}
@@ -4331,9 +4526,14 @@ const App = () => {
                     const widgetType = getWidgetType(note);
                     const isRssWidget = widgetType === "rss";
                     const isBookmarkWidget = widgetType === "bookmark";
+                    const isChecklistWidget = widgetType === "checklist";
+                    const isCountdownWidget = widgetType === "countdown";
                     const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
                     const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
                     const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
+                    const checklistItems = isChecklistWidget ? getChecklistItems(note) : [];
+                    const countdownTargetDate = isCountdownWidget ? getCountdownTargetDate(note) : "";
+                    const countdownDescription = isCountdownWidget ? getCountdownDescription(note) : "";
                     const attachedImageUrl = getAttachedImageUrl(note);
                     const noteUrl = extractFirstUrl(note.content);
                     const cardImageUrl = attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : "");
@@ -4676,6 +4876,159 @@ const App = () => {
                                       </>
                                     ) : (
                                       <p className="rss-empty">링크를 추가하면 북마크 카드가 표시됩니다.</p>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            ) : isChecklistWidget ? (
+                              <>
+                                <div className="widget-header">
+                                  <span className="widget-badge">CHECK</span>
+                                  <p className="pin-title">{asText(note.content).trim() || "체크리스트"}</p>
+                                </div>
+                                {selected ? (
+                                  <div className="widget-editor-stack">
+                                    <input
+                                      className="widget-input"
+                                      value={note.content}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                                      placeholder="체크리스트 제목"
+                                    />
+                                    <textarea
+                                      className="widget-textarea"
+                                      value={serializeChecklistItems(checklistItems)}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) => {
+                                        const nextValue = event.target.value;
+                                        updateNote(note.id, {
+                                          metadata: {
+                                            ...note.metadata,
+                                            widgetType: "checklist",
+                                            checklistItems: parseChecklistItems(nextValue),
+                                            checklistText: nextValue
+                                          }
+                                        });
+                                      }}
+                                      placeholder={"한 줄에 하나씩 입력하세요.\n[x] 완료한 항목\n[ ] 미완료 항목"}
+                                      rows={6}
+                                    />
+                                    <button
+                                      className="widget-confirm"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setSelectedNoteId(null);
+                                      }}
+                                    >
+                                      확인
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="checklist-widget-list">
+                                    {checklistItems.length > 0 ? (
+                                      <>
+                                        {checklistItems.slice(0, 4 + moreClicks * 3).map((item, index) => (
+                                          <div key={`${note.id}-check-${index}`} className="checklist-widget-item">
+                                            <span
+                                              className={`checklist-widget-box ${item.checked ? "checked" : ""}`}
+                                              aria-hidden="true"
+                                            >
+                                              {item.checked ? "✓" : ""}
+                                            </span>
+                                            <span className="checklist-widget-text">{item.text}</span>
+                                          </div>
+                                        ))}
+                                        {checklistItems.length > 4 + moreClicks * 3 && (
+                                          <button
+                                            className="note-more-button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              revealMoreForNote(note.id);
+                                            }}
+                                          >
+                                            <span className="note-more-icon" aria-hidden="true">
+                                              ↓
+                                            </span>
+                                            <span>More</span>
+                                          </button>
+                                        )}
+                                        <span className="checklist-widget-summary">
+                                          완료 {checklistItems.filter((item) => item.checked).length} / {checklistItems.length}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <p className="rss-empty">체크리스트 항목을 추가해 주세요.</p>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            ) : isCountdownWidget ? (
+                              <>
+                                <div className="widget-header">
+                                  <span className="widget-badge">D-DAY</span>
+                                  <p className="pin-title">{asText(note.content).trim() || "디데이"}</p>
+                                </div>
+                                {selected ? (
+                                  <div className="widget-editor-stack">
+                                    <input
+                                      className="widget-input"
+                                      value={note.content}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                                      placeholder="디데이 제목"
+                                    />
+                                    <input
+                                      className="widget-input"
+                                      type="date"
+                                      value={countdownTargetDate}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) =>
+                                        updateNote(note.id, {
+                                          metadata: {
+                                            ...note.metadata,
+                                            widgetType: "countdown",
+                                            targetDate: event.target.value
+                                          }
+                                        })
+                                      }
+                                    />
+                                    <textarea
+                                      className="widget-textarea"
+                                      value={countdownDescription}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) =>
+                                        updateNote(note.id, {
+                                          metadata: {
+                                            ...note.metadata,
+                                            widgetType: "countdown",
+                                            targetDate: countdownTargetDate,
+                                            countdownDescription: event.target.value
+                                          }
+                                        })
+                                      }
+                                      placeholder="중요한 일정이나 마감일 설명"
+                                      rows={4}
+                                    />
+                                    <button
+                                      className="widget-confirm"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setSelectedNoteId(null);
+                                      }}
+                                    >
+                                      확인
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="countdown-widget-card">
+                                    <strong className="countdown-widget-value">
+                                      {formatCountdownLabel(countdownTargetDate)}
+                                    </strong>
+                                    {countdownTargetDate && (
+                                      <span className="countdown-widget-date">{countdownTargetDate}</span>
+                                    )}
+                                    {countdownDescription && (
+                                      <p className="countdown-widget-description">{countdownDescription}</p>
                                     )}
                                   </div>
                                 )}
