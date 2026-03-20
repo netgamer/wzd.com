@@ -1345,6 +1345,10 @@ button {
   padding: 12px;
 }
 
+.pin-card.link-only-note {
+  position: relative;
+}
+
 .pin-card.link-only-note .pin-note-stack {
   gap: 0;
   min-height: 100%;
