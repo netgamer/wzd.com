@@ -179,6 +179,7 @@ const CLOUD_SAVE_DEBOUNCE_MS = 120;
 const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const MOBILE_LAYOUT_BREAKPOINT = 960;
+const MOBILE_SINGLE_COLUMN_BREAKPOINT = 680;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
 const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
@@ -1066,6 +1067,10 @@ const isInteractiveElement = (target: EventTarget | null) =>
 const getColumnCount = () => {
   if (typeof window === "undefined") {
     return 4;
+  }
+
+  if (window.innerWidth < MOBILE_SINGLE_COLUMN_BREAKPOINT) {
+    return 1;
   }
 
   if (window.innerWidth < MOBILE_LAYOUT_BREAKPOINT) {
