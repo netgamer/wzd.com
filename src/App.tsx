@@ -1112,6 +1112,7 @@ const App = () => {
   const [draggingBoardId, setDraggingBoardId] = useState<string | null>(null);
   const [dragPreviewBoardId, setDragPreviewBoardId] = useState<string | null>(null);
   const [dragArmedBoardId, setDragArmedBoardId] = useState<string | null>(null);
+  const [editorDropNoteId, setEditorDropNoteId] = useState<string | null>(null);
   const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
   const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(() => Boolean(getSharedBoardSlugFromLocation()));
 
@@ -2210,19 +2211,7 @@ const App = () => {
     return data.publicUrl || null;
   };
 
-  const onEditorPaste = async (note: NoteV2, event: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
-    if (!imageItem) {
-      return;
-    }
-
-    const file = imageItem.getAsFile();
-    if (!file) {
-      return;
-    }
-
-    event.preventDefault();
-
+  const applyImageFileToNote = async (note: NoteV2, file: File) => {
     try {
       const uploadedUrl = await uploadPastedImage(note, file);
       if (uploadedUrl) {
@@ -2253,6 +2242,55 @@ const App = () => {
       });
     };
     reader.readAsDataURL(file);
+  };
+
+  const onEditorPaste = async (note: NoteV2, event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
+    if (!imageItem) {
+      return;
+    }
+
+    const file = imageItem.getAsFile();
+    if (!file) {
+      return;
+    }
+
+    event.preventDefault();
+    await applyImageFileToNote(note, file);
+  };
+
+  const onEditorDragOver = (note: NoteV2, event: ReactDragEvent<HTMLTextAreaElement>) => {
+    const hasImageFile = Array.from(event.dataTransfer?.files ?? []).some((file) => file.type.startsWith("image/"));
+    if (!hasImageFile) {
+      return;
+    }
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    if (editorDropNoteId !== note.id) {
+      setEditorDropNoteId(note.id);
+    }
+  };
+
+  const onEditorDragLeave = (note: NoteV2, event: ReactDragEvent<HTMLTextAreaElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      return;
+    }
+
+    if (editorDropNoteId === note.id) {
+      setEditorDropNoteId(null);
+    }
+  };
+
+  const onEditorDrop = async (note: NoteV2, event: ReactDragEvent<HTMLTextAreaElement>) => {
+    const imageFile = Array.from(event.dataTransfer?.files ?? []).find((file) => file.type.startsWith("image/"));
+    if (!imageFile) {
+      return;
+    }
+
+    event.preventDefault();
+    setEditorDropNoteId(null);
+    await applyImageFileToNote(note, imageFile);
   };
 
   const archiveNote = (noteId: string) => {
@@ -3876,12 +3914,17 @@ const App = () => {
                                       </div>
                                     )}
                                     <textarea
-                                      className="pin-editor"
+                                      className={`pin-editor ${editorDropNoteId === note.id ? "drop-active" : ""}`}
                                       value={note.content}
                                       style={{ fontSize: `${fontSize}px` }}
                                       onMouseDown={(event) => event.stopPropagation()}
                                       onPaste={(event) => {
                                         void onEditorPaste(note, event);
+                                      }}
+                                      onDragOver={(event) => onEditorDragOver(note, event)}
+                                      onDragLeave={(event) => onEditorDragLeave(note, event)}
+                                      onDrop={(event) => {
+                                        void onEditorDrop(note, event);
                                       }}
                                       onFocus={() => setSelectedNoteId(note.id)}
                                       onChange={(event) => {

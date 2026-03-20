@@ -1476,12 +1476,19 @@ button {
   width: 100%;
   min-height: 0;
   border: none;
+  border-radius: 18px;
   resize: none;
   outline: none;
   background: transparent;
   color: var(--text);
   line-height: 1.7;
   overflow: hidden;
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.pin-editor.drop-active {
+  background: rgba(29, 111, 216, 0.08);
+  box-shadow: inset 0 0 0 2px rgba(29, 111, 216, 0.28);
 }
 
 .link-chip {
