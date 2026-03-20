@@ -1039,6 +1039,13 @@ const clearTrashedAt = (value: Record<string, unknown>) => {
   delete next.trashedAt;
   return next;
 };
+const sanitizeDuplicatedBoardSettings = (settings: Record<string, unknown>, sidebarOrder: number) => {
+  const next: Record<string, unknown> = { ...settings, sidebarOrder };
+  delete next.trashedAt;
+  delete next.sharedSlug;
+  delete next.historySnapshots;
+  return next;
+};
 const cloneNoteForHistory = (note: NoteV2): NoteV2 => ({
   ...note,
   metadata: { ...note.metadata }
@@ -2262,6 +2269,49 @@ const App = () => {
     setSelectedNoteId(null);
     setFeedMode("active");
     setTemplatePickerOpen(false);
+  };
+
+  const duplicateSelectedBoard = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const nextOrder = orderedBoards.length;
+    const timestamp = nowIso();
+    const duplicatedBoardId = makeId();
+    const duplicateTitle = `${selectedBoard.title} 복사본`;
+    const boardNotes = notes
+      .filter((note) => note.boardId === selectedBoard.id && !note.archived && !isNoteTrashed(note))
+      .sort((left, right) => left.zIndex - right.zIndex);
+
+    const duplicatedBoard: BoardV2 = {
+      ...selectedBoard,
+      id: duplicatedBoardId,
+      userId: user?.id ?? selectedBoard.userId,
+      title: duplicateTitle,
+      settings: sanitizeDuplicatedBoardSettings(selectedBoard.settings ?? {}, nextOrder),
+      updatedAt: timestamp
+    };
+
+    const duplicatedNotes = boardNotes.map((note, index) => ({
+      ...cloneNoteForHistory(note),
+      id: makeId(),
+      boardId: duplicatedBoardId,
+      userId: user?.id ?? selectedBoard.userId,
+      archived: false,
+      zIndex: index + 1,
+      metadata: clearTrashedAt({ ...(note.metadata ?? {}) }),
+      updatedAt: timestamp
+    }));
+
+    setBoards((prev) => [duplicatedBoard, ...prev]);
+    if (duplicatedNotes.length > 0) {
+      setNotes((prev) => [...duplicatedNotes, ...prev]);
+    }
+    setSelectedBoardId(duplicatedBoardId);
+    setSelectedNoteId(null);
+    setFeedMode("active");
+    setSettingsOpen(false);
   };
 
   const restoreBoard = (boardId: string) => {
@@ -3875,6 +3925,12 @@ const App = () => {
               {settingsSection === "menu" ? (
                 <>
                   <div className="settings-menu-grid">
+                    {selectedBoard && (
+                      <button className="settings-menu-card" onClick={duplicateSelectedBoard}>
+                        <span className="settings-menu-title">보드 복제</span>
+                        <span className="settings-menu-meta">현재 보드의 메모와 레이아웃을 새 보드로 복사</span>
+                      </button>
+                    )}
                     <button className="settings-menu-card" onClick={() => setSettingsSection("history")}>
                       <span className="settings-menu-title">보드 히스토리</span>
                       <span className="settings-menu-meta">
