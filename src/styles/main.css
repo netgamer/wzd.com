@@ -1350,11 +1350,45 @@ button {
   min-height: 100%;
 }
 
+.pin-card.link-only-note::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgba(31, 26, 19, 0.18);
+  z-index: 1;
+}
+
+.pin-card.link-only-note.note-yellow::before {
+  background: #f2c100;
+}
+
+.pin-card.link-only-note.note-pink::before {
+  background: #ef7f9e;
+}
+
+.pin-card.link-only-note.note-blue::before {
+  background: #8fb5ea;
+}
+
+.pin-card.link-only-note.note-green::before {
+  background: #7fc7b4;
+}
+
+.pin-card.link-only-note.note-white::before {
+  background: #d4c6b7;
+}
+
 .pin-card.link-only-note .link-preview-card {
   min-height: 260px;
   height: 100%;
-  border-radius: 20px;
-  box-shadow: 0 6px 18px rgba(34, 23, 12, 0.08);
+  border-radius: 18px;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+  padding-top: 20px;
 }
 
 .pin-card.link-only-note .pin-card-head {
@@ -1370,6 +1404,16 @@ button {
 
 .pin-card.link-only-note .pin-dot {
   display: none;
+}
+
+.pin-card.link-only-note .link-preview-meta {
+  padding: 0;
+}
+
+.pin-card.link-only-note .link-preview-card:hover {
+  transform: none;
+  box-shadow: none;
+  background: transparent;
 }
 
 .pin-card.link-only-note .pin-actions {
