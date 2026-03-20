@@ -910,6 +910,64 @@ const getLinkDisplayDescription = (content: unknown, noteUrl: string, preview: L
   return getUrlSnippet(noteUrl);
 };
 
+const normalizePreviewCompareText = (value: unknown) =>
+  String(value ?? "")
+    .toLowerCase()
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/[|·•"'`“”‘’()[\]{}<>]/g, " ")
+    .replace(/[^\p{L}\p{N}\s/@._:-]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const isLinkPreviewDuplicateText = (content: unknown, noteUrl: string, preview: LinkPreview | null | undefined) => {
+  if (!preview) {
+    return false;
+  }
+
+  const cleanedLines = stripUrls(content)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (cleanedLines.length === 0) {
+    return true;
+  }
+
+  const noteTitle = getNoteTitle(content);
+  const noteBody = cleanedLines.filter((line, index) => !(index === 0 && line === noteTitle)).join(" ").trim();
+  const noteFull = cleanedLines.join(" ").trim();
+
+  const bodyCandidates = [noteBody, noteFull].map(normalizePreviewCompareText).filter(Boolean);
+
+  if (bodyCandidates.length === 0) {
+    return true;
+  }
+
+  const previewTitle = getLinkDisplayTitle(content, noteUrl, preview);
+  const previewDescription = getLinkDisplayDescription(content, noteUrl, preview);
+  const previewCandidates = [
+    preview?.title,
+    preview?.description,
+    previewTitle,
+    previewDescription,
+    `${preview?.title ?? ""} ${preview?.description ?? ""}`,
+    `${previewTitle} ${previewDescription}`,
+    getLinkDisplaySite(preview),
+    getUrlSnippet(noteUrl),
+  ]
+    .map(normalizePreviewCompareText)
+    .filter(Boolean);
+
+  return bodyCandidates.every((bodyCandidate) =>
+    previewCandidates.some(
+      (previewCandidate) =>
+        bodyCandidate === previewCandidate ||
+        bodyCandidate.includes(previewCandidate) ||
+        previewCandidate.includes(bodyCandidate)
+    )
+  );
+};
+
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
 const getSharedBoardSlugFromLocation = () => {
   if (typeof window === "undefined") {
@@ -3981,7 +4039,10 @@ const App = () => {
                     const hasImagePreview = Boolean(cardImageUrl);
                     const hasTextPreview = previewText.trim().length > 0;
                     const hasLinkPreview = hasExternalLink;
-                    const isPureLinkNote = hasExternalLink && !hasImagePreview && !hasTextPreview;
+                    const isPureLinkNote =
+                      hasExternalLink &&
+                      !hasImagePreview &&
+                      (!hasTextPreview || isLinkPreviewDuplicateText(note.content, noteUrl, linkPreview));
                     const displayTitle = hasExternalLink
                       ? getLinkDisplayTitle(note.content, noteUrl, linkPreview)
                       : getNoteTitle(note.content);
