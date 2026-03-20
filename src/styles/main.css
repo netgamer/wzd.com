@@ -1447,12 +1447,14 @@ button {
 .pin-card.link-only-note::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 6px;
+  top: 8px;
+  left: 14px;
+  right: 14px;
+  height: 4px;
+  border-radius: 999px;
   background: rgba(31, 26, 19, 0.18);
   z-index: 1;
+  pointer-events: none;
 }
 
 .pin-card.link-only-note.note-yellow::before {
@@ -1482,7 +1484,7 @@ button {
   box-shadow: none;
   border: none;
   background: transparent;
-  padding-top: 20px;
+  padding-top: 18px;
 }
 
 .pin-card.link-only-note .pin-card-head {
