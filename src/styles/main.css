@@ -591,6 +591,13 @@ button {
   display: none;
 }
 
+@media (min-width: 981px) {
+  .pin-topbar .mobile-board-toggle,
+  .pin-topbar + .mobile-board-tabs {
+    display: none !important;
+  }
+}
+
 .mobile-profile-button {
   display: none;
   width: 42px;

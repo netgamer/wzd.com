@@ -194,6 +194,7 @@ const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const BOARD_HISTORY_LIMIT = 20;
 const MOBILE_LAYOUT_BREAKPOINT = 980;
 const MOBILE_SINGLE_COLUMN_BREAKPOINT = 680;
+const COMPACT_SIDEBAR_BREAKPOINT = 1120;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
 const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
@@ -1625,7 +1626,7 @@ const App = () => {
   const [rssFeeds, setRssFeeds] = useState<Record<string, RssFeedState>>({});
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [compactSidebar, setCompactSidebar] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth < 1180 : false
+    typeof window !== "undefined" ? window.innerWidth < COMPACT_SIDEBAR_BREAKPOINT : false
   );
   const [mobileViewport, setMobileViewport] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT : false
@@ -1721,7 +1722,7 @@ const App = () => {
   useEffect(() => {
     const onResize = () => {
       setColumnCount(getColumnCount());
-      setCompactSidebar(window.innerWidth < 1180);
+      setCompactSidebar(window.innerWidth < COMPACT_SIDEBAR_BREAKPOINT);
       setMobileViewport(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
       if (window.innerWidth > MOBILE_LAYOUT_BREAKPOINT) {
         setMobileSearchOpen(false);
@@ -3614,7 +3615,10 @@ const App = () => {
 
   const previousBoard = getAdjacentBoard("prev");
   const nextSwipeBoard = getAdjacentBoard("next");
-  const compactHeader = mobileViewport || compactSidebar;
+  // Keep the compact header aligned with the CSS mobile breakpoint.
+  // The sidebar can collapse earlier, but the topbar should not switch to
+  // the mobile tabs/header layout until the actual mobile layout kicks in.
+  const compactHeader = mobileViewport;
   const mobileSwipeEnabled = compactHeader && feedMode === "active" && activeBoards.length > 1;
   const starterTemplateSections = BOARD_TEMPLATE_SECTIONS.map((section) => ({
     ...section,
@@ -3771,13 +3775,15 @@ const App = () => {
         <header className={`pin-topbar ${compactHeader ? "compact-header" : ""}`}>
           <div className="topbar-primary">
             <div className="topbar-board-title">
-              <button
-                className="mobile-icon-action mobile-board-toggle"
-                onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
-                aria-label="보드 메뉴"
-              >
-                ≡
-              </button>
+              {compactHeader && (
+                <button
+                  className="mobile-icon-action mobile-board-toggle"
+                  onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+                  aria-label="보드 메뉴"
+                >
+                  ≡
+                </button>
+              )}
               <p className="feed-kicker">
                 {isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
               </p>
