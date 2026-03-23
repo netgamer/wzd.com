@@ -1444,20 +1444,8 @@ button {
 
 .pin-card.link-only-note {
   position: relative;
-  border-top-width: 1px;
-  border-top-color: rgba(31, 26, 19, 0.12);
-}
-
-.pin-card.link-only-note::before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: 16px;
-  right: 16px;
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(31, 26, 19, 0.18);
-  pointer-events: none;
+  border-top-width: 4px;
+  border-top-color: rgba(31, 26, 19, 0.14);
 }
 
 .pin-card.link-only-note .pin-note-stack {
@@ -1466,43 +1454,28 @@ button {
 }
 
 .pin-card.link-only-note.note-yellow {
-  border-top-color: rgba(242, 193, 0, 0.18);
-}
-
-.pin-card.link-only-note.note-yellow::before {
   background: #f2c100;
+  border-top-color: rgba(242, 193, 0, 0.58);
 }
 
 .pin-card.link-only-note.note-pink {
-  border-top-color: rgba(239, 127, 158, 0.18);
-}
-
-.pin-card.link-only-note.note-pink::before {
   background: #ef7f9e;
+  border-top-color: rgba(239, 127, 158, 0.52);
 }
 
 .pin-card.link-only-note.note-blue {
-  border-top-color: rgba(143, 181, 234, 0.2);
-}
-
-.pin-card.link-only-note.note-blue::before {
   background: #8fb5ea;
+  border-top-color: rgba(143, 181, 234, 0.55);
 }
 
 .pin-card.link-only-note.note-green {
-  border-top-color: rgba(127, 199, 180, 0.2);
-}
-
-.pin-card.link-only-note.note-green::before {
   background: #7fc7b4;
+  border-top-color: rgba(127, 199, 180, 0.55);
 }
 
 .pin-card.link-only-note.note-white {
-  border-top-color: rgba(212, 198, 183, 0.25);
-}
-
-.pin-card.link-only-note.note-white::before {
   background: #d4c6b7;
+  border-top-color: rgba(212, 198, 183, 0.62);
 }
 
 .pin-card.link-only-note .link-preview-card {
