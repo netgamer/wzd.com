@@ -61,7 +61,12 @@ type WidgetType =
   | "weather"
   | "trending"
   | "delivery"
-  | "pet";
+  | "pet"
+  | "cover"
+  | "focus"
+  | "mood"
+  | "routine"
+  | "prompt";
 type ChecklistItem = { text: string; checked: boolean };
 type TimetableEntry = { day: string; start: string; end: string; title: string; location: string };
 type BoardTemplateKey =
@@ -235,6 +240,26 @@ const DEFAULT_WEATHER_QUERY = "서울";
 const DEFAULT_TRENDING_REGION = "KR";
 const DEFAULT_DELIVERY_CARRIER = "kr.cjlogistics";
 const DEFAULT_PET_NAME = "모찌";
+const DEFAULT_COVER_SUBTITLE = "링크와 메모를 한 장의 보드로 정리해보세요.";
+const DEFAULT_FOCUS_DURATION_MINUTES = 25;
+const DEFAULT_MOOD_EMOJI = "🙂";
+const DEFAULT_MOOD_NOTE = "오늘의 기분을 짧게 남겨보세요.";
+const DEFAULT_MOOD_ENERGY = 3;
+const DEFAULT_ROUTINE_ITEMS: ChecklistItem[] = [
+  { text: "아침 정리", checked: true },
+  { text: "핵심 작업 시작", checked: false },
+  { text: "운동 또는 산책", checked: false },
+  { text: "하루 회고", checked: false }
+];
+const DEFAULT_PROMPT_TEXT = `당신은 아이디어를 구조화하는 조력자입니다.
+
+주제:
+목표:
+톤앤매너:
+핵심 포인트 3개:
+
+위 내용을 바탕으로 짧고 명확한 초안을 만들어주세요.`;
+const FOCUS_TICK_INTERVAL_MS = 1000;
 const PET_VISIT_STORAGE_KEY = "wzd-pet-visits";
 const PET_VISIT_SESSION_PREFIX = "wzd-pet-visit-session:";
 const TIMETABLE_DAY_ORDER = ["월", "화", "수", "목", "금", "토", "일"];
@@ -1180,7 +1205,12 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "weather" ||
   note.metadata?.widgetType === "trending" ||
   note.metadata?.widgetType === "delivery" ||
-  note.metadata?.widgetType === "pet"
+  note.metadata?.widgetType === "pet" ||
+  note.metadata?.widgetType === "cover" ||
+  note.metadata?.widgetType === "focus" ||
+  note.metadata?.widgetType === "mood" ||
+  note.metadata?.widgetType === "routine" ||
+  note.metadata?.widgetType === "prompt"
     ? note.metadata.widgetType
     : "note";
 const getRssFeedUrl = (note: NoteV2) =>
@@ -1254,6 +1284,78 @@ const getChecklistItems = (note: NoteV2): ChecklistItem[] => {
 
 const serializeChecklistItems = (items: ChecklistItem[]) =>
   items.map((item) => `${item.checked ? "[x]" : "[ ]"} ${item.text}`.trim()).join("\n");
+
+const getCoverSubtitle = (note: NoteV2) =>
+  typeof note.metadata?.coverSubtitle === "string" && note.metadata.coverSubtitle.trim()
+    ? note.metadata.coverSubtitle.trim()
+    : DEFAULT_COVER_SUBTITLE;
+
+const getFocusDurationMinutes = (note: NoteV2) =>
+  typeof note.metadata?.focusDurationMinutes === "number" && note.metadata.focusDurationMinutes > 0
+    ? Math.max(1, Math.min(180, Math.round(note.metadata.focusDurationMinutes)))
+    : DEFAULT_FOCUS_DURATION_MINUTES;
+
+const getFocusStartedAt = (note: NoteV2) =>
+  typeof note.metadata?.focusStartedAt === "string" && note.metadata.focusStartedAt.trim() ? note.metadata.focusStartedAt : "";
+
+const getFocusElapsedSeconds = (note: NoteV2) =>
+  typeof note.metadata?.focusElapsedSeconds === "number" && note.metadata.focusElapsedSeconds > 0
+    ? Math.max(0, Math.round(note.metadata.focusElapsedSeconds))
+    : 0;
+
+const getFocusSnapshot = (note: NoteV2, nowMs: number) => {
+  const durationMinutes = getFocusDurationMinutes(note);
+  const startedAt = getFocusStartedAt(note);
+  const baseElapsedSeconds = getFocusElapsedSeconds(note);
+  const isRunning = Boolean(startedAt);
+  const runningSeconds = startedAt ? Math.max(0, Math.floor((nowMs - new Date(startedAt).getTime()) / 1000)) : 0;
+  const elapsedSeconds = baseElapsedSeconds + runningSeconds;
+  const totalSeconds = durationMinutes * 60;
+  const progress = totalSeconds > 0 ? Math.min(1, elapsedSeconds / totalSeconds) : 0;
+  const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+  return { durationMinutes, elapsedSeconds, progress, remainingSeconds, isRunning };
+};
+
+const getMoodEmoji = (note: NoteV2) =>
+  typeof note.metadata?.moodEmoji === "string" && note.metadata.moodEmoji.trim() ? note.metadata.moodEmoji.trim() : DEFAULT_MOOD_EMOJI;
+
+const getMoodNote = (note: NoteV2) =>
+  typeof note.metadata?.moodNote === "string" && note.metadata.moodNote.trim() ? note.metadata.moodNote.trim() : DEFAULT_MOOD_NOTE;
+
+const getMoodEnergy = (note: NoteV2) =>
+  typeof note.metadata?.moodEnergy === "number" && note.metadata.moodEnergy >= 1 && note.metadata.moodEnergy <= 5
+    ? Math.round(note.metadata.moodEnergy)
+    : DEFAULT_MOOD_ENERGY;
+
+const getRoutineItems = (note: NoteV2) => {
+  const rawList = note.metadata?.routineItems;
+  if (Array.isArray(rawList)) {
+    const items = rawList
+      .map((item) =>
+        typeof item === "object" && item && "text" in item
+          ? {
+              text: String((item as { text?: unknown }).text ?? "").trim(),
+              checked: Boolean((item as { checked?: unknown }).checked)
+            }
+          : null
+      )
+      .filter((item): item is ChecklistItem => Boolean(item && item.text));
+    if (items.length > 0) {
+      return items;
+    }
+  }
+
+  if (typeof note.metadata?.routineText === "string" && note.metadata.routineText.trim()) {
+    return parseChecklistItems(note.metadata.routineText);
+  }
+
+  return DEFAULT_ROUTINE_ITEMS;
+};
+
+const getPromptText = (note: NoteV2) =>
+  typeof note.metadata?.promptText === "string" && note.metadata.promptText.trim()
+    ? note.metadata.promptText
+    : DEFAULT_PROMPT_TEXT;
 
 const getCountdownTargetDate = (note: NoteV2) =>
   typeof note.metadata?.targetDate === "string" && note.metadata.targetDate.trim() ? note.metadata.targetDate : "";
@@ -1560,6 +1662,11 @@ const reorderNotes = (
 
 const getAutoLayoutPriority = (note: NoteV2) => {
   const widgetType = getWidgetType(note);
+  if (widgetType === "cover") return -1;
+  if (widgetType === "focus") return 1;
+  if (widgetType === "mood") return 2;
+  if (widgetType === "routine") return 2;
+  if (widgetType === "prompt") return 1;
   if (widgetType === "rss") return 0;
   if (widgetType === "bookmark") return 1;
   if (widgetType === "checklist") return 2;
@@ -1579,6 +1686,11 @@ const getAutoLayoutPriority = (note: NoteV2) => {
 };
 
 type AutoLayoutCategory =
+  | "cover"
+  | "focus"
+  | "mood"
+  | "routine"
+  | "prompt"
   | "rss"
   | "bookmark"
   | "checklist"
@@ -1612,6 +1724,11 @@ const getBoardLayoutStyle = (board: BoardV2 | null | undefined): BoardLayoutStyl
 
 const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   const widgetType = getWidgetType(note);
+  if (widgetType === "cover") return "cover";
+  if (widgetType === "focus") return "focus";
+  if (widgetType === "mood") return "mood";
+  if (widgetType === "routine") return "routine";
+  if (widgetType === "prompt") return "prompt";
   if (widgetType === "rss") return "rss";
   if (widgetType === "bookmark") return "bookmark";
   if (widgetType === "checklist") return "checklist";
@@ -1688,6 +1805,11 @@ const getPreferredColumns = (
 
 const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) => {
   const widgetType = getWidgetType(note);
+  if (widgetType === "cover") return layoutStyle === "compact" ? 220 : 260;
+  if (widgetType === "focus") return layoutStyle === "compact" ? 220 : 250;
+  if (widgetType === "mood") return layoutStyle === "compact" ? 200 : 230;
+  if (widgetType === "routine") return layoutStyle === "compact" ? 240 : 280;
+  if (widgetType === "prompt") return layoutStyle === "compact" ? 230 : 270;
   if (widgetType === "rss") return layoutStyle === "compact" ? 270 : 300;
   if (widgetType === "bookmark") return layoutStyle === "compact" ? 230 : 260;
   if (widgetType === "checklist") return layoutStyle === "compact" ? 250 : 290;
@@ -1812,6 +1934,8 @@ const App = () => {
   const [deliveryWidgets, setDeliveryWidgets] = useState<Record<string, DeliveryState>>({});
   const [deliveryCarriers, setDeliveryCarriers] = useState<DeliveryCarrier[]>([]);
   const [petVisitCounts, setPetVisitCounts] = useState<Record<string, number>>(() => loadPetVisitCounts());
+  const [focusNow, setFocusNow] = useState(() => Date.now());
+  const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [compactSidebar, setCompactSidebar] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < COMPACT_SIDEBAR_BREAKPOINT : false
@@ -1858,6 +1982,7 @@ const App = () => {
     active: false
   });
   const boardSwipeAnimatingRef = useRef(false);
+  const promptCopyTimerRef = useRef<number | null>(null);
 
   const orderedBoards = useMemo(() => sortBoards(boards), [boards]);
   const activeBoards = useMemo(() => orderedBoards.filter((board) => !isBoardTrashed(board)), [orderedBoards]);
@@ -1906,6 +2031,15 @@ const App = () => {
       window.removeEventListener("pointerdown", handlePointerDown);
     };
   }, [profileMenuOpen]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setFocusNow(Date.now());
+    }, FOCUS_TICK_INTERVAL_MS);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     const onResize = () => {
@@ -2399,6 +2533,425 @@ const App = () => {
       );
     }
 
+    if (widgetType === "cover") {
+      const subtitle = getCoverSubtitle(note);
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">COVER</span>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="보드 커버 제목"
+              />
+              <textarea
+                className="widget-textarea"
+                value={subtitle}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "cover",
+                      coverSubtitle: event.target.value
+                    }
+                  })
+                }
+                placeholder="보드 소개 한 줄"
+                rows={3}
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`cover-widget ${compact ? "compact" : ""}`}>
+              <span className="cover-widget-kicker">Board Cover</span>
+              <strong>{asText(note.content).trim() || "보드 커버"}</strong>
+              <p>{subtitle}</p>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "focus") {
+      const focus = getFocusSnapshot(note, focusNow);
+      const minutes = Math.floor(focus.remainingSeconds / 60)
+        .toString()
+        .padStart(2, "0");
+      const seconds = (focus.remainingSeconds % 60).toString().padStart(2, "0");
+      const progressPercent = Math.round(focus.progress * 100);
+
+      const startFocus = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        updateNote(note.id, {
+          metadata: {
+            ...note.metadata,
+            widgetType: "focus",
+            focusDurationMinutes: focus.durationMinutes,
+            focusStartedAt: nowIso(),
+            focusElapsedSeconds: getFocusElapsedSeconds(note)
+          }
+        });
+      };
+
+      const pauseFocus = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        updateNote(note.id, {
+          metadata: {
+            ...note.metadata,
+            widgetType: "focus",
+            focusDurationMinutes: focus.durationMinutes,
+            focusStartedAt: "",
+            focusElapsedSeconds: focus.elapsedSeconds
+          }
+        });
+      };
+
+      const resetFocus = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        updateNote(note.id, {
+          metadata: {
+            ...note.metadata,
+            widgetType: "focus",
+            focusDurationMinutes: focus.durationMinutes,
+            focusStartedAt: "",
+            focusElapsedSeconds: 0
+          }
+        });
+      };
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">FOCUS</span>
+            <p className="pin-title">{asText(note.content).trim() || "포커스 타이머"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <label className="widget-field">
+                <span>집중 시간 (분)</span>
+                <input
+                  className="widget-input"
+                  type="number"
+                  min={1}
+                  max={180}
+                  value={focus.durationMinutes}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onChange={(event) =>
+                    updateNote(note.id, {
+                      metadata: {
+                        ...note.metadata,
+                        widgetType: "focus",
+                        focusDurationMinutes: Number(event.target.value) || DEFAULT_FOCUS_DURATION_MINUTES
+                      }
+                    })
+                  }
+                />
+              </label>
+              <div className="focus-widget-actions">
+                <button className="widget-confirm" onClick={focus.isRunning ? pauseFocus : startFocus}>
+                  {focus.isRunning ? "일시정지" : "시작"}
+                </button>
+                <button className="widget-secondary" onClick={resetFocus}>
+                  리셋
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className={`focus-widget ${compact ? "compact" : ""}`}>
+              <div className="focus-widget-timer">
+                {minutes}:{seconds}
+              </div>
+              <div className="focus-widget-track" aria-hidden="true">
+                <div className="focus-widget-fill" style={{ width: `${progressPercent}%` }} />
+              </div>
+              <div className="focus-widget-meta">
+                <span>{focus.isRunning ? "집중 중" : "대기 중"}</span>
+                <span>{progressPercent}%</span>
+              </div>
+              <div className="focus-widget-actions">
+                <button className="widget-confirm" onClick={focus.isRunning ? pauseFocus : startFocus}>
+                  {focus.isRunning ? "멈춤" : "시작"}
+                </button>
+                <button className="widget-secondary" onClick={resetFocus}>
+                  초기화
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "mood") {
+      const moodEmoji = getMoodEmoji(note);
+      const moodNote = getMoodNote(note);
+      const moodEnergy = getMoodEnergy(note);
+      const moodOptions = ["😴", "🙂", "😎", "🔥", "🥳"];
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">MOOD</span>
+            <p className="pin-title">{asText(note.content).trim() || "오늘의 무드"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <div className="mood-picker">
+                {moodOptions.map((option) => (
+                  <button
+                    key={`${note.id}-${option}`}
+                    className={`mood-option ${moodEmoji === option ? "active" : ""}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      updateNote(note.id, {
+                        metadata: {
+                          ...note.metadata,
+                          widgetType: "mood",
+                          moodEmoji: option
+                        }
+                      });
+                    }}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+              <label className="widget-field">
+                <span>에너지</span>
+                <input
+                  className="widget-input"
+                  type="range"
+                  min={1}
+                  max={5}
+                  value={moodEnergy}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onChange={(event) =>
+                    updateNote(note.id, {
+                      metadata: {
+                        ...note.metadata,
+                        widgetType: "mood",
+                        moodEnergy: Number(event.target.value)
+                      }
+                    })
+                  }
+                />
+              </label>
+              <textarea
+                className="widget-textarea"
+                value={moodNote}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "mood",
+                      moodNote: event.target.value
+                    }
+                  })
+                }
+                placeholder="오늘 기분 메모"
+                rows={3}
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`mood-widget ${compact ? "compact" : ""}`}>
+              <div className="mood-widget-emoji">{moodEmoji}</div>
+              <strong>에너지 {moodEnergy}/5</strong>
+              <p>{moodNote}</p>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "routine") {
+      const routineItems = getRoutineItems(note);
+
+      const toggleRoutineItem = (event: React.MouseEvent<HTMLButtonElement>, index: number) => {
+        event.stopPropagation();
+        const nextItems = routineItems.map((item, itemIndex) =>
+          itemIndex === index ? { ...item, checked: !item.checked } : item
+        );
+        updateNote(note.id, {
+          metadata: {
+            ...note.metadata,
+            widgetType: "routine",
+            routineItems: nextItems,
+            routineText: serializeChecklistItems(nextItems)
+          }
+        });
+      };
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">ROUTINE</span>
+            <p className="pin-title">{asText(note.content).trim() || "루틴"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <textarea
+                className="widget-textarea"
+                value={serializeChecklistItems(routineItems)}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => {
+                  const nextItems = parseChecklistItems(event.target.value);
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "routine",
+                      routineItems: nextItems,
+                      routineText: event.target.value
+                    }
+                  });
+                }}
+                placeholder="[ ] 아침 스트레칭"
+                rows={6}
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`routine-widget ${compact ? "compact" : ""}`}>
+              {routineItems.slice(0, compact ? 3 : routineItems.length).map((item, index) => (
+                <button
+                  key={`${note.id}-routine-${index}`}
+                  className={`routine-item ${item.checked ? "checked" : ""}`}
+                  onClick={(event) => toggleRoutineItem(event, index)}
+                >
+                  <span className="routine-item-mark">{item.checked ? "✓" : ""}</span>
+                  <span>{item.text}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "prompt") {
+      const promptText = getPromptText(note);
+
+      const copyPrompt = async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        try {
+          await navigator.clipboard.writeText(promptText);
+          setCopiedPromptId(note.id);
+          if (promptCopyTimerRef.current) {
+            window.clearTimeout(promptCopyTimerRef.current);
+          }
+          promptCopyTimerRef.current = window.setTimeout(() => {
+            setCopiedPromptId((current) => (current === note.id ? null : current));
+          }, 1600);
+        } catch (error) {
+          console.error("Failed to copy prompt", error);
+        }
+      };
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">PROMPT</span>
+            <p className="pin-title">{asText(note.content).trim() || "AI 프롬프트"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <textarea
+                className="widget-textarea"
+                value={promptText}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "prompt",
+                      promptText: event.target.value
+                    }
+                  })
+                }
+                placeholder="자주 쓰는 프롬프트를 입력하세요"
+                rows={8}
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`prompt-widget ${compact ? "compact" : ""}`}>
+              <pre>{promptText}</pre>
+              <button className="widget-secondary prompt-copy-button" onClick={copyPrompt}>
+                {copiedPromptId === note.id ? "복사됨" : "프롬프트 복사"}
+              </button>
+            </div>
+          )}
+        </>
+      );
+    }
+
     return null;
   };
 
@@ -2742,6 +3295,9 @@ const App = () => {
 
   useEffect(() => {
     return () => {
+      if (promptCopyTimerRef.current) {
+        window.clearTimeout(promptCopyTimerRef.current);
+      }
       if (saveStateResetTimerRef.current) {
         window.clearTimeout(saveStateResetTimerRef.current);
       }
@@ -3662,6 +4218,213 @@ const App = () => {
     setVisibleNoteCount((prev) => Math.max(prev, 1));
     setWidgetMenuOpen(false);
   };
+
+  const addCoverWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "보드 커버"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "cover",
+      coverSubtitle: DEFAULT_COVER_SUBTITLE
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addFocusWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "포커스 타이머"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "focus",
+      focusDurationMinutes: DEFAULT_FOCUS_DURATION_MINUTES,
+      focusStartedAt: "",
+      focusElapsedSeconds: 0
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addMoodWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "오늘의 무드"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "mood",
+      moodEmoji: DEFAULT_MOOD_EMOJI,
+      moodNote: DEFAULT_MOOD_NOTE,
+      moodEnergy: DEFAULT_MOOD_ENERGY
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addRoutineWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "루틴"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "routine",
+      routineItems: DEFAULT_ROUTINE_ITEMS,
+      routineText: serializeChecklistItems(DEFAULT_ROUTINE_ITEMS)
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addPromptWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "AI 프롬프트"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "prompt",
+      promptText: DEFAULT_PROMPT_TEXT
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const renderWidgetMenuItems = () => (
+    <>
+      <button className="widget-menu-item" onClick={addRssWidget}>
+        RSS 리더
+      </button>
+      <button className="widget-menu-item" onClick={addBookmarkWidget}>
+        북마크
+      </button>
+      <button className="widget-menu-item" onClick={addChecklistWidget}>
+        체크리스트
+      </button>
+      <button className="widget-menu-item" onClick={addCountdownWidget}>
+        디데이
+      </button>
+      <button className="widget-menu-item" onClick={addTimetableWidget}>
+        시간표
+      </button>
+      <button className="widget-menu-item" onClick={addWeatherWidget}>
+        날씨
+      </button>
+      <button className="widget-menu-item" onClick={addTrendingWidget}>
+        실시간 검색어
+      </button>
+      <button className="widget-menu-item" onClick={addDeliveryWidget}>
+        택배 추적
+      </button>
+      <button className="widget-menu-item" onClick={addPetWidget}>
+        방문자 캐릭터
+      </button>
+      <button className="widget-menu-item" onClick={addCoverWidget}>
+        보드 커버
+      </button>
+      <button className="widget-menu-item" onClick={addFocusWidget}>
+        포커스 타이머
+      </button>
+      <button className="widget-menu-item" onClick={addMoodWidget}>
+        오늘의 무드
+      </button>
+      <button className="widget-menu-item" onClick={addRoutineWidget}>
+        루틴
+      </button>
+      <button className="widget-menu-item" onClick={addPromptWidget}>
+        AI 프롬프트
+      </button>
+    </>
+  );
 
   const organizeCurrentBoard = () => {
     if (!selectedBoard) {
@@ -4780,33 +5543,7 @@ const App = () => {
                 </button>
                 {widgetMenuOpen && (
                   <div className="widget-menu">
-                    <button className="widget-menu-item" onClick={addRssWidget}>
-                      RSS 리더
-                    </button>
-                    <button className="widget-menu-item" onClick={addBookmarkWidget}>
-                      북마크
-                    </button>
-                    <button className="widget-menu-item" onClick={addChecklistWidget}>
-                      체크리스트
-                    </button>
-                    <button className="widget-menu-item" onClick={addCountdownWidget}>
-                      디데이
-                    </button>
-                    <button className="widget-menu-item" onClick={addTimetableWidget}>
-                      시간표
-                    </button>
-                    <button className="widget-menu-item" onClick={addWeatherWidget}>
-                      날씨
-                    </button>
-                    <button className="widget-menu-item" onClick={addTrendingWidget}>
-                      실시간 검색어
-                    </button>
-                    <button className="widget-menu-item" onClick={addDeliveryWidget}>
-                      택배 추적
-                    </button>
-                    <button className="widget-menu-item" onClick={addPetWidget}>
-                      방문자 캐릭터
-                    </button>
+                    {renderWidgetMenuItems()}
                   </div>
                 )}
               </div>
@@ -4893,6 +5630,20 @@ const App = () => {
                     </span>
                     <span>자동 정리</span>
                   </button>
+                )}
+                {!isSharedView && feedMode === "active" && selectedBoard && (
+                  <div className="mobile-board-widget-group">
+                    <button
+                      className={`mobile-board-action ${widgetMenuOpen ? "active" : ""}`}
+                      onClick={() => setWidgetMenuOpen((prev) => !prev)}
+                    >
+                      <span className="mobile-board-action-icon" aria-hidden="true">
+                        ◫
+                      </span>
+                      <span>위젯 추가</span>
+                    </button>
+                    {widgetMenuOpen && <div className="mobile-widget-menu">{renderWidgetMenuItems()}</div>}
+                  </div>
                 )}
                 {canShareBoard && (
                   <button

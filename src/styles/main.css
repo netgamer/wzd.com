@@ -1679,6 +1679,24 @@ button {
   cursor: pointer;
 }
 
+.widget-secondary {
+  min-height: 40px;
+  border-radius: 14px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(31, 26, 19, 0.12);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.widget-field {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .rss-feed-source {
   color: var(--text);
   font-size: 13px;
@@ -1707,6 +1725,167 @@ button {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.45;
+}
+
+.cover-widget,
+.focus-widget,
+.mood-widget,
+.prompt-widget {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.cover-widget-kicker {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 26, 19, 0.5);
+}
+
+.cover-widget strong,
+.mood-widget strong {
+  font-size: 18px;
+}
+
+.cover-widget p,
+.mood-widget p {
+  margin: 0;
+  line-height: 1.6;
+  color: rgba(31, 26, 19, 0.75);
+}
+
+.focus-widget-timer {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.focus-widget-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(31, 26, 19, 0.08);
+  overflow: hidden;
+}
+
+.focus-widget-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff5f7b, #ffb347);
+  transition: width 180ms ease;
+}
+
+.focus-widget-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(31, 26, 19, 0.64);
+}
+
+.focus-widget-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mood-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mood-option {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease;
+}
+
+.mood-option.active {
+  transform: translateY(-1px);
+  border-color: rgba(255, 72, 120, 0.45);
+}
+
+.mood-widget-emoji {
+  font-size: 42px;
+  line-height: 1;
+}
+
+.routine-widget {
+  display: grid;
+  gap: 10px;
+}
+
+.routine-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  text-align: left;
+  cursor: pointer;
+}
+
+.routine-item.checked {
+  opacity: 0.72;
+}
+
+.routine-item-mark {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 26, 19, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.prompt-widget pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  line-height: 1.55;
+  color: rgba(31, 26, 19, 0.82);
+}
+
+.prompt-copy-button {
+  justify-self: start;
+}
+
+.cover-widget.compact,
+.focus-widget.compact,
+.mood-widget.compact,
+.prompt-widget.compact {
+  gap: 8px;
+  padding: 12px;
+}
+
+.cover-widget.compact strong,
+.mood-widget.compact strong {
+  font-size: 16px;
+}
+
+.focus-widget.compact .focus-widget-timer {
+  font-size: 28px;
+}
+
+.focus-widget.compact .focus-widget-actions,
+.routine-widget.compact {
+  gap: 6px;
 }
 
 .note-more-button {
@@ -2107,7 +2286,10 @@ button {
 .settings-menu-card:focus-visible,
 .settings-layout-card:focus-visible,
 .trash-restore:focus-visible,
-.floating-trash:focus-visible {
+.floating-trash:focus-visible,
+.widget-secondary:focus-visible,
+.mood-option:focus-visible,
+.routine-item:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
@@ -2384,6 +2566,27 @@ button {
     gap: 8px;
     padding-top: 4px;
     border-top: 1px solid rgba(31, 26, 19, 0.08);
+  }
+
+  .mobile-board-widget-group {
+    display: grid;
+    gap: 8px;
+  }
+
+  .mobile-widget-menu {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(31, 26, 19, 0.08);
+  }
+
+  .mobile-widget-menu .widget-menu-item {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    min-height: 44px;
   }
 
   .mobile-board-action {
