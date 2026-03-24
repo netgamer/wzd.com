@@ -23,6 +23,7 @@ Expand WZD from a memo and link board into a richer personal dashboard with widg
 - Mood tracker widget
 - Routine widget
 - AI prompt widget
+- Food recommendation widget
 
 ## Why This Matters
 
@@ -53,12 +54,12 @@ Expand WZD from a memo and link board into a richer personal dashboard with widg
 - [x] Mood tracker widget stores emoji, note, and energy
 - [x] Routine widget toggles checklist-style items
 - [x] Prompt widget supports editable copy-friendly prompt text
+- [x] Food recommendation widget supports region-based restaurant picks
 - [x] Auto organize includes new widget categories
 - [x] Build passes successfully
 
 ## Suggested Next Follow-up
 
-- Add a "오늘은 뭐 먹지" recommendation widget
 - Add calendar / clock / quick memo widgets
 - Add stronger visitor pet animation states
 - Connect premium plans to advanced widgets and widget themes

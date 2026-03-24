@@ -66,9 +66,16 @@ type WidgetType =
   | "focus"
   | "mood"
   | "routine"
-  | "prompt";
+  | "prompt"
+  | "food";
 type ChecklistItem = { text: string; checked: boolean };
 type TimetableEntry = { day: string; start: string; end: string; title: string; location: string };
+type FoodCategoryKey = "chef" | "instagram" | "trending";
+type FoodRecommendation = {
+  name: string;
+  menu: string;
+  summary: string;
+};
 type BoardTemplateKey =
   | "blank"
   | "video"
@@ -259,7 +266,102 @@ const DEFAULT_PROMPT_TEXT = `당신은 아이디어를 구조화하는 조력자
 핵심 포인트 3개:
 
 위 내용을 바탕으로 짧고 명확한 초안을 만들어주세요.`;
+const DEFAULT_FOOD_REGION = "서울 금천구";
 const FOCUS_TICK_INTERVAL_MS = 1000;
+
+const FOOD_CATEGORY_LABELS: Record<FoodCategoryKey, string> = {
+  chef: "흑백요리사 픽",
+  instagram: "인스타 화제",
+  trending: "실시간 인기"
+};
+
+const FOOD_RECOMMENDATIONS_BY_REGION: Record<string, Record<FoodCategoryKey, FoodRecommendation[]>> = {
+  "서울 금천구": {
+    chef: [
+      { name: "호우양꼬치 가산점", menu: "양갈비 · 마라전골", summary: "퇴근 후 모임용으로 만족도가 높은 묵직한 맛집" },
+      { name: "도원", menu: "중식 코스 · 유린기", summary: "중식 베이스로 안정적으로 실패 없는 식사" },
+      { name: "진영면옥", menu: "평양냉면 · 수육", summary: "깔끔한 한 끼가 필요할 때 어울리는 선택" }
+    ],
+    instagram: [
+      { name: "금천면옥", menu: "들기름막국수 · 수육", summary: "사진도 예쁘고 담백해서 반응 좋은 곳" },
+      { name: "카멜커피 가산", menu: "브런치 · 샌드위치", summary: "가볍게 먹으면서 분위기 챙기기 좋은 카페형 식사" },
+      { name: "포포인츠 버거", menu: "수제버거", summary: "비주얼이 좋아서 SNS에 자주 보이는 메뉴" }
+    ],
+    trending: [
+      { name: "오복수산", menu: "카이센동", summary: "점심시간 체감 만족도가 높은 덮밥" },
+      { name: "등촌샤브칼국수 가산", menu: "버섯 샤브샤브", summary: "여럿이 가기 편하고 실패 확률이 낮은 선택" },
+      { name: "정육식당 미도", menu: "한우 불고기", summary: "든든하게 먹고 싶을 때 무난하게 좋은 곳" }
+    ]
+  },
+  "서울 마포구": {
+    chef: [
+      { name: "정육면체 합정", menu: "한우 우육면", summary: "진한 육향과 깔끔한 면 조합이 좋은 곳" },
+      { name: "교다이야", menu: "우동 · 돈카츠", summary: "마포권에서 안정적으로 만족도 높은 면 요리" },
+      { name: "옥동식", menu: "돼지곰탕", summary: "단순하지만 완성도 높은 한 그릇" }
+    ],
+    instagram: [
+      { name: "연남동 소금집", menu: "샌드위치 · 파스타", summary: "가볍게 들르기 좋고 비주얼도 좋은 곳" },
+      { name: "경의선숲길 브런치랩", menu: "프렌치토스트", summary: "연남 감성 사진이 잘 나오는 브런치" },
+      { name: "상수 청수당", menu: "디저트 · 음료", summary: "식사 후 가볍게 코스처럼 붙이기 좋음" }
+    ],
+    trending: [
+      { name: "하노이의 아침 홍대", menu: "쌀국수", summary: "늘 대기 있지만 회전 빠르고 만족도 높은 편" },
+      { name: "미도인 연남", menu: "스테이크 덮밥", summary: "든든한 한 끼로 대중적인 인기" },
+      { name: "개미식당 홍대", menu: "덮밥 · 규카츠", summary: "무난하게 호불호 적은 선택" }
+    ]
+  },
+  "서울 성동구": {
+    chef: [
+      { name: "대도식당 왕십리", menu: "한우 등심", summary: "고기 자체에 집중한 정석적인 선택" },
+      { name: "금남시장 한식당", menu: "제육 · 된장찌개", summary: "시장형 집밥 분위기로 안정적인 식사" },
+      { name: "성수 면옥", menu: "냉면 · 갈비", summary: "깔끔한 맛과 식사 조합이 좋음" }
+    ],
+    instagram: [
+      { name: "성수 다운타우너", menu: "아보카도 버거", summary: "성수에서 사진과 맛 둘 다 잡기 좋은 카드" },
+      { name: "누데이크 성수", menu: "디저트 · 커피", summary: "식후 코스로 붙이기 좋은 감각적인 공간" },
+      { name: "서울숲 피자네버슬립스", menu: "피자", summary: "힙한 분위기와 함께 가볍게 먹기 좋음" }
+    ],
+    trending: [
+      { name: "소문난성수감자탕", menu: "감자탕", summary: "웨이팅은 있지만 만족도가 높은 시그니처" },
+      { name: "성수동 카츠", menu: "돈카츠", summary: "빠르고 깔끔하게 먹기 좋은 인기 메뉴" },
+      { name: "어메이징브루잉 성수", menu: "피자 · 맥주", summary: "저녁 모임용으로 반응 좋은 편" }
+    ]
+  },
+  "서울 강남구": {
+    chef: [
+      { name: "권숙수", menu: "한식 코스", summary: "특별한 날 선택지로 임팩트 있는 곳" },
+      { name: "삼원가든", menu: "갈비", summary: "접대나 식사 모임에 무난하게 강한 카드" },
+      { name: "논현손칼국수", menu: "칼국수 · 만두", summary: "깔끔한 면 요리를 원할 때 안정적" }
+    ],
+    instagram: [
+      { name: "도산분식", menu: "분식 플레이트", summary: "비주얼이 좋아 가볍게 즐기기 좋음" },
+      { name: "런던베이글뮤지엄", menu: "베이글", summary: "브런치나 티타임으로 반응이 확실한 곳" },
+      { name: "새들러하우스", menu: "토스트", summary: "사진과 간단한 식사를 동시에 챙길 수 있음" }
+    ],
+    trending: [
+      { name: "온기정 강남", menu: "텐동", summary: "혼밥/직장인 점심으로 인기 있는 편" },
+      { name: "강남교자", menu: "칼국수", summary: "늘 꾸준히 찾는 사람 많은 클래식 선택" },
+      { name: "우동명가기리야마", menu: "우동", summary: "면 좋아하는 사람들 사이에서 만족도 높음" }
+    ]
+  },
+  "경기 성남시": {
+    chef: [
+      { name: "분당 서현 한정식", menu: "한정식 코스", summary: "가족 식사나 여유 있는 한 끼에 적합" },
+      { name: "판교 능라도", menu: "냉면 · 어복쟁반", summary: "정갈한 메뉴 구성이 강점" },
+      { name: "백현동 미식당", menu: "파스타 · 스테이크", summary: "무난하면서도 완성도 있는 선택" }
+    ],
+    instagram: [
+      { name: "카페 랑데자뷰 판교", menu: "브런치", summary: "채광과 분위기가 좋아 사진 찍기 좋음" },
+      { name: "현백 판교 다운타우너", menu: "버거", summary: "쇼핑 동선과 함께 즐기기 좋음" },
+      { name: "정자동 폴바셋 키친", menu: "샐러드 · 파니니", summary: "가볍고 깔끔한 식사로 호불호 적음" }
+    ],
+    trending: [
+      { name: "판교 삿뽀로", menu: "일식 정식", summary: "모임성 식사로 자주 언급되는 카드" },
+      { name: "정자동 잇쇼우", menu: "돈카츠", summary: "든든하게 먹기 좋은 인기 메뉴" },
+      { name: "서현 청춘닭갈비", menu: "닭갈비", summary: "여럿이 가기 좋은 대중적 선택" }
+    ]
+  }
+};
 const PET_VISIT_STORAGE_KEY = "wzd-pet-visits";
 const PET_VISIT_SESSION_PREFIX = "wzd-pet-visit-session:";
 const TIMETABLE_DAY_ORDER = ["월", "화", "수", "목", "금", "토", "일"];
@@ -1210,7 +1312,8 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "focus" ||
   note.metadata?.widgetType === "mood" ||
   note.metadata?.widgetType === "routine" ||
-  note.metadata?.widgetType === "prompt"
+  note.metadata?.widgetType === "prompt" ||
+  note.metadata?.widgetType === "food"
     ? note.metadata.widgetType
     : "note";
 const getRssFeedUrl = (note: NoteV2) =>
@@ -1356,6 +1459,50 @@ const getPromptText = (note: NoteV2) =>
   typeof note.metadata?.promptText === "string" && note.metadata.promptText.trim()
     ? note.metadata.promptText
     : DEFAULT_PROMPT_TEXT;
+
+const normalizeFoodRegion = (value: string | undefined | null) => {
+  const query = typeof value === "string" ? value.trim() : "";
+  if (!query) {
+    return DEFAULT_FOOD_REGION;
+  }
+
+  const exact = Object.keys(FOOD_RECOMMENDATIONS_BY_REGION).find((region) => region === query);
+  if (exact) {
+    return exact;
+  }
+
+  const included = Object.keys(FOOD_RECOMMENDATIONS_BY_REGION).find(
+    (region) => query.includes(region) || region.includes(query)
+  );
+  return included ?? DEFAULT_FOOD_REGION;
+};
+
+const getFoodRegion = (note: NoteV2) =>
+  typeof note.metadata?.foodRegion === "string" && note.metadata.foodRegion.trim()
+    ? note.metadata.foodRegion.trim()
+    : DEFAULT_FOOD_REGION;
+
+const getFoodSeed = (note: NoteV2) =>
+  typeof note.metadata?.foodSeed === "number" && Number.isFinite(note.metadata.foodSeed)
+    ? note.metadata.foodSeed
+    : 0;
+
+const buildFoodRecommendationSet = (regionQuery: string, seed: number) => {
+  const region = normalizeFoodRegion(regionQuery);
+  const source = FOOD_RECOMMENDATIONS_BY_REGION[region] ?? FOOD_RECOMMENDATIONS_BY_REGION[DEFAULT_FOOD_REGION];
+  return {
+    region,
+    entries: (Object.keys(FOOD_CATEGORY_LABELS) as FoodCategoryKey[]).map((category, index) => {
+      const items = source[category];
+      const item = items[(Math.abs(seed) + index) % items.length];
+      return {
+        category,
+        label: FOOD_CATEGORY_LABELS[category],
+        item
+      };
+    })
+  };
+};
 
 const getCountdownTargetDate = (note: NoteV2) =>
   typeof note.metadata?.targetDate === "string" && note.metadata.targetDate.trim() ? note.metadata.targetDate : "";
@@ -1667,6 +1814,7 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   if (widgetType === "mood") return 2;
   if (widgetType === "routine") return 2;
   if (widgetType === "prompt") return 1;
+  if (widgetType === "food") return 1;
   if (widgetType === "rss") return 0;
   if (widgetType === "bookmark") return 1;
   if (widgetType === "checklist") return 2;
@@ -1729,6 +1877,7 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   if (widgetType === "mood") return "mood";
   if (widgetType === "routine") return "routine";
   if (widgetType === "prompt") return "prompt";
+  if (widgetType === "food") return "prompt";
   if (widgetType === "rss") return "rss";
   if (widgetType === "bookmark") return "bookmark";
   if (widgetType === "checklist") return "checklist";
@@ -1810,6 +1959,7 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
   if (widgetType === "mood") return layoutStyle === "compact" ? 200 : 230;
   if (widgetType === "routine") return layoutStyle === "compact" ? 240 : 280;
   if (widgetType === "prompt") return layoutStyle === "compact" ? 230 : 270;
+  if (widgetType === "food") return layoutStyle === "compact" ? 250 : 290;
   if (widgetType === "rss") return layoutStyle === "compact" ? 270 : 300;
   if (widgetType === "bookmark") return layoutStyle === "compact" ? 230 : 260;
   if (widgetType === "checklist") return layoutStyle === "compact" ? 250 : 290;
@@ -2877,6 +3027,82 @@ const App = () => {
             </div>
           )}
         </>
+      );
+    }
+
+    if (widgetType === "food") {
+      const regionInput = getFoodRegion(note);
+      const recommendationSet = buildFoodRecommendationSet(regionInput, getFoodSeed(note));
+
+      return (
+        <div className={`food-widget${compact ? " compact" : ""}`}>
+          <div className="food-widget-header">
+            <span className="food-widget-kicker">오늘은 뭐 먹지</span>
+            <strong>{recommendationSet.region}</strong>
+          </div>
+          {!compact && selected && (
+            <div className="widget-field">
+              <span>지역</span>
+              <input
+                className="pin-input"
+                value={regionInput}
+                onChange={(event) =>
+                  setNotes((prev) =>
+                    prev.map((current) =>
+                      current.id === note.id
+                        ? {
+                            ...current,
+                            metadata: {
+                              ...current.metadata,
+                              widgetType: "food",
+                              foodRegion: event.target.value
+                            }
+                          }
+                        : current
+                    )
+                  )
+                }
+                placeholder="예: 서울 금천구"
+              />
+            </div>
+          )}
+          <div className="food-widget-list">
+            {recommendationSet.entries.map(({ category, label, item }) => (
+              <article key={`${category}-${item.name}`} className="food-widget-card">
+                <span className={`food-widget-label ${category}`}>{label}</span>
+                <strong>{item.name}</strong>
+                <p>{item.menu}</p>
+                <small>{item.summary}</small>
+              </article>
+            ))}
+          </div>
+          {!compact && (
+            <div className="food-widget-actions">
+              <button
+                className="widget-secondary"
+                onClick={() =>
+                  setNotes((prev) =>
+                    prev.map((current) =>
+                      current.id === note.id
+                        ? {
+                            ...current,
+                            metadata: {
+                              ...current.metadata,
+                              widgetType: "food",
+                              foodRegion: regionInput,
+                              foodSeed: Date.now()
+                            }
+                          }
+                        : current
+                    )
+                  )
+                }
+              >
+                다시 추천
+              </button>
+            </div>
+          )}
+        </div>
       );
     }
 
@@ -4379,6 +4605,38 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addFoodWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "yellow",
+      content: "오늘은 뭐 먹지"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "food",
+      foodRegion: DEFAULT_FOOD_REGION,
+      foodSeed: Date.now()
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const renderWidgetMenuItems = () => (
     <>
       <button className="widget-menu-item" onClick={addRssWidget}>
@@ -4422,6 +4680,9 @@ const App = () => {
       </button>
       <button className="widget-menu-item" onClick={addPromptWidget}>
         AI 프롬프트
+      </button>
+      <button className="widget-menu-item" onClick={addFoodWidget}>
+        오늘은 뭐 먹지
       </button>
     </>
   );

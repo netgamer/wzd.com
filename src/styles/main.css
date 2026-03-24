@@ -1730,7 +1730,8 @@ button {
 .cover-widget,
 .focus-widget,
 .mood-widget,
-.prompt-widget {
+.prompt-widget,
+.food-widget {
   display: grid;
   gap: 12px;
   padding: 14px 16px;
@@ -1755,6 +1756,77 @@ button {
   margin: 0;
   line-height: 1.6;
   color: rgba(31, 26, 19, 0.75);
+}
+
+.food-widget-header {
+  display: grid;
+  gap: 4px;
+}
+
+.food-widget-kicker {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(230, 0, 35, 0.72);
+}
+
+.food-widget-list {
+  display: grid;
+  gap: 10px;
+}
+
+.food-widget-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 14px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+}
+
+.food-widget-card strong,
+.food-widget-card p,
+.food-widget-card small {
+  margin: 0;
+}
+
+.food-widget-card p {
+  font-weight: 600;
+  color: #3b3127;
+}
+
+.food-widget-card small {
+  line-height: 1.5;
+  color: rgba(31, 26, 19, 0.68);
+}
+
+.food-widget-label {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.food-widget-label.chef {
+  background: rgba(31, 26, 19, 0.08);
+  color: var(--text);
+}
+
+.food-widget-label.instagram {
+  background: rgba(230, 0, 35, 0.1);
+  color: var(--accent);
+}
+
+.food-widget-label.trending {
+  background: rgba(29, 111, 216, 0.12);
+  color: #2162ad;
+}
+
+.food-widget-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .focus-widget-timer {
@@ -1869,7 +1941,8 @@ button {
 .cover-widget.compact,
 .focus-widget.compact,
 .mood-widget.compact,
-.prompt-widget.compact {
+.prompt-widget.compact,
+.food-widget.compact {
   gap: 8px;
   padding: 12px;
 }
@@ -1886,6 +1959,15 @@ button {
 .focus-widget.compact .focus-widget-actions,
 .routine-widget.compact {
   gap: 6px;
+}
+
+.food-widget.compact .food-widget-list {
+  gap: 8px;
+}
+
+.food-widget.compact .food-widget-card {
+  padding: 12px;
+  gap: 4px;
 }
 
 .note-more-button {
