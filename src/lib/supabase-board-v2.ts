@@ -373,6 +373,79 @@ export const loadEditableSharedBoardV2 = async (
   };
 };
 
+export const loadHomeBoardV2 = async (): Promise<{ board: BoardV2; notes: NoteV2[] } | null> => {
+  ensureSupabase();
+
+  const boardQuery = await supabase!
+    .from("boards")
+    .select("id,user_id,title,description,background_style,settings,updated_at")
+    .contains("settings", { homeBoard: true })
+    .eq("is_archived", false)
+    .maybeSingle();
+
+  if (boardQuery.error) {
+    throw boardQuery.error;
+  }
+
+  if (!boardQuery.data) {
+    return null;
+  }
+
+  const board = mapBoardRow(boardQuery.data as BoardRow);
+  const notesQuery = await supabase!
+    .from("notes")
+    .select("id,board_id,user_id,content,color,x,y,w,h,z_index,rotation,pinned,archived,metadata,updated_at")
+    .eq("board_id", board.id)
+    .eq("archived", false)
+    .order("z_index", { ascending: true })
+    .order("updated_at", { ascending: true });
+
+  if (notesQuery.error) {
+    throw notesQuery.error;
+  }
+
+  return {
+    board,
+    notes: ((notesQuery.data ?? []) as NoteRow[]).map(mapNoteRow)
+  };
+};
+
+export const loadEditableHomeBoardV2 = async (): Promise<{ board: BoardV2; notes: NoteV2[] } | null> => {
+  ensureSupabase();
+
+  const boardQuery = await supabase!
+    .from("boards")
+    .select("id,user_id,title,description,background_style,settings,updated_at")
+    .contains("settings", { homeBoard: true })
+    .eq("is_archived", false)
+    .maybeSingle();
+
+  if (boardQuery.error) {
+    throw boardQuery.error;
+  }
+
+  if (!boardQuery.data) {
+    return null;
+  }
+
+  const board = mapBoardRow(boardQuery.data as BoardRow);
+  const notesQuery = await supabase!
+    .from("notes")
+    .select("id,board_id,user_id,content,color,x,y,w,h,z_index,rotation,pinned,archived,metadata,updated_at")
+    .eq("board_id", board.id)
+    .order("z_index", { ascending: true })
+    .order("updated_at", { ascending: true });
+
+  if (notesQuery.error) {
+    throw notesQuery.error;
+  }
+
+  return {
+    board,
+    notes: ((notesQuery.data ?? []) as NoteRow[]).map(mapNoteRow)
+  };
+};
+
 export const isBoardShareSlugTaken = async (slug: string, excludeBoardId?: string): Promise<boolean> => {
   ensureSupabase();
 

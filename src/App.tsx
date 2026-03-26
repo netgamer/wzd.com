@@ -23,7 +23,9 @@ import {
   isBoardShareSlugTaken,
   listBoardMembers,
   loadBoardsV2,
+  loadEditableHomeBoardV2,
   loadEditableSharedBoardV2,
+  loadHomeBoardV2,
   loadSharedBoardV2,
   type NoteColor,
   type NoteV2,
@@ -1147,6 +1149,13 @@ const isLinkPreviewDuplicateText = (content: unknown, noteUrl: string, preview: 
 };
 
 const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
+const isHomeBoardLocation = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.location.pathname === "/" && !window.location.hash;
+};
 const getSharedBoardSlugFromLocation = () => {
   if (typeof window === "undefined") {
     return null;
@@ -1155,6 +1164,7 @@ const getSharedBoardSlugFromLocation = () => {
   const match = window.location.pathname.match(/^\/board\/([a-z0-9_-]+)$/i);
   return match?.[1] ?? null;
 };
+const isHomeBoard = (board: BoardV2 | null) => Boolean(board?.settings?.homeBoard);
 const getBoardShareSlug = (board: BoardV2 | null) =>
   typeof board?.settings?.sharedSlug === "string" && board.settings.sharedSlug.trim() ? board.settings.sharedSlug.trim() : "";
 const makeBoardShareUrl = (slug: string) => {
@@ -2114,8 +2124,11 @@ const App = () => {
   const [dragArmedBoardId, setDragArmedBoardId] = useState<string | null>(null);
   const [editorDropNoteId, setEditorDropNoteId] = useState<string | null>(null);
   const [noteMoreState, setNoteMoreState] = useState<Record<string, number>>({});
+  const [homeBoardRoute, setHomeBoardRoute] = useState<boolean>(() => isHomeBoardLocation());
   const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
-  const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(() => Boolean(getSharedBoardSlugFromLocation()));
+  const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(
+    () => Boolean(getSharedBoardSlugFromLocation()) || isHomeBoardLocation()
+  );
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -2138,15 +2151,17 @@ const App = () => {
   const activeBoards = useMemo(() => orderedBoards.filter((board) => !isBoardTrashed(board)), [orderedBoards]);
   const trashedBoards = useMemo(() => orderedBoards.filter((board) => isBoardTrashed(board)), [orderedBoards]);
   const isSharedView = Boolean(sharedBoardSlug && sharedBoardReadOnly);
+  const isReadOnlyBoardView = Boolean((sharedBoardSlug || homeBoardRoute) && sharedBoardReadOnly);
   const selectedBoard = useMemo(
     () => activeBoards.find((board) => board.id === selectedBoardId) ?? activeBoards[0] ?? null,
     [activeBoards, selectedBoardId]
   );
+  const isHomeView = homeBoardRoute && Boolean(selectedBoard && isHomeBoard(selectedBoard));
   const isBoardOwner = Boolean(user?.id && selectedBoard && selectedBoard.userId === user.id);
-  const canShareBoard = feedMode === "active" && Boolean(selectedBoard) && !isSharedView && isBoardOwner;
+  const canShareBoard = feedMode === "active" && Boolean(selectedBoard) && !isReadOnlyBoardView && isBoardOwner;
   const canInviteBoard = canShareBoard;
   const canBoardSettings = canShareBoard;
-  const canRenameBoard = feedMode === "active" && Boolean(selectedBoard) && !isSharedView && isBoardOwner;
+  const canRenameBoard = feedMode === "active" && Boolean(selectedBoard) && !isReadOnlyBoardView && isBoardOwner;
   const boardHistorySnapshots = useMemo(() => getBoardHistorySnapshots(selectedBoard), [selectedBoard]);
 
   useEffect(() => {
@@ -2213,13 +2228,17 @@ const App = () => {
 
   useEffect(() => {
     const syncSharedSlug = () => {
+      const nextHomeRoute = isHomeBoardLocation();
       const nextSlug = getSharedBoardSlugFromLocation();
+      setHomeBoardRoute(nextHomeRoute);
       setSharedBoardSlug(nextSlug);
-      setSharedBoardReadOnly(Boolean(nextSlug));
+      setSharedBoardReadOnly(Boolean(nextSlug) || nextHomeRoute);
     };
     window.addEventListener("popstate", syncSharedSlug);
+    window.addEventListener("hashchange", syncSharedSlug);
     return () => {
       window.removeEventListener("popstate", syncSharedSlug);
+      window.removeEventListener("hashchange", syncSharedSlug);
     };
   }, []);
 
@@ -3328,6 +3347,66 @@ const App = () => {
   useEffect(() => {
     let active = true;
 
+    if (homeBoardRoute) {
+      if (!supabase) {
+        setBoards([]);
+        setNotes([]);
+        setSelectedBoardId(null);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const loadHomeBoard = async () => {
+        const editablePayload = user?.id ? await loadEditableHomeBoardV2() : null;
+        if (editablePayload) {
+          return { payload: editablePayload, readOnly: false };
+        }
+
+        const readonlyPayload = await loadHomeBoardV2();
+        return { payload: readonlyPayload, readOnly: true };
+      };
+
+      loadHomeBoard()
+        .then(({ payload, readOnly }) => {
+          if (!active) {
+            return;
+          }
+
+          if (!payload) {
+            setSharedBoardReadOnly(true);
+            setBoards([]);
+            setNotes([]);
+            setSelectedBoardId(null);
+            setSelectedNoteId(null);
+            setLoading(false);
+            return;
+          }
+
+          setSharedBoardReadOnly(readOnly);
+          setBoards([payload.board]);
+          setNotes(sanitizeNotes(payload.notes));
+          setSelectedBoardId(payload.board.id);
+          setSelectedNoteId(null);
+          setFeedMode("active");
+          setLoading(false);
+        })
+        .catch(() => {
+          if (active) {
+            setSharedBoardReadOnly(true);
+            setBoards([]);
+            setNotes([]);
+            setSelectedBoardId(null);
+            setSelectedNoteId(null);
+            setLoading(false);
+          }
+        });
+
+      return () => {
+        active = false;
+      };
+    }
+
     if (sharedBoardSlug) {
       if (!supabase) {
         setBoards([]);
@@ -3428,7 +3507,7 @@ const App = () => {
     return () => {
       active = false;
     };
-  }, [user?.id, sharedBoardSlug]);
+  }, [user?.id, sharedBoardSlug, homeBoardRoute]);
 
   useEffect(() => {
     setProfileMenuOpen(false);
@@ -3460,7 +3539,7 @@ const App = () => {
   useEffect(() => {
     const currentBoardId = selectedBoard?.id ?? boards[0]?.id ?? null;
 
-    if (isSharedView) {
+    if (isReadOnlyBoardView) {
       setCloudSaveState("idle");
       return;
     }
@@ -3495,7 +3574,7 @@ const App = () => {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [boards, notes, selectedBoard?.id, user?.id, loading, isSharedView]);
+  }, [boards, notes, selectedBoard?.id, user?.id, loading, isReadOnlyBoardView]);
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -4001,8 +4080,60 @@ const App = () => {
     setSettingsSection("trash");
   };
 
+  const navigateToHomeBoard = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.history.pushState({}, "", "/");
+    setHomeBoardRoute(true);
+    setSharedBoardSlug(null);
+    setSharedBoardReadOnly(true);
+    setSelectedNoteId(null);
+    setMobileBoardMenuOpen(false);
+  };
+
+  const navigateToWorkspace = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.history.pushState({}, "", "/#");
+    setHomeBoardRoute(false);
+    setSharedBoardSlug(null);
+    setSharedBoardReadOnly(false);
+    setSelectedNoteId(null);
+    setMobileBoardMenuOpen(false);
+  };
+
+  const setSelectedBoardAsHome = () => {
+    if (!selectedBoard || !isBoardOwner) {
+      return;
+    }
+
+    const timestamp = nowIso();
+    setBoards((prev) =>
+      prev.map((board) => ({
+        ...board,
+        settings:
+          board.id === selectedBoard.id
+            ? {
+                ...board.settings,
+                homeBoard: true
+              }
+            : {
+                ...board.settings,
+                homeBoard: false
+              },
+        updatedAt: board.id === selectedBoard.id || board.settings?.homeBoard ? timestamp : board.updatedAt
+      }))
+    );
+    touchBoard(selectedBoard.id);
+    window.alert("현재 보드를 WZD 홈 보드로 지정했습니다.");
+  };
+
   const shareBoard = async () => {
-    if (!selectedBoard || isSharedView || !isBoardOwner) {
+    if (!selectedBoard || isReadOnlyBoardView || !isBoardOwner) {
       return;
     }
 
@@ -5620,7 +5751,7 @@ const App = () => {
   return (
     <div className={`pin-page ${showExpandedSidebar ? "sidebar-expanded" : ""}`}>
       <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`}>
-        <button className="pin-brand" aria-label="WZD 홈">
+        <button className="pin-brand" aria-label="WZD 홈" onClick={navigateToHomeBoard}>
           <span>{showExpandedSidebar ? "WZD" : "W"}</span>
         </button>
 
@@ -5735,7 +5866,7 @@ const App = () => {
                 </button>
               )}
               <p className="feed-kicker">
-                {isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
+                {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
               </p>
               {canRenameBoard && editingBoardTitle ? (
                 <input
@@ -5786,18 +5917,23 @@ const App = () => {
             </div>
           </div>
 
-            <div className="topbar-actions">
-            {compactHeader && !isSharedView && (
+          <div className="topbar-actions">
+            {homeBoardRoute && user && (
+              <button className="ghost-action" onClick={navigateToWorkspace}>
+                작업공간
+              </button>
+            )}
+            {compactHeader && !isReadOnlyBoardView && (
               <button className="mobile-icon-action mobile-new-note-action" onClick={addNote} aria-label="새 메모 만들기">
                 +
               </button>
             )}
-            {!compactHeader && !isSharedView && (
+            {!compactHeader && !isReadOnlyBoardView && (
               <button className="new-note-pill" onClick={addNote}>
                 새 메모
               </button>
             )}
-            {!compactHeader && !isSharedView && (
+            {!compactHeader && !isReadOnlyBoardView && (
               <div className="widget-menu-wrap">
                 <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
                   위젯 추가
@@ -5809,7 +5945,7 @@ const App = () => {
                 )}
               </div>
             )}
-            {!compactHeader && !isSharedView && feedMode === "active" && selectedBoard && (
+            {!compactHeader && !isReadOnlyBoardView && feedMode === "active" && selectedBoard && (
               <button className="ghost-action" onClick={organizeCurrentBoard}>
                 자동 정리
               </button>
@@ -5878,7 +6014,20 @@ const App = () => {
                 </button>
               ))}
               <div className="mobile-board-actions">
-                {!isSharedView && feedMode === "active" && selectedBoard && (
+                {homeBoardRoute && user && (
+                  <button
+                    className="mobile-board-action"
+                    onClick={() => {
+                      navigateToWorkspace();
+                    }}
+                  >
+                    <span className="mobile-board-action-icon" aria-hidden="true">
+                      ↩
+                    </span>
+                    <span>작업공간</span>
+                  </button>
+                )}
+                {!isReadOnlyBoardView && feedMode === "active" && selectedBoard && (
                   <button
                     className="mobile-board-action"
                     onClick={() => {
@@ -5892,7 +6041,7 @@ const App = () => {
                     <span>자동 정리</span>
                   </button>
                 )}
-                {!isSharedView && feedMode === "active" && selectedBoard && (
+                {!isReadOnlyBoardView && feedMode === "active" && selectedBoard && (
                   <div className="mobile-board-widget-group">
                     <button
                       className={`mobile-board-action ${widgetMenuOpen ? "active" : ""}`}
@@ -6114,7 +6263,16 @@ const App = () => {
                             <span className="settings-info-label">편집자</span>
                             <strong>{boardMembers.length}명</strong>
                           </div>
+                          <div className="settings-info-item">
+                            <span className="settings-info-label">홈 보드</span>
+                            <strong>{isHomeBoard(selectedBoard) ? "현재 지정됨" : "일반 보드"}</strong>
+                          </div>
                         </div>
+                        {isBoardOwner && !isHomeBoard(selectedBoard) && (
+                          <button className="ghost-action" onClick={setSelectedBoardAsHome}>
+                            홈 보드로 지정
+                          </button>
+                        )}
                         <div className="invite-member-list compact">
                           {boardMembers.length === 0 ? (
                             <p className="settings-empty">아직 초대된 편집자가 없습니다.</p>
@@ -6541,7 +6699,7 @@ const App = () => {
                           } ${isRssWidget ? "widget-note rss-widget" : ""} ${selected ? "selected" : ""} ${
                             runningDragNoteId === note.id ? "dragging" : ""
                           }`}
-                          draggable={feedMode === "active" && !selected && !isSharedView}
+                          draggable={feedMode === "active" && !selected && !isReadOnlyBoardView}
                           onDragStart={(event) => onPinDragStart(event, note.id)}
                           onDragEnd={() => {
                             suppressNextCardClickRef.current = true;
@@ -6566,7 +6724,7 @@ const App = () => {
                               return;
                             }
 
-                            if (isSharedView) {
+                            if (isReadOnlyBoardView) {
                               if (isFramedLinkNote && noteUrl) {
                                 window.open(noteUrl, "_blank", "noopener,noreferrer");
                               }
@@ -6593,7 +6751,7 @@ const App = () => {
 
                           <div className="pin-card-head">
                             <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
-                            {!isSharedView && (
+                            {!isReadOnlyBoardView && (
                               <div className="pin-actions">
                                 {!useImageHeroCard && !isPureLinkNote && (
                                   <button
