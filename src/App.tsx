@@ -65,11 +65,13 @@ type WidgetType =
   | "delivery"
   | "pet"
   | "cover"
+  | "document"
   | "focus"
   | "mood"
   | "routine"
   | "prompt"
   | "food";
+type DocumentWidgetVariant = "hero" | "section" | "feature" | "cta";
 type ChecklistItem = { text: string; checked: boolean };
 type TimetableEntry = { day: string; start: string; end: string; title: string; location: string };
 type FoodCategoryKey = "chef" | "instagram" | "trending";
@@ -250,6 +252,10 @@ const DEFAULT_TRENDING_REGION = "KR";
 const DEFAULT_DELIVERY_CARRIER = "kr.cjlogistics";
 const DEFAULT_PET_NAME = "모찌";
 const DEFAULT_COVER_SUBTITLE = "링크와 메모를 한 장의 보드로 정리해보세요.";
+const DEFAULT_DOCUMENT_KICKER = "WZD MASTER";
+const DEFAULT_DOCUMENT_BODY =
+  "말뿐인 구상을 빠르게 검증 가능한 프로토타입으로 바꾸는 아이디어 프로토타이퍼입니다.";
+const DEFAULT_DOCUMENT_VARIANT: DocumentWidgetVariant = "section";
 const DEFAULT_FOCUS_DURATION_MINUTES = 25;
 const DEFAULT_MOOD_EMOJI = "🙂";
 const DEFAULT_MOOD_NOTE = "오늘의 기분을 짧게 남겨보세요.";
@@ -276,6 +282,129 @@ const FOOD_CATEGORY_LABELS: Record<FoodCategoryKey, string> = {
   instagram: "인스타 화제",
   trending: "실시간 인기"
 };
+const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
+  {
+    color: "white",
+    content: "아이디어를 바로 만져볼 수 있는 서비스로 만듭니다",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "hero",
+      documentKicker: "WZD MASTER",
+      documentBody:
+        "WZD Master는 말뿐인 구상을 빠르게 검증 가능한 프로토타입으로 바꾸는 아이디어 프로토타이퍼입니다.\n기획서 한 장, 메모 몇 줄, 머릿속 상상만 있어도 실제로 보고, 누르고, 테스트할 수 있는 형태로 바꿔드립니다.\n\n설명만 하던 아이디어를, 이제 직접 보여주세요.",
+      documentPrimaryCta: "프로젝트 이야기하기",
+      documentSecondaryCta: "프로토타입 문의하기"
+    }
+  },
+  {
+    color: "mint",
+    content: "개발자가 아닙니다. 아이디어 프로토타이퍼입니다.",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "section",
+      documentKicker: "정체성",
+      documentBody:
+        "저는 단순히 코드를 만드는 사람이 아닙니다.\n사람들의 머릿속에만 있던 서비스 아이디어를 빠르게 형태로 만들고, 직접 보고 만져보고 판단할 수 있게 바꾸는 사람입니다.\n\n누군가는 아이디어를 설명으로 끝냅니다. 저는 그것을 작동하는 화면, 흐름, 구조로 바꿉니다."
+    }
+  },
+  {
+    color: "blue",
+    content: "좋은 아이디어가 사라지는 이유는 대부분 실행 전 단계에 있습니다",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "section",
+      documentKicker: "문제",
+      documentBody:
+        "많은 아이디어가 실패하는 이유는 나쁘기 때문이 아닙니다.\n대부분은 너무 추상적이라 남에게 설명하기 어렵고, 팀이 이해하기 어렵고, 직접 써보기 전까지 가능성을 판단할 수 없기 때문입니다.\n\n머릿속엔 있는데 설명이 안 된다\n기획은 있는데 실제 모습이 없다\n외주 맡기기 전에 먼저 확인해보고 싶다\n투자자나 팀원에게 보여줄 형태가 필요하다\n당장 테스트 가능한 MVP가 필요하다"
+    }
+  },
+  {
+    color: "yellow",
+    content: "아이디어 시각화",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "feature",
+      documentKicker: "What I Do",
+      documentBody: "막연한 구상, 메모, 대화 내용을 실제 서비스 구조와 화면 흐름으로 정리합니다."
+    }
+  },
+  {
+    color: "pink",
+    content: "프로토타입 제작",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "feature",
+      documentKicker: "What I Do",
+      documentBody: "클릭하고, 눌러보고, 테스트할 수 있는 프로토타입 또는 MVP 형태로 빠르게 구현합니다."
+    }
+  },
+  {
+    color: "green",
+    content: "서비스 구조 설계",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "feature",
+      documentKicker: "What I Do",
+      documentBody: "단순한 화면이 아니라 사용 흐름, 기능 연결, 핵심 동작 구조까지 설계합니다."
+    }
+  },
+  {
+    color: "orange",
+    content: "실행 가능성 검증",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "feature",
+      documentKicker: "What I Do",
+      documentBody: "무작정 크게 시작하지 않고 먼저 빠르게 만들어보고, 써보고, 판단할 수 있게 합니다."
+    }
+  },
+  {
+    color: "white",
+    content: "왜 WZD Master인가",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "section",
+      documentKicker: "차별점",
+      documentBody:
+        "설명에서 끝내지 않습니다 — 아이디어를 말로만 정리하지 않고 실제 형태로 보여줍니다.\n빠르게 구체화합니다 — 긴 기획보다 먼저, 확인 가능한 결과물을 만듭니다.\n기술과 기획을 함께 다룹니다 — 예쁜 화면만 만드는 것이 아니라 실제로 작동 가능한 서비스 구조를 생각합니다.\n아이디어의 본질을 살립니다 — 불필요한 기능을 늘리는 대신 핵심 가치가 바로 보이게 만듭니다."
+    }
+  },
+  {
+    color: "purple",
+    content: "이런 아이디어라면 잘 맞습니다",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "section",
+      documentKicker: "대상",
+      documentBody:
+        "서비스 아이디어가 있는데 아직 형태가 없는 분\n창업 아이템을 빠르게 검증해보고 싶은 분\n외주 개발 전에 먼저 뼈대를 만들고 싶은 분\n투자, 제안, 발표용 데모가 필요한 분\n머릿속 구상을 실제 화면으로 보고 싶은 분"
+    }
+  },
+  {
+    color: "blue",
+    content: "아이디어가 서비스가 되는 과정",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "section",
+      documentKicker: "PROCESS",
+      documentBody:
+        "1. 아이디어 수집 — 메모, 대화, 기획서, 음성, 러프한 설명도 괜찮습니다.\n2. 핵심 구조 정리 — 무엇이 핵심인지, 무엇부터 보여줘야 하는지 정리합니다.\n3. 프로토타입 설계 및 구현 — 화면, 흐름, 기능 구조를 실제로 만듭니다.\n4. 직접 보고 판단 — 설명이 아니라 실제 결과물을 기준으로 수정하고 발전시킵니다."
+    }
+  },
+  {
+    color: "mint",
+    content: "상상은 누구나 한다. 하지만 보여주는 사람은 드물다.",
+    metadata: {
+      widgetType: "document",
+      documentVariant: "cta",
+      documentKicker: "BRAND MESSAGE",
+      documentBody:
+        "아이디어는 많습니다. 하지만 대부분은 말로만 남습니다.\nWZD Master는 그 아이디어가 사라지지 않도록 직접 보고, 만져보고, 검증할 수 있는 형태로 바꿉니다.\n\n아이디어를 현실로 옮기는 첫 번째 형태. 그게 제가 만드는 일입니다.",
+      documentPrimaryCta: "아이디어 보내기",
+      documentSecondaryCta: "프로토타입 문의하기"
+    }
+  }
+];
 
 const FOOD_RECOMMENDATIONS_BY_REGION: Record<string, Record<FoodCategoryKey, FoodRecommendation[]>> = {
   "서울 금천구": {
@@ -1319,6 +1448,7 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "delivery" ||
   note.metadata?.widgetType === "pet" ||
   note.metadata?.widgetType === "cover" ||
+  note.metadata?.widgetType === "document" ||
   note.metadata?.widgetType === "focus" ||
   note.metadata?.widgetType === "mood" ||
   note.metadata?.widgetType === "routine" ||
@@ -1402,6 +1532,28 @@ const getCoverSubtitle = (note: NoteV2) =>
   typeof note.metadata?.coverSubtitle === "string" && note.metadata.coverSubtitle.trim()
     ? note.metadata.coverSubtitle.trim()
     : DEFAULT_COVER_SUBTITLE;
+
+const isDocumentVariant = (value: unknown): value is DocumentWidgetVariant =>
+  value === "hero" || value === "section" || value === "feature" || value === "cta";
+
+const getDocumentVariant = (note: NoteV2): DocumentWidgetVariant =>
+  isDocumentVariant(note.metadata?.documentVariant) ? note.metadata.documentVariant : DEFAULT_DOCUMENT_VARIANT;
+
+const getDocumentKicker = (note: NoteV2) =>
+  typeof note.metadata?.documentKicker === "string" && note.metadata.documentKicker.trim()
+    ? note.metadata.documentKicker.trim()
+    : DEFAULT_DOCUMENT_KICKER;
+
+const getDocumentBody = (note: NoteV2) =>
+  typeof note.metadata?.documentBody === "string" && note.metadata.documentBody.trim()
+    ? note.metadata.documentBody
+    : DEFAULT_DOCUMENT_BODY;
+
+const getDocumentPrimaryCta = (note: NoteV2) =>
+  typeof note.metadata?.documentPrimaryCta === "string" ? note.metadata.documentPrimaryCta.trim() : "";
+
+const getDocumentSecondaryCta = (note: NoteV2) =>
+  typeof note.metadata?.documentSecondaryCta === "string" ? note.metadata.documentSecondaryCta.trim() : "";
 
 const getFocusDurationMinutes = (note: NoteV2) =>
   typeof note.metadata?.focusDurationMinutes === "number" && note.metadata.focusDurationMinutes > 0
@@ -1820,6 +1972,7 @@ const reorderNotes = (
 const getAutoLayoutPriority = (note: NoteV2) => {
   const widgetType = getWidgetType(note);
   if (widgetType === "cover") return -1;
+  if (widgetType === "document") return 0;
   if (widgetType === "focus") return 1;
   if (widgetType === "mood") return 2;
   if (widgetType === "routine") return 2;
@@ -1883,6 +2036,7 @@ const getBoardLayoutStyle = (board: BoardV2 | null | undefined): BoardLayoutStyl
 const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   const widgetType = getWidgetType(note);
   if (widgetType === "cover") return "cover";
+  if (widgetType === "document") return "cover";
   if (widgetType === "focus") return "focus";
   if (widgetType === "mood") return "mood";
   if (widgetType === "routine") return "routine";
@@ -1965,6 +2119,13 @@ const getPreferredColumns = (
 const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) => {
   const widgetType = getWidgetType(note);
   if (widgetType === "cover") return layoutStyle === "compact" ? 220 : 260;
+  if (widgetType === "document") {
+    const variant = getDocumentVariant(note);
+    if (variant === "hero") return layoutStyle === "compact" ? 300 : 360;
+    if (variant === "cta") return layoutStyle === "compact" ? 260 : 310;
+    if (variant === "feature") return layoutStyle === "compact" ? 220 : 250;
+    return layoutStyle === "compact" ? 250 : 300;
+  }
   if (widgetType === "focus") return layoutStyle === "compact" ? 220 : 250;
   if (widgetType === "mood") return layoutStyle === "compact" ? 200 : 230;
   if (widgetType === "routine") return layoutStyle === "compact" ? 240 : 280;
@@ -2696,6 +2857,156 @@ const App = () => {
                 <span>오늘 방문 {visitCount}</span>
                 <span>다음 성장까지 {Math.max(0, (visitCount < 3 ? 3 : visitCount < 10 ? 10 : visitCount < 25 ? 25 : 50) - visitCount)}</span>
               </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "document") {
+      const variant = getDocumentVariant(note);
+      const kicker = getDocumentKicker(note);
+      const body = getDocumentBody(note);
+      const primaryCta = getDocumentPrimaryCta(note);
+      const secondaryCta = getDocumentSecondaryCta(note);
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">DOC</span>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="섹션 제목"
+              />
+              <input
+                className="widget-input"
+                value={kicker}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "document",
+                      documentVariant: variant,
+                      documentKicker: event.target.value,
+                      documentBody: body,
+                      documentPrimaryCta: primaryCta,
+                      documentSecondaryCta: secondaryCta
+                    }
+                  })
+                }
+                placeholder="작은 카테고리 문구"
+              />
+              <select
+                className="widget-input"
+                value={variant}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "document",
+                      documentVariant: isDocumentVariant(event.target.value)
+                        ? event.target.value
+                        : DEFAULT_DOCUMENT_VARIANT,
+                      documentKicker: kicker,
+                      documentBody: body,
+                      documentPrimaryCta: primaryCta,
+                      documentSecondaryCta: secondaryCta
+                    }
+                  })
+                }
+              >
+                <option value="hero">히어로</option>
+                <option value="section">섹션</option>
+                <option value="feature">기능 카드</option>
+                <option value="cta">CTA</option>
+              </select>
+              <textarea
+                className="widget-textarea"
+                value={body}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "document",
+                      documentVariant: variant,
+                      documentKicker: kicker,
+                      documentBody: event.target.value,
+                      documentPrimaryCta: primaryCta,
+                      documentSecondaryCta: secondaryCta
+                    }
+                  })
+                }
+                placeholder="섹션 설명"
+                rows={8}
+              />
+              <input
+                className="widget-input"
+                value={primaryCta}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "document",
+                      documentVariant: variant,
+                      documentKicker: kicker,
+                      documentBody: body,
+                      documentPrimaryCta: event.target.value,
+                      documentSecondaryCta: secondaryCta
+                    }
+                  })
+                }
+                placeholder="주요 버튼 문구"
+              />
+              <input
+                className="widget-input"
+                value={secondaryCta}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "document",
+                      documentVariant: variant,
+                      documentKicker: kicker,
+                      documentBody: body,
+                      documentPrimaryCta: primaryCta,
+                      documentSecondaryCta: event.target.value
+                    }
+                  })
+                }
+                placeholder="보조 버튼 문구"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`document-widget ${variant} ${compact ? "compact" : ""}`}>
+              {kicker && <span className="document-widget-kicker">{kicker}</span>}
+              <strong>{asText(note.content).trim() || "문서 섹션"}</strong>
+              <p>{body}</p>
+              {(primaryCta || secondaryCta) && (
+                <div className="document-widget-actions">
+                  {primaryCta && <span className="document-widget-action primary">{primaryCta}</span>}
+                  {secondaryCta && <span className="document-widget-action">{secondaryCta}</span>}
+                </div>
+              )}
             </div>
           )}
         </>
@@ -4106,6 +4417,61 @@ const App = () => {
     setMobileBoardMenuOpen(false);
   };
 
+  const insertHomeLandingContent = () => {
+    if (!selectedBoard || !isBoardOwner) {
+      return;
+    }
+
+    const timestamp = nowIso();
+    const createdNotes = HOME_LANDING_NOTE_SEEDS.map((seed, index) => {
+      const note = createNote({
+        boardId: selectedBoard.id,
+        userId: user?.id ?? selectedBoard.userId,
+        zIndex: index + 1,
+        color: seed.color,
+        content: seed.content
+      });
+      note.metadata = {
+        ...note.metadata,
+        ...(seed.metadata ?? {})
+      };
+      note.updatedAt = timestamp;
+      return note;
+    });
+
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === selectedBoard.id
+          ? {
+              ...board,
+              backgroundStyle: "paper",
+              description: "아이디어를 프로토타입으로 바꾸는 WZD Master 랜딩 보드",
+              settings: {
+                ...board.settings,
+                layoutStyle: "balanced"
+              },
+              updatedAt: timestamp
+            }
+          : board
+      )
+    );
+    setNotes((prev) =>
+      autoOrganizeBoardNotes(
+        [
+          ...prev.filter((note) => note.boardId !== selectedBoard.id || note.archived || isNoteTrashed(note)),
+          ...createdNotes
+        ],
+        selectedBoard.id,
+        getColumnCount(),
+        "balanced"
+      )
+    );
+    setSelectedNoteId(null);
+    setVisibleNoteCount((prev) => Math.max(prev, createdNotes.length));
+    touchBoard(selectedBoard.id);
+    setSettingsOpen(false);
+  };
+
   const setSelectedBoardAsHome = () => {
     if (!selectedBoard || !isBoardOwner) {
       return;
@@ -4130,6 +4496,9 @@ const App = () => {
     );
     touchBoard(selectedBoard.id);
     window.alert("현재 보드를 WZD 홈 보드로 지정했습니다.");
+    if (activeNotes.length === 0) {
+      insertHomeLandingContent();
+    }
   };
 
   const shareBoard = async () => {
@@ -4607,6 +4976,41 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addDocumentWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "새 섹션"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "document",
+      documentVariant: DEFAULT_DOCUMENT_VARIANT,
+      documentKicker: DEFAULT_DOCUMENT_KICKER,
+      documentBody: DEFAULT_DOCUMENT_BODY,
+      documentPrimaryCta: "",
+      documentSecondaryCta: ""
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const addFocusWidget = () => {
     if (!selectedBoard) {
       return;
@@ -4799,6 +5203,9 @@ const App = () => {
       </button>
       <button className="widget-menu-item" onClick={addCoverWidget}>
         보드 커버
+      </button>
+      <button className="widget-menu-item" onClick={addDocumentWidget}>
+        문서 섹션
       </button>
       <button className="widget-menu-item" onClick={addFocusWidget}>
         포커스 타이머
@@ -6273,6 +6680,11 @@ const App = () => {
                             홈 보드로 지정
                           </button>
                         )}
+                        {isBoardOwner && isHomeBoard(selectedBoard) && activeNotes.length === 0 && (
+                          <button className="ghost-action" onClick={insertHomeLandingContent}>
+                            랜딩 기본 섹션 넣기
+                          </button>
+                        )}
                         <div className="invite-member-list compact">
                           {boardMembers.length === 0 ? (
                             <p className="settings-empty">아직 초대된 편집자가 없습니다.</p>
@@ -6597,20 +7009,35 @@ const App = () => {
               feedMode === "active" ? (
                 <div className="feed-empty empty-templates full-span">
                   <div className="feed-empty-copy">
-                    <strong>이 보드를 채워볼까요?</strong>
+                    <strong>{isHomeView ? "WZD 홈을 랜딩페이지처럼 채워볼까요?" : "이 보드를 채워볼까요?"}</strong>
                     <span>
-                      새 메모를 바로 추가하거나, 템플릿 보드를 하나 더 만들어서 흐름을 참고할 수 있어요.
+                      {isHomeView
+                        ? "문서 섹션 위젯으로 소개, 작업 방식, CTA를 한 번에 구성할 수 있어요."
+                        : "새 메모를 바로 추가하거나, 템플릿 보드를 하나 더 만들어서 흐름을 참고할 수 있어요."}
                     </span>
                   </div>
                   <div className="feed-empty-actions">
-                    <button className="new-note-pill" onClick={addNote}>
-                      새 메모 만들기
-                    </button>
-                    <button className="ghost-action" onClick={openTemplatePicker}>
-                      템플릿 보드 보기
-                    </button>
+                    {isHomeView && isBoardOwner ? (
+                      <>
+                        <button className="new-note-pill" onClick={insertHomeLandingContent}>
+                          랜딩 기본 섹션 넣기
+                        </button>
+                        <button className="ghost-action" onClick={addDocumentWidget}>
+                          문서 섹션 추가
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="new-note-pill" onClick={addNote}>
+                          새 메모 만들기
+                        </button>
+                        <button className="ghost-action" onClick={openTemplatePicker}>
+                          템플릿 보드 보기
+                        </button>
+                      </>
+                    )}
                   </div>
-                  {renderTemplateSections("selected-empty")}
+                  {isHomeView ? null : renderTemplateSections("selected-empty")}
                 </div>
               ) : (
                 <div className="feed-empty">보관된 메모가 없습니다.</div>
@@ -6665,6 +7092,7 @@ const App = () => {
                       hasExternalLink &&
                       !hasImagePreview &&
                       (!hasTextPreview || isLinkPreviewDuplicateText(note.content, noteUrl, linkPreview));
+                    const isDocumentWidget = widgetType === "document";
                     const displayTitle = hasExternalLink
                       ? getLinkDisplayTitle(note.content, noteUrl, linkPreview)
                       : getNoteTitle(note.content);
@@ -6694,6 +7122,8 @@ const App = () => {
                         <article
                           className={`pin-card note-${note.color} ${useImageHeroCard ? "image-note" : ""} ${
                             isPureLinkNote && !selected ? "link-only-note" : ""
+                          } ${isDocumentWidget ? "document-note" : ""} ${
+                            isDocumentWidget && isHomeView ? "landing-home-note" : ""
                           } ${
                             !hideHoverMetadata && (hasTextPreview || hasLinkPreview) ? "has-hover-copy" : "image-only"
                           } ${isRssWidget ? "widget-note rss-widget" : ""} ${selected ? "selected" : ""} ${
@@ -6753,7 +7183,7 @@ const App = () => {
                             <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
                             {!isReadOnlyBoardView && (
                               <div className="pin-actions">
-                                {!useImageHeroCard && !isPureLinkNote && (
+                                {!useImageHeroCard && !isPureLinkNote && !isDocumentWidget && (
                                   <button
                                     className={`note-color-toggle chip-${note.color}`}
                                     onClick={(event) => {
