@@ -128,6 +128,9 @@ type BoardTemplateDefinition = {
   notes: TemplateNoteSeed[];
 };
 
+const HOME_ADMIN_EMAIL = (import.meta.env.VITE_HOME_ADMIN_EMAIL as string | undefined)?.trim().toLowerCase() || "leejunho2638@gmail.com";
+const HOME_FALLBACK_OWNER_ID = "wzd-home-owner";
+
 type BoardTemplateSection = {
   key: BoardTemplateSectionKey;
   title: string;
@@ -971,6 +974,40 @@ const createTemplateBoardSnapshot = (
   return { board, notes: organizedNotes };
 };
 
+const createHomeLandingSnapshot = (userId: string, columnCount: number) => {
+  const timestamp = nowIso();
+  const board = createDefaultBoard(userId, "WZD Master");
+  board.description = "아이디어를 프로토타입으로 바꾸는 WZD Master 랜딩 보드";
+  board.backgroundStyle = "paper";
+  board.settings = {
+    ...board.settings,
+    homeBoard: true,
+    layoutStyle: "balanced"
+  };
+  board.updatedAt = timestamp;
+
+  const notes = HOME_LANDING_NOTE_SEEDS.map((seed, index) => {
+    const note = createNote({
+      boardId: board.id,
+      userId,
+      zIndex: index + 1,
+      color: seed.color,
+      content: seed.content
+    });
+    note.metadata = {
+      ...note.metadata,
+      ...(seed.metadata ?? {})
+    };
+    note.updatedAt = timestamp;
+    return note;
+  });
+
+  return {
+    board,
+    notes: autoOrganizeBoardNotes(notes, board.id, columnCount, "balanced").filter((note) => note.boardId === board.id)
+  };
+};
+
 const migrateLocalSnapshot = (raw: string): LocalSnapshot => {
   const parsed = JSON.parse(raw) as Partial<LocalSnapshot> & { board?: BoardV2 };
 
@@ -1294,6 +1331,7 @@ const getSharedBoardSlugFromLocation = () => {
   return match?.[1] ?? null;
 };
 const isHomeBoard = (board: BoardV2 | null) => Boolean(board?.settings?.homeBoard);
+const isHomeAdminEmail = (email?: string | null) => Boolean(email && email.trim().toLowerCase() === HOME_ADMIN_EMAIL);
 const getBoardShareSlug = (board: BoardV2 | null) =>
   typeof board?.settings?.sharedSlug === "string" && board.settings.sharedSlug.trim() ? board.settings.sharedSlug.trim() : "";
 const makeBoardShareUrl = (slug: string) => {
@@ -3660,9 +3698,11 @@ const App = () => {
 
     if (homeBoardRoute) {
       if (!supabase) {
-        setBoards([]);
-        setNotes([]);
-        setSelectedBoardId(null);
+        const fallbackSnapshot = createHomeLandingSnapshot(HOME_FALLBACK_OWNER_ID, getColumnCount());
+        setSharedBoardReadOnly(true);
+        setBoards([fallbackSnapshot.board]);
+        setNotes(sanitizeNotes(fallbackSnapshot.notes));
+        setSelectedBoardId(fallbackSnapshot.board.id);
         setLoading(false);
         return;
       }
@@ -3675,7 +3715,28 @@ const App = () => {
         }
 
         const readonlyPayload = await loadHomeBoardV2();
-        return { payload: readonlyPayload, readOnly: true };
+        if (readonlyPayload) {
+          return { payload: readonlyPayload, readOnly: true };
+        }
+
+        if (user?.id && isHomeAdminEmail(user?.email)) {
+          const snapshot = createHomeLandingSnapshot(user.id, getColumnCount());
+          try {
+            await saveBoardsV2({
+              boards: [snapshot.board],
+              notes: snapshot.notes,
+              currentUserId: user.id
+            });
+          } catch (error) {
+            console.error("Failed to seed default home board", error);
+          }
+          return { payload: snapshot, readOnly: false };
+        }
+
+        return {
+          payload: createHomeLandingSnapshot(HOME_FALLBACK_OWNER_ID, getColumnCount()),
+          readOnly: true
+        };
       };
 
       loadHomeBoard()
