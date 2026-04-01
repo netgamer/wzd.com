@@ -2058,6 +2058,18 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   return 4;
 };
 
+const getHomeLandingVariantPriority = (note: NoteV2) => {
+  if (getWidgetType(note) !== "document") return 4;
+
+  const variant = getDocumentVariant(note);
+  if (variant === "hero") return 0;
+  if (variant === "feature") return 1;
+  if (variant === "section") return 2;
+  if (variant === "cta") return 3;
+
+  return 4;
+};
+
 type AutoLayoutCategory =
   | "cover"
   | "focus"
@@ -3694,6 +3706,25 @@ const App = () => {
   const visibleNotes = useMemo(
     () => filteredNotes.slice(0, visibleNoteCount),
     [filteredNotes, visibleNoteCount]
+  );
+  const homeLandingNotes = useMemo(
+    () =>
+      visibleNotes
+        .map((note, index) => ({ note, index }))
+        .sort((a, b) => {
+          const variantDiff = getHomeLandingVariantPriority(a.note) - getHomeLandingVariantPriority(b.note);
+          if (variantDiff !== 0) {
+            return variantDiff;
+          }
+
+          if (a.note.pinned !== b.note.pinned) {
+            return a.note.pinned ? -1 : 1;
+          }
+
+          return a.index - b.index;
+        })
+        .map(({ note }) => note),
+    [visibleNotes]
   );
   const visibleColumns = useMemo(
     () => groupNotesByColumn(visibleNotes, columnCount),
@@ -6278,6 +6309,20 @@ const App = () => {
 
   const showExpandedSidebar = sidebarExpanded && !compactSidebar;
   const CurrentPage = isHomeView ? HomePage : isReadOnlyBoardView ? SharePage : BoardPage;
+  const pageModeClassName = isHomeView ? "mode-home" : isReadOnlyBoardView ? "mode-share" : "mode-board";
+  const topbarClassName = `pin-topbar ${compactHeader ? "compact-header" : ""} ${
+    isReadOnlyBoardView ? "public-topbar" : "workspace-topbar"
+  } ${pageModeClassName}-topbar`.trim();
+  const mainClassName = `pin-main ${isReadOnlyBoardView ? "public-main" : "workspace-main"} ${pageModeClassName}-main`.trim();
+  const boardPanelClassName = `pin-board-panel current-board-panel ${
+    isReadOnlyBoardView ? "public-board-panel" : "workspace-board-panel"
+  } ${isHomeView ? "home-board-panel" : isReadOnlyBoardView ? "share-board-panel" : ""}`.trim();
+  const feedHeadClassName = `feed-head ${isReadOnlyBoardView ? "public-feed-head" : "workspace-feed-head"} ${
+    isHomeView ? "home-feed-head" : isSharedView ? "share-feed-head" : ""
+  }`.trim();
+  const boardClassName = `pin-board ${isReadOnlyBoardView ? "public-board-grid" : "workspace-board-grid"} ${
+    isHomeView ? "home-board-grid" : isSharedView ? "share-board-grid" : ""
+  }`.trim();
 
   return (
     <CurrentPage showExpandedSidebar={showExpandedSidebar}>
@@ -6383,8 +6428,8 @@ const App = () => {
         </button>
       </aside>
 
-      <div className="pin-app">
-        <header className={`pin-topbar ${compactHeader ? "compact-header" : ""}`}>
+      <div className={`pin-app ${pageModeClassName}-app`}>
+        <header className={topbarClassName}>
             <div className="topbar-primary">
             <div className={`topbar-board-title ${isReadOnlyBoardView ? "readonly-board-title" : ""}`}>
               {compactHeader && (
@@ -7083,7 +7128,7 @@ const App = () => {
             </div>
           )}
 
-          <main className="pin-main">
+          <main className={mainClassName}>
           <div
             className={`pin-board-stage ${mobileSwipeEnabled ? "mobile-swipe-enabled" : ""} ${boardSwipeTransition ? "swipe-transition" : ""}`}
             style={{ "--board-swipe-offset": `${boardSwipeOffset}px` } as CSSProperties}
@@ -7093,8 +7138,8 @@ const App = () => {
           >
           <div className="pin-board-track">
           <div className="pin-board-panel swipe-preview-panel">{mobileSwipeEnabled ? renderSwipePreviewPanel(previousBoard, "prev") : null}</div>
-          <div className="pin-board-panel current-board-panel">
-          <section className="feed-head">
+          <div className={boardPanelClassName}>
+          <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">
                 <span className={`trust-chip save-state-${cloudSaveState}`}>
@@ -7138,7 +7183,7 @@ const App = () => {
           </section>
 
           <section
-            className="pin-board"
+            className={boardClassName}
             style={{ "--pin-columns": String(columnCount) } as CSSProperties}
             onMouseDown={onBoardBackgroundMouseDown}
             onDragOver={(event) => {
@@ -7199,10 +7244,10 @@ const App = () => {
                 <div className="feed-empty">보관된 메모가 없습니다.</div>
               )
             ) : (
-              visibleColumns.map((columnNotes, columnIndex) => (
+              (isHomeView ? [homeLandingNotes] : visibleColumns).map((columnNotes, columnIndex) => (
                 <div
                   key={`column-${columnIndex}`}
-                  className="pin-column"
+                  className={`pin-column ${isHomeView ? "landing-flow-column" : ""}`.trim()}
                   onMouseDown={onBoardBackgroundMouseDown}
                   onDragOver={(event) => {
                     if (feedMode === "active") {
@@ -7249,6 +7294,7 @@ const App = () => {
                       !hasImagePreview &&
                       (!hasTextPreview || isLinkPreviewDuplicateText(note.content, noteUrl, linkPreview));
                     const isDocumentWidget = widgetType === "document";
+                    const documentVariant = isDocumentWidget ? getDocumentVariant(note) : null;
                     const displayTitle = hasExternalLink
                       ? getLinkDisplayTitle(note.content, noteUrl, linkPreview)
                       : getNoteTitle(note.content);
@@ -7275,13 +7321,20 @@ const App = () => {
                       runningDragNoteId !== note.id;
 
                     return (
-                      <div key={note.id}>
+                      <div
+                        key={note.id}
+                        className={`pin-card-slot ${
+                          isHomeView && documentVariant ? `landing-slot landing-slot-${documentVariant}` : ""
+                        }`.trim()}
+                      >
                         {showDropPreview && <article className="pin-card pin-drop-preview" aria-hidden="true" />}
                         <article
                           className={`pin-card note-${note.color} ${useImageHeroCard ? "image-note" : ""} ${
                             useFramedLinkCard ? "link-only-note" : ""
                           } ${isDocumentWidget ? "document-note" : ""} ${
                             isDocumentWidget && isHomeView ? "landing-home-note" : ""
+                          } ${documentVariant ? `document-${documentVariant}-note` : ""} ${
+                            isHomeView && documentVariant ? `landing-home-${documentVariant}-note` : ""
                           } ${
                             !hideHoverMetadata && (hasTextPreview || hasLinkPreview) ? "has-hover-copy" : "image-only"
                           } ${isRssWidget ? "widget-note rss-widget" : ""} ${selected ? "selected" : ""} ${
