@@ -7,6 +7,9 @@
   useRef,
   useState
 } from "react";
+import BoardPage from "./features/board/BoardPage";
+import HomePage from "./features/home/HomePage";
+import SharePage from "./features/share/SharePage";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
@@ -6235,9 +6238,10 @@ const App = () => {
   );
 
   const showExpandedSidebar = sidebarExpanded && !compactSidebar;
+  const CurrentPage = isHomeView ? HomePage : isReadOnlyBoardView ? SharePage : BoardPage;
 
   return (
-    <div className={`pin-page ${showExpandedSidebar ? "sidebar-expanded" : ""}`}>
+    <CurrentPage showExpandedSidebar={showExpandedSidebar}>
       <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`}>
         <button className="pin-brand" aria-label="WZD 홈" onClick={navigateToHomeBoard}>
           <span>{showExpandedSidebar ? "WZD" : "W"}</span>
@@ -7889,7 +7893,7 @@ const App = () => {
           </button>
         )}
       </div>
-    </div>
+    </CurrentPage>
   );
 };
 
