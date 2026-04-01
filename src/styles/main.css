@@ -3208,23 +3208,6 @@ button {
   overflow: visible;
 }
 
-.instagram-link-card {
-  gap: 0;
-}
-
-.instagram-link-card .link-preview-meta {
-  padding: 12px;
-  gap: 8px;
-  flex: 1;
-}
-
-.instagram-link-card .link-preview-description {
-  font-size: 14px;
-  line-height: 1.55;
-  -webkit-line-clamp: unset;
-  overflow: visible;
-}
-
 .link-preview-site-row {
   display: flex;
   align-items: center;
