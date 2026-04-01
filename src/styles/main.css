@@ -378,6 +378,43 @@ button {
   flex: 0 0 auto;
 }
 
+.readonly-board-title {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.readonly-board-copy {
+  max-width: 760px;
+}
+
+.readonly-board-description {
+  margin: 0;
+  color: #54483d;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.readonly-board-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  color: #8a7c6d;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.readonly-board-meta span {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(99, 73, 47, 0.08);
+}
+
 .mobile-board-toggle {
   display: none;
 }
@@ -1171,6 +1208,86 @@ button {
 .pin-main {
   padding: 8px 14px 28px;
   overflow-x: hidden;
+}
+
+.share-page,
+.home-page {
+  grid-template-columns: minmax(0, 1fr);
+  background:
+    radial-gradient(circle at top left, rgba(255, 240, 216, 0.9), transparent 30%),
+    linear-gradient(180deg, #fffdfa, #f8f2e9 55%, #f5efe6);
+}
+
+.share-page .pin-sidebar,
+.home-page .pin-sidebar {
+  display: none;
+}
+
+.share-page .pin-topbar,
+.home-page .pin-topbar {
+  position: static;
+  align-items: flex-start;
+  padding: 28px 32px 18px;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom: none;
+}
+
+.share-page .topbar-primary,
+.home-page .topbar-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.share-page .topbar-board-title h1,
+.home-page .topbar-board-title h1 {
+  font-size: clamp(34px, 4vw, 56px);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.share-page .feed-kicker,
+.home-page .feed-kicker {
+  margin-bottom: 8px;
+  color: #9d8168;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
+.share-page .search-shell,
+.home-page .search-shell {
+  width: min(100%, 640px);
+  flex: 0 1 auto;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(96, 76, 54, 0.08);
+  box-shadow: 0 16px 32px rgba(76, 53, 28, 0.06);
+}
+
+.share-page .topbar-actions,
+.home-page .topbar-actions {
+  justify-content: flex-end;
+}
+
+.share-page .pin-main,
+.home-page .pin-main {
+  padding: 0 32px 52px;
+}
+
+.share-page .feed-head,
+.home-page .feed-head {
+  margin-bottom: 18px;
+}
+
+.share-page .feed-meta,
+.home-page .feed-meta {
+  font-size: 14px;
+}
+
+.share-page .pin-board,
+.home-page .pin-board {
+  gap: 24px;
 }
 
 .pin-board-stage {

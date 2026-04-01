@@ -6346,8 +6346,8 @@ const App = () => {
 
       <div className="pin-app">
         <header className={`pin-topbar ${compactHeader ? "compact-header" : ""}`}>
-          <div className="topbar-primary">
-            <div className="topbar-board-title">
+            <div className="topbar-primary">
+            <div className={`topbar-board-title ${isReadOnlyBoardView ? "readonly-board-title" : ""}`}>
               {compactHeader && (
                 <button
                   className="mobile-icon-action mobile-board-toggle"
@@ -6392,6 +6392,15 @@ const App = () => {
                 >
                   {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}
                 </h1>
+              )}
+              {isReadOnlyBoardView && selectedBoard?.description?.trim() && (
+                <div className="readonly-board-copy">
+                  <p className="readonly-board-description">{selectedBoard.description.trim()}</p>
+                  <div className="readonly-board-meta">
+                    <span>{activeNotes.length}개의 핀</span>
+                    <span>읽기 전용 페이지</span>
+                  </div>
+                </div>
               )}
             </div>
 
