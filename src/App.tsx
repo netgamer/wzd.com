@@ -7834,7 +7834,9 @@ const App = () => {
                                     {hasExternalLink && !hideHoverMetadata &&
                                       (linkPreview ? (
                                         <a
-                                          className={`link-preview-card ${isInstagramLink ? "instagram-link-card" : ""}`}
+                                          className={`link-preview-card ${isInstagramLink ? "instagram-link-card" : ""} ${
+                                            linkPreview.image ? "has-preview-image" : "text-only-link-card"
+                                          } ${isPureLinkNote ? "signature-link-card" : ""}`}
                                           href={linkPreview.finalUrl}
                                           target="_blank"
                                           rel="noreferrer"
