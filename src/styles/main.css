@@ -365,6 +365,15 @@ button {
   border-bottom: 1px solid var(--line);
 }
 
+.board-page .pin-topbar {
+  padding: 16px 20px 14px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 241, 220, 0.9), transparent 28%),
+    rgba(255, 255, 255, 0.88);
+  border-bottom-color: rgba(79, 60, 39, 0.08);
+  box-shadow: 0 10px 30px rgba(63, 42, 19, 0.06);
+}
+
 .topbar-primary {
   flex: 1;
   min-width: 0;
@@ -435,6 +444,19 @@ button {
   line-height: 1;
 }
 
+.board-page .topbar-board-title h1 {
+  font-size: clamp(30px, 3vw, 40px);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.board-page .feed-kicker {
+  margin-bottom: 6px;
+  color: #8f7258;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
 .editable-board-title {
   cursor: text;
 }
@@ -462,6 +484,12 @@ button {
   border-radius: 18px;
   padding: 0 14px;
   min-height: 48px;
+}
+
+.board-page .search-shell {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(87, 64, 39, 0.08);
+  box-shadow: 0 14px 28px rgba(54, 37, 19, 0.05);
 }
 
 .search-icon {
@@ -1210,6 +1238,10 @@ button {
   overflow-x: hidden;
 }
 
+.board-page .pin-main {
+  padding: 18px 20px 34px;
+}
+
 .share-page,
 .home-page {
   grid-template-columns: minmax(0, 1fr);
@@ -1310,6 +1342,20 @@ button {
   box-sizing: border-box;
 }
 
+.board-page .current-board-panel {
+  width: min(100%, 1520px);
+  margin: 0 auto;
+  padding: 20px 20px 26px;
+  border-radius: 34px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 250, 244, 0.34)),
+    rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(87, 64, 39, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 22px 44px rgba(52, 36, 18, 0.06);
+}
+
 .swipe-preview-panel {
   opacity: 0.92;
 }
@@ -1349,6 +1395,10 @@ button {
   align-items: flex-end;
   gap: 16px;
   margin-bottom: 10px;
+}
+
+.board-page .feed-head {
+  margin-bottom: 18px;
 }
 
 .feed-kicker {
@@ -1429,6 +1479,10 @@ button {
   width: 100%;
 }
 
+.board-page .pin-board {
+  gap: 22px;
+}
+
 .pin-column {
   display: flex;
   flex-direction: column;
@@ -1452,6 +1506,14 @@ button {
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
+.board-page .pin-card {
+  border-radius: 28px;
+  border-color: rgba(75, 56, 35, 0.08);
+  box-shadow:
+    0 14px 32px rgba(42, 29, 14, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.72) inset;
+}
+
 .pin-card.image-note {
   position: relative;
   background: transparent;
@@ -1461,6 +1523,13 @@ button {
 .pin-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 24px 44px rgba(34, 23, 12, 0.12);
+}
+
+.board-page .pin-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 24px 46px rgba(42, 29, 14, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.78) inset;
 }
 
 .pin-card.selected {
@@ -1507,6 +1576,10 @@ button {
   justify-content: space-between;
   gap: 10px;
   padding: 12px 12px 8px;
+}
+
+.board-page .pin-card-head {
+  padding: 14px 14px 10px;
 }
 
 .pin-card.image-note .pin-card-head {
@@ -1598,6 +1671,11 @@ button {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.board-page .pin-card-body {
+  padding: 0 16px 16px;
+  gap: 12px;
 }
 
 .pin-note-stack {
@@ -2454,6 +2532,12 @@ button {
   font-weight: 700;
 }
 
+.board-page .pin-title {
+  font-size: 17px;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+}
+
 .pin-card.image-note .pin-title,
 .pin-card.image-note .pin-body-preview {
   color: #fffaf2;
@@ -2465,6 +2549,11 @@ button {
   color: #3b3127;
   line-height: 1.65;
   white-space: pre-wrap;
+}
+
+.board-page .pin-body-preview {
+  color: #4b3a2c;
+  line-height: 1.72;
 }
 
 .pin-body-preview.clamped {
@@ -2562,6 +2651,11 @@ button {
   padding: 0 12px 12px;
 }
 
+.board-page .link-preview-meta {
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+
 .instagram-link-card {
   gap: 0;
 }
@@ -2624,6 +2718,12 @@ button {
   overflow: hidden;
 }
 
+.board-page .link-preview-title {
+  font-size: 17px;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+}
+
 .link-preview-description {
   color: #4d4033;
   font-size: 13px;
@@ -2632,6 +2732,10 @@ button {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.board-page .link-preview-description {
+  line-height: 1.55;
 }
 
 .link-preview-url {
