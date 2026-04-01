@@ -7,10 +7,15 @@
 
 ## Hades + gstack workflow
 1. Read `HADES.md`.
-2. Create a task file from `hades/task-template.md`.
-3. Implement the change.
-4. Run local gate: `npm run hades:verify-local`
-5. Run repo-local gstack verifier skills in Codex:
+2. For product-facing work, read the latest planning reviews in `hades/reviews/`.
+   - `2026-04-01-office-hours.md`
+   - `2026-04-01-ceo-review.md`
+   - `2026-04-01-eng-review.md`
+   - `2026-04-01-design-review.md`
+3. Create a task file from `hades/task-template.md`.
+4. Implement the change.
+5. Run local gate: `npm run hades:verify-local`
+6. Run repo-local gstack verifier skills in Codex:
    - `/gstack-review`
    - `/gstack-qa-only` for UI work
    - `/gstack-benchmark` for performance-sensitive UI work

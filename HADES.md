@@ -17,11 +17,16 @@ The loop is not complete until the verifier passes.
 ## Required sequence
 
 1. Create a task file from [task-template.md](C:\Users\junho\Documents\code\wzd.com\hades\task-template.md)
-2. Planner fills in goal, scope, success criteria, and test conditions
-3. Builder implements
-4. Verifier runs local checks and gstack review
-5. If verifier fails, return to builder
-6. Only merge or deploy after verifier passes
+2. For product-facing work, run the gstack planning sequence first:
+   - [office-hours](C:\Users\junho\Documents\code\wzd.com\hades\reviews\2026-04-01-office-hours.md)
+   - [ceo-review](C:\Users\junho\Documents\code\wzd.com\hades\reviews\2026-04-01-ceo-review.md)
+   - [eng-review](C:\Users\junho\Documents\code\wzd.com\hades\reviews\2026-04-01-eng-review.md)
+   - [design-review](C:\Users\junho\Documents\code\wzd.com\hades\reviews\2026-04-01-design-review.md)
+3. Planner fills in goal, scope, success criteria, and test conditions
+4. Builder implements
+5. Verifier runs local checks and gstack review
+6. If verifier fails, return to builder
+7. Only merge or deploy after verifier passes
 
 ## Verifier stack
 
