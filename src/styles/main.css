@@ -1370,6 +1370,57 @@ button {
   font-size: 13px;
 }
 
+.trust-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.trust-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(79, 60, 39, 0.08);
+  color: #6d5e4f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.trust-chip.save-state-saving {
+  background: rgba(255, 196, 76, 0.18);
+  color: #8a6110;
+}
+
+.trust-chip.save-state-saved {
+  background: rgba(71, 165, 112, 0.14);
+  color: #2b6a47;
+}
+
+.trust-chip.save-state-error {
+  background: rgba(230, 0, 35, 0.12);
+  color: #a20f2c;
+}
+
+.trust-chip-action {
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.trust-chip-action:hover {
+  background: rgba(79, 60, 39, 0.14);
+  transform: translateY(-1px);
+}
+
+.trust-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
 .pin-board {
   display: grid;
   grid-template-columns: repeat(var(--pin-columns, 4), minmax(0, 1fr));

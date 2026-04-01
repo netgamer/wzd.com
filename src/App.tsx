@@ -880,6 +880,21 @@ const makeId = () =>
     : Math.random().toString(36).slice(2, 10);
 
 const nowIso = () => new Date().toISOString();
+const formatSavedAtLabel = (value: string | null) => {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  return parsed.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
 
 const createDefaultBoard = (userId: string, title = "My Board"): BoardV2 => ({
   id: makeId(),
@@ -2294,6 +2309,7 @@ const App = () => {
   const [visibleNoteCount, setVisibleNoteCount] = useState(INITIAL_VISIBLE_NOTE_COUNT);
   const [feedMode, setFeedMode] = useState<FeedMode>("active");
   const [cloudSaveState, setCloudSaveState] = useState<CloudSaveState>("idle");
+  const [lastPersistedAt, setLastPersistedAt] = useState<string | null>(null);
   const [columnCount, setColumnCount] = useState(() => getColumnCount());
   const [linkPreviews, setLinkPreviews] = useState<Record<string, LinkPreviewState>>({});
   const [rssFeeds, setRssFeeds] = useState<Record<string, RssFeedState>>({});
@@ -2474,7 +2490,9 @@ const App = () => {
   };
 
   const markCloudSaved = () => {
+    const timestamp = nowIso();
     setCloudSaveState("saved");
+    setLastPersistedAt(timestamp);
 
     if (saveStateResetTimerRef.current) {
       window.clearTimeout(saveStateResetTimerRef.current);
@@ -3635,6 +3653,26 @@ const App = () => {
       [...trashedNotes].sort((a, b) => (getNoteTrashedAt(b) ?? "").localeCompare(getNoteTrashedAt(a) ?? "")),
     [trashedNotes]
   );
+  const latestHistorySnapshot = boardHistorySnapshots[0] ?? null;
+  const totalTrashCount = sortedTrashedBoards.length + sortedTrashedNotes.length;
+  const lastPersistedLabel = formatSavedAtLabel(lastPersistedAt);
+  const persistenceStatusLabel = isReadOnlyBoardView
+    ? "읽기 전용"
+    : hasSupabaseConfig && user
+      ? cloudSaveState === "saving"
+        ? "클라우드 저장 중"
+        : cloudSaveState === "saved"
+          ? lastPersistedLabel
+            ? `${lastPersistedLabel} 저장 완료`
+            : "클라우드 저장 완료"
+          : cloudSaveState === "error"
+            ? "클라우드 저장 실패"
+            : lastPersistedLabel
+              ? `${lastPersistedLabel} 마지막 저장`
+              : "클라우드 동기화 대기"
+      : lastPersistedLabel
+        ? `${lastPersistedLabel} 브라우저 저장`
+        : "브라우저 저장";
   const currentNotes = feedMode === "active" ? activeNotes : archivedNotes;
 
   const filteredNotes = useMemo(() => {
@@ -3928,6 +3966,7 @@ const App = () => {
     if (!user?.id || !supabase) {
       saveLocalSnapshot({ boards, notes, selectedBoardId: currentBoardId });
       setCloudSaveState("idle");
+      setLastPersistedAt(nowIso());
       return;
     }
 
@@ -7057,21 +7096,44 @@ const App = () => {
           <div className="pin-board-panel current-board-panel">
           <section className="feed-head">
             <div className="feed-meta">
-              <span>
-                {hasSupabaseConfig && user
-                  ? cloudSaveState === "saving"
-                    ? "클라우드에 저장 중입니다"
-                    : cloudSaveState === "saved"
-                      ? "클라우드에 저장되었습니다"
-                      : cloudSaveState === "error"
-                        ? "클라우드 저장에 실패했습니다"
-                        : feedMode === "active"
-                          ? `${activeNotes.length}개의 핀`
-                          : `${archivedNotes.length}개의 보관 메모`
-                  : feedMode === "active"
-                    ? `${activeNotes.length}개의 핀`
-                    : `${archivedNotes.length}개의 보관 메모`}
-              </span>
+              <div className="trust-bar">
+                <span className={`trust-chip save-state-${cloudSaveState}`}>
+                  {persistenceStatusLabel}
+                </span>
+                <span className="trust-chip">
+                  {feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`}
+                </span>
+                {!isReadOnlyBoardView && (
+                  <button
+                    className="trust-chip trust-chip-action"
+                    onClick={() => {
+                      setSettingsSection("history");
+                      setSettingsOpen(true);
+                    }}
+                  >
+                    저장본 {boardHistorySnapshots.length}개
+                    {latestHistorySnapshot ? ` · ${latestHistorySnapshot.label}` : ""}
+                  </button>
+                )}
+                {!isReadOnlyBoardView && (
+                  <button
+                    className="trust-chip trust-chip-action"
+                    onClick={() => {
+                      setSettingsSection("trash");
+                      setSettingsOpen(true);
+                    }}
+                  >
+                    휴지통 {totalTrashCount}개
+                  </button>
+                )}
+              </div>
+              {!isReadOnlyBoardView && (
+                <div className="trust-actions">
+                  <button className="ghost-action" onClick={saveCurrentBoardToHistory} disabled={!selectedBoard}>
+                    현재 상태 저장
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
