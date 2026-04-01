@@ -550,7 +550,7 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
     subtitle: "회의, 작업 메모, 할 일까지 한 보드에서 정리",
     tag: "메모 보드",
     audience: "작업 메모를 빠르게 쌓아두는 팀과 개인",
-    highlights: ["작업 메모", "회의 기록", "체크리스트"],
+    highlights: ["작업 메모", "회의 기록", "TODO"],
     backgroundStyle: "paper",
     layoutStyle: "balanced",
     notes: [
@@ -577,7 +577,7 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
     subtitle: "과목별 핵심 메모와 링크를 보기 좋게 정리",
     tag: "메모 보드",
     audience: "강의·자료·복습 메모를 모으는 분",
-    highlights: ["복습 포인트", "자료 링크", "체크리스트"],
+    highlights: ["복습 포인트", "자료 링크", "TODO"],
     backgroundStyle: "cork",
     layoutStyle: "balanced",
     notes: [
@@ -1221,6 +1221,12 @@ const getLinkDisplayHost = (preview: LinkPreview | null | undefined) => {
   }
 
   return preview.hostname.replace(/^www\./i, "");
+};
+
+const isInstagramLinkPreview = (noteUrl: string, preview: LinkPreview | null | undefined) => {
+  const candidates = [noteUrl, preview?.finalUrl, preview?.hostname].filter((value): value is string => Boolean(value));
+
+  return candidates.some((value) => /(^|\/\/|\.)(instagram\.com)\b/i.test(value));
 };
 
 const getLinkDisplayTitle = (content: unknown, noteUrl: string, preview: LinkPreview | null | undefined) => {
@@ -4796,7 +4802,7 @@ const App = () => {
       userId: user?.id ?? selectedBoard.userId,
       zIndex: boardMaxZ + 1,
       color: "white",
-      content: "체크리스트"
+      content: "TODO"
     });
 
     note.metadata = {
@@ -5242,7 +5248,7 @@ const App = () => {
         북마크
       </button>
       <button className="widget-menu-item" onClick={addChecklistWidget}>
-        체크리스트
+        TODO
       </button>
       <button className="widget-menu-item" onClick={addCountdownWidget}>
         디데이
@@ -5495,6 +5501,22 @@ const App = () => {
     if (touchedBoardId) {
       touchBoard(touchedBoardId);
     }
+  };
+
+  const updateChecklistItems = (note: NoteV2, items: ChecklistItem[]) => {
+    const normalizedItems = items.map((item) => ({
+      text: item.text.trim(),
+      checked: Boolean(item.checked)
+    }));
+
+    updateNote(note.id, {
+      metadata: {
+        ...note.metadata,
+        widgetType: "checklist",
+        checklistItems: normalizedItems,
+        checklistText: serializeChecklistItems(normalizedItems)
+      }
+    });
   };
 
   const uploadPastedImage = async (note: NoteV2, file: File) => {
@@ -5961,15 +5983,13 @@ const App = () => {
                         ) : isChecklistWidget ? (
                           <>
                             <div className="widget-header">
-                              <span className="widget-badge">CHECK</span>
-                              <p className="pin-title">{asText(note.content).trim() || "체크리스트"}</p>
+                              <span className="widget-badge">TODO</span>
+                              <p className="pin-title">{asText(note.content).trim() || "TODO"}</p>
                             </div>
                             <div className="checklist-widget-list">
                               {checklistItems.slice(0, 4).map((item, index) => (
                                 <div key={`${note.id}-preview-check-${index}`} className="checklist-widget-item">
-                                  <span className={`checklist-widget-box ${item.checked ? "checked" : ""}`} aria-hidden="true">
-                                    {item.checked ? "✓" : ""}
-                                  </span>
+                                  <input className="checklist-widget-checkbox" type="checkbox" checked={item.checked} readOnly />
                                   <span className="checklist-widget-text">{item.text}</span>
                                 </div>
                               ))}
@@ -7162,9 +7182,11 @@ const App = () => {
                       : previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.");
                     const displaySite = hasExternalLink ? getLinkDisplaySite(linkPreview) : "";
                     const displayHost = hasExternalLink ? getLinkDisplayHost(linkPreview) : "";
-                    const hideHoverMetadata = Boolean(attachedImageUrl && hasExternalLink && !selected);
-                    const useImageHeroCard = hasImagePreview && !selected;
+                    const isInstagramLink = hasExternalLink && isInstagramLinkPreview(noteUrl ?? "", linkPreview);
+                    const hideHoverMetadata = Boolean(attachedImageUrl && hasExternalLink && !selected && !isInstagramLink);
+                    const useImageHeroCard = hasImagePreview && !selected && !isInstagramLink;
                     const isFramedLinkNote = feedMode === "active" && hasExternalLink;
+                    const useFramedLinkCard = !selected && hasExternalLink && (isPureLinkNote || isInstagramLink);
                     const moreClicks = noteMoreState[note.id] ?? 0;
                     const rssVisibleCount = 5 + moreClicks * 5;
                     const bookmarkVisibleCount = 2 + moreClicks * 2;
@@ -7182,7 +7204,7 @@ const App = () => {
                         {showDropPreview && <article className="pin-card pin-drop-preview" aria-hidden="true" />}
                         <article
                           className={`pin-card note-${note.color} ${useImageHeroCard ? "image-note" : ""} ${
-                            isPureLinkNote && !selected ? "link-only-note" : ""
+                            useFramedLinkCard ? "link-only-note" : ""
                           } ${isDocumentWidget ? "document-note" : ""} ${
                             isDocumentWidget && isHomeView ? "landing-home-note" : ""
                           } ${
@@ -7244,7 +7266,7 @@ const App = () => {
                             <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
                             {!isReadOnlyBoardView && (
                               <div className="pin-actions">
-                                {!useImageHeroCard && !isPureLinkNote && !isDocumentWidget && (
+                                {!useImageHeroCard && !useFramedLinkCard && !isDocumentWidget && (
                                   <button
                                     className={`note-color-toggle chip-${note.color}`}
                                     onClick={(event) => {
@@ -7494,8 +7516,8 @@ const App = () => {
                             ) : isChecklistWidget ? (
                               <>
                                 <div className="widget-header">
-                                  <span className="widget-badge">CHECK</span>
-                                  <p className="pin-title">{asText(note.content).trim() || "체크리스트"}</p>
+                                  <span className="widget-badge">TODO</span>
+                                  <p className="pin-title">{asText(note.content).trim() || "TODO"}</p>
                                 </div>
                                 {selected ? (
                                   <div className="widget-editor-stack">
@@ -7504,26 +7526,64 @@ const App = () => {
                                       value={note.content}
                                       onMouseDown={(event) => event.stopPropagation()}
                                       onChange={(event) => updateNote(note.id, { content: event.target.value })}
-                                      placeholder="체크리스트 제목"
+                                      placeholder="TODO 제목"
                                     />
-                                    <textarea
-                                      className="widget-textarea"
-                                      value={serializeChecklistItems(checklistItems)}
-                                      onMouseDown={(event) => event.stopPropagation()}
-                                      onChange={(event) => {
-                                        const nextValue = event.target.value;
-                                        updateNote(note.id, {
-                                          metadata: {
-                                            ...note.metadata,
-                                            widgetType: "checklist",
-                                            checklistItems: parseChecklistItems(nextValue),
-                                            checklistText: nextValue
-                                          }
-                                        });
-                                      }}
-                                      placeholder={"한 줄에 하나씩 입력하세요.\n[x] 완료한 항목\n[ ] 미완료 항목"}
-                                      rows={6}
-                                    />
+                                    <div className="todo-editor-list" onMouseDown={(event) => event.stopPropagation()}>
+                                      {checklistItems.map((item, index) => (
+                                        <div key={`${note.id}-todo-edit-${index}`} className="todo-editor-item">
+                                          <input
+                                            className="checklist-widget-checkbox"
+                                            type="checkbox"
+                                            checked={item.checked}
+                                            onChange={(event) =>
+                                              updateChecklistItems(
+                                                note,
+                                                checklistItems.map((entry, entryIndex) =>
+                                                  entryIndex === index ? { ...entry, checked: event.target.checked } : entry
+                                                )
+                                              )
+                                            }
+                                          />
+                                          <input
+                                            className="todo-item-input"
+                                            value={item.text}
+                                            onChange={(event) =>
+                                              updateChecklistItems(
+                                                note,
+                                                checklistItems.map((entry, entryIndex) =>
+                                                  entryIndex === index ? { ...entry, text: event.target.value } : entry
+                                                )
+                                              )
+                                            }
+                                            placeholder="할 일을 입력하세요"
+                                          />
+                                          <button
+                                            className="todo-remove-button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              updateChecklistItems(
+                                                note,
+                                                checklistItems.filter((_, entryIndex) => entryIndex !== index)
+                                              );
+                                            }}
+                                            aria-label="할 일 삭제"
+                                            type="button"
+                                          >
+                                            ×
+                                          </button>
+                                        </div>
+                                      ))}
+                                      <button
+                                        className="todo-add-button"
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          updateChecklistItems(note, [...checklistItems, { text: "", checked: false }]);
+                                        }}
+                                        type="button"
+                                      >
+                                        + 할 일 추가
+                                      </button>
+                                    </div>
                                     <button
                                       className="widget-confirm"
                                       onClick={(event) => {
@@ -7540,12 +7600,21 @@ const App = () => {
                                       <>
                                         {checklistItems.slice(0, 4 + moreClicks * 3).map((item, index) => (
                                           <div key={`${note.id}-check-${index}`} className="checklist-widget-item">
-                                            <span
-                                              className={`checklist-widget-box ${item.checked ? "checked" : ""}`}
-                                              aria-hidden="true"
-                                            >
-                                              {item.checked ? "✓" : ""}
-                                            </span>
+                                            <input
+                                              className="checklist-widget-checkbox"
+                                              type="checkbox"
+                                              checked={item.checked}
+                                              onChange={(event) => {
+                                                event.stopPropagation();
+                                                updateChecklistItems(
+                                                  note,
+                                                  checklistItems.map((entry, entryIndex) =>
+                                                    entryIndex === index ? { ...entry, checked: event.target.checked } : entry
+                                                  )
+                                                );
+                                              }}
+                                              onClick={(event) => event.stopPropagation()}
+                                            />
                                             <span className="checklist-widget-text">{item.text}</span>
                                           </div>
                                         ))}
@@ -7568,7 +7637,7 @@ const App = () => {
                                         </span>
                                       </>
                                     ) : (
-                                      <p className="rss-empty">체크리스트 항목을 추가해 주세요.</p>
+                                      <p className="rss-empty">TODO 항목을 추가해 주세요.</p>
                                     )}
                                   </div>
                                 )}
@@ -7646,7 +7715,7 @@ const App = () => {
                               </>
                             ) : (
                               <div className="pin-note-stack">
-                                {!isPureLinkNote &&
+                                {!useFramedLinkCard &&
                                   (!useImageHeroCard || (!hideHoverMetadata && (hasTextPreview || hasLinkPreview))) && (
                                   <p className="pin-title">{displayTitle}</p>
                                   )}
@@ -7690,7 +7759,7 @@ const App = () => {
                                     {hasExternalLink && !hideHoverMetadata &&
                                       (linkPreview ? (
                                         <a
-                                          className="link-preview-card"
+                                          className={`link-preview-card ${isInstagramLink ? "instagram-link-card" : ""}`}
                                           href={linkPreview.finalUrl}
                                           target="_blank"
                                           rel="noreferrer"
@@ -7720,7 +7789,7 @@ const App = () => {
                                                 <span className="link-preview-host">{displayHost}</span>
                                               )}
                                             </span>
-                                            <span className="link-preview-title">{displayTitle}</span>
+                                            {!isInstagramLink && <span className="link-preview-title">{displayTitle}</span>}
                                             {displayDescription && (
                                               <span className="link-preview-description">{displayDescription}</span>
                                             )}

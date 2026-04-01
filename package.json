@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "verify:build": "npm run build",
+    "hades:verify-local": "npm run build",
     "preview": "vite preview",
     "server": "node server/index.js"
   },

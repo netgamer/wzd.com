@@ -1505,6 +1505,7 @@ button {
 
 .pin-card.link-only-note .link-preview-meta {
   padding: 0;
+  min-height: 100%;
 }
 
 .pin-card.link-only-note .link-preview-card:hover {
@@ -1591,30 +1592,62 @@ button {
   background: rgba(255, 255, 255, 0.72);
 }
 
-.checklist-widget-box {
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
-  margin-top: 2px;
-  border-radius: 8px;
-  border: 1px solid rgba(31, 26, 19, 0.14);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: transparent;
-}
-
-.checklist-widget-box.checked {
-  background: var(--text);
-  border-color: var(--text);
-  color: #fff;
+.checklist-widget-checkbox {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin-top: 3px;
+  accent-color: #1f1a13;
 }
 
 .checklist-widget-text {
   flex: 1;
   line-height: 1.5;
+}
+
+.todo-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.todo-editor-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.todo-item-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.todo-remove-button,
+.todo-add-button {
+  min-height: 36px;
+  border-radius: 12px;
+  background: rgba(31, 26, 19, 0.08);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.todo-remove-button {
+  min-width: 36px;
+  padding: 0;
+}
+
+.todo-add-button {
+  align-self: flex-start;
+  padding: 0 12px;
 }
 
 .checklist-widget-summary {
@@ -2359,6 +2392,23 @@ button {
   flex-direction: column;
   gap: 5px;
   padding: 0 12px 12px;
+}
+
+.instagram-link-card {
+  gap: 0;
+}
+
+.instagram-link-card .link-preview-meta {
+  padding: 12px;
+  gap: 8px;
+  flex: 1;
+}
+
+.instagram-link-card .link-preview-description {
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-line-clamp: unset;
+  overflow: visible;
 }
 
 .link-preview-site-row {

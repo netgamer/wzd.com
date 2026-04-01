@@ -5,6 +5,21 @@
 2. Install dependencies: `npm install`
 3. Run dev server: `npm run dev`
 
+## Hades + gstack workflow
+1. Read `HADES.md`.
+2. Create a task file from `hades/task-template.md`.
+3. Implement the change.
+4. Run local gate: `npm run hades:verify-local`
+5. Run repo-local gstack verifier skills in Codex:
+   - `/gstack-review`
+   - `/gstack-qa-only` for UI work
+   - `/gstack-benchmark` for performance-sensitive UI work
+   - `/gstack-cso` for auth, storage, sharing, or public URL changes
+
+## Repo-local gstack
+1. gstack source is vendored at `.agents/skills/gstack`
+2. Generated Codex skills are available under `.agents/skills/gstack-*`
+
 ## Cloudflare Pages deploy
 1. Push repository to GitHub.
 2. In Cloudflare Pages, connect the Git repository.
