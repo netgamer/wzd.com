@@ -86,8 +86,8 @@ const CAT_FRAMES = {
     "/companions/original-frames/17.png",
     "/companions/original-frames/18.png"
   ],
-  leapUp: ["/companions/frames/leap-up.png"],
-  dropDown: ["/companions/frames/drop-down.png"]
+  leapUp: ["/companions/original-frames/82.png"],
+  dropDown: ["/companions/original-frames/78.png"]
 } as const;
 
 const FRAME_TIMINGS: Record<CatBehavior, number> = {
