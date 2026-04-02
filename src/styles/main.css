@@ -5507,6 +5507,20 @@ button {
   text-align: center;
 }
 
+.landing-shared-board {
+  padding: 0 0 52px;
+}
+
+.landing-shared-board-inner {
+  width: min(1240px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.landing-shared-board-grid {
+  column-count: 3;
+  column-gap: 18px;
+}
+
 .landing-showcase-inner {
   width: min(920px, calc(100% - 32px));
   margin: 0 auto;
@@ -5760,6 +5774,10 @@ button {
     padding: 28px 0 44px;
   }
 
+  .landing-shared-board-grid {
+    column-count: 2;
+  }
+
   .landing-final-cta {
     padding: 0 0 64px;
   }
@@ -5803,6 +5821,10 @@ button {
   }
 
   .landing-expanded-board {
+    column-count: 1;
+  }
+
+  .landing-shared-board-grid {
     column-count: 1;
   }
 

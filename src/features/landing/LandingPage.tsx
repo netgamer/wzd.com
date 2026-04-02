@@ -623,6 +623,82 @@ const SHOWCASE_WIDGETS: ShowcaseWidget[] = [
   }
 ];
 
+const SHARED_BOARD_WIDGETS: ShowcaseWidget[] = [
+  {
+    kind: "todo",
+    badge: "TODO",
+    title: "이번 주 운영 체크",
+    accentClass: "accent-mint",
+    size: "medium",
+    items: [
+      { label: "행사 장소 확정", done: true },
+      { label: "발표 자료 취합", done: true },
+      { label: "참가자 공지 발송", done: false },
+      { label: "촬영 인력 배치", done: false }
+    ]
+  },
+  {
+    kind: "timetable",
+    badge: "TIMETABLE",
+    title: "행사 당일 스케줄",
+    accentClass: "accent-blue",
+    size: "tall",
+    rows: [
+      { day: "화", time: "10:00", task: "운영팀 리허설" },
+      { day: "화", time: "13:00", task: "게스트 체크인" },
+      { day: "화", time: "15:00", task: "세션 진행" },
+      { day: "화", time: "18:30", task: "정리 및 회수" }
+    ]
+  },
+  {
+    kind: "bookmark",
+    badge: "BOOKMARK",
+    title: "팀 공용 링크",
+    accentClass: "accent-sand",
+    size: "medium",
+    links: [
+      { label: "Notion 행사 문서", host: "notion.so" },
+      { label: "Canva 발표 자료", host: "canva.com" },
+      { label: "폼 응답 시트", host: "docs.google.com" }
+    ]
+  },
+  {
+    kind: "delivery",
+    badge: "DELIVERY",
+    title: "비품 배송 현황",
+    accentClass: "accent-ash",
+    size: "medium",
+    carrier: "CJ대한통운",
+    status: "행사장 도착 예정",
+    steps: ["배너 출고 완료", "테이블보 이동 중", "내일 오전 수령 예정"]
+  },
+  {
+    kind: "food",
+    badge: "DOC",
+    title: "공유 운영 문서",
+    accentClass: "accent-cream",
+    size: "medium",
+    region: "운영팀 보드",
+    picks: [
+      { name: "역할 분담표", meta: "진행/촬영/안내" },
+      { name: "비상 연락망", meta: "팀장 포함 12명" },
+      { name: "행사 종료 체크", meta: "철수 순서 정리" }
+    ]
+  },
+  {
+    kind: "rss",
+    badge: "RSS",
+    title: "업계 뉴스 공유",
+    accentClass: "accent-lavender",
+    size: "tall",
+    items: [
+      { source: "GeekNews", headline: "AI 행사 운영에 쓰이는 실전 자동화 사례", time: "12분 전" },
+      { source: "TechCrunch", headline: "커뮤니티 빌딩 팀이 보는 이벤트 운영 변화", time: "28분 전" },
+      { source: "Google News", headline: "기업 세미나와 모임에서 뜨는 협업 툴", time: "51분 전" }
+    ]
+  }
+];
+
 const renderShowcaseWidget = (widget: ShowcaseWidget) => {
   const cardClassName = `landing-expanded-widget ${widget.accentClass} ${widget.size}`.trim();
 
@@ -1015,6 +1091,22 @@ const LandingPage = () => {
               ))}
               {SHOWCASE_WIDGETS.map((widget) => renderShowcaseWidget(widget))}
               {WIDGET_SAMPLES.map((widget) => renderWidgetSample(widget))}
+            </div>
+          </div>
+        </section>
+
+        <section className="landing-shared-board">
+          <div className="landing-shared-board-inner">
+            <div className="landing-section-header left">
+              <p className="landing-section-kicker">SHARED BOARD EXAMPLE</p>
+              <h2>회사와 모임에서는 이렇게 공유 보드로 같이 씁니다</h2>
+              <p className="landing-section-desc">
+                일정, 공용 링크, 운영 체크리스트, 비품 배송, 공지 문서를 한 보드에 묶어 두면 팀원 모두가 같은 화면을 보고 움직일 수 있습니다.
+              </p>
+            </div>
+
+            <div className="landing-shared-board-grid">
+              {SHARED_BOARD_WIDGETS.map((widget) => renderShowcaseWidget(widget))}
             </div>
           </div>
         </section>
