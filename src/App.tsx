@@ -292,123 +292,172 @@ const FOOD_CATEGORY_LABELS: Record<FoodCategoryKey, string> = {
 const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
   {
     color: "white",
-    content: "아이디어를 바로 만져보는 프로토타입으로 바꿉니다",
+    content: "모든 위젯을 한눈에 보는 WZD 샘플 보드",
     metadata: {
-      widgetType: "document",
-      documentVariant: "hero",
-      documentKicker: "WZD MASTER",
-      documentBody:
-        "아이디어는 설명만으로 설득되지 않습니다.\nWZD Master는 메모, 기획서, 구두 설명만 있어도 실제로 눌러보고 흐름을 확인할 수 있는 프로토타입으로 정리합니다.\n\n회의용 문서가 아니라 판단 가능한 첫 화면을 먼저 만듭니다.",
-      documentPrimaryCta: "프로젝트 상담하기",
-      documentSecondaryCta: "프로토타입 문의하기"
-    }
-  },
-  {
-    color: "mint",
-    content: "개발자가 아닙니다. 아이디어 프로토타이퍼입니다.",
-    metadata: {
-      widgetType: "document",
-      documentVariant: "section",
-      documentKicker: "정체성",
-      documentBody:
-        "저는 단순히 코드를 만드는 사람이 아닙니다.\n사람들의 머릿속에만 있던 서비스 아이디어를 빠르게 형태로 만들고, 직접 보고 만져보고 판단할 수 있게 바꾸는 사람입니다.\n\n누군가는 아이디어를 설명으로 끝냅니다. 저는 그것을 작동하는 화면, 흐름, 구조로 바꿉니다."
-    }
-  },
-  {
-    color: "blue",
-    content: "좋은 아이디어가 사라지는 이유는 대부분 실행 전 단계에 있습니다",
-    metadata: {
-      widgetType: "document",
-      documentVariant: "section",
-      documentKicker: "문제",
-      documentBody:
-        "많은 아이디어는 나빠서가 아니라 아직 보이지 않아서 멈춥니다.\n설명은 있는데 화면이 없고, 방향은 있는데 흐름이 없고, 판단은 해야 하는데 직접 써볼 수 있는 형태가 없습니다.\n\n머릿속에는 있는데 설명이 어렵다\n기획은 있는데 실제 모습이 없다\n외주 전에 먼저 확인 가능한 뼈대가 필요하다\n투자자나 팀원에게 보여줄 데모가 필요하다\n당장 검증 가능한 MVP가 필요하다"
-    }
-  },
-  {
-    color: "yellow",
-    content: "아이디어 시각화",
-    metadata: {
-      widgetType: "document",
-      documentVariant: "feature",
-      documentKicker: "핵심 역량",
-      documentBody: "막연한 구상, 메모, 대화 내용을 실제 서비스 구조와 화면 흐름으로 정리합니다."
-    }
-  },
-  {
-    color: "pink",
-    content: "프로토타입 제작",
-    metadata: {
-      widgetType: "document",
-      documentVariant: "feature",
-      documentKicker: "핵심 역량",
-      documentBody: "클릭하고 눌러보며 판단할 수 있는 프로토타입 또는 MVP 형태로 빠르게 구현합니다."
-    }
-  },
-  {
-    color: "green",
-    content: "서비스 구조 설계",
-    metadata: {
-      widgetType: "document",
-      documentVariant: "feature",
-      documentKicker: "핵심 역량",
-      documentBody: "단순한 화면이 아니라 사용 흐름, 기능 연결, 핵심 동작 구조까지 함께 설계합니다."
-    }
-  },
-  {
-    color: "orange",
-    content: "실행 가능성 검증",
-    metadata: {
-      widgetType: "document",
-      documentVariant: "feature",
-      documentKicker: "핵심 역량",
-      documentBody: "무작정 크게 시작하지 않고 먼저 빠르게 만들어보고, 써보고, 판단할 수 있게 합니다."
+      widgetType: "cover",
+      coverSubtitle:
+        "메모, 북마크, RSS, 할 일, 날씨, 트렌드, 타이머까지. WZD가 어떤 보드인지 첫 화면에서 바로 볼 수 있게 구성했습니다."
     }
   },
   {
     color: "white",
-    content: "왜 WZD Master인가",
+    content: "메모와 위젯을 같은 보드에서",
     metadata: {
       widgetType: "document",
-      documentVariant: "section",
-      documentKicker: "차별점",
+      documentVariant: "hero",
+      documentKicker: "ALL WIDGETS AT A GLANCE",
       documentBody:
-        "설명에서 끝내지 않습니다. 아이디어를 말로만 정리하지 않고 실제 형태로 보여줍니다.\n빠르게 구체화합니다. 긴 기획보다 먼저 확인 가능한 결과물을 만듭니다.\n기술과 기획을 함께 다룹니다. 예쁜 화면만 만드는 것이 아니라 실제로 작동 가능한 서비스 구조를 생각합니다.\n아이디어의 본질을 살립니다. 불필요한 기능을 늘리기보다 핵심 가치가 바로 보이게 만듭니다."
+        "WZD는 메모 앱이 아니라 위젯이 붙는 보드입니다.\n로그인하기 전에 어떤 카드들을 만들 수 있는지 전부 샘플로 보여줍니다.\n\n아래 카드들을 눌러보면 메모, 체크리스트, RSS, 날씨, 배송 추적, 프롬프트 보드까지 한 화면에서 어떻게 섞이는지 바로 감이 옵니다.",
+      documentPrimaryCta: "Google로 시작하기",
+      documentSecondaryCta: "샘플 보드 둘러보기"
     }
   },
   {
-    color: "purple",
-    content: "이런 팀과 아이디어에 잘 맞습니다",
+    color: "yellow",
+    content: "빠른 메모\n\n회의 전에 꼭 물어볼 질문 3개\n- 현재 병목은 어디인지\n- 이번 주 목표\n- 필요한 레퍼런스 링크"
+  },
+  {
+    color: "white",
+    content: "자주 여는 링크",
     metadata: {
-      widgetType: "document",
-      documentVariant: "section",
-      documentKicker: "대상",
-      documentBody:
-        "서비스 아이디어가 있는데 아직 형태가 없는 분\n창업 아이템을 빠르게 검증해보고 싶은 분\n외주 개발 전에 먼저 뼈대를 만들고 싶은 분\n투자, 제안, 발표용 데모가 필요한 분\n머릿속 구상을 실제 화면으로 보고 싶은 분"
+      widgetType: "bookmark",
+      bookmarkUrls: ["https://openai.com", "https://calendar.google.com", "https://www.figma.com"]
     }
   },
   {
-    color: "blue",
-    content: "아이디어가 서비스가 되는 과정",
+    color: "white",
+    content: "AI 뉴스",
     metadata: {
-      widgetType: "document",
-      documentVariant: "section",
-      documentKicker: "진행 방식",
-      documentBody:
-        "1. 아이디어 수집. 메모, 대화, 기획서, 음성, 러프한 설명도 괜찮습니다.\n2. 핵심 구조 정리. 무엇이 핵심인지, 무엇부터 보여줘야 하는지 먼저 정리합니다.\n3. 프로토타입 설계 및 구현. 화면, 흐름, 기능 구조를 실제로 만듭니다.\n4. 직접 보고 판단. 설명이 아니라 결과물을 기준으로 수정하고 발전시킵니다."
+      widgetType: "rss",
+      feedUrl: DEFAULT_RSS_FEED_URL
     }
   },
   {
     color: "mint",
-    content: "상상은 누구나 합니다. 하지만 보여주는 사람은 드뭅니다.",
+    content: "오늘 할 일",
+    metadata: {
+      widgetType: "checklist",
+      checklistItems: [
+        { text: "피드백 확인", checked: true },
+        { text: "와이어프레임 수정", checked: false },
+        { text: "공유 링크 정리", checked: false }
+      ],
+      checklistText: "[x] 피드백 확인\n[ ] 와이어프레임 수정\n[ ] 공유 링크 정리"
+    }
+  },
+  {
+    color: "pink",
+    content: "서비스 오픈",
+    metadata: {
+      widgetType: "countdown",
+      targetDate: "2026-04-14",
+      countdownDescription: "런칭 전 최종 점검과 공유 문서 마감일"
+    }
+  },
+  {
+    color: "blue",
+    content: "주간 시간표",
+    metadata: {
+      widgetType: "timetable",
+      timetableText: DEFAULT_TIMETABLE_TEXT
+    }
+  },
+  {
+    color: "blue",
+    content: "서울 날씨",
+    metadata: {
+      widgetType: "weather",
+      weatherQuery: "서울"
+    }
+  },
+  {
+    color: "orange",
+    content: "지금 뜨는 키워드",
+    metadata: {
+      widgetType: "trending",
+      trendingRegion: "KR"
+    }
+  },
+  {
+    color: "white",
+    content: "배송 추적 샘플",
+    metadata: {
+      widgetType: "delivery",
+      deliveryCarrierId: DEFAULT_DELIVERY_CARRIER,
+      deliveryTrackingNumber: "",
+      deliveryLabel: "도착 예정 택배"
+    }
+  },
+  {
+    color: "mint",
+    content: "모찌 상태",
+    metadata: {
+      widgetType: "pet",
+      petName: "모찌"
+    }
+  },
+  {
+    color: "white",
+    content: "짧은 기획 문서",
     metadata: {
       widgetType: "document",
-      documentVariant: "cta",
-      documentKicker: "BRAND MESSAGE",
+      documentVariant: "section",
+      documentKicker: "DOC WIDGET",
       documentBody:
-        "아이디어는 많지만 대부분은 말로만 남습니다.\nWZD Master는 그 아이디어가 사라지지 않도록 직접 보고, 만져보고, 검증할 수 있는 첫 형태로 바꿉니다.\n\n아이디어를 현실로 옮기는 가장 빠른 시작점을 만듭니다.",
-      documentPrimaryCta: "아이디어 보내기",
-      documentSecondaryCta: "프로토타입 문의하기"
+        "긴 문장을 보드 안에 바로 올려둘 수 있습니다.\n회의 전 공유할 요약, 기능 설명, 간단한 제안문을 카드처럼 붙여두는 용도입니다.",
+      documentPrimaryCta: "",
+      documentSecondaryCta: ""
+    }
+  },
+  {
+    color: "purple",
+    content: "집중 타이머",
+    metadata: {
+      widgetType: "focus",
+      focusDurationMinutes: 25,
+      focusStartedAt: "",
+      focusElapsedSeconds: 0
+    }
+  },
+  {
+    color: "pink",
+    content: "오늘의 기분",
+    metadata: {
+      widgetType: "mood",
+      moodEmoji: "😎",
+      moodNote: "집중 잘 되는 날. 오후에 중요한 회의 하나 남음.",
+      moodEnergy: 4
+    }
+  },
+  {
+    color: "green",
+    content: "매일 루틴",
+    metadata: {
+      widgetType: "routine",
+      routineItems: [
+        { text: "아침 정리", checked: true },
+        { text: "핵심 작업 1개", checked: false },
+        { text: "하루 회고", checked: false }
+      ],
+      routineText: "[x] 아침 정리\n[ ] 핵심 작업 1개\n[ ] 하루 회고"
+    }
+  },
+  {
+    color: "white",
+    content: "AI 초안 프롬프트",
+    metadata: {
+      widgetType: "prompt",
+      promptText:
+        "당신은 서비스 기획 초안을 구조화하는 조력자입니다.\n\n주제:\n목표:\n핵심 사용자:\n필수 기능 3개:\n\n위 내용을 기준으로 짧은 제품 초안을 작성하세요."
+    }
+  },
+  {
+    color: "yellow",
+    content: "오늘 점심 추천",
+    metadata: {
+      widgetType: "food",
+      foodRegion: "서울 금천구",
+      foodSeed: 1
     }
   }
 ];
@@ -996,12 +1045,12 @@ const createTemplateBoardSnapshot = (
 const createHomeLandingSnapshot = (userId: string, columnCount: number) => {
   const timestamp = nowIso();
   const board = createDefaultBoard(userId, "WZD Master");
-  board.description = "아이디어를 프로토타입으로 바꾸는 WZD Master 랜딩 보드";
+  board.description = "메모와 위젯을 한눈에 보여주는 WZD 샘플 랜딩 보드";
   board.backgroundStyle = "paper";
   board.settings = {
     ...board.settings,
     homeBoard: true,
-    layoutStyle: "balanced"
+    layoutStyle: "compact"
   };
   board.updatedAt = timestamp;
 
@@ -4588,10 +4637,10 @@ const App = () => {
           ? {
               ...board,
               backgroundStyle: "paper",
-              description: "아이디어를 프로토타입으로 바꾸는 WZD Master 랜딩 보드",
+              description: "메모와 위젯을 한눈에 보여주는 WZD 샘플 랜딩 보드",
               settings: {
                 ...board.settings,
-                layoutStyle: "balanced"
+                layoutStyle: "compact"
               },
               updatedAt: timestamp
             }
