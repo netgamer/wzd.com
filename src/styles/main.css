@@ -1729,9 +1729,9 @@ button {
 }
 
 .home-page .pin-board {
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  align-items: start;
-  gap: 28px 24px;
+  grid-template-columns: repeat(var(--pin-columns, 4), minmax(0, 1fr));
+  align-items: stretch;
+  gap: 20px;
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -1757,11 +1757,9 @@ button {
 }
 
 .home-page .landing-flow-column {
-  display: contents;
-}
-
-.home-page .pin-card-slot {
-  grid-column: span 3;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .home-page .landing-slot {
@@ -1770,22 +1768,18 @@ button {
 
 .home-page .landing-slot-hero {
   order: 10;
-  grid-column: 1 / -1;
 }
 
 .home-page .landing-slot-feature {
   order: 20;
-  grid-column: span 3;
 }
 
 .home-page .landing-slot-section {
   order: 30;
-  grid-column: span 6;
 }
 
 .home-page .landing-slot-cta {
   order: 40;
-  grid-column: span 6;
 }
 
 .pin-card {
@@ -4100,18 +4094,12 @@ button {
   }
 
   .home-page .pin-board {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--pin-columns, 2), minmax(0, 1fr));
     gap: 18px;
   }
 
-  .home-page .pin-card-slot,
-  .home-page .landing-slot-feature {
-    grid-column: span 3;
-  }
-
-  .home-page .landing-slot-section,
-  .home-page .landing-slot-cta {
-    grid-column: span 6;
+  .home-page .landing-flow-column {
+    gap: 18px;
   }
 
   .home-page .document-widget.hero {
@@ -4222,22 +4210,8 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .home-page .pin-card-slot {
-    grid-column: 1 / -1;
-  }
-
-  .home-page .landing-slot-feature:nth-of-type(1),
-  .home-page .landing-slot-feature:nth-of-type(2),
-  .home-page .landing-slot-feature:nth-of-type(3),
-  .home-page .landing-slot-feature:nth-of-type(4),
-  .home-page .landing-slot-section:nth-of-type(1),
-  .home-page .landing-slot-section:nth-of-type(2),
-  .home-page .landing-slot-section:nth-of-type(3),
-  .home-page .landing-slot-section:nth-of-type(4),
-  .home-page .landing-slot-section:nth-of-type(5),
-  .home-page .landing-slot-hero,
-  .home-page .landing-slot-cta {
-    grid-column: 1 / -1;
+  .home-page .landing-flow-column {
+    gap: 16px;
   }
 
   .home-page .document-widget.hero {

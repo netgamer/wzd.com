@@ -1087,7 +1087,7 @@ const createHomeLandingSnapshot = (userId: string, columnCount: number) => {
 
   return {
     board,
-    notes: autoOrganizeBoardNotes(notes, board.id, columnCount, "balanced").filter((note) => note.boardId === board.id)
+    notes: autoOrganizeBoardNotes(notes, board.id, columnCount, "compact").filter((note) => note.boardId === board.id)
   };
 };
 
@@ -2119,18 +2119,6 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   const noteUrl = extractFirstUrl(note.content);
   if (noteUrl && isImageUrl(noteUrl)) return 2;
   if (noteUrl) return 3;
-
-  return 4;
-};
-
-const getHomeLandingVariantPriority = (note: NoteV2) => {
-  if (getWidgetType(note) !== "document") return 4;
-
-  const variant = getDocumentVariant(note);
-  if (variant === "hero") return 0;
-  if (variant === "feature") return 1;
-  if (variant === "section") return 2;
-  if (variant === "cta") return 3;
 
   return 4;
 };
@@ -3772,25 +3760,6 @@ const App = () => {
   const visibleNotes = useMemo(
     () => filteredNotes.slice(0, visibleNoteCount),
     [filteredNotes, visibleNoteCount]
-  );
-  const homeLandingNotes = useMemo(
-    () =>
-      visibleNotes
-        .map((note, index) => ({ note, index }))
-        .sort((a, b) => {
-          const variantDiff = getHomeLandingVariantPriority(a.note) - getHomeLandingVariantPriority(b.note);
-          if (variantDiff !== 0) {
-            return variantDiff;
-          }
-
-          if (a.note.pinned !== b.note.pinned) {
-            return a.note.pinned ? -1 : 1;
-          }
-
-          return a.index - b.index;
-        })
-        .map(({ note }) => note),
-    [visibleNotes]
   );
   const visibleColumns = useMemo(
     () => groupNotesByColumn(visibleNotes, columnCount),
@@ -7310,7 +7279,7 @@ const App = () => {
                 <div className="feed-empty">보관된 메모가 없습니다.</div>
               )
             ) : (
-              (isHomeView ? [homeLandingNotes] : visibleColumns).map((columnNotes, columnIndex) => (
+              visibleColumns.map((columnNotes, columnIndex) => (
                 <div
                   key={`column-${columnIndex}`}
                   className={`pin-column ${isHomeView ? "landing-flow-column" : ""}`.trim()}
