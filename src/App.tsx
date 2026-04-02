@@ -224,6 +224,35 @@ const SettingsIcon = () => (
   </svg>
 );
 
+const SparkleIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M12 3.5l1.8 4.7 4.7 1.8-4.7 1.8L12 16.5l-1.8-4.7-4.7-1.8 4.7-1.8L12 3.5Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M18.5 4.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
 const VISIBLE_NOTE_BATCH_SIZE = 16;
@@ -6615,11 +6644,6 @@ const App = () => {
                 )}
               </div>
             )}
-            {!compactHeader && !isReadOnlyBoardView && feedMode === "active" && selectedBoard && (
-              <button className="ghost-action" onClick={organizeCurrentBoard}>
-                자동 정리
-              </button>
-            )}
             {!compactHeader && canShareBoard && (
               <button className="ghost-action" onClick={() => void shareBoard()}>
                 보드 공유
@@ -6695,20 +6719,6 @@ const App = () => {
                       ↩
                     </span>
                     <span>작업공간</span>
-                  </button>
-                )}
-                {!isReadOnlyBoardView && feedMode === "active" && selectedBoard && (
-                  <button
-                    className="mobile-board-action"
-                    onClick={() => {
-                      organizeCurrentBoard();
-                      setMobileBoardMenuOpen(false);
-                    }}
-                  >
-                    <span className="mobile-board-action-icon" aria-hidden="true">
-                      ✦
-                    </span>
-                    <span>자동 정리</span>
                   </button>
                 )}
                 {!isReadOnlyBoardView && feedMode === "active" && selectedBoard && (
@@ -7228,6 +7238,18 @@ const App = () => {
           <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">
+                {!isReadOnlyBoardView && feedMode === "active" && selectedBoard && (
+                  <button
+                    className="trust-icon-button"
+                    onClick={organizeCurrentBoard}
+                    aria-label="자동 정리"
+                    title="자동 정리"
+                  >
+                    <span className="trust-icon-glyph" aria-hidden="true">
+                      <SparkleIcon />
+                    </span>
+                  </button>
+                )}
                 <span className={`trust-chip save-state-${cloudSaveState}`}>
                   {persistenceStatusLabel}
                 </span>
