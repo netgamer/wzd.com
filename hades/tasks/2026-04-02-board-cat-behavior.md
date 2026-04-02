@@ -55,3 +55,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 - 2026-04-03: remap wait, leap, and drop poses to exact EXE frames for up-look idle, up-jump, down-look idle, and down-dive motion
 - 2026-04-03: exclude topmost clipped cards from walkable surfaces so the cat never jumps to positions where its body is hidden
 - 2026-04-03: correct the top-card idle pose to the seated upward-looking EXE frame requested by the user
+- 2026-04-03: correct the drop pose to the crouched downward-looking EXE frame requested by the user
