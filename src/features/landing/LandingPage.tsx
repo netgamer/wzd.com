@@ -60,6 +60,78 @@ const LandingPage = () => {
           </div>
         </section>
 
+        <section className="landing-widgets">
+          <div className="landing-widgets-inner">
+            <div className="landing-section-header">
+              <p className="landing-section-kicker">다양한 위젯</p>
+              <h2>필요한 모든 도구가 한 곳에</h2>
+              <p className="landing-section-desc">메모 외에도 다양한 위젯으로 일상을 관리하세요</p>
+            </div>
+            <div className="landing-widgets-grid">
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">RSS</div>
+                <h4>RSS 리더</h4>
+                <p>좋아하는 블로그와 뉴스를 한 곳에서</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">BM</div>
+                <h4>북마크</h4>
+                <p>중요한 링크를 깔끔하게 정리</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">TODO</div>
+                <h4>할 일 목록</h4>
+                <p>오늘 할 일을 체크리스트로</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">D-</div>
+                <h4>디데이</h4>
+                <p>중요한 날까지 남은 시간 확인</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">CAL</div>
+                <h4>시간표</h4>
+                <p>주간 일정을 한눈에</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">SUN</div>
+                <h4>날씨</h4>
+                <p>오늘의 날씨를 빠르게 확인</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">HOT</div>
+                <h4>실시간 트렌드</h4>
+                <p>지금 뜨는 키워드 모아보기</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">BOX</div>
+                <h4>배송 추적</h4>
+                <p>택배 배송 현황을 실시간으로</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">DOC</div>
+                <h4>문서</h4>
+                <p>긴 글도 깔끔하게 작성</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">FOCUS</div>
+                <h4>집중 타이머</h4>
+                <p>뽀모도로 기법으로 집중력 UP</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">MOOD</div>
+                <h4>감정 기록</h4>
+                <p>오늘의 기분을 간단히 기록</p>
+              </div>
+              <div className="landing-widget-card">
+                <div className="landing-widget-icon">AI</div>
+                <h4>AI 프롬프트</h4>
+                <p>자주 쓰는 프롬프트 저장</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="landing-showcase">
           <div className="landing-showcase-inner">
             <h2>당신의 두 번째 뇌</h2>

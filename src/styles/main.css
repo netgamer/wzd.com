@@ -4466,6 +4466,91 @@ button {
   color: #6b5d4d;
 }
 
+.landing-widgets {
+  padding: 80px 24px;
+}
+
+.landing-widgets-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.landing-section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.landing-section-kicker {
+  margin: 0 0 12px;
+  color: #e60023;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.landing-section-header h2 {
+  margin: 0 0 16px;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1f1a13;
+}
+
+.landing-section-desc {
+  margin: 0;
+  font-size: 16px;
+  color: #6b5d4d;
+}
+
+.landing-widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.landing-widget-card {
+  padding: 20px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(31, 26, 19, 0.06);
+  box-shadow: 0 4px 16px rgba(31, 26, 19, 0.03);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.landing-widget-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(31, 26, 19, 0.08);
+}
+
+.landing-widget-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #1f1a13 0%, #3a3228 100%);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.landing-widget-card h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f1a13;
+}
+
+.landing-widget-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #8a7c6d;
+}
+
 .landing-showcase {
   padding: 100px 24px;
   text-align: center;
