@@ -7688,6 +7688,12 @@ const App = () => {
                             </div>
                           )}
 
+                          {useImageHeroCard && (
+                            <div className="image-note-caption" aria-hidden="true">
+                              <p className="image-note-caption-title">{displayTitle}</p>
+                            </div>
+                          )}
+
                           <div className="pin-card-head">
                             <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
                             {!isReadOnlyBoardView && (
