@@ -2529,6 +2529,8 @@ const App = () => {
   const saveStateResetTimerRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const boardGridRef = useRef<HTMLElement | null>(null);
+  const mobileBoardTabsRef = useRef<HTMLDivElement | null>(null);
+  const mobileBoardTabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const boardLongPressTimerRef = useRef<number | null>(null);
   const boardSwipeStartRef = useRef<{ x: number; y: number; active: boolean }>({
     x: 0,
@@ -4248,6 +4250,32 @@ const App = () => {
       setSelectedBoardId(activeBoards[0].id);
     }
   }, [activeBoards, selectedBoard]);
+
+  useEffect(() => {
+    if (!mobileViewport || feedMode !== "active" || !selectedBoard?.id) {
+      return;
+    }
+
+    const tab = mobileBoardTabRefs.current[selectedBoard.id];
+    const container = mobileBoardTabsRef.current;
+    if (!tab || !container) {
+      return;
+    }
+
+    const containerRect = container.getBoundingClientRect();
+    const tabRect = tab.getBoundingClientRect();
+    const leftGap = tabRect.left - containerRect.left;
+    const rightGap = tabRect.right - containerRect.right;
+
+    if (leftGap < 0) {
+      container.scrollBy({ left: leftGap - 12, behavior: "smooth" });
+      return;
+    }
+
+    if (rightGap > 0) {
+      container.scrollBy({ left: rightGap + 12, behavior: "smooth" });
+    }
+  }, [mobileViewport, feedMode, selectedBoard?.id]);
 
   useEffect(() => {
     setBoardTitleDraft(selectedBoard?.title ?? "");
@@ -7255,13 +7283,16 @@ const App = () => {
           )}
 
           {compactHeader && feedMode === "active" && activeBoards.length > 1 && (
-            <div className="mobile-board-tabs" role="tablist" aria-label="보드 목록">
+            <div className="mobile-board-tabs" role="tablist" aria-label="보드 목록" ref={mobileBoardTabsRef}>
               {activeBoards.map((boardItem) => (
                 <button
                   key={`mobile-tab-${boardItem.id}`}
                   role="tab"
                   aria-selected={selectedBoard?.id === boardItem.id}
                   className={`mobile-board-tab ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
+                  ref={(node) => {
+                    mobileBoardTabRefs.current[boardItem.id] = node;
+                  }}
                   onClick={() => {
                     setSelectedBoardId(boardItem.id);
                     setSelectedNoteId(null);
