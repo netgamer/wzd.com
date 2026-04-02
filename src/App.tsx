@@ -65,6 +65,7 @@ type WidgetType =
   | "checklist"
   | "countdown"
   | "timetable"
+  | "clock"
   | "weather"
   | "trending"
   | "delivery"
@@ -77,6 +78,7 @@ type WidgetType =
   | "prompt"
   | "food";
 type DocumentWidgetVariant = "hero" | "section" | "feature" | "cta";
+type ClockWidgetMode = "digital" | "analog";
 type ChecklistItem = { text: string; checked: boolean };
 type TimetableEntry = { day: string; start: string; end: string; title: string; location: string };
 type FoodCategoryKey = "chef" | "instagram" | "trending";
@@ -271,6 +273,7 @@ const DEFAULT_TIMETABLE_TEXT = [
   "목|15:00|16:00|피드백 정리|노트북",
   "금|16:30|17:30|다음 주 준비|라운지"
 ].join("\n");
+const DEFAULT_CLOCK_MODE: ClockWidgetMode = "digital";
 const DEFAULT_WEATHER_QUERY = "서울";
 const DEFAULT_TRENDING_REGION = "KR";
 const DEFAULT_DELIVERY_CARRIER = "kr.cjlogistics";
@@ -1653,6 +1656,7 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "checklist" ||
   note.metadata?.widgetType === "countdown" ||
   note.metadata?.widgetType === "timetable" ||
+  note.metadata?.widgetType === "clock" ||
   note.metadata?.widgetType === "weather" ||
   note.metadata?.widgetType === "trending" ||
   note.metadata?.widgetType === "delivery" ||
@@ -1923,6 +1927,11 @@ const getTimetableText = (note: NoteV2) =>
 
 const getTimetableEntries = (note: NoteV2) => parseTimetableEntries(getTimetableText(note));
 
+const isClockWidgetMode = (value: unknown): value is ClockWidgetMode => value === "digital" || value === "analog";
+
+const getClockMode = (note: NoteV2): ClockWidgetMode =>
+  isClockWidgetMode(note.metadata?.clockMode) ? note.metadata.clockMode : DEFAULT_CLOCK_MODE;
+
 const getWeatherQuery = (note: NoteV2) =>
   typeof note.metadata?.weatherQuery === "string" && note.metadata.weatherQuery.trim()
     ? note.metadata.weatherQuery.trim()
@@ -2005,6 +2014,20 @@ const getPetStage = (visitCount: number) => {
 };
 
 const formatTimeRange = (start: string, end: string) => `${start}~${end}`;
+const formatClockTime = (value: Date) =>
+  value.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  });
+
+const formatClockDate = (value: Date) =>
+  value.toLocaleDateString("ko-KR", {
+    month: "long",
+    day: "numeric",
+    weekday: "short"
+  });
 
 const formatCountdownLabel = (targetDate: string) => {
   if (!targetDate) {
@@ -2194,6 +2217,7 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   if (widgetType === "cover") return -1;
   if (widgetType === "document") return 0;
   if (widgetType === "focus") return 1;
+  if (widgetType === "clock") return 1;
   if (widgetType === "mood") return 2;
   if (widgetType === "routine") return 2;
   if (widgetType === "prompt") return 1;
@@ -2227,6 +2251,7 @@ type AutoLayoutCategory =
   | "checklist"
   | "countdown"
   | "timetable"
+  | "clock"
   | "weather"
   | "trending"
   | "delivery"
@@ -2267,6 +2292,7 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   if (widgetType === "checklist") return "checklist";
   if (widgetType === "countdown") return "countdown";
   if (widgetType === "timetable") return "timetable";
+  if (widgetType === "clock") return "clock";
   if (widgetType === "weather") return "weather";
   if (widgetType === "trending") return "trending";
   if (widgetType === "delivery") return "delivery";
@@ -2351,6 +2377,7 @@ const getPreferredColumns = (
     case "checklist":
     case "countdown":
     case "timetable":
+    case "clock":
     case "weather":
     case "trending":
     case "delivery":
@@ -2381,6 +2408,7 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
   if (widgetType === "checklist") return layoutStyle === "compact" ? 250 : 290;
   if (widgetType === "countdown") return layoutStyle === "compact" ? 210 : 240;
   if (widgetType === "timetable") return layoutStyle === "compact" ? 260 : 320;
+  if (widgetType === "clock") return layoutStyle === "compact" ? 220 : 260;
   if (widgetType === "weather") return layoutStyle === "compact" ? 220 : 260;
   if (widgetType === "trending") return layoutStyle === "compact" ? 250 : 300;
   if (widgetType === "delivery") return layoutStyle === "compact" ? 230 : 280;
@@ -2874,6 +2902,98 @@ const App = () => {
             </div>
           ) : (
             <p className="rss-empty">날씨 정보를 불러오는 중입니다.</p>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "clock") {
+      const clockMode = getClockMode(note);
+      const currentTime = new Date(focusNow);
+      const hour = currentTime.getHours() % 12;
+      const minute = currentTime.getMinutes();
+      const second = currentTime.getSeconds();
+      const hourRotation = hour * 30 + minute * 0.5;
+      const minuteRotation = minute * 6 + second * 0.1;
+      const secondRotation = second * 6;
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">CLOCK</span>
+            <p className="pin-title">{asText(note.content).trim() || "시계"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="시계 위젯 제목"
+              />
+              <label className="widget-field">
+                <span>시계 형식</span>
+                <select
+                  className="widget-input"
+                  value={clockMode}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onChange={(event) =>
+                    updateNote(note.id, {
+                      metadata: {
+                        ...note.metadata,
+                        widgetType: "clock",
+                        clockMode: isClockWidgetMode(event.target.value) ? event.target.value : DEFAULT_CLOCK_MODE
+                      }
+                    })
+                  }
+                >
+                  <option value="digital">디지털 시계</option>
+                  <option value="analog">아날로그 시계</option>
+                </select>
+              </label>
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`clock-widget ${clockMode} ${compact ? "compact" : ""}`}>
+              {clockMode === "digital" ? (
+                <>
+                  <div className="clock-digital-time">{formatClockTime(currentTime)}</div>
+                  <div className="clock-digital-date">{formatClockDate(currentTime)}</div>
+                </>
+              ) : (
+                <>
+                  <div className="clock-analog-face" aria-hidden="true">
+                    <span className="clock-analog-mark top" />
+                    <span className="clock-analog-mark right" />
+                    <span className="clock-analog-mark bottom" />
+                    <span className="clock-analog-mark left" />
+                    <span className="clock-analog-hand hour" style={{ transform: `translateX(-50%) rotate(${hourRotation}deg)` }} />
+                    <span
+                      className="clock-analog-hand minute"
+                      style={{ transform: `translateX(-50%) rotate(${minuteRotation}deg)` }}
+                    />
+                    <span
+                      className="clock-analog-hand second"
+                      style={{ transform: `translateX(-50%) rotate(${secondRotation}deg)` }}
+                    />
+                    <span className="clock-analog-center" />
+                  </div>
+                  <div className="clock-analog-caption">
+                    <strong>{formatClockTime(currentTime).slice(0, 5)}</strong>
+                    <span>{formatClockDate(currentTime)}</span>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </>
       );
@@ -5389,6 +5509,37 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addClockWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "시계"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "clock",
+      clockMode: DEFAULT_CLOCK_MODE
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const addTrendingWidget = () => {
     if (!selectedBoard) {
       return;
@@ -5729,6 +5880,9 @@ const App = () => {
       </button>
       <button className="widget-menu-item" onClick={addTimetableWidget}>
         시간표
+      </button>
+      <button className="widget-menu-item" onClick={addClockWidget}>
+        시계
       </button>
       <button className="widget-menu-item" onClick={addWeatherWidget}>
         날씨

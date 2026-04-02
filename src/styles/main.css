@@ -4616,6 +4616,133 @@ button {
   gap: 12px;
 }
 
+.clock-widget {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding: 8px 0 2px;
+}
+
+.clock-widget.digital {
+  justify-items: start;
+}
+
+.clock-digital-time {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-digital-date {
+  font-size: 13px;
+  color: rgba(31, 26, 19, 0.66);
+  font-weight: 600;
+}
+
+.clock-analog-face {
+  position: relative;
+  width: 152px;
+  height: 152px;
+  border-radius: 50%;
+  border: 6px solid rgba(255, 255, 255, 0.9);
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.95) 0 58%, rgba(244, 236, 227, 0.9) 58% 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 18px 36px rgba(34, 23, 12, 0.12);
+}
+
+.clock-analog-mark {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 4px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(31, 26, 19, 0.3);
+  transform: translateX(-50%);
+}
+
+.clock-analog-mark.right {
+  left: auto;
+  right: 8px;
+  top: 50%;
+  width: 16px;
+  height: 4px;
+  transform: translateY(-50%);
+}
+
+.clock-analog-mark.bottom {
+  top: auto;
+  bottom: 8px;
+}
+
+.clock-analog-mark.left {
+  left: 8px;
+  top: 50%;
+  width: 16px;
+  height: 4px;
+  transform: translateY(-50%);
+}
+
+.clock-analog-hand {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  transform-origin: 50% 100%;
+  border-radius: 999px;
+}
+
+.clock-analog-hand.hour {
+  width: 6px;
+  height: 40px;
+  background: rgba(31, 26, 19, 0.88);
+}
+
+.clock-analog-hand.minute {
+  width: 4px;
+  height: 56px;
+  background: rgba(31, 26, 19, 0.76);
+}
+
+.clock-analog-hand.second {
+  width: 2px;
+  height: 62px;
+  background: linear-gradient(180deg, #ff6d4a 0%, #9c58ff 100%);
+}
+
+.clock-analog-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #1f1a13;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.75);
+}
+
+.clock-analog-caption {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+
+.clock-analog-caption strong {
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-analog-caption span {
+  font-size: 12px;
+  color: rgba(31, 26, 19, 0.66);
+}
+
 .weather-current {
   display: flex;
   align-items: center;
@@ -4640,6 +4767,31 @@ button {
   display: block;
   font-size: 12px;
   color: rgba(31, 26, 19, 0.72);
+}
+
+.clock-widget.compact {
+  gap: 10px;
+}
+
+.clock-widget.compact .clock-digital-time {
+  font-size: 30px;
+}
+
+.clock-widget.compact .clock-analog-face {
+  width: 132px;
+  height: 132px;
+}
+
+.clock-widget.compact .clock-analog-hand.hour {
+  height: 34px;
+}
+
+.clock-widget.compact .clock-analog-hand.minute {
+  height: 48px;
+}
+
+.clock-widget.compact .clock-analog-hand.second {
+  height: 54px;
 }
 
 .weather-forecast-item {
