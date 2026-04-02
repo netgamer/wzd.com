@@ -50,3 +50,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 
 - 2026-04-02: tighten cling targeting so the cat anchors to a card's outer left/right wall instead of occasionally sticking to the card face interior
 - 2026-04-02: remove wall-cling entirely and replace it with edge-wait plus jump-to-surface motion
+- 2026-04-03: raise card surface anchoring so the cat walks on the top border line instead of sinking into note content

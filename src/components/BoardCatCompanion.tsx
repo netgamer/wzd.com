@@ -119,7 +119,8 @@ const measureLayout = (overlay: HTMLDivElement, board: HTMLElement, preset: Spri
         bottom,
         width: rect.width,
         height: rect.height,
-        surfaceY: top - preset.frameHeight + 14
+        // Keep the cat's feet on the card's top edge, never inside the body.
+        surfaceY: top - preset.frameHeight + 2
       };
     })
     .filter((card) => card.bottom > -20 && card.top < overlayRect.height + 40);
