@@ -4662,6 +4662,14 @@ const App = () => {
     setMobileBoardMenuOpen(false);
   };
 
+  useEffect(() => {
+    if (!authChecked || !user || !homeBoardRoute || sharedBoardSlug || pendingAuthHash) {
+      return;
+    }
+
+    navigateToWorkspace();
+  }, [authChecked, user, homeBoardRoute, sharedBoardSlug, pendingAuthHash]);
+
   const insertHomeLandingContent = () => {
     if (!selectedBoard || !isBoardOwner) {
       return;
