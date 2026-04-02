@@ -2308,6 +2308,7 @@ const autoOrganizeBoardNotes = (
 
 const App = () => {
   const [user, setUser] = useState<AuthUserProfile | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [boards, setBoards] = useState<BoardV2[]>(() => createDefaultSnapshot().boards);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(() => createDefaultSnapshot().selectedBoardId);
   const [boardTitleDraft, setBoardTitleDraft] = useState("");
@@ -3750,6 +3751,7 @@ const App = () => {
           console.error("Failed to sync user profile", error);
         });
       }
+      setAuthChecked(true);
     });
 
     const {
@@ -6309,7 +6311,8 @@ const App = () => {
   );
 
   // Show landing page for non-logged-in users (except for shared board views)
-  if (!user && !isReadOnlyBoardView) {
+  // Wait for auth check to complete before showing landing page
+  if (!user && !isReadOnlyBoardView && authChecked) {
     return <LandingPage />;
   }
 
