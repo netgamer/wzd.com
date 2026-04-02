@@ -1777,23 +1777,6 @@ button {
   border-radius: 14px;
 }
 
-.board-page .trust-icon-button {
-  width: 28px;
-  height: 28px;
-  background: rgba(96, 70, 42, 0.06);
-  border-radius: 14px;
-}
-
-.board-page .trust-icon-glyph {
-  width: 14px;
-  height: 14px;
-}
-
-.board-page .trust-icon-glyph svg {
-  width: 14px;
-  height: 14px;
-}
-
 .board-page .trust-actions {
   margin-top: 0;
   margin-left: auto;
@@ -1858,43 +1841,6 @@ button {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
-}
-
-.trust-icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border-radius: 999px;
-  background: rgba(79, 60, 39, 0.08);
-  color: #6d5e4f;
-  cursor: pointer;
-  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
-}
-
-.trust-icon-button:hover {
-  background: rgba(79, 60, 39, 0.14);
-  transform: translateY(-1px);
-}
-
-.trust-icon-button:focus-visible {
-  outline: 2px solid rgba(230, 0, 35, 0.22);
-  outline-offset: 2px;
-}
-
-.trust-icon-glyph {
-  width: 16px;
-  height: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.trust-icon-glyph svg {
-  width: 16px;
-  height: 16px;
 }
 
 .trust-chip.save-state-saving {

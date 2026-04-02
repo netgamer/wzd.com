@@ -224,35 +224,6 @@ const SettingsIcon = () => (
   </svg>
 );
 
-const SparkleIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path
-      d="M12 3.5l1.8 4.7 4.7 1.8-4.7 1.8L12 16.5l-1.8-4.7-4.7-1.8 4.7-1.8L12 3.5Z"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M18.5 4.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M5.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
 const SidebarToggleIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path
@@ -5695,16 +5666,6 @@ const App = () => {
     </>
   );
 
-  const organizeCurrentBoard = () => {
-    if (!selectedBoard) {
-      return;
-    }
-
-    const nextColumnCount = getColumnCount();
-    setNotes((prev) => autoOrganizeBoardNotes(prev, selectedBoard.id, nextColumnCount, getBoardLayoutStyle(selectedBoard)));
-    touchBoard(selectedBoard.id);
-  };
-
   const updateBoardLayoutStyle = (boardId: string, layoutStyle: BoardLayoutStyle) => {
     setBoards((prev) =>
       prev.map((board) =>
@@ -7456,18 +7417,6 @@ const App = () => {
           <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">
-                {!isReadOnlyBoardView && feedMode === "active" && selectedBoard && (
-                  <button
-                    className="trust-icon-button"
-                    onClick={organizeCurrentBoard}
-                    aria-label="자동 정리"
-                    title="자동 정리"
-                  >
-                    <span className="trust-icon-glyph" aria-hidden="true">
-                      <SparkleIcon />
-                    </span>
-                  </button>
-                )}
                 <span className={`trust-chip save-state-${cloudSaveState}`}>
                   {persistenceStatusLabel}
                 </span>
