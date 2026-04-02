@@ -286,7 +286,7 @@ const DEFAULT_TRENDING_REGION = "KR";
 const DEFAULT_DELIVERY_CARRIER = "kr.cjlogistics";
 const DEFAULT_PET_NAME = "모찌";
 const DEFAULT_COVER_SUBTITLE = "링크와 메모를 한 장의 보드로 정리해보세요.";
-const DEFAULT_DOCUMENT_KICKER = "WZD MASTER";
+const DEFAULT_DOCUMENT_KICKER = "";
 const DEFAULT_DOCUMENT_BODY =
   "말뿐인 구상을 빠르게 검증 가능한 프로토타입으로 바꾸는 아이디어 프로토타이퍼입니다.";
 const DEFAULT_DOCUMENT_VARIANT: DocumentWidgetVariant = "section";
