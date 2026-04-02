@@ -1411,6 +1411,39 @@ const isHomeBoardLocation = () => {
 
   return window.location.pathname === "/" && !window.location.hash;
 };
+
+const hasPendingAuthHash = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const rawHash = window.location.hash.replace(/^#/, "").trim();
+  if (!rawHash) {
+    return false;
+  }
+
+  const params = new URLSearchParams(rawHash);
+  return (
+    params.has("access_token") ||
+    params.has("refresh_token") ||
+    params.has("provider_token") ||
+    params.has("error") ||
+    params.has("error_code")
+  );
+};
+
+const hasStoredSupabaseSession = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    return Object.keys(window.localStorage).some((key) => key.startsWith("sb-") && key.endsWith("-auth-token"));
+  } catch {
+    return false;
+  }
+};
+
 const getSharedBoardSlugFromLocation = () => {
   if (typeof window === "undefined") {
     return null;
@@ -2442,6 +2475,9 @@ const App = () => {
   const trashedBoards = useMemo(() => orderedBoards.filter((board) => isBoardTrashed(board)), [orderedBoards]);
   const isSharedView = Boolean(sharedBoardSlug && sharedBoardReadOnly);
   const isReadOnlyBoardView = Boolean((sharedBoardSlug || homeBoardRoute) && sharedBoardReadOnly);
+  const pendingAuthHash = hasPendingAuthHash();
+  const storedSupabaseSession = hasStoredSupabaseSession();
+  const waitingForAuthResolution = !user && !authChecked && !isSharedView && (pendingAuthHash || storedSupabaseSession);
   const selectedBoard = useMemo(
     () => activeBoards.find((board) => board.id === selectedBoardId) ?? activeBoards[0] ?? null,
     [activeBoards, selectedBoardId]
@@ -4068,10 +4104,12 @@ const App = () => {
       return;
     }
 
+    const isAnonymousLanding = !user && !isSharedView;
     const boardTitle = selectedBoard?.title?.trim();
-    const title = boardTitle ? `${boardTitle} | WZD` : "WZD 개인 시작페이지";
-    const description =
-      selectedBoard?.description?.trim() || "WZD에서 메모, 링크, 위젯이 담긴 보드를 만들고 공유해보세요.";
+    const title = isAnonymousLanding ? "WZD | 메모와 위젯 보드" : boardTitle ? `${boardTitle} | WZD` : "WZD 개인 시작페이지";
+    const description = isAnonymousLanding
+      ? "WZD는 메모, 링크, 체크리스트, 날씨, RSS 같은 위젯을 한 보드에 함께 놓는 워크스페이스입니다."
+      : selectedBoard?.description?.trim() || "WZD에서 메모, 링크, 위젯이 담긴 보드를 만들고 공유해보세요.";
 
     document.title = title;
 
@@ -4083,7 +4121,7 @@ const App = () => {
     }
 
     descriptionMeta.setAttribute("content", description);
-  }, [selectedBoard]);
+  }, [selectedBoard, user, isSharedView]);
 
   useEffect(() => {
     return () => {
@@ -6343,9 +6381,11 @@ const App = () => {
     </div>
   );
 
-  // Show landing page for non-logged-in users (except for shared board views)
-  // Wait for auth check to complete before showing landing page
-  if (!user && !isReadOnlyBoardView && authChecked) {
+  if (!user && !isSharedView && waitingForAuthResolution) {
+    return <div className="landing-auth-wait">로그인 상태를 확인하는 중입니다.</div>;
+  }
+
+  if (!user && !isSharedView) {
     return <LandingPage />;
   }
 
