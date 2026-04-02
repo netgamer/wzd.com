@@ -60,6 +60,26 @@ type SpritePreset = {
   gravity: number;
 };
 
+const CAT_FRAMES = {
+  idle: ["/companions/blue-cat.png"],
+  walk: [
+    "/companions/frames/walk-1.png",
+    "/companions/frames/walk-2.png",
+    "/companions/frames/walk-3.png",
+    "/companions/frames/walk-4.png"
+  ],
+  cling: ["/companions/frames/cling-1.png", "/companions/frames/cling-2.png"],
+  leap: ["/companions/frames/leap-1.png", "/companions/frames/walk-2.png"],
+  drop: ["/companions/frames/drop-1.png", "/companions/frames/walk-3.png"]
+} as const;
+
+const FRAME_TIMINGS: Record<CatBehavior, number> = {
+  walk: 110,
+  leap: 120,
+  cling: 180,
+  drop: 140
+};
+
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 const getSpritePreset = (compact: boolean, mobile: boolean): SpritePreset => {
@@ -172,11 +192,13 @@ const findLandingSurface = (layout: CatLayout, x: number, previousY: number, nex
 export default function BoardCatCompanion({ active, boardRef, compact, mobile }: BoardCatCompanionProps) {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const actorRef = useRef<HTMLDivElement | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
   const shadowRef = useRef<HTMLDivElement | null>(null);
   const layoutRef = useRef<CatLayout | null>(null);
   const stateRef = useRef<MotionState | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastTickRef = useRef(0);
+  const frameRef = useRef({ behavior: "walk" as CatBehavior, cursor: 0, at: 0 });
 
   useEffect(() => {
     if (!active) {
@@ -186,9 +208,10 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
     const overlay = overlayRef.current;
     const board = boardRef.current;
     const actor = actorRef.current;
+    const image = imageRef.current;
     const shadow = shadowRef.current;
 
-    if (!overlay || !board || !actor || !shadow) {
+    if (!overlay || !board || !actor || !image || !shadow) {
       return;
     }
 
@@ -354,6 +377,19 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
 
       actor.dataset.behavior = state.behavior;
       actor.dataset.direction = state.direction === 1 ? "right" : "left";
+
+      const behaviorFrames = CAT_FRAMES[state.behavior] ?? CAT_FRAMES.idle;
+      const frameDuration = FRAME_TIMINGS[state.behavior];
+      if (frameRef.current.behavior !== state.behavior) {
+        frameRef.current.behavior = state.behavior;
+        frameRef.current.cursor = 0;
+        frameRef.current.at = now;
+      } else if (now - frameRef.current.at >= frameDuration) {
+        frameRef.current.cursor = (frameRef.current.cursor + 1) % behaviorFrames.length;
+        frameRef.current.at = now;
+      }
+      image.src = behaviorFrames[frameRef.current.cursor] ?? CAT_FRAMES.idle[0];
+
       actor.style.transform = `translate3d(${state.x}px, ${state.y}px, 0)`;
       const shadowScale = state.behavior === "cling" ? 0.4 : state.behavior === "drop" ? 0.62 : 1;
       const shadowOpacity = state.behavior === "cling" ? 0.14 : state.behavior === "drop" ? 0.22 : 0.28;
@@ -382,7 +418,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       <div className="board-cat-shadow" ref={shadowRef} />
       <div className="board-cat-actor" ref={actorRef}>
         <div className="board-cat-pose">
-          <img className="board-cat-image" src="/companions/blue-cat.png" alt="" />
+          <img className="board-cat-image" src="/companions/frames/walk-1.png" alt="" ref={imageRef} />
         </div>
         <span className="board-cat-spark">✦</span>
       </div>

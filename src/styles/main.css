@@ -1547,12 +1547,18 @@ button {
   z-index: 1;
 }
 
+.board-page .pin-card-slot,
+.board-page .pin-card {
+  position: relative;
+  z-index: 3;
+}
+
 .board-cat-companion {
   position: absolute;
   inset: 110px 28px 24px;
   overflow: hidden;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
   --board-cat-frame-w: 56px;
   --board-cat-frame-h: 101px;
 }
@@ -1592,7 +1598,7 @@ button {
   object-fit: contain;
   image-rendering: pixelated;
   will-change: transform;
-  animation: board-cat-walk-bob 1.05s steps(2, end) infinite;
+  animation: board-cat-walk-bob 0.72s ease-in-out infinite;
 }
 
 .board-cat-actor[data-behavior="cling"] .board-cat-pose {
