@@ -66,6 +66,7 @@ type WidgetType =
   | "countdown"
   | "timetable"
   | "clock"
+  | "profile"
   | "weather"
   | "trending"
   | "delivery"
@@ -274,6 +275,11 @@ const DEFAULT_TIMETABLE_TEXT = [
   "금|16:30|17:30|다음 주 준비|라운지"
 ].join("\n");
 const DEFAULT_CLOCK_MODE: ClockWidgetMode = "digital";
+const DEFAULT_PROFILE_NAME = "홍길동";
+const DEFAULT_PROFILE_BIRTHDATE = "1995-05-12";
+const DEFAULT_PROFILE_OCCUPATION = "기획자";
+const DEFAULT_PROFILE_IMAGE_URL =
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=640&q=80";
 const DEFAULT_WEATHER_QUERY = "서울";
 const DEFAULT_TRENDING_REGION = "KR";
 const DEFAULT_DELIVERY_CARRIER = "kr.cjlogistics";
@@ -1657,6 +1663,7 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "countdown" ||
   note.metadata?.widgetType === "timetable" ||
   note.metadata?.widgetType === "clock" ||
+  note.metadata?.widgetType === "profile" ||
   note.metadata?.widgetType === "weather" ||
   note.metadata?.widgetType === "trending" ||
   note.metadata?.widgetType === "delivery" ||
@@ -1932,6 +1939,26 @@ const isClockWidgetMode = (value: unknown): value is ClockWidgetMode => value ==
 const getClockMode = (note: NoteV2): ClockWidgetMode =>
   isClockWidgetMode(note.metadata?.clockMode) ? note.metadata.clockMode : DEFAULT_CLOCK_MODE;
 
+const getProfileName = (note: NoteV2) =>
+  typeof note.metadata?.profileName === "string" && note.metadata.profileName.trim()
+    ? note.metadata.profileName.trim()
+    : DEFAULT_PROFILE_NAME;
+
+const getProfileBirthdate = (note: NoteV2) =>
+  typeof note.metadata?.profileBirthdate === "string" && note.metadata.profileBirthdate.trim()
+    ? note.metadata.profileBirthdate.trim()
+    : DEFAULT_PROFILE_BIRTHDATE;
+
+const getProfileOccupation = (note: NoteV2) =>
+  typeof note.metadata?.profileOccupation === "string" && note.metadata.profileOccupation.trim()
+    ? note.metadata.profileOccupation.trim()
+    : DEFAULT_PROFILE_OCCUPATION;
+
+const getProfileImageUrl = (note: NoteV2) =>
+  typeof note.metadata?.profileImageUrl === "string" && note.metadata.profileImageUrl.trim()
+    ? normalizeExternalUrl(note.metadata.profileImageUrl)
+    : DEFAULT_PROFILE_IMAGE_URL;
+
 const getWeatherQuery = (note: NoteV2) =>
   typeof note.metadata?.weatherQuery === "string" && note.metadata.weatherQuery.trim()
     ? note.metadata.weatherQuery.trim()
@@ -2028,6 +2055,37 @@ const formatClockDate = (value: Date) =>
     day: "numeric",
     weekday: "short"
   });
+
+const formatProfileBirthdate = (value: string) => {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+};
+
+const getKoreanAgeLabel = (birthdate: string, referenceDate = new Date()) => {
+  if (!birthdate) {
+    return "";
+  }
+
+  const parsed = new Date(`${birthdate}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  const koreanAge = referenceDate.getFullYear() - parsed.getFullYear() + 1;
+  return `${koreanAge}세`;
+};
 
 const formatCountdownLabel = (targetDate: string) => {
   if (!targetDate) {
@@ -2218,6 +2276,7 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   if (widgetType === "document") return 0;
   if (widgetType === "focus") return 1;
   if (widgetType === "clock") return 1;
+  if (widgetType === "profile") return 1;
   if (widgetType === "mood") return 2;
   if (widgetType === "routine") return 2;
   if (widgetType === "prompt") return 1;
@@ -2252,6 +2311,7 @@ type AutoLayoutCategory =
   | "countdown"
   | "timetable"
   | "clock"
+  | "profile"
   | "weather"
   | "trending"
   | "delivery"
@@ -2293,6 +2353,7 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   if (widgetType === "countdown") return "countdown";
   if (widgetType === "timetable") return "timetable";
   if (widgetType === "clock") return "clock";
+  if (widgetType === "profile") return "focus";
   if (widgetType === "weather") return "weather";
   if (widgetType === "trending") return "trending";
   if (widgetType === "delivery") return "delivery";
@@ -2378,6 +2439,7 @@ const getPreferredColumns = (
     case "countdown":
     case "timetable":
     case "clock":
+    case "profile":
     case "weather":
     case "trending":
     case "delivery":
@@ -2409,6 +2471,7 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
   if (widgetType === "countdown") return layoutStyle === "compact" ? 210 : 240;
   if (widgetType === "timetable") return layoutStyle === "compact" ? 260 : 320;
   if (widgetType === "clock") return layoutStyle === "compact" ? 220 : 260;
+  if (widgetType === "profile") return layoutStyle === "compact" ? 260 : 310;
   if (widgetType === "weather") return layoutStyle === "compact" ? 220 : 260;
   if (widgetType === "trending") return layoutStyle === "compact" ? 250 : 300;
   if (widgetType === "delivery") return layoutStyle === "compact" ? 230 : 280;
@@ -2993,6 +3056,145 @@ const App = () => {
                   </div>
                 </>
               )}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "profile") {
+      const profileName = getProfileName(note);
+      const birthdate = getProfileBirthdate(note);
+      const occupation = getProfileOccupation(note);
+      const profileImageUrl = getProfileImageUrl(note);
+      const koreanAge = getKoreanAgeLabel(birthdate);
+      const fallbackInitial = profileName.trim().charAt(0) || "P";
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">PROFILE</span>
+            <p className="pin-title">{asText(note.content).trim() || "내 정보"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <input
+                className="widget-input"
+                value={profileName}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "profile",
+                      profileName: event.target.value,
+                      profileBirthdate: birthdate,
+                      profileOccupation: occupation,
+                      profileImageUrl
+                    }
+                  })
+                }
+                placeholder="이름"
+              />
+              <label className="widget-field">
+                <span>생년월일</span>
+                <input
+                  className="widget-input"
+                  type="date"
+                  value={birthdate}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onChange={(event) =>
+                    updateNote(note.id, {
+                      metadata: {
+                        ...note.metadata,
+                        widgetType: "profile",
+                        profileName,
+                        profileBirthdate: event.target.value,
+                        profileOccupation: occupation,
+                        profileImageUrl
+                      }
+                    })
+                  }
+                />
+              </label>
+              <input
+                className="widget-input"
+                value={occupation}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "profile",
+                      profileName,
+                      profileBirthdate: birthdate,
+                      profileOccupation: event.target.value,
+                      profileImageUrl
+                    }
+                  })
+                }
+                placeholder="직업"
+              />
+              <input
+                className="widget-input"
+                value={profileImageUrl}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "profile",
+                      profileName,
+                      profileBirthdate: birthdate,
+                      profileOccupation: occupation,
+                      profileImageUrl: event.target.value
+                    }
+                  })
+                }
+                placeholder="프로필 사진 URL"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`profile-widget ${compact ? "compact" : ""}`}>
+              <div className="profile-widget-head">
+                {profileImageUrl ? (
+                  <img className="profile-widget-avatar" src={profileImageUrl} alt={`${profileName} 프로필`} loading="lazy" />
+                ) : (
+                  <div className="profile-widget-avatar fallback" aria-hidden="true">
+                    {fallbackInitial}
+                  </div>
+                )}
+                <div className="profile-widget-identity">
+                  <strong>{profileName}</strong>
+                  <span>{occupation}</span>
+                </div>
+              </div>
+              <div className="profile-widget-meta">
+                <div className="profile-widget-meta-item">
+                  <span>생년월일</span>
+                  <strong>{formatProfileBirthdate(birthdate)}</strong>
+                </div>
+                <div className="profile-widget-meta-item">
+                  <span>한국나이</span>
+                  <strong>{koreanAge}</strong>
+                </div>
+              </div>
             </div>
           )}
         </>
@@ -5540,6 +5742,40 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addProfileWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "내 정보"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "profile",
+      profileName: DEFAULT_PROFILE_NAME,
+      profileBirthdate: DEFAULT_PROFILE_BIRTHDATE,
+      profileOccupation: DEFAULT_PROFILE_OCCUPATION,
+      profileImageUrl: DEFAULT_PROFILE_IMAGE_URL
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const addTrendingWidget = () => {
     if (!selectedBoard) {
       return;
@@ -5883,6 +6119,9 @@ const App = () => {
       </button>
       <button className="widget-menu-item" onClick={addClockWidget}>
         시계
+      </button>
+      <button className="widget-menu-item" onClick={addProfileWidget}>
+        내 정보
       </button>
       <button className="widget-menu-item" onClick={addWeatherWidget}>
         날씨
