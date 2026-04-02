@@ -6644,16 +6644,6 @@ const App = () => {
                 )}
               </div>
             )}
-            {!compactHeader && canShareBoard && (
-              <button className="ghost-action" onClick={() => void shareBoard()}>
-                보드 공유
-              </button>
-            )}
-            {!compactHeader && canInviteBoard && (
-              <button className="ghost-action" onClick={() => void openInvitePanel()}>
-                보드 초대
-              </button>
-            )}
             {!compactHeader && canBoardSettings && (
               <button className="ghost-action" onClick={openBoardSettings}>
                 보드 설정
@@ -6734,34 +6724,6 @@ const App = () => {
                     </button>
                     {widgetMenuOpen && <div className="mobile-widget-menu">{renderWidgetMenuItems()}</div>}
                   </div>
-                )}
-                {canShareBoard && (
-                  <button
-                    className="mobile-board-action"
-                    onClick={() => {
-                      void shareBoard();
-                      setMobileBoardMenuOpen(false);
-                    }}
-                  >
-                    <span className="mobile-board-action-icon" aria-hidden="true">
-                      ↗
-                    </span>
-                    <span>보드 공유</span>
-                  </button>
-                )}
-                {canInviteBoard && (
-                  <button
-                    className="mobile-board-action"
-                    onClick={() => {
-                      void openInvitePanel();
-                      setMobileBoardMenuOpen(false);
-                    }}
-                  >
-                    <span className="mobile-board-action-icon" aria-hidden="true">
-                      @
-                    </span>
-                    <span>보드 초대</span>
-                  </button>
                 )}
                 <button
                   className="mobile-board-action"
@@ -6920,12 +6882,30 @@ const App = () => {
                         저장본 {boardHistorySnapshots.length}개 · 이전 상태로 언제든 복구
                       </span>
                     </button>
-                    <button className="settings-menu-card" onClick={() => setSettingsSection("trash")}>
-                      <span className="settings-menu-title">휴지통</span>
-                      <span className="settings-menu-meta">
-                        삭제된 보드 {sortedTrashedBoards.length}개 · 삭제된 메모 {sortedTrashedNotes.length}개
-                      </span>
-                    </button>
+                      <button className="settings-menu-card" onClick={() => setSettingsSection("trash")}>
+                        <span className="settings-menu-title">휴지통</span>
+                        <span className="settings-menu-meta">
+                          삭제된 보드 {sortedTrashedBoards.length}개 · 삭제된 메모 {sortedTrashedNotes.length}개
+                        </span>
+                      </button>
+                    {canShareBoard && (
+                      <button className="settings-menu-card" onClick={() => void shareBoard()}>
+                        <span className="settings-menu-title">보드 공유</span>
+                        <span className="settings-menu-meta">현재 보드를 링크로 공유하고 읽기 전용 페이지를 만듭니다.</span>
+                      </button>
+                    )}
+                    {canInviteBoard && (
+                      <button
+                        className="settings-menu-card"
+                        onClick={() => {
+                          setSettingsOpen(false);
+                          void openInvitePanel();
+                        }}
+                      >
+                        <span className="settings-menu-title">보드 초대</span>
+                        <span className="settings-menu-meta">이메일로 편집자를 초대하고 공동 작업 멤버를 관리합니다.</span>
+                      </button>
+                    )}
                   </div>
 
                   {selectedBoard && (
@@ -6973,6 +6953,11 @@ const App = () => {
                             ))
                           )}
                         </div>
+                        {canShareBoard && (
+                          <button className="ghost-action" onClick={() => void shareBoard()}>
+                            보드 공유 링크 만들기
+                          </button>
+                        )}
                         {canInviteBoard && (
                           <button
                             className="ghost-action"
