@@ -4526,6 +4526,7 @@ button {
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.02em;
+  min-width: 0;
 }
 
 .landing-logo {
@@ -5673,14 +5674,40 @@ button {
 
   .landing-header-inner {
     padding: 14px 0;
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
   }
 
   .landing-logo-lockup {
-    flex-direction: column;
-    align-items: flex-start;
+    flex: 1;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
     gap: 10px;
+  }
+
+  .landing-logo {
+    min-width: 62px;
+    min-height: 42px;
+    padding: 0 16px;
+    font-size: 18px;
+  }
+
+  .landing-logo-lockup span {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .landing-login-btn {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 0 16px;
+    font-size: 13px;
   }
 
   .landing-hero {
