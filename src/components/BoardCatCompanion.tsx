@@ -134,19 +134,23 @@ const measureLayout = (overlay: HTMLDivElement, board: HTMLElement, preset: Spri
     overlayRect.height - preset.frameHeight - 6
   );
 
+  const visibleCardSurfaces = measuredCards
+    .filter((card) => card.surfaceY >= 4)
+    .map((card) => ({
+      id: card.id,
+      left: card.left + 10,
+      right: card.right - 10,
+      y: card.surfaceY,
+      kind: "card" as const
+    }));
+
   return {
     width: overlayRect.width,
     height: overlayRect.height,
     groundY,
     cards: measuredCards,
     surfaces: [
-      ...measuredCards.map((card) => ({
-        id: card.id,
-        left: card.left + 10,
-        right: card.right - 10,
-        y: card.surfaceY,
-        kind: "card" as const
-      })),
+      ...visibleCardSurfaces,
       {
         id: "ground",
         left: 8,
