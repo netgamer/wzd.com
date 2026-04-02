@@ -66,3 +66,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 - 2026-04-03: remap upward jump to `82.png` and downward fall to `78.png` per user-selected numbered frames
 - 2026-04-03: remap walk cycle to `04 -> 05 -> 06 -> 72 -> 73 -> 13` and loop back to `04`
 - 2026-04-03: delete legacy named jump/drop PNGs so the repo only retains the active numbered-frame mapping
+- 2026-04-03: use `78.png` during downward target jumps inside the `leap` state so descending jumps no longer reuse the upward `82.png` frame

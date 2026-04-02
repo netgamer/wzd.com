@@ -198,7 +198,7 @@ const getDisplayFrames = (state: MotionState, surface: CatSurface) => {
   }
 
   if (state.behavior === "leap") {
-    return CAT_FRAMES.leapUp;
+    return state.jumpTarget && state.jumpTarget.y > state.leapFromY ? CAT_FRAMES.dropDown : CAT_FRAMES.leapUp;
   }
 
   if (state.behavior === "drop") {
