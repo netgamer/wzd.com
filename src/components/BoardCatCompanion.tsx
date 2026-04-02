@@ -264,6 +264,8 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
   const shadowRef = useRef<HTMLDivElement | null>(null);
   const layoutRef = useRef<CatLayout | null>(null);
   const stateRef = useRef<MotionState | null>(null);
+  const readyAtRef = useRef(0);
+  const introducedRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const lastTickRef = useRef(0);
   const frameRef = useRef({ behavior: "walk" as CatBehavior, cursor: 0, at: 0 });
@@ -286,28 +288,23 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
     const preset = getSpritePreset(compact, mobile);
     overlay.style.setProperty("--board-cat-frame-w", `${preset.frameWidth}px`);
     overlay.style.setProperty("--board-cat-frame-h", `${preset.frameHeight}px`);
+    introducedRef.current = false;
+    readyAtRef.current = performance.now() + 420;
+    stateRef.current = null;
+    lastTickRef.current = 0;
+    frameRef.current = { behavior: "walk", cursor: 0, at: 0 };
 
     const syncLayout = () => {
+      const now = performance.now();
       const layout = measureLayout(overlay, board, preset);
       layoutRef.current = layout;
+      if (!introducedRef.current) {
+        readyAtRef.current = now + 420;
+        return;
+      }
+
       const current = stateRef.current;
       if (!current) {
-        stateRef.current = {
-          x: clamp(24, 8, layout.width - preset.frameWidth - 8),
-          y: layout.groundY,
-          direction: 1,
-          behavior: "walk",
-          surfaceId: "ground",
-          vy: 0,
-          vx: preset.stepSpeed,
-          actionStartedAt: performance.now(),
-          actionDuration: 0,
-          nextDecisionAt: performance.now() + 1100,
-          leapFromX: 0,
-          leapFromY: 0,
-          jumpTarget: null,
-          waitPose: "up"
-        };
         return;
       }
 
@@ -355,8 +352,50 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
 
     const tick = (now: number) => {
       const layout = layoutRef.current;
+      if (!layout) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      if (!introducedRef.current) {
+        actor.style.opacity = "0";
+        shadow.style.opacity = "0";
+
+        if (now >= readyAtRef.current) {
+          const spawnSurface = layout.surfaces
+            .filter((surface) => surface.kind === "card")
+            .sort((a, b) => a.y - b.y)[0] ?? layout.surfaces[layout.surfaces.length - 1];
+          const spawnX = clamp(
+            spawnSurface.left + (spawnSurface.right - spawnSurface.left - preset.frameWidth) / 2,
+            8,
+            layout.width - preset.frameWidth - 8
+          );
+          stateRef.current = {
+            x: spawnX,
+            y: -preset.frameHeight - 12,
+            direction: 1,
+            behavior: "drop",
+            surfaceId: "ground",
+            vy: 40,
+            vx: 0,
+            actionStartedAt: now,
+            actionDuration: 0,
+            nextDecisionAt: now + 900,
+            leapFromX: spawnX,
+            leapFromY: -preset.frameHeight - 12,
+            jumpTarget: null,
+            waitPose: "up"
+          };
+          introducedRef.current = true;
+          actor.style.opacity = "1";
+        }
+
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
       const state = stateRef.current;
-      if (!layout || !state) {
+      if (!state) {
         rafRef.current = requestAnimationFrame(tick);
         return;
       }
@@ -366,6 +405,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       lastTickRef.current = now;
       const surface = findSurfaceById(layout, state.surfaceId);
       const actionElapsed = now - state.actionStartedAt;
+      actor.style.opacity = "1";
 
       if (state.behavior === "walk") {
         const walkSpeed = surface.kind === "ground" ? preset.stepSpeed : preset.stepSpeed * 0.84;
