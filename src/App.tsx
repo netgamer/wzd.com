@@ -7219,7 +7219,13 @@ const App = () => {
           <div className="pin-board-track">
           <div className="pin-board-panel swipe-preview-panel">{mobileSwipeEnabled ? renderSwipePreviewPanel(previousBoard, "prev") : null}</div>
           <div className={boardPanelClassName}>
-          <BoardCatCompanion active={showBoardCatCompanion} boardRef={boardGridRef} compact={compactHeader} mobile={mobileViewport} />
+          <BoardCatCompanion
+            key={`${selectedBoard?.id ?? "none"}-${feedMode}`}
+            active={showBoardCatCompanion}
+            boardRef={boardGridRef}
+            compact={compactHeader}
+            mobile={mobileViewport}
+          />
           <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">
