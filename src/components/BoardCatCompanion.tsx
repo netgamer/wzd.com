@@ -44,6 +44,8 @@ type JumpTarget = {
   kind: "ground" | "card";
 };
 
+type WaitPose = "up" | "down" | "blink";
+
 type MotionState = {
   x: number;
   y: number;
@@ -58,6 +60,7 @@ type MotionState = {
   leapFromX: number;
   leapFromY: number;
   jumpTarget: JumpTarget | null;
+  waitPose: WaitPose;
 };
 
 type SpritePreset = {
@@ -75,8 +78,14 @@ const CAT_FRAMES = {
     "/companions/frames/walk-3.png",
     "/companions/frames/walk-4.png"
   ],
-  waitUp: ["/companions/frames/wait-up.png"],
-  waitDown: ["/companions/frames/wait-down.png"],
+  waitUp: ["/companions/original-frames/67.png"],
+  waitDown: ["/companions/original-frames/21.png"],
+  blink: [
+    "/companions/original-frames/17.png",
+    "/companions/original-frames/18.png",
+    "/companions/original-frames/17.png",
+    "/companions/original-frames/18.png"
+  ],
   leapUp: ["/companions/frames/leap-up.png"],
   dropDown: ["/companions/frames/drop-down.png"]
 } as const;
@@ -92,14 +101,14 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 
 const getSpritePreset = (compact: boolean, mobile: boolean): SpritePreset => {
   if (mobile) {
-    return { frameWidth: 42, frameHeight: 76, stepSpeed: 52, gravity: 640 };
+    return { frameWidth: 42, frameHeight: 76, stepSpeed: 26, gravity: 640 };
   }
 
   if (compact) {
-    return { frameWidth: 48, frameHeight: 86, stepSpeed: 56, gravity: 700 };
+    return { frameWidth: 48, frameHeight: 86, stepSpeed: 28, gravity: 700 };
   }
 
-  return { frameWidth: 56, frameHeight: 101, stepSpeed: 62, gravity: 760 };
+  return { frameWidth: 56, frameHeight: 101, stepSpeed: 31, gravity: 760 };
 };
 
 const measureLayout = (overlay: HTMLDivElement, board: HTMLElement, preset: SpritePreset): CatLayout => {
@@ -179,7 +188,11 @@ const getDisplayFrames = (state: MotionState, surface: CatSurface) => {
   }
 
   if (state.behavior === "wait") {
-    return surface.kind === "ground" ? CAT_FRAMES.waitDown : CAT_FRAMES.waitUp;
+    if (state.waitPose === "blink") {
+      return CAT_FRAMES.blink;
+    }
+
+    return state.waitPose === "down" || surface.kind === "ground" ? CAT_FRAMES.waitDown : CAT_FRAMES.waitUp;
   }
 
   if (state.behavior === "leap") {
@@ -290,7 +303,8 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
           nextDecisionAt: performance.now() + 1100,
           leapFromX: 0,
           leapFromY: 0,
-          jumpTarget: null
+          jumpTarget: null,
+          waitPose: "up"
         };
         return;
       }
@@ -322,7 +336,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       state.nextDecisionAt = now + 900;
     };
 
-    const startWait = (now: number, target: JumpTarget | null, duration = 400) => {
+    const startWait = (now: number, target: JumpTarget | null, duration = 400, waitPose: WaitPose = "up") => {
       const state = stateRef.current;
       if (!state) {
         return;
@@ -334,6 +348,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       state.actionStartedAt = now;
       state.actionDuration = duration;
       state.jumpTarget = target;
+      state.waitPose = waitPose;
     };
 
     const tick = (now: number) => {
@@ -359,19 +374,27 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
           state.x = surface.left;
           state.direction = 1;
           const target = surface.kind === "ground" ? null : pickJumpTarget(layout, state, surface, preset);
-          startWait(now, target, 380);
+          const waitPose: WaitPose = target && target.y >= surface.y ? "down" : "up";
+          startWait(now, target, 380, waitPose);
         } else if (state.x >= surface.right - preset.frameWidth) {
           state.x = surface.right - preset.frameWidth;
           state.direction = -1;
           const target = surface.kind === "ground" ? null : pickJumpTarget(layout, state, surface, preset);
-          startWait(now, target, 380);
-        } else if (surface.kind === "ground" && now >= state.nextDecisionAt) {
-          const target = pickJumpTarget(layout, state, surface, preset);
-          if (target) {
-            startWait(now, target, 340);
+          const waitPose: WaitPose = target && target.y >= surface.y ? "down" : "up";
+          startWait(now, target, 380, waitPose);
+        } else if (now >= state.nextDecisionAt) {
+          if (Math.random() < 0.24) {
+            startWait(now, null, 960, "blink");
+          } else if (surface.kind === "ground") {
+            const target = pickJumpTarget(layout, state, surface, preset);
+            if (target) {
+              startWait(now, target, 340, target.y >= surface.y ? "down" : "up");
+            } else {
+              state.direction = state.direction === 1 ? -1 : 1;
+              state.nextDecisionAt = now + 1000 + Math.random() * 1200;
+            }
           } else {
-            state.direction = state.direction === 1 ? -1 : 1;
-            state.nextDecisionAt = now + 1000 + Math.random() * 1200;
+            state.nextDecisionAt = now + 1400 + Math.random() * 1400;
           }
         }
       } else if (state.behavior === "wait") {
@@ -384,9 +407,11 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
             state.leapFromY = state.y;
             state.actionStartedAt = now;
             state.actionDuration = 700;
+            state.waitPose = "up";
           } else {
             state.behavior = "walk";
             state.nextDecisionAt = now + 1100 + Math.random() * 1200;
+            state.waitPose = "up";
           }
         }
       } else if (state.behavior === "leap" && state.jumpTarget) {
@@ -411,6 +436,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
             state.vy = 0;
             state.nextDecisionAt = now + 900 + Math.random() * 900;
             state.jumpTarget = null;
+            state.waitPose = "up";
           }
         }
       } else if (state.behavior === "drop") {
@@ -432,6 +458,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
           state.actionDuration = 0;
           state.nextDecisionAt = now + 900 + Math.random() * 900;
           state.jumpTarget = null;
+          state.waitPose = "up";
         } else if (state.y >= layout.groundY + 24) {
           const groundDirection = state.vx >= 0 ? 1 : -1;
           state.y = layout.groundY;
@@ -442,6 +469,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
           state.direction = groundDirection;
           state.nextDecisionAt = now + 800 + Math.random() * 1000;
           state.jumpTarget = null;
+          state.waitPose = "down";
         }
       }
 
