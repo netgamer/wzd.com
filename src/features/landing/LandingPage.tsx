@@ -25,6 +25,17 @@ type MemoSample = {
   image?: string;
 };
 
+type HeroPreviewWidget = {
+  kind: "note" | "bookmark" | "todo" | "countdown" | "timetable" | "weather";
+  badge: string;
+  title: string;
+  accentClass: string;
+  subtitle?: string;
+  lines?: string[];
+  value?: string;
+  chips?: string[];
+};
+
 type ShowcaseWidget =
   | {
       kind: "rss";
@@ -333,6 +344,142 @@ const MEMO_SAMPLES: MemoSample[] = [
       "https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=900&q=80"
   }
 ];
+
+const HERO_PREVIEW_WIDGETS: HeroPreviewWidget[] = [
+  {
+    kind: "note",
+    badge: "NOTE",
+    title: "빠른 메모",
+    accentClass: "accent-paper",
+    subtitle: "회의 전 질문 3개"
+  },
+  {
+    kind: "bookmark",
+    badge: "BOOKMARK",
+    title: "자주 여는 링크",
+    accentClass: "accent-sand",
+    lines: ["OpenAI Docs", "platform.openai.com"]
+  },
+  {
+    kind: "todo",
+    badge: "TODO",
+    title: "오늘 할 일",
+    accentClass: "accent-mint",
+    lines: ["회의 자료 정리", "피드백 반영"]
+  },
+  {
+    kind: "countdown",
+    badge: "COUNTDOWN",
+    title: "런칭 카운트다운",
+    accentClass: "accent-rose",
+    value: "D-12",
+    subtitle: "프로젝트 오픈"
+  },
+  {
+    kind: "timetable",
+    badge: "TIMETABLE",
+    title: "주간 스케줄",
+    accentClass: "accent-blue",
+    lines: ["월 09:00 기획 회의", "수 13:00 촬영"]
+  },
+  {
+    kind: "weather",
+    badge: "WEATHER",
+    title: "오늘 날씨",
+    accentClass: "accent-sky",
+    value: "17°",
+    chips: ["서울", "오후 흐림"]
+  }
+];
+
+const renderHeroPreviewWidget = (widget: HeroPreviewWidget) => {
+  if (widget.kind === "todo") {
+    return (
+      <>
+        <span className="landing-widget-mini-badge">{widget.badge}</span>
+        <strong>{widget.title}</strong>
+        <div className="landing-mini-todo-list">
+          {(widget.lines ?? []).map((line, index) => (
+            <div key={line} className="landing-mini-todo-item">
+              <span className={`landing-mini-check ${index === 0 ? "checked" : ""}`.trim()}>{index === 0 ? "✓" : ""}</span>
+              <p>{line}</p>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  if (widget.kind === "countdown") {
+    return (
+      <>
+        <span className="landing-widget-mini-badge">{widget.badge}</span>
+        <strong>{widget.title}</strong>
+        <div className="landing-mini-countdown">
+          <span className="landing-mini-countdown-value">{widget.value}</span>
+          <p>{widget.subtitle}</p>
+        </div>
+      </>
+    );
+  }
+
+  if (widget.kind === "timetable") {
+    return (
+      <>
+        <span className="landing-widget-mini-badge">{widget.badge}</span>
+        <strong>{widget.title}</strong>
+        <div className="landing-mini-schedule">
+          {(widget.lines ?? []).map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  if (widget.kind === "weather") {
+    return (
+      <>
+        <span className="landing-widget-mini-badge">{widget.badge}</span>
+        <strong>{widget.title}</strong>
+        <div className="landing-mini-weather">
+          <span className="landing-mini-weather-temp">{widget.value}</span>
+          <div className="landing-mini-chip-row">
+            {(widget.chips ?? []).map((chip) => (
+              <span key={chip} className="landing-mini-chip">
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (widget.kind === "bookmark") {
+    return (
+      <>
+        <span className="landing-widget-mini-badge">{widget.badge}</span>
+        <strong>{widget.title}</strong>
+        <div className="landing-mini-link-card">
+          {(widget.lines ?? []).map((line, index) => (
+            <p key={line} className={index === 0 ? "primary" : "secondary"}>
+              {line}
+            </p>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <span className="landing-widget-mini-badge">{widget.badge}</span>
+      <strong>{widget.title}</strong>
+      <p>{widget.subtitle}</p>
+    </>
+  );
+};
 
 const SHOWCASE_WIDGETS: ShowcaseWidget[] = [
   {
@@ -765,11 +912,9 @@ const LandingPage = () => {
                 <strong>오늘 자주 쓰는 조합</strong>
               </div>
               <div className="landing-hero-mini-grid">
-                {WIDGET_SAMPLES.slice(0, 6).map((widget) => (
+                {HERO_PREVIEW_WIDGETS.map((widget) => (
                   <article key={widget.badge} className={`landing-widget-mini-card ${widget.accentClass}`}>
-                    <span className="landing-widget-mini-badge">{widget.badge}</span>
-                    <strong>{widget.title}</strong>
-                    <p>{widget.lines[0]}</p>
+                    {renderHeroPreviewWidget(widget)}
                   </article>
                 ))}
               </div>
