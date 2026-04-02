@@ -374,13 +374,13 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
           state.x = surface.left;
           state.direction = 1;
           const target = surface.kind === "ground" ? null : pickJumpTarget(layout, state, surface, preset);
-          const waitPose: WaitPose = target && target.y >= surface.y ? "down" : "up";
+          const waitPose: WaitPose = target && target.y > surface.y ? "down" : "up";
           startWait(now, target, 380, waitPose);
         } else if (state.x >= surface.right - preset.frameWidth) {
           state.x = surface.right - preset.frameWidth;
           state.direction = -1;
           const target = surface.kind === "ground" ? null : pickJumpTarget(layout, state, surface, preset);
-          const waitPose: WaitPose = target && target.y >= surface.y ? "down" : "up";
+          const waitPose: WaitPose = target && target.y > surface.y ? "down" : "up";
           startWait(now, target, 380, waitPose);
         } else if (now >= state.nextDecisionAt) {
           if (Math.random() < 0.24) {
@@ -388,7 +388,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
           } else if (surface.kind === "ground") {
             const target = pickJumpTarget(layout, state, surface, preset);
             if (target) {
-              startWait(now, target, 340, target.y >= surface.y ? "down" : "up");
+              startWait(now, target, 340, target.y > surface.y ? "down" : "up");
             } else {
               state.direction = state.direction === 1 ? -1 : 1;
               state.nextDecisionAt = now + 1000 + Math.random() * 1200;

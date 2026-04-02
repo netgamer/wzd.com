@@ -61,3 +61,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 - 2026-04-03: rebuild `public/companions/original-frames` from isolated `segments` instead of broken tile slices so every numbered frame is a valid single pose
 - 2026-04-03: set the down-looking wait pose to `21.png` and split composite `01.png` into four additional numbered frames `67.png` to `70.png`
 - 2026-04-03: set top wait to `67.png`, down wait to `21.png`, halve walking speed, and add occasional seated blink loops using `17.png` and `18.png`
+- 2026-04-03: use `67.png` for waits before same-level or upward jumps, and only use `21.png` when the next jump target is actually below the current ledge
