@@ -420,6 +420,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
         const jumpTarget = state.jumpTarget;
         const progress = clamp(actionElapsed / state.actionDuration, 0, 1);
         const distanceX = jumpTarget.x - state.leapFromX;
+        state.direction = distanceX >= 0 ? 1 : -1;
         const arc = Math.max(26, Math.abs(distanceX) * 0.22 + Math.max(0, state.leapFromY - jumpTarget.y) * 0.16);
         state.x = state.leapFromX + distanceX * progress;
         state.y = state.leapFromY + (jumpTarget.y - state.leapFromY) * progress - Math.sin(progress * Math.PI) * arc;
@@ -446,6 +447,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
         state.vy += preset.gravity * dt;
         state.y += state.vy * dt;
         state.x = clamp(state.x + state.vx * dt, 4, layout.width - preset.frameWidth - 4);
+        state.direction = state.vx >= 0 ? 1 : -1;
 
         const landingSurface = findLandingSurface(layout, state.x, previousY, state.y, preset.frameWidth);
         if (landingSurface) {
