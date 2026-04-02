@@ -253,6 +253,19 @@ const SparkleIcon = () => (
   </svg>
 );
 
+const SidebarToggleIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M8 6l6 6-6 6"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
 const VISIBLE_NOTE_BATCH_SIZE = 16;
@@ -6453,6 +6466,20 @@ const App = () => {
           <span>{showExpandedSidebar ? "WZD" : "W"}</span>
         </button>
 
+        {!compactSidebar && (
+          <button
+            className={`side-icon subtle sidebar-toggle-button ${showExpandedSidebar ? "expanded" : ""}`}
+            onClick={() => setSidebarExpanded((prev) => !prev)}
+            aria-label={showExpandedSidebar ? "사이드 메뉴 접기" : "사이드 메뉴 펼치기"}
+            title={showExpandedSidebar ? "사이드 메뉴 접기" : "사이드 메뉴 펼치기"}
+          >
+            <span className="side-icon-glyph sidebar-toggle-glyph" aria-hidden="true">
+              <SidebarToggleIcon />
+            </span>
+            <span className="side-icon-label">{showExpandedSidebar ? "사이드 메뉴 접기" : "사이드 메뉴 펼치기"}</span>
+          </button>
+        )}
+
         <div className="board-menu">
           <div
             className="board-switcher"
@@ -6502,10 +6529,6 @@ const App = () => {
                   onClick={() => {
                     if (dragArmedBoardId === boardItem.id || draggingBoardId === boardItem.id) {
                       return;
-                    }
-
-                    if (boardItem.id === selectedBoard?.id) {
-                      setSidebarExpanded((prev) => !prev);
                     }
 
                     setSelectedBoardId(boardItem.id);

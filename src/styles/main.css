@@ -163,6 +163,21 @@ button {
   line-height: 1;
 }
 
+.sidebar-toggle-button {
+  margin-bottom: 2px;
+}
+
+.sidebar-toggle-glyph svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  transition: transform 240ms ease;
+}
+
+.pin-sidebar.expanded .sidebar-toggle-glyph svg {
+  transform: rotate(180deg);
+}
+
 .settings-glyph svg {
   width: 20px;
   height: 20px;
