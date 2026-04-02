@@ -2318,6 +2318,10 @@ button {
   padding-top: 8px;
 }
 
+.pin-card.link-only-note .link-preview-card::before {
+  display: none;
+}
+
 .pin-card.link-only-note .pin-card-head {
   position: absolute;
   top: 10px;
