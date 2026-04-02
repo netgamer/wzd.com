@@ -4418,7 +4418,7 @@ button {
   .board-page .workspace-topbar,
   .home-page .public-topbar,
   .share-page .public-topbar {
-    margin-inline: 0;
+    margin-inline: 12px;
     border-radius: 22px;
   }
 
