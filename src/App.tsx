@@ -1480,6 +1480,14 @@ const isHomeBoardLocation = () => {
   return window.location.pathname === "/" && !window.location.hash;
 };
 
+const isPublicLandingLocation = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.location.pathname === "/landing";
+};
+
 const hasPendingAuthHash = () => {
   if (typeof window === "undefined") {
     return false;
@@ -2547,6 +2555,7 @@ const App = () => {
   const [editorDropNoteId, setEditorDropNoteId] = useState<string | null>(null);
   const [noteMoreState, setNoteMoreState] = useState<Record<string, number>>({});
   const [homeBoardRoute, setHomeBoardRoute] = useState<boolean>(() => isHomeBoardLocation());
+  const [publicLandingRoute, setPublicLandingRoute] = useState<boolean>(() => isPublicLandingLocation());
   const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
   const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(
     () => Boolean(getSharedBoardSlugFromLocation()) || isHomeBoardLocation()
@@ -2662,8 +2671,10 @@ const App = () => {
   useEffect(() => {
     const syncSharedSlug = () => {
       const nextHomeRoute = isHomeBoardLocation();
+      const nextPublicLandingRoute = isPublicLandingLocation();
       const nextSlug = getSharedBoardSlugFromLocation();
       setHomeBoardRoute(nextHomeRoute);
+      setPublicLandingRoute(nextPublicLandingRoute);
       setSharedBoardSlug(nextSlug);
       setSharedBoardReadOnly(Boolean(nextSlug) || nextHomeRoute);
     };
@@ -4837,15 +4848,16 @@ const App = () => {
     setSettingsSection("trash");
   };
 
-  const navigateToHomeBoard = () => {
+  const navigateToPublicLanding = () => {
     if (typeof window === "undefined") {
       return;
     }
 
-    window.history.pushState({}, "", "/");
-    setHomeBoardRoute(true);
+    window.history.pushState({}, "", "/landing");
+    setHomeBoardRoute(false);
+    setPublicLandingRoute(true);
     setSharedBoardSlug(null);
-    setSharedBoardReadOnly(true);
+    setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
     setMobileBoardMenuOpen(false);
   };
@@ -4857,6 +4869,7 @@ const App = () => {
 
     window.history.pushState({}, "", "/#");
     setHomeBoardRoute(false);
+    setPublicLandingRoute(false);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
@@ -6624,6 +6637,10 @@ const App = () => {
     </div>
   );
 
+  if (publicLandingRoute && !isSharedView) {
+    return <LandingPage />;
+  }
+
   if (!user && !isSharedView && waitingForAuthResolution) {
     return <div className="landing-auth-wait">로그인 상태를 확인하는 중입니다.</div>;
   }
@@ -6653,7 +6670,7 @@ const App = () => {
   return (
     <CurrentPage showExpandedSidebar={showExpandedSidebar}>
       <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`}>
-        <button className="pin-brand" aria-label="WZD 홈" onClick={navigateToHomeBoard}>
+        <button className="pin-brand" aria-label="WZD 홈" onClick={navigateToPublicLanding}>
           <span>{showExpandedSidebar ? "WZD" : "W"}</span>
         </button>
 
