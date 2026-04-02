@@ -7,6 +7,7 @@
   useRef,
   useState
 } from "react";
+import BoardCatCompanion from "./components/BoardCatCompanion";
 import BoardPage from "./features/board/BoardPage";
 import HomePage from "./features/home/HomePage";
 import LandingPage from "./features/landing/LandingPage";
@@ -2461,6 +2462,7 @@ const App = () => {
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const saveStateResetTimerRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const boardGridRef = useRef<HTMLElement | null>(null);
   const boardLongPressTimerRef = useRef<number | null>(null);
   const boardSwipeStartRef = useRef<{ x: number; y: number; active: boolean }>({
     x: 0,
@@ -7222,15 +7224,7 @@ const App = () => {
           <div className="pin-board-track">
           <div className="pin-board-panel swipe-preview-panel">{mobileSwipeEnabled ? renderSwipePreviewPanel(previousBoard, "prev") : null}</div>
           <div className={boardPanelClassName}>
-          {showBoardCatCompanion && (
-            <div className="board-cat-companion" aria-hidden="true">
-              <div className="board-cat-shadow" />
-              <div className="board-cat-sprite">
-                <img className="board-cat-image" src="/companions/blue-cat.png" alt="" />
-                <span className="board-cat-spark">✦</span>
-              </div>
-            </div>
-          )}
+          <BoardCatCompanion active={showBoardCatCompanion} boardRef={boardGridRef} compact={compactHeader} mobile={mobileViewport} />
           <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">
@@ -7269,6 +7263,7 @@ const App = () => {
 
           <section
             className={boardClassName}
+            ref={boardGridRef}
             style={{ "--pin-columns": String(columnCount) } as CSSProperties}
             onMouseDown={onBoardBackgroundMouseDown}
             onDragOver={(event) => {
@@ -7414,6 +7409,7 @@ const App = () => {
                       >
                         {showDropPreview && <article className="pin-card pin-drop-preview" aria-hidden="true" />}
                         <article
+                          data-note-id={note.id}
                           className={`pin-card note-${note.color} ${useImageHeroCard ? "image-note" : ""} ${
                             useFramedLinkCard ? "link-only-note" : ""
                           } ${isDocumentWidget ? "document-note" : ""} ${
