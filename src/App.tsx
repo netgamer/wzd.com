@@ -2248,8 +2248,8 @@ const BOARD_LAYOUT_STYLES: Array<{
   description: string;
 }> = [
   { key: "balanced", label: "균형형", description: "카드 종류를 적당히 섞어 균형 있게 배치합니다." },
-  { key: "compact", label: "콤팩트형", description: "여백을 줄이고 촘촘하게 정리합니다." },
-  { key: "visual", label: "시각형", description: "이미지와 링크 카드가 더 잘 보이도록 정리합니다." }
+  { key: "compact", label: "콤팩트형", description: "낮은 컬럼을 먼저 채워 스크롤을 줄이는 방향으로 정리합니다." },
+  { key: "visual", label: "종류별 정리", description: "메모와 위젯 비중을 보고 한쪽 컬럼군씩 묶어서 정리합니다." }
 ];
 
 const isBoardLayoutStyle = (value: unknown): value is BoardLayoutStyle =>
@@ -2292,11 +2292,36 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   return "text";
 };
 
+const isWidgetLikeNote = (note: NoteV2) => getWidgetType(note) !== "note";
+
+const getGroupedColumnPreference = (
+  note: NoteV2,
+  totalColumns: number,
+  dominantGroup: "note" | "widget"
+) => {
+  const allColumns = Array.from({ length: totalColumns }, (_, index) => index);
+  if (totalColumns <= 1) {
+    return allColumns;
+  }
+
+  const dominantCount = Math.max(1, Math.ceil(totalColumns / 2));
+  const dominantColumns = allColumns.slice(0, dominantCount);
+  const secondaryColumns = allColumns.slice(dominantCount);
+  const preferredPrimary = dominantGroup === "widget" ? isWidgetLikeNote(note) : !isWidgetLikeNote(note);
+
+  if (preferredPrimary) {
+    return [...dominantColumns, ...secondaryColumns];
+  }
+
+  return secondaryColumns.length > 0 ? [...secondaryColumns, ...dominantColumns] : [...dominantColumns];
+};
+
 const getPreferredColumns = (
   note: NoteV2,
   totalColumns: number,
   columnHeights: number[],
-  layoutStyle: BoardLayoutStyle
+  layoutStyle: BoardLayoutStyle,
+  dominantGroup: "note" | "widget" | null
 ) => {
   const allColumns = Array.from({ length: totalColumns }, (_, index) => index);
   const category = getAutoLayoutCategory(note);
@@ -2313,16 +2338,16 @@ const getPreferredColumns = (
     return [...allColumns].sort((left, right) => columnHeights[left] - columnHeights[right]);
   }
 
+  if (layoutStyle === "visual" && dominantGroup) {
+    return getGroupedColumnPreference(note, totalColumns, dominantGroup);
+  }
+
   switch (category) {
     case "image":
-      return layoutStyle === "visual"
-        ? [0, 1, ...allColumns.filter((index) => index > 1)]
-        : [0, ...allColumns.filter((index) => index !== 0)];
+      return [0, ...allColumns.filter((index) => index !== 0)];
     case "link": {
       const middle = Math.min(1, totalColumns - 1);
-      return layoutStyle === "visual"
-        ? [middle, 0, ...allColumns.filter((index) => index !== middle && index !== 0)]
-        : [middle, ...allColumns.filter((index) => index !== middle)];
+      return [middle, ...allColumns.filter((index) => index !== middle)];
     }
     case "text": {
       const middle = Math.floor((totalColumns - 1) / 2);
@@ -2404,6 +2429,10 @@ const autoOrganizeBoardNotes = (
   const columns = Array.from({ length: Math.max(1, columnCount) }, () => [] as NoteV2[]);
   const columnHeights = Array.from({ length: Math.max(1, columnCount) }, () => 0);
   const updatedAt = nowIso();
+  const widgetCount = boardActiveNotes.filter((note) => isWidgetLikeNote(note)).length;
+  const noteCount = boardActiveNotes.length - widgetCount;
+  const dominantGroup =
+    widgetCount === noteCount ? null : widgetCount > noteCount ? ("widget" as const) : ("note" as const);
 
   const sortedNotes = [...boardActiveNotes].sort((a, b) => {
     if (a.pinned !== b.pinned) {
@@ -2424,7 +2453,7 @@ const autoOrganizeBoardNotes = (
   });
 
   sortedNotes.forEach((note) => {
-    const preferredColumns = getPreferredColumns(note, columns.length, columnHeights, layoutStyle);
+    const preferredColumns = getPreferredColumns(note, columns.length, columnHeights, layoutStyle, dominantGroup);
     const targetColumn =
       preferredColumns.reduce((bestColumn, column) => {
         if (columnHeights[column] < columnHeights[bestColumn]) {
