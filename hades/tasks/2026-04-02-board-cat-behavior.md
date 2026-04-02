@@ -58,3 +58,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 - 2026-04-03: correct the drop pose to the crouched downward-looking EXE frame requested by the user
 - 2026-04-03: align both wait poses to the exact user-picked EXE frames for top idle and pre-drop crouch
 - 2026-04-03: export the original EXE frame tiles as numbered PNGs under `public/companions/original-frames` so future pose picks can use explicit numbers
+- 2026-04-03: rebuild `public/companions/original-frames` from isolated `segments` instead of broken tile slices so every numbered frame is a valid single pose
