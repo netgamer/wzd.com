@@ -4335,39 +4335,14 @@ const App = () => {
       }, BOARD_CAT_IDLE_MS);
     };
 
-    const markActivity = () => {
-      if (boardCatIdleStateRef.current) {
-        boardCatIdleStateRef.current = false;
-        setBoardCatIdle(false);
-      }
-      armIdleTimer();
-    };
-
     boardCatIdleStateRef.current = false;
     setBoardCatIdle(false);
     armIdleTimer();
 
-    window.addEventListener("pointerdown", markActivity);
-    window.addEventListener("pointermove", markActivity);
-    window.addEventListener("wheel", markActivity);
-    window.addEventListener("keydown", markActivity);
-    window.addEventListener("touchstart", markActivity);
-    window.addEventListener("scroll", markActivity);
-    document.addEventListener("focusin", markActivity);
-    document.addEventListener("input", markActivity);
-
     return () => {
       clearIdleTimer();
-      window.removeEventListener("pointerdown", markActivity);
-      window.removeEventListener("pointermove", markActivity);
-      window.removeEventListener("wheel", markActivity);
-      window.removeEventListener("keydown", markActivity);
-      window.removeEventListener("touchstart", markActivity);
-      window.removeEventListener("scroll", markActivity);
-      document.removeEventListener("focusin", markActivity);
-      document.removeEventListener("input", markActivity);
     };
-  }, [boardCatEligible, selectedBoard?.id]);
+  }, [boardCatEligible, selectedBoard?.id, boards, notes]);
 
   useEffect(() => {
     if (!supabase) {
