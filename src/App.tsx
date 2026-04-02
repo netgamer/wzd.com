@@ -6653,7 +6653,7 @@ const App = () => {
               user ? (
                 <div className="profile-menu-wrap" ref={profileMenuRef}>
                   <button
-                    className={compactHeader ? "mobile-profile-button" : "profile-pill"}
+                    className={compactHeader ? "mobile-profile-button" : "profile-pill profile-pill-expandable"}
                     onClick={() => setProfileMenuOpen((prev) => !prev)}
                     aria-expanded={profileMenuOpen}
                   >

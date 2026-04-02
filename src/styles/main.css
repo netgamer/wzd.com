@@ -777,6 +777,22 @@ button {
   cursor: pointer;
 }
 
+.profile-pill-expandable {
+  width: 44px;
+  padding-right: 8px;
+  overflow: hidden;
+  justify-content: flex-start;
+  transition: width 220ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.profile-pill-expandable:hover,
+.profile-menu-wrap:focus-within .profile-pill-expandable,
+.profile-pill-expandable[aria-expanded="true"] {
+  width: 268px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74);
+}
+
 .profile-pill.muted {
   color: var(--muted);
 }
@@ -817,14 +833,33 @@ button {
   color: #fff;
   font-size: 13px;
   font-weight: 700;
+  flex: 0 0 auto;
+  transition: transform 220ms ease;
 }
 
 .profile-email {
-  max-width: 210px;
+  max-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: 13px;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: max-width 220ms ease, opacity 160ms ease, transform 220ms ease;
+}
+
+.profile-pill-expandable:hover .profile-email,
+.profile-menu-wrap:focus-within .profile-pill-expandable .profile-email,
+.profile-pill-expandable[aria-expanded="true"] .profile-email {
+  max-width: 210px;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.profile-pill-expandable:hover .profile-avatar,
+.profile-menu-wrap:focus-within .profile-pill-expandable .profile-avatar,
+.profile-pill-expandable[aria-expanded="true"] .profile-avatar {
+  transform: translateX(2px);
 }
 
 .settings-overlay {
