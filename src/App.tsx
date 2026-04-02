@@ -1521,6 +1521,7 @@ const getSharedBoardSlugFromLocation = () => {
   return match?.[1] ?? null;
 };
 const isHomeBoard = (board: BoardV2 | null) => Boolean(board?.settings?.homeBoard);
+const getPreferredHomeBoardId = (boards: BoardV2[]) => boards.find((board) => !isBoardTrashed(board) && isHomeBoard(board))?.id ?? null;
 const isHomeAdminEmail = (email?: string | null) => Boolean(email && email.trim().toLowerCase() === HOME_ADMIN_EMAIL);
 const getBoardShareSlug = (board: BoardV2 | null) =>
   typeof board?.settings?.sharedSlug === "string" && board.settings.sharedSlug.trim() ? board.settings.sharedSlug.trim() : "";
@@ -4180,9 +4181,10 @@ const App = () => {
         setBoards(merged.boards);
         setNotes(sanitizeNotes(merged.notes));
         const preferredBoardId = loadLastViewedBoardId(user.id);
+        const homeBoardId = getPreferredHomeBoardId(merged.boards);
         const restoredBoardId = merged.boards.some((board) => !isBoardTrashed(board) && board.id === preferredBoardId)
           ? preferredBoardId
-          : merged.selectedBoardId;
+          : homeBoardId ?? merged.selectedBoardId;
         setSelectedBoardId(restoredBoardId);
         setSelectedNoteId(null);
         setLoading(false);
@@ -4340,7 +4342,7 @@ const App = () => {
 
   useEffect(() => {
     if (!selectedBoard && activeBoards.length > 0) {
-      setSelectedBoardId(activeBoards[0].id);
+      setSelectedBoardId(getPreferredHomeBoardId(activeBoards) ?? activeBoards[0].id);
     }
   }, [activeBoards, selectedBoard]);
 
