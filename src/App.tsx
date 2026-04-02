@@ -6800,23 +6800,8 @@ const App = () => {
         </header>
 
         {mobileBoardMenuOpen && (
-            <div className="mobile-board-sheet">
+          <div className="mobile-board-sheet">
             <div className="mobile-board-list">
-              {activeBoards.map((boardItem) => (
-                <button
-                  key={`mobile-${boardItem.id}`}
-                  className={`mobile-board-item ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
-                  onClick={() => {
-                    setSelectedBoardId(boardItem.id);
-                    setSelectedNoteId(null);
-                    setFeedMode("active");
-                    setMobileBoardMenuOpen(false);
-                  }}
-                >
-                  <span className="mobile-board-badge">{getBoardBadge(boardItem.title)}</span>
-                  <span className="mobile-board-name">{boardItem.title}</span>
-                </button>
-              ))}
               <div className="mobile-board-actions">
                 {homeBoardRoute && user && (
                   <button
