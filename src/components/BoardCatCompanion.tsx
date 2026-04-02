@@ -131,8 +131,8 @@ const measureLayout = (overlay: HTMLDivElement, board: HTMLElement, preset: Spri
         bottom,
         width: rect.width,
         height: rect.height,
-        // Keep the cat's feet aligned to the card's top edge without floating above it.
-        surfaceY: top - preset.frameHeight + 6
+        // Keep the full walking body on the card cap line, not inside the note body.
+        surfaceY: top - preset.frameHeight - 12
       };
     })
     .filter((card) => card.bottom > -20 && card.top < overlayRect.height + 40);
