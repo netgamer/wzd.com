@@ -1575,14 +1575,51 @@ button {
   filter: drop-shadow(0 12px 22px rgba(49, 31, 16, 0.16));
 }
 
-.board-cat-sprite-sheet {
+.board-cat-pose {
+  width: 100%;
+  height: 100%;
+  transform-origin: center bottom;
+}
+
+.board-cat-actor[data-direction="left"] .board-cat-pose {
+  transform: scaleX(-1);
+}
+
+.board-cat-image {
   width: var(--board-cat-frame-w);
   height: var(--board-cat-frame-h);
-  background-image: url("/companions/blue-cat-sheet.png");
-  background-repeat: no-repeat;
-  background-size: calc(var(--board-cat-frame-w) * 24) calc(var(--board-cat-frame-h) * 4);
+  display: block;
+  object-fit: contain;
   image-rendering: pixelated;
-  will-change: background-position, transform;
+  will-change: transform;
+  animation: board-cat-walk-bob 1.05s steps(2, end) infinite;
+}
+
+.board-cat-actor[data-behavior="cling"] .board-cat-pose {
+  transform: rotate(-84deg) translate3d(-5px, -2px, 0);
+  animation: board-cat-cling-sway 0.95s ease-in-out infinite;
+}
+
+.board-cat-actor[data-behavior="cling"][data-direction="left"] .board-cat-pose {
+  transform: scaleX(-1) rotate(-84deg) translate3d(-5px, -2px, 0);
+}
+
+.board-cat-actor[data-behavior="drop"] .board-cat-pose {
+  transform: rotate(12deg) translate3d(0, 0, 0);
+  animation: board-cat-drop-wiggle 0.45s ease-in-out infinite;
+}
+
+.board-cat-actor[data-behavior="drop"][data-direction="left"] .board-cat-pose {
+  transform: scaleX(-1) rotate(12deg) translate3d(0, 0, 0);
+}
+
+.board-cat-actor[data-behavior="leap"] .board-cat-pose {
+  transform: rotate(-18deg) translate3d(0, -2px, 0);
+  animation: board-cat-leap-stretch 0.42s ease-in-out infinite;
+}
+
+.board-cat-actor[data-behavior="leap"][data-direction="left"] .board-cat-pose {
+  transform: scaleX(-1) rotate(-18deg) translate3d(0, -2px, 0);
 }
 
 .board-cat-spark {
@@ -1615,6 +1652,46 @@ button {
   50% {
     opacity: 1;
     transform: translate3d(0, -2px, 0) scale(1.1);
+  }
+}
+
+@keyframes board-cat-walk-bob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+@keyframes board-cat-cling-sway {
+  0%,
+  100% {
+    transform: rotate(-84deg) translate3d(-5px, -2px, 0);
+  }
+  50% {
+    transform: rotate(-88deg) translate3d(-7px, 0, 0);
+  }
+}
+
+@keyframes board-cat-drop-wiggle {
+  0%,
+  100% {
+    transform: rotate(12deg) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: rotate(18deg) translate3d(0, 2px, 0);
+  }
+}
+
+@keyframes board-cat-leap-stretch {
+  0%,
+  100% {
+    transform: rotate(-18deg) translate3d(0, -2px, 0) scale(1, 1);
+  }
+  50% {
+    transform: rotate(-10deg) translate3d(0, -6px, 0) scale(1.04, 0.96);
   }
 }
 

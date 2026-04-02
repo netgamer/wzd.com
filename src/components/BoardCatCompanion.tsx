@@ -60,18 +60,6 @@ type SpritePreset = {
   gravity: number;
 };
 
-const SPRITE_COLUMNS = 24;
-const WALK_FRAMES = [24, 25, 26, 27, 28, 29];
-const CLING_FRAMES = [2, 3, 4, 5, 4, 3];
-const DROP_FRAMES = [43, 44, 45, 46];
-const IDLE_FRAMES = [18, 19, 20, 19];
-const FRAME_TIMINGS: Record<CatBehavior, number> = {
-  walk: 120,
-  leap: 90,
-  cling: 130,
-  drop: 95
-};
-
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 const getSpritePreset = (compact: boolean, mobile: boolean): SpritePreset => {
@@ -84,20 +72,6 @@ const getSpritePreset = (compact: boolean, mobile: boolean): SpritePreset => {
   }
 
   return { frameWidth: 56, frameHeight: 101, stepSpeed: 62, gravity: 760 };
-};
-
-const getFramesForBehavior = (behavior: CatBehavior) => {
-  switch (behavior) {
-    case "cling":
-      return CLING_FRAMES;
-    case "drop":
-      return DROP_FRAMES;
-    case "leap":
-      return DROP_FRAMES;
-    case "walk":
-    default:
-      return WALK_FRAMES;
-  }
 };
 
 const pickCardTarget = (layout: CatLayout, state: MotionState, preset: SpritePreset): ClingTarget | null => {
@@ -198,13 +172,11 @@ const findLandingSurface = (layout: CatLayout, x: number, previousY: number, nex
 export default function BoardCatCompanion({ active, boardRef, compact, mobile }: BoardCatCompanionProps) {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const actorRef = useRef<HTMLDivElement | null>(null);
-  const spriteRef = useRef<HTMLDivElement | null>(null);
   const shadowRef = useRef<HTMLDivElement | null>(null);
   const layoutRef = useRef<CatLayout | null>(null);
   const stateRef = useRef<MotionState | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastTickRef = useRef(0);
-  const frameRef = useRef({ behavior: "walk" as CatBehavior, frameCursor: 0, frameAt: 0, direction: 1 as -1 | 1 });
 
   useEffect(() => {
     if (!active) {
@@ -214,10 +186,9 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
     const overlay = overlayRef.current;
     const board = boardRef.current;
     const actor = actorRef.current;
-    const sprite = spriteRef.current;
     const shadow = shadowRef.current;
 
-    if (!overlay || !board || !actor || !sprite || !shadow) {
+    if (!overlay || !board || !actor || !shadow) {
       return;
     }
 
@@ -257,14 +228,6 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
     const resizeObserver = new ResizeObserver(() => syncLayout());
     resizeObserver.observe(overlay);
     resizeObserver.observe(board);
-
-    const applyFrame = (frameIndex: number, direction: -1 | 1, behavior: CatBehavior) => {
-      const frameColumn = frameIndex % SPRITE_COLUMNS;
-      const frameRow = Math.floor(frameIndex / SPRITE_COLUMNS);
-      sprite.style.backgroundPosition = `-${frameColumn * preset.frameWidth}px -${frameRow * preset.frameHeight}px`;
-      sprite.style.transform = `scaleX(${direction})`;
-      actor.dataset.behavior = behavior;
-    };
 
     const startDrop = (now: number) => {
       const state = stateRef.current;
@@ -389,23 +352,8 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
         }
       }
 
-      const actorBehavior = state.behavior;
-      const sequence = actorBehavior === "walk" ? WALK_FRAMES : getFramesForBehavior(actorBehavior);
-      const frameDuration = FRAME_TIMINGS[actorBehavior];
-
-      if (frameRef.current.behavior !== actorBehavior || frameRef.current.direction !== state.direction) {
-        frameRef.current.behavior = actorBehavior;
-        frameRef.current.direction = state.direction;
-        frameRef.current.frameCursor = 0;
-        frameRef.current.frameAt = now;
-      } else if (now - frameRef.current.frameAt >= frameDuration) {
-        frameRef.current.frameCursor = (frameRef.current.frameCursor + 1) % sequence.length;
-        frameRef.current.frameAt = now;
-      }
-
-      const activeFrame = sequence[frameRef.current.frameCursor] ?? IDLE_FRAMES[0];
-      applyFrame(activeFrame, state.direction, actorBehavior);
-
+      actor.dataset.behavior = state.behavior;
+      actor.dataset.direction = state.direction === 1 ? "right" : "left";
       actor.style.transform = `translate3d(${state.x}px, ${state.y}px, 0)`;
       const shadowScale = state.behavior === "cling" ? 0.4 : state.behavior === "drop" ? 0.62 : 1;
       const shadowOpacity = state.behavior === "cling" ? 0.14 : state.behavior === "drop" ? 0.22 : 0.28;
@@ -433,7 +381,9 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
     <div className="board-cat-companion" aria-hidden="true" ref={overlayRef}>
       <div className="board-cat-shadow" ref={shadowRef} />
       <div className="board-cat-actor" ref={actorRef}>
-        <div className="board-cat-sprite-sheet" ref={spriteRef} />
+        <div className="board-cat-pose">
+          <img className="board-cat-image" src="/companions/blue-cat.png" alt="" />
+        </div>
         <span className="board-cat-spark">✦</span>
       </div>
     </div>
