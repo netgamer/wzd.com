@@ -7226,7 +7226,7 @@ const App = () => {
             <div className="board-cat-companion" aria-hidden="true">
               <div className="board-cat-shadow" />
               <div className="board-cat-sprite">
-                <span className="board-cat-glyph">🐈</span>
+                <img className="board-cat-image" src="/companions/blue-cat.png" alt="" />
                 <span className="board-cat-spark">✦</span>
               </div>
             </div>

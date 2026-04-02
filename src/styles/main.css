@@ -1566,19 +1566,22 @@ button {
   animation:
     board-cat-wander 34s linear infinite,
     board-cat-bob 2.6s ease-in-out infinite;
-  filter: drop-shadow(0 8px 18px rgba(56, 38, 20, 0.18));
+  filter: drop-shadow(0 10px 18px rgba(56, 38, 20, 0.18));
 }
 
-.board-cat-glyph {
-  font-size: 32px;
-  line-height: 1;
+.board-cat-image {
+  width: 72px;
+  height: auto;
+  display: block;
+  image-rendering: pixelated;
+  user-select: none;
 }
 
 .board-cat-spark {
   font-size: 10px;
   line-height: 1;
   color: rgba(248, 173, 94, 0.92);
-  transform: translateY(2px);
+  transform: translate(-4px, 6px);
   animation: board-cat-sparkle 1.8s ease-in-out infinite;
 }
 
@@ -4156,8 +4159,8 @@ button {
     inset: 104px 16px 16px;
   }
 
-  .board-cat-glyph {
-    font-size: 28px;
+  .board-cat-image {
+    width: 62px;
   }
 
   .board-cat-shadow {
@@ -4298,8 +4301,8 @@ button {
     inset: 92px 10px 10px;
   }
 
-  .board-cat-glyph {
-    font-size: 24px;
+  .board-cat-image {
+    width: 52px;
   }
 
   .board-page .workspace-topbar .topbar-actions {
