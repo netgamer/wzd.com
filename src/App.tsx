@@ -2564,6 +2564,7 @@ const App = () => {
   const mobileBoardTabsRef = useRef<HTMLDivElement | null>(null);
   const mobileBoardTabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const noteCardRefs = useRef<Record<string, HTMLElement | null>>({});
+  const noteEditorRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const pendingMobileNewNoteScrollRef = useRef<string | null>(null);
   const boardLongPressTimerRef = useRef<number | null>(null);
   const boardSwipeStartRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -4384,7 +4385,15 @@ const App = () => {
 
     const frame = window.requestAnimationFrame(() => {
       target.scrollIntoView({ behavior: "smooth", block: "center" });
-      pendingMobileNewNoteScrollRef.current = null;
+      window.setTimeout(() => {
+        const editor = noteEditorRefs.current[selectedNoteId];
+        if (editor) {
+          editor.focus({ preventScroll: true });
+          const length = editor.value.length;
+          editor.setSelectionRange(length, length);
+        }
+        pendingMobileNewNoteScrollRef.current = null;
+      }, 260);
     });
 
     return () => {
@@ -8164,6 +8173,9 @@ const App = () => {
                                       </div>
                                     )}
                                     <textarea
+                                      ref={(node) => {
+                                        noteEditorRefs.current[note.id] = node;
+                                      }}
                                       className={`pin-editor ${editorDropNoteId === note.id ? "drop-active" : ""}`}
                                       value={note.content}
                                       style={{ fontSize: `${fontSize}px` }}
