@@ -3327,7 +3327,7 @@ button {
 }
 
 .pin-card.document-note .pin-card-body {
-  gap: 0;
+  gap: 12px;
 }
 
 .pin-card.landing-home-note {
