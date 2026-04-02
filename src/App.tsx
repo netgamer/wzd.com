@@ -317,6 +317,21 @@ const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
     content: "빠른 메모\n\n회의 전에 꼭 물어볼 질문 3개\n- 현재 병목은 어디인지\n- 이번 주 목표\n- 필요한 레퍼런스 링크"
   },
   {
+    color: "mint",
+    content: "일반 메모 샘플\n\n짧은 메모는 제목과 본문만 적어도 바로 카드가 됩니다.\n아이디어, 회의 요약, 해야 할 일 메모처럼 가장 자주 쓰는 기본 형태입니다."
+  },
+  {
+    color: "white",
+    content: "링크 메모 샘플\n\nOpenAI API 최신 가이드 확인\nhttps://platform.openai.com/docs/guides/text"
+  },
+  {
+    color: "white",
+    content: "이미지 메모 샘플\n\n무드보드, 레퍼런스, 촬영컷처럼 이미지 한 장만 붙여도 카드가 됩니다.",
+    metadata: {
+      pastedImageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80"
+    }
+  },
+  {
     color: "white",
     content: "자주 여는 링크",
     metadata: {
