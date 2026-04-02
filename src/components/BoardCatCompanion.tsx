@@ -73,10 +73,12 @@ type SpritePreset = {
 const CAT_FRAMES = {
   idle: ["/companions/blue-cat.png"],
   walk: [
-    "/companions/frames/walk-1.png",
-    "/companions/frames/walk-2.png",
-    "/companions/frames/walk-3.png",
-    "/companions/frames/walk-4.png"
+    "/companions/original-frames/04.png",
+    "/companions/original-frames/05.png",
+    "/companions/original-frames/06.png",
+    "/companions/original-frames/72.png",
+    "/companions/original-frames/73.png",
+    "/companions/original-frames/13.png"
   ],
   waitUp: ["/companions/original-frames/67.png"],
   waitDown: ["/companions/original-frames/21.png"],

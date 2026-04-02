@@ -64,3 +64,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 - 2026-04-03: use `67.png` for waits before same-level or upward jumps, and only use `21.png` when the next jump target is actually below the current ledge
 - 2026-04-03: split composite `11.png` into twelve additional numbered poses `71.png` to `82.png` and regenerate the frame index
 - 2026-04-03: remap upward jump to `82.png` and downward fall to `78.png` per user-selected numbered frames
+- 2026-04-03: remap walk cycle to `04 -> 05 -> 06 -> 72 -> 73 -> 13` and loop back to `04`
