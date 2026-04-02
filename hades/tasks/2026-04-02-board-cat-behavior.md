@@ -56,3 +56,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 - 2026-04-03: exclude topmost clipped cards from walkable surfaces so the cat never jumps to positions where its body is hidden
 - 2026-04-03: correct the top-card idle pose to the seated upward-looking EXE frame requested by the user
 - 2026-04-03: correct the drop pose to the crouched downward-looking EXE frame requested by the user
+- 2026-04-03: align both wait poses to the exact user-picked EXE frames for top idle and pre-drop crouch
