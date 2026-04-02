@@ -103,14 +103,14 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 
 const getSpritePreset = (compact: boolean, mobile: boolean): SpritePreset => {
   if (mobile) {
-    return { frameWidth: 42, frameHeight: 76, stepSpeed: 26, gravity: 640 };
+    return { frameWidth: 42, frameHeight: 76, stepSpeed: 34, gravity: 640 };
   }
 
   if (compact) {
-    return { frameWidth: 48, frameHeight: 86, stepSpeed: 28, gravity: 700 };
+    return { frameWidth: 48, frameHeight: 86, stepSpeed: 36, gravity: 700 };
   }
 
-  return { frameWidth: 56, frameHeight: 101, stepSpeed: 31, gravity: 760 };
+  return { frameWidth: 56, frameHeight: 101, stepSpeed: 40, gravity: 760 };
 };
 
 const measureLayout = (overlay: HTMLDivElement, board: HTMLElement, preset: SpritePreset): CatLayout => {

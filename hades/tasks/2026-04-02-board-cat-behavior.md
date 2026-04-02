@@ -68,3 +68,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 - 2026-04-03: delete legacy named jump/drop PNGs so the repo only retains the active numbered-frame mapping
 - 2026-04-03: use `78.png` during downward target jumps inside the `leap` state so descending jumps no longer reuse the upward `82.png` frame
 - 2026-04-03: update jump and drop facing from actual horizontal travel so left-to-right jumps flip the sprite correctly
+- 2026-04-03: increase walking speed by about 30% from the slowed baseline while keeping the rest of the behavior unchanged
