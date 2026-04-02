@@ -426,7 +426,7 @@ button {
 }
 
 .board-page .pin-topbar {
-  width: min(100%, 1540px);
+  width: min(1540px, calc(100% - 40px));
   margin: 18px auto 0;
   padding: 18px 22px 16px;
   background:
