@@ -52,3 +52,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 - 2026-04-02: remove wall-cling entirely and replace it with edge-wait plus jump-to-surface motion
 - 2026-04-03: raise card surface anchoring so the cat walks on the top border line instead of sinking into note content
 - 2026-04-03: lower the top-edge anchor slightly so the cat's feet sit on the card instead of hovering above it
+- 2026-04-03: remap wait, leap, and drop poses to exact EXE frames for up-look idle, up-jump, down-look idle, and down-dive motion

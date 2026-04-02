@@ -75,9 +75,10 @@ const CAT_FRAMES = {
     "/companions/frames/walk-3.png",
     "/companions/frames/walk-4.png"
   ],
-  wait: ["/companions/blue-cat.png"],
-  leap: ["/companions/frames/leap-1.png", "/companions/frames/walk-2.png"],
-  drop: ["/companions/frames/drop-1.png", "/companions/frames/walk-3.png"]
+  waitUp: ["/companions/frames/wait-up.png"],
+  waitDown: ["/companions/frames/wait-down.png"],
+  leapUp: ["/companions/frames/leap-up.png"],
+  dropDown: ["/companions/frames/drop-down.png"]
 } as const;
 
 const FRAME_TIMINGS: Record<CatBehavior, number> = {
@@ -166,6 +167,26 @@ const findLandingSurface = (layout: CatLayout, x: number, previousY: number, nex
     .filter((surface) => center >= surface.left && center <= surface.right)
     .sort((a, b) => a.y - b.y)
     .find((surface) => previousY <= surface.y && nextY >= surface.y);
+};
+
+const getDisplayFrames = (state: MotionState, surface: CatSurface) => {
+  if (state.behavior === "walk") {
+    return CAT_FRAMES.walk;
+  }
+
+  if (state.behavior === "wait") {
+    return surface.kind === "ground" ? CAT_FRAMES.waitDown : CAT_FRAMES.waitUp;
+  }
+
+  if (state.behavior === "leap") {
+    return CAT_FRAMES.leapUp;
+  }
+
+  if (state.behavior === "drop") {
+    return CAT_FRAMES.dropDown;
+  }
+
+  return CAT_FRAMES.idle;
 };
 
 const pickJumpTarget = (
@@ -423,7 +444,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       actor.dataset.behavior = state.behavior;
       actor.dataset.direction = state.direction === 1 ? "right" : "left";
 
-      const behaviorFrames = CAT_FRAMES[state.behavior] ?? CAT_FRAMES.idle;
+      const behaviorFrames = getDisplayFrames(state, surface);
       const frameDuration = FRAME_TIMINGS[state.behavior];
       if (frameRef.current.behavior !== state.behavior) {
         frameRef.current.behavior = state.behavior;
