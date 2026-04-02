@@ -25,13 +25,116 @@ type MemoSample = {
   image?: string;
 };
 
-type ShowcaseBoardCard = {
-  badge: string;
-  title: string;
-  accentClass: string;
-  size: "short" | "medium" | "tall";
-  lines: string[];
-};
+type ShowcaseWidget =
+  | {
+      kind: "rss";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      items: Array<{ source: string; headline: string; time: string }>;
+    }
+  | {
+      kind: "weather";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      location: string;
+      temperature: string;
+      summary: string;
+      chips: string[];
+    }
+  | {
+      kind: "todo";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      items: Array<{ label: string; done: boolean }>;
+    }
+  | {
+      kind: "countdown";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      days: string;
+      date: string;
+      summary: string;
+    }
+  | {
+      kind: "timetable";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      rows: Array<{ day: string; time: string; task: string }>;
+    }
+  | {
+      kind: "delivery";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      carrier: string;
+      status: string;
+      steps: string[];
+    }
+  | {
+      kind: "focus";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      timer: string;
+      current: string;
+      next: string;
+    }
+  | {
+      kind: "mood";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      emoji: string;
+      state: string;
+      energy: number;
+      note: string;
+    }
+  | {
+      kind: "prompt";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      sections: string[];
+    }
+  | {
+      kind: "bookmark";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      links: Array<{ label: string; host: string }>;
+    }
+  | {
+      kind: "trend";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      items: string[];
+    }
+  | {
+      kind: "food";
+      badge: string;
+      title: string;
+      accentClass: string;
+      size: "short" | "medium" | "tall";
+      region: string;
+      picks: Array<{ name: string; meta: string }>;
+    };
 
 const FEATURES: LandingFeature[] = [
   {
@@ -231,134 +334,379 @@ const MEMO_SAMPLES: MemoSample[] = [
   }
 ];
 
-const SHOWCASE_BOARD_CARDS: ShowcaseBoardCard[] = [
+const SHOWCASE_WIDGETS: ShowcaseWidget[] = [
   {
-    badge: "NOTE",
-    title: "오늘 회의 포인트",
-    accentClass: "accent-paper",
-    size: "short",
-    lines: ["- 결정할 것 2개", "- 막힌 이슈 1개", "- 참고 링크 전달"]
+    kind: "rss",
+    badge: "RSS",
+    title: "AI 뉴스 피드",
+    accentClass: "accent-lavender",
+    size: "tall",
+    items: [
+      { source: "Google News", headline: "멀티모달 에이전트 실무 적용 사례 정리", time: "6분 전" },
+      { source: "The Verge", headline: "AI tooling stack이 바뀌는 방식", time: "18분 전" },
+      { source: "TechCrunch", headline: "스타트업 운영에 붙는 자동화 루틴", time: "39분 전" }
+    ]
   },
   {
-    badge: "BOOKMARK",
-    title: "브랜드 레퍼런스",
-    accentClass: "accent-sand",
+    kind: "weather",
+    badge: "WEATHER",
+    title: "오늘 날씨",
+    accentClass: "accent-sky",
     size: "medium",
-    lines: ["Figma moodboard", "Campaign archive", "Client deck final"]
+    location: "서울 금천구",
+    temperature: "17°",
+    summary: "오후 흐림, 야외 촬영은 오전 우선",
+    chips: ["강수 40%", "바람 약함", "체감 16°"]
   },
   {
+    kind: "todo",
     badge: "TODO",
     title: "오전 체크리스트",
     accentClass: "accent-mint",
     size: "medium",
-    lines: ["[x] 메일 확인", "[x] 우선순위 정리", "[ ] 시안 수정", "[ ] 공유본 업로드"]
+    items: [
+      { label: "메일 확인", done: true },
+      { label: "우선순위 정리", done: true },
+      { label: "시안 수정", done: false },
+      { label: "공유본 업로드", done: false }
+    ]
   },
   {
-    badge: "WEATHER",
-    title: "촬영 일정 체크",
-    accentClass: "accent-sky",
-    size: "short",
-    lines: ["서울 17도", "오후 흐림", "야외 컷은 오전 우선"]
-  },
-  {
-    badge: "DOC",
-    title: "신규 기능 요약",
-    accentClass: "accent-cream",
-    size: "tall",
-    lines: ["문제: 자료가 링크와 메모로 흩어짐", "해결: 보드 안에 위젯과 메모를 혼합", "효과: 시작페이지와 작업판을 하나로 통합", "다음: 팀 템플릿 3종 추가"]
-  },
-  {
-    badge: "TREND",
-    title: "오늘의 키워드",
-    accentClass: "accent-amber",
-    size: "short",
-    lines: ["AI 에이전트", "로봇택시", "온디바이스 모델"]
-  },
-  {
-    badge: "RSS",
-    title: "읽을 거리 큐",
-    accentClass: "accent-lavender",
-    size: "medium",
-    lines: ["AI newsletter", "Product essay", "Growth teardown", "Frontend case study"]
-  },
-  {
-    badge: "IMAGE",
-    title: "무드 샘플",
+    kind: "countdown",
+    badge: "COUNTDOWN",
+    title: "런칭 카운트다운",
     accentClass: "accent-rose",
-    size: "tall",
-    lines: ["톤: 따뜻한 크림", "질감: 종이 + 유리", "조명: 낮은 대비", "카드: 넓은 라운드"]
+    size: "short",
+    days: "D-12",
+    date: "2026.04.14",
+    summary: "공유본 최종 점검까지 남은 시간"
   },
   {
+    kind: "timetable",
+    badge: "TIMETABLE",
+    title: "주간 일정",
+    accentClass: "accent-blue",
+    size: "tall",
+    rows: [
+      { day: "월", time: "09:00", task: "기획 회의" },
+      { day: "수", time: "13:00", task: "촬영 진행" },
+      { day: "목", time: "15:30", task: "클라이언트 피드백" },
+      { day: "금", time: "17:00", task: "회고 정리" }
+    ]
+  },
+  {
+    kind: "delivery",
+    badge: "DELIVERY",
+    title: "샘플 배송 추적",
+    accentClass: "accent-ash",
+    size: "medium",
+    carrier: "CJ대한통운",
+    status: "간선 상차",
+    steps: ["집화 완료", "간선 상차", "내일 오후 도착 예정"]
+  },
+  {
+    kind: "focus",
     badge: "FOCUS",
     title: "딥워크 세션",
     accentClass: "accent-burgundy",
     size: "short",
-    lines: ["25분 집중", "5분 휴식", "현재 2세트째"]
+    timer: "25:00",
+    current: "현재 2세트째 집중 중",
+    next: "다음 휴식 5분"
   },
   {
-    badge: "ROUTINE",
-    title: "매일 반복",
-    accentClass: "accent-olive",
-    size: "medium",
-    lines: ["아침 정리", "핵심 작업 1개", "점심 전 공유", "퇴근 전 회고"]
+    kind: "mood",
+    badge: "MOOD",
+    title: "오늘의 컨디션",
+    accentClass: "accent-blush",
+    size: "short",
+    emoji: "🙂",
+    state: "차분함",
+    energy: 3,
+    note: "회의 전 준비 완료"
   },
   {
+    kind: "prompt",
     badge: "PROMPT",
     title: "문서 초안 프롬프트",
     accentClass: "accent-violet",
     size: "medium",
-    lines: ["Role: product marketer", "Goal: launch summary", "Tone: concise", "Format: bullets"]
+    sections: ["Role: product marketer", "Goal: launch summary", "Tone: concise", "Format: bullets"]
   },
   {
-    badge: "COUNT",
-    title: "런칭까지",
-    accentClass: "accent-rose",
+    kind: "bookmark",
+    badge: "BOOKMARK",
+    title: "바로 열기 링크",
+    accentClass: "accent-sand",
+    size: "medium",
+    links: [
+      { label: "OpenAI Docs", host: "platform.openai.com" },
+      { label: "Canva Board", host: "canva.com" },
+      { label: "GitHub Actions", host: "github.com" }
+    ]
+  },
+  {
+    kind: "trend",
+    badge: "TREND",
+    title: "오늘의 키워드",
+    accentClass: "accent-amber",
     size: "short",
-    lines: ["D-12", "4월 14일", "공유본 최종 점검"]
+    items: ["AI 에이전트", "로봇택시", "온디바이스 모델"]
   },
   {
-    badge: "PET",
-    title: "모찌 기록",
-    accentClass: "accent-peach",
-    size: "short",
-    lines: ["산책 2회", "간식 조금", "기분 좋음"]
-  },
-  {
+    kind: "food",
     badge: "FOOD",
     title: "금천구 점심 후보",
     accentClass: "accent-coral",
     size: "medium",
-    lines: ["도원", "면식당", "국밥집", "회의 후 도보 7분"]
-  },
-  {
-    badge: "COVER",
-    title: "브랜드 리뉴얼 보드",
-    accentClass: "accent-ink",
-    size: "tall",
-    lines: ["이번 주 집중 작업", "랜딩 수정", "카드 밀도 개선", "팀 공유본 정리"]
-  },
-  {
-    badge: "LINK",
-    title: "바로 열기",
-    accentClass: "accent-paper",
-    size: "short",
-    lines: ["openai docs", "canva board", "github actions"]
-  },
-  {
-    badge: "NOTE",
-    title: "빠른 아이디어",
-    accentClass: "accent-blush",
-    size: "medium",
-    lines: ["히어로 아래에 dense wall", "설명은 유지", "보드 감각은 더 강하게"]
-  },
-  {
-    badge: "BOARD",
-    title: "팀 운영 보드",
-    accentClass: "accent-blue",
-    size: "tall",
-    lines: ["링크", "문서", "루틴", "날씨", "배송", "메모", "프롬프트"]
+    region: "서울 금천구",
+    picks: [
+      { name: "도원", meta: "중식 코스 · 7분" },
+      { name: "면식당", meta: "국수 · 5분" },
+      { name: "국밥집", meta: "빠른 식사 · 4분" }
+    ]
   }
 ];
+
+const renderShowcaseWidget = (widget: ShowcaseWidget) => {
+  const cardClassName = `landing-expanded-widget ${widget.accentClass} ${widget.size}`.trim();
+
+  if (widget.kind === "rss") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-rss-feed">
+          {widget.items.map((item) => (
+            <article key={`${item.source}-${item.headline}`} className="showcase-rss-item">
+              <div className="showcase-rss-meta">
+                <span>{item.source}</span>
+                <span>{item.time}</span>
+              </div>
+              <strong>{item.headline}</strong>
+            </article>
+          ))}
+        </div>
+      </article>
+    );
+  }
+
+  if (widget.kind === "weather") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-weather-card">
+          <p className="showcase-weather-location">{widget.location}</p>
+          <div className="showcase-weather-main">
+            <strong>{widget.temperature}</strong>
+            <span>{widget.summary}</span>
+          </div>
+          <div className="showcase-chip-row">
+            {widget.chips.map((chip) => (
+              <span key={chip} className="showcase-chip">
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (widget.kind === "todo") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-todo-list">
+          {widget.items.map((item) => (
+            <div key={item.label} className={`showcase-todo-item ${item.done ? "done" : ""}`.trim()}>
+              <span className="showcase-check">{item.done ? "✓" : ""}</span>
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </article>
+    );
+  }
+
+  if (widget.kind === "countdown") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-countdown-card">
+          <strong className="showcase-countdown-days">{widget.days}</strong>
+          <p>{widget.summary}</p>
+          <span className="showcase-countdown-date">{widget.date}</span>
+        </div>
+      </article>
+    );
+  }
+
+  if (widget.kind === "timetable") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-timetable">
+          {widget.rows.map((row) => (
+            <div key={`${row.day}-${row.time}-${row.task}`} className="showcase-timetable-row">
+              <span>{row.day}</span>
+              <span>{row.time}</span>
+              <strong>{row.task}</strong>
+            </div>
+          ))}
+        </div>
+      </article>
+    );
+  }
+
+  if (widget.kind === "delivery") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-delivery-card">
+          <div className="showcase-delivery-meta">
+            <span>{widget.carrier}</span>
+            <strong>{widget.status}</strong>
+          </div>
+          <div className="showcase-delivery-steps">
+            {widget.steps.map((step, index) => (
+              <div key={step} className="showcase-delivery-step">
+                <span className="showcase-delivery-dot">{index + 1}</span>
+                <p>{step}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (widget.kind === "focus") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-focus-card">
+          <div className="showcase-focus-ring">
+            <strong>{widget.timer}</strong>
+          </div>
+          <p>{widget.current}</p>
+          <span>{widget.next}</span>
+        </div>
+      </article>
+    );
+  }
+
+  if (widget.kind === "mood") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-mood-card">
+          <div className="showcase-mood-top">
+            <span className="showcase-mood-emoji">{widget.emoji}</span>
+            <div>
+              <strong>{widget.state}</strong>
+              <p>{widget.note}</p>
+            </div>
+          </div>
+          <div className="showcase-energy-bar">
+            <span style={{ width: `${widget.energy * 20}%` }} />
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (widget.kind === "prompt") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <pre className="showcase-prompt-card">{widget.sections.join("\n")}</pre>
+      </article>
+    );
+  }
+
+  if (widget.kind === "bookmark") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-bookmark-list">
+          {widget.links.map((link) => (
+            <div key={link.label} className="showcase-bookmark-item">
+              <strong>{link.label}</strong>
+              <span>{link.host}</span>
+            </div>
+          ))}
+        </div>
+      </article>
+    );
+  }
+
+  if (widget.kind === "trend") {
+    return (
+      <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+        <div className="landing-expanded-widget-head">
+          <span>{widget.badge}</span>
+          <strong>{widget.title}</strong>
+        </div>
+        <div className="showcase-trend-list">
+          {widget.items.map((item, index) => (
+            <div key={item} className="showcase-trend-item">
+              <span>{index + 1}</span>
+              <strong>{item}</strong>
+            </div>
+          ))}
+        </div>
+      </article>
+    );
+  }
+
+  return (
+    <article key={`${widget.badge}-${widget.title}`} className={cardClassName}>
+      <div className="landing-expanded-widget-head">
+        <span>{widget.badge}</span>
+        <strong>{widget.title}</strong>
+      </div>
+      <div className="showcase-food-card">
+        <p className="showcase-food-region">{widget.region}</p>
+        {widget.picks.map((pick) => (
+          <div key={pick.name} className="showcase-food-item">
+            <strong>{pick.name}</strong>
+            <span>{pick.meta}</span>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+};
 
 const LandingPage = () => {
   const handleGoogleLogin = async () => {
@@ -418,10 +766,7 @@ const LandingPage = () => {
               </div>
               <div className="landing-hero-mini-grid">
                 {WIDGET_SAMPLES.slice(0, 6).map((widget) => (
-                  <article
-                    key={widget.badge}
-                    className={`landing-widget-mini-card ${widget.accentClass}`}
-                  >
+                  <article key={widget.badge} className={`landing-widget-mini-card ${widget.accentClass}`}>
                     <span className="landing-widget-mini-badge">{widget.badge}</span>
                     <strong>{widget.title}</strong>
                     <p>{widget.lines[0]}</p>
@@ -518,30 +863,16 @@ const LandingPage = () => {
         <section className="landing-expanded-wall">
           <div className="landing-expanded-wall-inner">
             <div className="landing-section-header left">
-              <p className="landing-section-kicker">EXPANDED BOARD SAMPLE</p>
-              <h2>실제 보드처럼 카드가 많이 깔린 화면도 아래에서 바로 볼 수 있습니다</h2>
+              <p className="landing-section-kicker">REAL WIDGET PREVIEW</p>
+              <h2>아래 카드들은 메모가 아니라 실제 위젯이 어떻게 보이는지에 더 가깝습니다</h2>
               <p className="landing-section-desc">
-                위젯 설명을 본 다음에는, 이런 카드들이 한 보드 안에서 어떻게 많이 쌓여 보이는지도 같이 보여줍니다.
+                RSS, 날씨, 체크리스트, 시간표, 배송 추적, 프롬프트처럼 실제 위젯 레이아웃을 그대로 축약해서
+                보여줍니다.
               </p>
             </div>
 
             <div className="landing-expanded-board">
-              {SHOWCASE_BOARD_CARDS.map((card) => (
-                <article
-                  key={`${card.badge}-${card.title}`}
-                  className={`landing-expanded-card ${card.accentClass} ${card.size}`}
-                >
-                  <div className="landing-expanded-card-head">
-                    <span>{card.badge}</span>
-                    <strong>{card.title}</strong>
-                  </div>
-                  <div className="landing-expanded-card-body">
-                    {card.lines.map((line) => (
-                      <p key={line}>{line}</p>
-                    ))}
-                  </div>
-                </article>
-              ))}
+              {SHOWCASE_WIDGETS.map((widget) => renderShowcaseWidget(widget))}
             </div>
           </div>
         </section>

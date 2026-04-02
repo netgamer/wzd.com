@@ -5083,7 +5083,7 @@ button {
   column-gap: 18px;
 }
 
-.landing-expanded-card {
+.landing-expanded-widget {
   break-inside: avoid;
   display: inline-block;
   width: 100%;
@@ -5096,25 +5096,25 @@ button {
     0 18px 34px rgba(49, 33, 16, 0.08);
 }
 
-.landing-expanded-card.short {
+.landing-expanded-widget.short {
   min-height: 170px;
 }
 
-.landing-expanded-card.medium {
+.landing-expanded-widget.medium {
   min-height: 224px;
 }
 
-.landing-expanded-card.tall {
+.landing-expanded-widget.tall {
   min-height: 290px;
 }
 
-.landing-expanded-card-head {
+.landing-expanded-widget-head {
   display: grid;
   gap: 10px;
   margin-bottom: 14px;
 }
 
-.landing-expanded-card-head span {
+.landing-expanded-widget-head span {
   justify-self: start;
   min-height: 28px;
   padding: 0 10px;
@@ -5128,26 +5128,236 @@ button {
   letter-spacing: 0.12em;
 }
 
-.landing-expanded-card-head strong {
+.landing-expanded-widget-head strong {
   font-size: 24px;
   line-height: 1.08;
   letter-spacing: -0.04em;
   color: #20160d;
 }
 
-.landing-expanded-card-body {
+.showcase-rss-feed,
+.showcase-todo-list,
+.showcase-timetable,
+.showcase-delivery-steps,
+.showcase-bookmark-list,
+.showcase-trend-list,
+.showcase-food-card {
   display: grid;
   gap: 10px;
 }
 
-.landing-expanded-card-body p {
-  margin: 0;
-  padding: 10px 12px;
+.showcase-rss-item,
+.showcase-bookmark-item,
+.showcase-food-item {
+  padding: 12px 14px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.58);
-  color: rgba(31, 26, 19, 0.8);
+  background: rgba(255, 255, 255, 0.62);
+  display: grid;
+  gap: 6px;
+}
+
+.showcase-rss-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(31, 26, 19, 0.52);
+}
+
+.showcase-rss-item strong,
+.showcase-bookmark-item strong,
+.showcase-food-item strong,
+.showcase-trend-item strong,
+.showcase-timetable-row strong {
+  font-size: 15px;
+  line-height: 1.4;
+  color: #24180f;
+}
+
+.showcase-weather-card,
+.showcase-countdown-card,
+.showcase-delivery-card,
+.showcase-focus-card,
+.showcase-mood-card {
+  display: grid;
+  gap: 12px;
+}
+
+.showcase-weather-location,
+.showcase-food-region,
+.showcase-countdown-date,
+.showcase-bookmark-item span,
+.showcase-food-item span {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(31, 26, 19, 0.56);
+}
+
+.showcase-weather-main {
+  display: grid;
+  gap: 6px;
+}
+
+.showcase-weather-main strong,
+.showcase-countdown-days {
+  font-size: 42px;
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  color: #1f160d;
+}
+
+.showcase-weather-main span,
+.showcase-countdown-card p,
+.showcase-focus-card p,
+.showcase-focus-card span,
+.showcase-mood-card p {
+  margin: 0;
   font-size: 14px;
   line-height: 1.5;
+  color: rgba(31, 26, 19, 0.74);
+}
+
+.showcase-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.showcase-chip {
+  min-height: 28px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(31, 26, 19, 0.68);
+}
+
+.showcase-todo-item,
+.showcase-timetable-row,
+.showcase-delivery-step,
+.showcase-trend-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.showcase-todo-item.done {
+  opacity: 0.78;
+}
+
+.showcase-check,
+.showcase-delivery-dot,
+.showcase-trend-item span:first-child {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(31, 26, 19, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(31, 26, 19, 0.72);
+}
+
+.showcase-timetable-row {
+  grid-template-columns: auto auto 1fr;
+}
+
+.showcase-timetable-row span {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(31, 26, 19, 0.6);
+}
+
+.showcase-delivery-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.showcase-delivery-meta span {
+  font-size: 12px;
+  color: rgba(31, 26, 19, 0.56);
+}
+
+.showcase-delivery-meta strong,
+.showcase-mood-top strong {
+  font-size: 18px;
+  color: #24180f;
+}
+
+.showcase-delivery-step p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(31, 26, 19, 0.76);
+}
+
+.showcase-focus-ring {
+  width: 112px;
+  height: 112px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.86) 0 57%, transparent 58%),
+    conic-gradient(from 0deg, rgba(255, 255, 255, 0.9) 0 78%, rgba(31, 26, 19, 0.1) 78% 100%);
+}
+
+.showcase-focus-ring strong {
+  font-size: 26px;
+  letter-spacing: -0.05em;
+  color: #20160d;
+}
+
+.showcase-mood-top {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.showcase-mood-emoji {
+  font-size: 28px;
+}
+
+.showcase-energy-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.52);
+  overflow: hidden;
+}
+
+.showcase-energy-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff7a7a, #ffcc66);
+}
+
+.showcase-prompt-card {
+  margin: 0;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(31, 26, 19, 0.84);
+  color: #fff8f0;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+.showcase-trend-item {
+  grid-template-columns: auto 1fr;
 }
 
 .landing-showcase {
