@@ -1765,6 +1765,16 @@ const getDocumentPrimaryCta = (note: NoteV2) =>
 const getDocumentSecondaryCta = (note: NoteV2) =>
   typeof note.metadata?.documentSecondaryCta === "string" ? note.metadata.documentSecondaryCta.trim() : "";
 
+const getDocumentPrimaryCtaUrl = (note: NoteV2) =>
+  typeof note.metadata?.documentPrimaryCtaUrl === "string" && note.metadata.documentPrimaryCtaUrl.trim()
+    ? normalizeExternalUrl(note.metadata.documentPrimaryCtaUrl)
+    : "";
+
+const getDocumentSecondaryCtaUrl = (note: NoteV2) =>
+  typeof note.metadata?.documentSecondaryCtaUrl === "string" && note.metadata.documentSecondaryCtaUrl.trim()
+    ? normalizeExternalUrl(note.metadata.documentSecondaryCtaUrl)
+    : "";
+
 const getFocusDurationMinutes = (note: NoteV2) =>
   typeof note.metadata?.focusDurationMinutes === "number" && note.metadata.focusDurationMinutes > 0
     ? Math.max(1, Math.min(180, Math.round(note.metadata.focusDurationMinutes)))
@@ -3127,6 +3137,40 @@ const App = () => {
       const body = getDocumentBody(note);
       const primaryCta = getDocumentPrimaryCta(note);
       const secondaryCta = getDocumentSecondaryCta(note);
+      const primaryCtaUrl = getDocumentPrimaryCtaUrl(note);
+      const secondaryCtaUrl = getDocumentSecondaryCtaUrl(note);
+      const renderDocumentAction = (
+        label: string,
+        href: string,
+        kind: "primary" | "secondary",
+        key: string
+      ) => {
+        if (!label) {
+          return null;
+        }
+
+        const className = `document-widget-action ${kind === "primary" ? "primary" : ""}`.trim();
+        if (href) {
+          return (
+            <a
+              key={key}
+              className={className}
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {label}
+            </a>
+          );
+        }
+
+        return (
+          <span key={key} className={className}>
+            {label}
+          </span>
+        );
+      };
 
       return (
         <>
@@ -3155,7 +3199,9 @@ const App = () => {
                       documentKicker: event.target.value,
                       documentBody: body,
                       documentPrimaryCta: primaryCta,
-                      documentSecondaryCta: secondaryCta
+                      documentSecondaryCta: secondaryCta,
+                      documentPrimaryCtaUrl: primaryCtaUrl,
+                      documentSecondaryCtaUrl: secondaryCtaUrl
                     }
                   })
                 }
@@ -3176,7 +3222,9 @@ const App = () => {
                       documentKicker: kicker,
                       documentBody: body,
                       documentPrimaryCta: primaryCta,
-                      documentSecondaryCta: secondaryCta
+                      documentSecondaryCta: secondaryCta,
+                      documentPrimaryCtaUrl: primaryCtaUrl,
+                      documentSecondaryCtaUrl: secondaryCtaUrl
                     }
                   })
                 }
@@ -3199,7 +3247,9 @@ const App = () => {
                       documentKicker: kicker,
                       documentBody: event.target.value,
                       documentPrimaryCta: primaryCta,
-                      documentSecondaryCta: secondaryCta
+                      documentSecondaryCta: secondaryCta,
+                      documentPrimaryCtaUrl: primaryCtaUrl,
+                      documentSecondaryCtaUrl: secondaryCtaUrl
                     }
                   })
                 }
@@ -3219,11 +3269,34 @@ const App = () => {
                       documentKicker: kicker,
                       documentBody: body,
                       documentPrimaryCta: event.target.value,
-                      documentSecondaryCta: secondaryCta
+                      documentSecondaryCta: secondaryCta,
+                      documentPrimaryCtaUrl: primaryCtaUrl,
+                      documentSecondaryCtaUrl: secondaryCtaUrl
                     }
                   })
                 }
                 placeholder="주요 버튼 문구"
+              />
+              <input
+                className="widget-input"
+                value={primaryCtaUrl}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "document",
+                      documentVariant: variant,
+                      documentKicker: kicker,
+                      documentBody: body,
+                      documentPrimaryCta: primaryCta,
+                      documentSecondaryCta: secondaryCta,
+                      documentPrimaryCtaUrl: event.target.value,
+                      documentSecondaryCtaUrl: secondaryCtaUrl
+                    }
+                  })
+                }
+                placeholder="주요 버튼 이동 URL"
               />
               <input
                 className="widget-input"
@@ -3238,11 +3311,34 @@ const App = () => {
                       documentKicker: kicker,
                       documentBody: body,
                       documentPrimaryCta: primaryCta,
-                      documentSecondaryCta: event.target.value
+                      documentSecondaryCta: event.target.value,
+                      documentPrimaryCtaUrl: primaryCtaUrl,
+                      documentSecondaryCtaUrl: secondaryCtaUrl
                     }
                   })
                 }
                 placeholder="보조 버튼 문구"
+              />
+              <input
+                className="widget-input"
+                value={secondaryCtaUrl}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "document",
+                      documentVariant: variant,
+                      documentKicker: kicker,
+                      documentBody: body,
+                      documentPrimaryCta: primaryCta,
+                      documentSecondaryCta: secondaryCta,
+                      documentPrimaryCtaUrl: primaryCtaUrl,
+                      documentSecondaryCtaUrl: event.target.value
+                    }
+                  })
+                }
+                placeholder="보조 버튼 이동 URL"
               />
               <button
                 className="widget-confirm"
@@ -3261,8 +3357,8 @@ const App = () => {
               <p>{body}</p>
               {(primaryCta || secondaryCta) && (
                 <div className="document-widget-actions">
-                  {primaryCta && <span className="document-widget-action primary">{primaryCta}</span>}
-                  {secondaryCta && <span className="document-widget-action">{secondaryCta}</span>}
+                  {renderDocumentAction(primaryCta, primaryCtaUrl, "primary", `${note.id}-doc-primary-cta`)}
+                  {renderDocumentAction(secondaryCta, secondaryCtaUrl, "secondary", `${note.id}-doc-secondary-cta`)}
                 </div>
               )}
             </div>
@@ -5443,7 +5539,9 @@ const App = () => {
       documentKicker: DEFAULT_DOCUMENT_KICKER,
       documentBody: DEFAULT_DOCUMENT_BODY,
       documentPrimaryCta: "",
-      documentSecondaryCta: ""
+      documentSecondaryCta: "",
+      documentPrimaryCtaUrl: "",
+      documentSecondaryCtaUrl: ""
     };
 
     setNotes((prev) => [note, ...prev]);
