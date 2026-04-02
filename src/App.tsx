@@ -286,7 +286,7 @@ const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
   { text: "참고 링크 확인", checked: false },
   { text: "완료 후 공유", checked: false }
 ];
-const DEFAULT_NEW_NOTE_CONTENT = "새 메모\n\nhttps://";
+const DEFAULT_NEW_NOTE_CONTENT = "새 메모";
 const DEFAULT_PERSONAL_NOTE_CONTENT =
   "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80";
 const DEFAULT_GROUP_NOTE_CONTENT =
