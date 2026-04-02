@@ -259,6 +259,7 @@ const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
   { text: "완료 후 공유", checked: false }
 ];
 const DEFAULT_NEW_NOTE_CONTENT = "새 메모";
+const MAX_BOARD_TITLE_LENGTH = 32;
 const DEFAULT_PERSONAL_NOTE_CONTENT =
   "개인 메모장\n\n간단한 메모, 북마크, 이미지 URL을 모아두는 공간입니다.\nhttps://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80";
 const DEFAULT_GROUP_NOTE_CONTENT =
@@ -1232,6 +1233,7 @@ const getNoteFontSize = (note: NoteV2): NoteFontSize => {
 };
 
 const asText = (value: unknown) => (typeof value === "string" ? value : "");
+const clampBoardTitle = (value: string) => value.trim().slice(0, MAX_BOARD_TITLE_LENGTH);
 
 const normalizeExternalUrl = (value: unknown) => {
   let normalized = asText(value).trim();
@@ -5799,7 +5801,7 @@ const App = () => {
   };
 
   const updateBoardTitle = (boardId: string, title: string) => {
-    const nextTitle = title.trim() || "Untitled Board";
+    const nextTitle = clampBoardTitle(title) || "Untitled Board";
     setBoards((prev) =>
       prev.map((board) =>
         board.id === boardId
@@ -6762,7 +6764,7 @@ const App = () => {
                 <input
                   className="board-title-input"
                   value={boardTitleDraft}
-                  onChange={(event) => setBoardTitleDraft(event.target.value)}
+                  onChange={(event) => setBoardTitleDraft(event.target.value.slice(0, MAX_BOARD_TITLE_LENGTH))}
                   onBlur={commitBoardTitle}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
@@ -6775,6 +6777,7 @@ const App = () => {
                       setEditingBoardTitle(false);
                     }
                   }}
+                  maxLength={MAX_BOARD_TITLE_LENGTH}
                   autoFocus
                 />
               ) : (
