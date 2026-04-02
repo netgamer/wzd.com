@@ -2027,6 +2027,38 @@ button {
     0 1px 0 rgba(255, 255, 255, 0.76) inset;
 }
 
+.board-page .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(255, 251, 228, 0.98), rgba(255, 243, 190, 0.96));
+}
+
+.board-page .pin-card.note-pink:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(255, 241, 246, 0.98), rgba(251, 224, 234, 0.96));
+}
+
+.board-page .pin-card.note-blue:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(240, 246, 255, 0.98), rgba(220, 233, 255, 0.96));
+}
+
+.board-page .pin-card.note-green:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(241, 251, 243, 0.98), rgba(221, 242, 225, 0.96));
+}
+
+.board-page .pin-card.note-orange:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(255, 246, 236, 0.98), rgba(255, 230, 204, 0.96));
+}
+
+.board-page .pin-card.note-purple:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(245, 239, 255, 0.98), rgba(232, 222, 252, 0.96));
+}
+
+.board-page .pin-card.note-mint:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(238, 251, 247, 0.98), rgba(217, 243, 235, 0.96));
+}
+
+.board-page .pin-card.note-white:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 241, 233, 0.96));
+}
+
 .share-page .pin-card {
   border-radius: 30px;
   border-color: rgba(96, 73, 48, 0.08);
