@@ -52,6 +52,44 @@ const normalizeInstagramTitle = (title: string, hostname: string, siteName: stri
   return siteName || title;
 };
 
+const extractYoutubeVideoId = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+
+    if (hostname === "youtu.be") {
+      const shortId = parsed.pathname.split("/").filter(Boolean)[0];
+      return shortId || "";
+    }
+
+    if (hostname === "youtube.com" || hostname.endsWith(".youtube.com")) {
+      if (parsed.pathname === "/watch") {
+        return parsed.searchParams.get("v")?.trim() || "";
+      }
+
+      const pathMatch = parsed.pathname.match(/^\/(?:embed|shorts|live)\/([^/?#]+)/i);
+      return pathMatch?.[1]?.trim() || "";
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+};
+
+const getYoutubeThumbnail = (preview: LinkPreview) => {
+  if (preview.image?.trim()) {
+    return preview.image;
+  }
+
+  const videoId = extractYoutubeVideoId(preview.finalUrl || preview.url);
+  if (!videoId) {
+    return preview.image;
+  }
+
+  return `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`;
+};
+
 export const getImageProxyUrl = (url: string) =>
   url.startsWith("data:image/") ? url : `${API_BASE}/api/image-proxy?url=${encodeURIComponent(url)}`;
 
@@ -80,6 +118,7 @@ export const fetchLinkPreview = async (url: string): Promise<LinkPreview> => {
     ...preview,
     title: normalizedTitle,
     description: normalizePreviewText(preview.description),
-    siteName: normalizedSiteName
+    siteName: normalizedSiteName,
+    image: getYoutubeThumbnail(preview)
   };
 };
