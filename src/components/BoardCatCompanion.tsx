@@ -222,7 +222,13 @@ const pickJumpTarget = (
     return null;
   }
 
-  const scored = candidates
+  // Favor lateral movement first so the pet explores adjacent cards before
+  // making bigger vertical jumps up or down the board.
+  const preferredCandidates =
+    candidates.filter((candidate) => Math.abs(candidate.y - surface.y) <= 140) || candidates;
+  const activeCandidates = preferredCandidates.length > 0 ? preferredCandidates : candidates;
+
+  const scored = activeCandidates
     .map((candidate) => {
       const x =
         state.direction === 1
@@ -232,13 +238,14 @@ const pickJumpTarget = (
       const behindPenalty = forwardDistance < 0 ? 220 + Math.abs(forwardDistance) * 2.2 : forwardDistance;
       const verticalDistance = Math.abs(candidate.y - surface.y);
       const groundPenalty = candidate.kind === "ground" ? 90 : 0;
+      const laneBonus = verticalDistance <= 64 ? -120 : verticalDistance <= 140 ? -50 : 0;
       return {
         surfaceId: candidate.id,
         x,
         y: candidate.y,
         direction: state.direction,
         kind: candidate.kind,
-        score: behindPenalty + verticalDistance * 0.7 + groundPenalty
+        score: behindPenalty + verticalDistance * 1.8 + groundPenalty + laneBonus
       };
     })
     .sort((a, b) => a.score - b.score);

@@ -70,3 +70,4 @@ Replace the floating board cat with a desktop-pet style blue cat that walks in s
 - 2026-04-03: update jump and drop facing from actual horizontal travel so left-to-right jumps flip the sprite correctly
 - 2026-04-03: increase walking speed by about 30% from the slowed baseline while keeping the rest of the behavior unchanged
 - 2026-04-03: delay the cat until board layout settles, then introduce it from above in a falling spawn so it lands against the final card positions
+- 2026-04-03: prefer sideways card-to-card movement over larger vertical jumps so the cat usually advances laterally when a nearby ledge exists
