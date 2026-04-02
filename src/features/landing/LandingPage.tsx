@@ -25,6 +25,14 @@ type MemoSample = {
   image?: string;
 };
 
+type ShowcaseBoardCard = {
+  badge: string;
+  title: string;
+  accentClass: string;
+  size: "short" | "medium" | "tall";
+  lines: string[];
+};
+
 const FEATURES: LandingFeature[] = [
   {
     icon: "01",
@@ -223,6 +231,135 @@ const MEMO_SAMPLES: MemoSample[] = [
   }
 ];
 
+const SHOWCASE_BOARD_CARDS: ShowcaseBoardCard[] = [
+  {
+    badge: "NOTE",
+    title: "오늘 회의 포인트",
+    accentClass: "accent-paper",
+    size: "short",
+    lines: ["- 결정할 것 2개", "- 막힌 이슈 1개", "- 참고 링크 전달"]
+  },
+  {
+    badge: "BOOKMARK",
+    title: "브랜드 레퍼런스",
+    accentClass: "accent-sand",
+    size: "medium",
+    lines: ["Figma moodboard", "Campaign archive", "Client deck final"]
+  },
+  {
+    badge: "TODO",
+    title: "오전 체크리스트",
+    accentClass: "accent-mint",
+    size: "medium",
+    lines: ["[x] 메일 확인", "[x] 우선순위 정리", "[ ] 시안 수정", "[ ] 공유본 업로드"]
+  },
+  {
+    badge: "WEATHER",
+    title: "촬영 일정 체크",
+    accentClass: "accent-sky",
+    size: "short",
+    lines: ["서울 17도", "오후 흐림", "야외 컷은 오전 우선"]
+  },
+  {
+    badge: "DOC",
+    title: "신규 기능 요약",
+    accentClass: "accent-cream",
+    size: "tall",
+    lines: ["문제: 자료가 링크와 메모로 흩어짐", "해결: 보드 안에 위젯과 메모를 혼합", "효과: 시작페이지와 작업판을 하나로 통합", "다음: 팀 템플릿 3종 추가"]
+  },
+  {
+    badge: "TREND",
+    title: "오늘의 키워드",
+    accentClass: "accent-amber",
+    size: "short",
+    lines: ["AI 에이전트", "로봇택시", "온디바이스 모델"]
+  },
+  {
+    badge: "RSS",
+    title: "읽을 거리 큐",
+    accentClass: "accent-lavender",
+    size: "medium",
+    lines: ["AI newsletter", "Product essay", "Growth teardown", "Frontend case study"]
+  },
+  {
+    badge: "IMAGE",
+    title: "무드 샘플",
+    accentClass: "accent-rose",
+    size: "tall",
+    lines: ["톤: 따뜻한 크림", "질감: 종이 + 유리", "조명: 낮은 대비", "카드: 넓은 라운드"]
+  },
+  {
+    badge: "FOCUS",
+    title: "딥워크 세션",
+    accentClass: "accent-burgundy",
+    size: "short",
+    lines: ["25분 집중", "5분 휴식", "현재 2세트째"]
+  },
+  {
+    badge: "ROUTINE",
+    title: "매일 반복",
+    accentClass: "accent-olive",
+    size: "medium",
+    lines: ["아침 정리", "핵심 작업 1개", "점심 전 공유", "퇴근 전 회고"]
+  },
+  {
+    badge: "PROMPT",
+    title: "문서 초안 프롬프트",
+    accentClass: "accent-violet",
+    size: "medium",
+    lines: ["Role: product marketer", "Goal: launch summary", "Tone: concise", "Format: bullets"]
+  },
+  {
+    badge: "COUNT",
+    title: "런칭까지",
+    accentClass: "accent-rose",
+    size: "short",
+    lines: ["D-12", "4월 14일", "공유본 최종 점검"]
+  },
+  {
+    badge: "PET",
+    title: "모찌 기록",
+    accentClass: "accent-peach",
+    size: "short",
+    lines: ["산책 2회", "간식 조금", "기분 좋음"]
+  },
+  {
+    badge: "FOOD",
+    title: "금천구 점심 후보",
+    accentClass: "accent-coral",
+    size: "medium",
+    lines: ["도원", "면식당", "국밥집", "회의 후 도보 7분"]
+  },
+  {
+    badge: "COVER",
+    title: "브랜드 리뉴얼 보드",
+    accentClass: "accent-ink",
+    size: "tall",
+    lines: ["이번 주 집중 작업", "랜딩 수정", "카드 밀도 개선", "팀 공유본 정리"]
+  },
+  {
+    badge: "LINK",
+    title: "바로 열기",
+    accentClass: "accent-paper",
+    size: "short",
+    lines: ["openai docs", "canva board", "github actions"]
+  },
+  {
+    badge: "NOTE",
+    title: "빠른 아이디어",
+    accentClass: "accent-blush",
+    size: "medium",
+    lines: ["히어로 아래에 dense wall", "설명은 유지", "보드 감각은 더 강하게"]
+  },
+  {
+    badge: "BOARD",
+    title: "팀 운영 보드",
+    accentClass: "accent-blue",
+    size: "tall",
+    lines: ["링크", "문서", "루틴", "날씨", "배송", "메모", "프롬프트"]
+  }
+];
+
 const LandingPage = () => {
   const handleGoogleLogin = async () => {
     if (!supabase) return;
@@ -371,6 +508,37 @@ const LandingPage = () => {
                       </a>
                     ) : null}
                     {memo.image ? <img className="landing-note-image" src={memo.image} alt={memo.title} /> : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="landing-expanded-wall">
+          <div className="landing-expanded-wall-inner">
+            <div className="landing-section-header left">
+              <p className="landing-section-kicker">EXPANDED BOARD SAMPLE</p>
+              <h2>실제 보드처럼 카드가 많이 깔린 화면도 아래에서 바로 볼 수 있습니다</h2>
+              <p className="landing-section-desc">
+                위젯 설명을 본 다음에는, 이런 카드들이 한 보드 안에서 어떻게 많이 쌓여 보이는지도 같이 보여줍니다.
+              </p>
+            </div>
+
+            <div className="landing-expanded-board">
+              {SHOWCASE_BOARD_CARDS.map((card) => (
+                <article
+                  key={`${card.badge}-${card.title}`}
+                  className={`landing-expanded-card ${card.accentClass} ${card.size}`}
+                >
+                  <div className="landing-expanded-card-head">
+                    <span>{card.badge}</span>
+                    <strong>{card.title}</strong>
+                  </div>
+                  <div className="landing-expanded-card-body">
+                    {card.lines.map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
                   </div>
                 </article>
               ))}

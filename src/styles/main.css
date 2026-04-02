@@ -5069,6 +5069,87 @@ button {
   box-shadow: 0 18px 30px rgba(65, 42, 24, 0.18);
 }
 
+.landing-expanded-wall {
+  padding: 0 0 52px;
+}
+
+.landing-expanded-wall-inner {
+  width: min(1240px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.landing-expanded-board {
+  column-count: 4;
+  column-gap: 18px;
+}
+
+.landing-expanded-card {
+  break-inside: avoid;
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 18px;
+  padding: 20px;
+  border-radius: 28px;
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 18px 34px rgba(49, 33, 16, 0.08);
+}
+
+.landing-expanded-card.short {
+  min-height: 170px;
+}
+
+.landing-expanded-card.medium {
+  min-height: 224px;
+}
+
+.landing-expanded-card.tall {
+  min-height: 290px;
+}
+
+.landing-expanded-card-head {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.landing-expanded-card-head span {
+  justify-self: start;
+  min-height: 28px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  color: rgba(31, 26, 19, 0.62);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.landing-expanded-card-head strong {
+  font-size: 24px;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  color: #20160d;
+}
+
+.landing-expanded-card-body {
+  display: grid;
+  gap: 10px;
+}
+
+.landing-expanded-card-body p {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+  color: rgba(31, 26, 19, 0.8);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .landing-showcase {
   padding: 42px 0 72px;
   text-align: center;
@@ -5289,6 +5370,10 @@ button {
     gap: 16px;
   }
 
+  .landing-expanded-board {
+    column-count: 2;
+  }
+
   .landing-showcase {
     padding: 28px 0 44px;
   }
@@ -5329,6 +5414,10 @@ button {
 
   .landing-note-card {
     min-height: auto;
+  }
+
+  .landing-expanded-board {
+    column-count: 1;
   }
 
   .landing-showcase-inner,
