@@ -1,5 +1,10 @@
 import { supabase } from "../../lib/supabase";
 
+type AuthUserProfile = {
+  id: string;
+  email: string;
+};
+
 type LandingFeature = {
   icon: string;
   title: string;
@@ -980,7 +985,12 @@ const renderWidgetSample = (widget: WidgetSample) => {
   );
 };
 
-const LandingPage = () => {
+type LandingPageProps = {
+  user?: AuthUserProfile | null;
+  onOpenWorkspace?: () => void;
+};
+
+const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
   const handleGoogleLogin = async () => {
     if (!supabase) return;
     await supabase.auth.signInWithOAuth({
@@ -997,9 +1007,15 @@ const LandingPage = () => {
             <div className="landing-logo">WZD</div>
             <span>보드 위에 메모와 위젯을 같이 쌓는 워크스페이스</span>
           </div>
-          <button className="landing-login-btn" onClick={handleGoogleLogin}>
-            Google로 시작하기
-          </button>
+          {user ? (
+            <button className="landing-profile-btn" onClick={onOpenWorkspace}>
+              <span className="landing-profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+            </button>
+          ) : (
+            <button className="landing-login-btn" onClick={handleGoogleLogin}>
+              Google로 시작하기
+            </button>
+          )}
         </div>
       </header>
 

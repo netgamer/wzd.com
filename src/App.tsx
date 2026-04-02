@@ -7081,7 +7081,7 @@ const App = () => {
   );
 
   if (publicLandingRoute && !isSharedView) {
-    return <LandingPage />;
+    return <LandingPage user={user} onOpenWorkspace={navigateToWorkspace} />;
   }
 
   if (marketRoute && !isSharedView) {
