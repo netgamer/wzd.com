@@ -11,6 +11,7 @@ import BoardCatCompanion from "./components/BoardCatCompanion";
 import BoardPage from "./features/board/BoardPage";
 import HomePage from "./features/home/HomePage";
 import LandingPage from "./features/landing/LandingPage";
+import MarketPage from "./features/market/MarketPage";
 import SharePage from "./features/share/SharePage";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
@@ -1470,6 +1471,14 @@ const isPublicLandingLocation = () => {
   return window.location.pathname === "/landing";
 };
 
+const isMarketLocation = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.location.pathname === "/market";
+};
+
 const hasPendingAuthHash = () => {
   if (typeof window === "undefined") {
     return false;
@@ -2630,6 +2639,7 @@ const App = () => {
   const [noteMoreState, setNoteMoreState] = useState<Record<string, number>>({});
   const [homeBoardRoute, setHomeBoardRoute] = useState<boolean>(() => isHomeBoardLocation());
   const [publicLandingRoute, setPublicLandingRoute] = useState<boolean>(() => isPublicLandingLocation());
+  const [marketRoute, setMarketRoute] = useState<boolean>(() => isMarketLocation());
   const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
   const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(
     () => Boolean(getSharedBoardSlugFromLocation()) || isHomeBoardLocation()
@@ -2746,9 +2756,11 @@ const App = () => {
     const syncSharedSlug = () => {
       const nextHomeRoute = isHomeBoardLocation();
       const nextPublicLandingRoute = isPublicLandingLocation();
+      const nextMarketRoute = isMarketLocation();
       const nextSlug = getSharedBoardSlugFromLocation();
       setHomeBoardRoute(nextHomeRoute);
       setPublicLandingRoute(nextPublicLandingRoute);
+      setMarketRoute(nextMarketRoute);
       setSharedBoardSlug(nextSlug);
       setSharedBoardReadOnly(Boolean(nextSlug) || nextHomeRoute);
     };
@@ -5222,6 +5234,7 @@ const App = () => {
     window.history.pushState({}, "", "/landing");
     setHomeBoardRoute(false);
     setPublicLandingRoute(true);
+    setMarketRoute(false);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
@@ -5236,6 +5249,7 @@ const App = () => {
     window.history.pushState({}, "", "/#");
     setHomeBoardRoute(false);
     setPublicLandingRoute(false);
+    setMarketRoute(false);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
@@ -7068,6 +7082,10 @@ const App = () => {
 
   if (publicLandingRoute && !isSharedView) {
     return <LandingPage />;
+  }
+
+  if (marketRoute && !isSharedView) {
+    return <MarketPage user={user} onNavigateBack={user ? navigateToWorkspace : navigateToPublicLanding} />;
   }
 
   if (!user && !isSharedView && waitingForAuthResolution) {
