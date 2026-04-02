@@ -292,14 +292,14 @@ const FOOD_CATEGORY_LABELS: Record<FoodCategoryKey, string> = {
 const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
   {
     color: "white",
-    content: "아이디어를 바로 만져볼 수 있는 서비스로 만듭니다",
+    content: "아이디어를 바로 만져보는 프로토타입으로 바꿉니다",
     metadata: {
       widgetType: "document",
       documentVariant: "hero",
       documentKicker: "WZD MASTER",
       documentBody:
-        "WZD Master는 말뿐인 구상을 빠르게 검증 가능한 프로토타입으로 바꾸는 아이디어 프로토타이퍼입니다.\n기획서 한 장, 메모 몇 줄, 머릿속 상상만 있어도 실제로 보고, 누르고, 테스트할 수 있는 형태로 바꿔드립니다.\n\n설명만 하던 아이디어를, 이제 직접 보여주세요.",
-      documentPrimaryCta: "프로젝트 이야기하기",
+        "아이디어는 설명만으로 설득되지 않습니다.\nWZD Master는 메모, 기획서, 구두 설명만 있어도 실제로 눌러보고 흐름을 확인할 수 있는 프로토타입으로 정리합니다.\n\n회의용 문서가 아니라 판단 가능한 첫 화면을 먼저 만듭니다.",
+      documentPrimaryCta: "프로젝트 상담하기",
       documentSecondaryCta: "프로토타입 문의하기"
     }
   },
@@ -322,7 +322,7 @@ const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
       documentVariant: "section",
       documentKicker: "문제",
       documentBody:
-        "많은 아이디어가 실패하는 이유는 나쁘기 때문이 아닙니다.\n대부분은 너무 추상적이라 남에게 설명하기 어렵고, 팀이 이해하기 어렵고, 직접 써보기 전까지 가능성을 판단할 수 없기 때문입니다.\n\n머릿속엔 있는데 설명이 안 된다\n기획은 있는데 실제 모습이 없다\n외주 맡기기 전에 먼저 확인해보고 싶다\n투자자나 팀원에게 보여줄 형태가 필요하다\n당장 테스트 가능한 MVP가 필요하다"
+        "많은 아이디어는 나빠서가 아니라 아직 보이지 않아서 멈춥니다.\n설명은 있는데 화면이 없고, 방향은 있는데 흐름이 없고, 판단은 해야 하는데 직접 써볼 수 있는 형태가 없습니다.\n\n머릿속에는 있는데 설명이 어렵다\n기획은 있는데 실제 모습이 없다\n외주 전에 먼저 확인 가능한 뼈대가 필요하다\n투자자나 팀원에게 보여줄 데모가 필요하다\n당장 검증 가능한 MVP가 필요하다"
     }
   },
   {
@@ -331,7 +331,7 @@ const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
     metadata: {
       widgetType: "document",
       documentVariant: "feature",
-      documentKicker: "What I Do",
+      documentKicker: "핵심 역량",
       documentBody: "막연한 구상, 메모, 대화 내용을 실제 서비스 구조와 화면 흐름으로 정리합니다."
     }
   },
@@ -341,8 +341,8 @@ const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
     metadata: {
       widgetType: "document",
       documentVariant: "feature",
-      documentKicker: "What I Do",
-      documentBody: "클릭하고, 눌러보고, 테스트할 수 있는 프로토타입 또는 MVP 형태로 빠르게 구현합니다."
+      documentKicker: "핵심 역량",
+      documentBody: "클릭하고 눌러보며 판단할 수 있는 프로토타입 또는 MVP 형태로 빠르게 구현합니다."
     }
   },
   {
@@ -351,8 +351,8 @@ const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
     metadata: {
       widgetType: "document",
       documentVariant: "feature",
-      documentKicker: "What I Do",
-      documentBody: "단순한 화면이 아니라 사용 흐름, 기능 연결, 핵심 동작 구조까지 설계합니다."
+      documentKicker: "핵심 역량",
+      documentBody: "단순한 화면이 아니라 사용 흐름, 기능 연결, 핵심 동작 구조까지 함께 설계합니다."
     }
   },
   {
@@ -361,7 +361,7 @@ const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
     metadata: {
       widgetType: "document",
       documentVariant: "feature",
-      documentKicker: "What I Do",
+      documentKicker: "핵심 역량",
       documentBody: "무작정 크게 시작하지 않고 먼저 빠르게 만들어보고, 써보고, 판단할 수 있게 합니다."
     }
   },
@@ -373,12 +373,12 @@ const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
       documentVariant: "section",
       documentKicker: "차별점",
       documentBody:
-        "설명에서 끝내지 않습니다 — 아이디어를 말로만 정리하지 않고 실제 형태로 보여줍니다.\n빠르게 구체화합니다 — 긴 기획보다 먼저, 확인 가능한 결과물을 만듭니다.\n기술과 기획을 함께 다룹니다 — 예쁜 화면만 만드는 것이 아니라 실제로 작동 가능한 서비스 구조를 생각합니다.\n아이디어의 본질을 살립니다 — 불필요한 기능을 늘리는 대신 핵심 가치가 바로 보이게 만듭니다."
+        "설명에서 끝내지 않습니다. 아이디어를 말로만 정리하지 않고 실제 형태로 보여줍니다.\n빠르게 구체화합니다. 긴 기획보다 먼저 확인 가능한 결과물을 만듭니다.\n기술과 기획을 함께 다룹니다. 예쁜 화면만 만드는 것이 아니라 실제로 작동 가능한 서비스 구조를 생각합니다.\n아이디어의 본질을 살립니다. 불필요한 기능을 늘리기보다 핵심 가치가 바로 보이게 만듭니다."
     }
   },
   {
     color: "purple",
-    content: "이런 아이디어라면 잘 맞습니다",
+    content: "이런 팀과 아이디어에 잘 맞습니다",
     metadata: {
       widgetType: "document",
       documentVariant: "section",
@@ -393,20 +393,20 @@ const HOME_LANDING_NOTE_SEEDS: TemplateNoteSeed[] = [
     metadata: {
       widgetType: "document",
       documentVariant: "section",
-      documentKicker: "PROCESS",
+      documentKicker: "진행 방식",
       documentBody:
-        "1. 아이디어 수집 — 메모, 대화, 기획서, 음성, 러프한 설명도 괜찮습니다.\n2. 핵심 구조 정리 — 무엇이 핵심인지, 무엇부터 보여줘야 하는지 정리합니다.\n3. 프로토타입 설계 및 구현 — 화면, 흐름, 기능 구조를 실제로 만듭니다.\n4. 직접 보고 판단 — 설명이 아니라 실제 결과물을 기준으로 수정하고 발전시킵니다."
+        "1. 아이디어 수집. 메모, 대화, 기획서, 음성, 러프한 설명도 괜찮습니다.\n2. 핵심 구조 정리. 무엇이 핵심인지, 무엇부터 보여줘야 하는지 먼저 정리합니다.\n3. 프로토타입 설계 및 구현. 화면, 흐름, 기능 구조를 실제로 만듭니다.\n4. 직접 보고 판단. 설명이 아니라 결과물을 기준으로 수정하고 발전시킵니다."
     }
   },
   {
     color: "mint",
-    content: "상상은 누구나 한다. 하지만 보여주는 사람은 드물다.",
+    content: "상상은 누구나 합니다. 하지만 보여주는 사람은 드뭅니다.",
     metadata: {
       widgetType: "document",
       documentVariant: "cta",
       documentKicker: "BRAND MESSAGE",
       documentBody:
-        "아이디어는 많습니다. 하지만 대부분은 말로만 남습니다.\nWZD Master는 그 아이디어가 사라지지 않도록 직접 보고, 만져보고, 검증할 수 있는 형태로 바꿉니다.\n\n아이디어를 현실로 옮기는 첫 번째 형태. 그게 제가 만드는 일입니다.",
+        "아이디어는 많지만 대부분은 말로만 남습니다.\nWZD Master는 그 아이디어가 사라지지 않도록 직접 보고, 만져보고, 검증할 수 있는 첫 형태로 바꿉니다.\n\n아이디어를 현실로 옮기는 가장 빠른 시작점을 만듭니다.",
       documentPrimaryCta: "아이디어 보내기",
       documentSecondaryCta: "프로토타입 문의하기"
     }
