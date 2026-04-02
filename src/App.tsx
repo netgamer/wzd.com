@@ -267,6 +267,7 @@ const SidebarToggleIcon = () => (
 );
 
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
+const LAST_VIEWED_BOARD_KEY = "wzd-board-v2-last-viewed";
 const INITIAL_VISIBLE_NOTE_COUNT = 24;
 const VISIBLE_NOTE_BATCH_SIZE = 16;
 const DEFAULT_FONT_SIZE: NoteFontSize = 16;
@@ -1204,6 +1205,29 @@ const clearLocalSnapshot = () => {
   }
 
   localStorage.removeItem(LOCAL_STORAGE_KEY);
+};
+
+const loadLastViewedBoardId = (userId?: string | null) => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const key = userId ? `${LAST_VIEWED_BOARD_KEY}:${userId}` : LAST_VIEWED_BOARD_KEY;
+  return localStorage.getItem(key);
+};
+
+const saveLastViewedBoardId = (boardId: string | null, userId?: string | null) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const key = userId ? `${LAST_VIEWED_BOARD_KEY}:${userId}` : LAST_VIEWED_BOARD_KEY;
+  if (!boardId) {
+    localStorage.removeItem(key);
+    return;
+  }
+
+  localStorage.setItem(key, boardId);
 };
 
 const normalizeSnapshotForCompare = (snapshot: LocalSnapshot) => ({
@@ -4060,7 +4084,11 @@ const App = () => {
         skipNextCloudSaveRef.current = true;
         setBoards(merged.boards);
         setNotes(sanitizeNotes(merged.notes));
-        setSelectedBoardId(merged.selectedBoardId);
+        const preferredBoardId = loadLastViewedBoardId(user.id);
+        const restoredBoardId = merged.boards.some((board) => !isBoardTrashed(board) && board.id === preferredBoardId)
+          ? preferredBoardId
+          : merged.selectedBoardId;
+        setSelectedBoardId(restoredBoardId);
         setSelectedNoteId(null);
         setLoading(false);
       })
@@ -4142,6 +4170,14 @@ const App = () => {
       window.clearTimeout(timer);
     };
   }, [boards, notes, selectedBoard?.id, user?.id, loading, isReadOnlyBoardView]);
+
+  useEffect(() => {
+    if (isReadOnlyBoardView || homeBoardRoute || feedMode !== "active") {
+      return;
+    }
+
+    saveLastViewedBoardId(selectedBoard?.id ?? null, user?.id ?? null);
+  }, [selectedBoard?.id, user?.id, isReadOnlyBoardView, homeBoardRoute, feedMode]);
 
   useEffect(() => {
     if (typeof document === "undefined") {
