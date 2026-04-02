@@ -987,32 +987,15 @@ const LandingPage = () => {
           <div className="landing-widgets-inner">
             <div className="landing-section-header">
               <p className="landing-section-kicker">ALL WIDGETS AT A GLANCE</p>
-              <h2>홈에서 바로 모든 위젯 샘플을 훑어보세요</h2>
+              <h2>메모와 위젯이 한 보드에 섞여 있는 모습을 바로 보세요</h2>
               <p className="landing-section-desc">
-                어떤 보드를 만들 수 있는지 설명 대신 샘플 카드와 실제 내용으로 바로 보여줍니다.
+                메모 샘플과 실제 위젯형 카드를 한 화면에 같이 놓아서, 로그인 전에 어떤 식으로 보드를 쓰게 되는지 바로 이해할 수 있습니다.
               </p>
             </div>
 
-            <div className="landing-widget-wall">
-              {WIDGET_SAMPLES.map((widget) => renderWidgetSample(widget))}
-            </div>
-          </div>
-        </section>
-
-        <section className="landing-memo-showcase">
-          <div className="landing-memo-showcase-inner">
-            <div className="landing-section-header left">
-              <p className="landing-section-kicker">MEMO CONTENT EXAMPLES</p>
-              <h2>메모 안에 실제로 무엇이 들어가는지까지 같이 보여줍니다</h2>
-              <p className="landing-section-desc">
-                텍스트만 적는 메모가 아니라 링크가 붙고 이미지가 붙는 카드까지, 실제 사용 장면을 랜딩에서 바로
-                확인할 수 있습니다.
-              </p>
-            </div>
-
-            <div className="landing-memo-grid">
+            <div className="landing-unified-board">
               {MEMO_SAMPLES.map((memo) => (
-                <article key={memo.title} className={`landing-note-card ${memo.accentClass}`}>
+                <article key={memo.title} className={`landing-note-card landing-unified-card ${memo.accentClass}`}>
                   <div className="landing-note-head">
                     <span>{memo.badge}</span>
                     <strong>{memo.title}</strong>
@@ -1030,23 +1013,8 @@ const LandingPage = () => {
                   </div>
                 </article>
               ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="landing-expanded-wall">
-          <div className="landing-expanded-wall-inner">
-            <div className="landing-section-header left">
-              <p className="landing-section-kicker">REAL WIDGET PREVIEW</p>
-              <h2>아래 카드들은 메모가 아니라 실제 위젯이 어떻게 보이는지에 더 가깝습니다</h2>
-              <p className="landing-section-desc">
-                RSS, 날씨, 체크리스트, 시간표, 배송 추적, 프롬프트처럼 실제 위젯 레이아웃을 그대로 축약해서
-                보여줍니다.
-              </p>
-            </div>
-
-            <div className="landing-expanded-board">
               {SHOWCASE_WIDGETS.map((widget) => renderShowcaseWidget(widget))}
+              {WIDGET_SAMPLES.map((widget) => renderWidgetSample(widget))}
             </div>
           </div>
         </section>

@@ -4947,7 +4947,16 @@ button {
   gap: 18px;
 }
 
+.landing-unified-board {
+  column-count: 4;
+  column-gap: 18px;
+}
+
 .landing-widget-sample {
+  break-inside: avoid;
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 18px;
   min-height: 260px;
   padding: 20px;
   border-radius: 28px;
@@ -5122,6 +5131,10 @@ button {
 }
 
 .landing-note-card {
+  break-inside: avoid;
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 18px;
   min-height: 320px;
   padding: 22px;
   border-radius: 30px;
@@ -5205,6 +5218,10 @@ button {
 .landing-expanded-board {
   column-count: 4;
   column-gap: 18px;
+}
+
+.landing-unified-card {
+  min-height: 320px;
 }
 
 .landing-expanded-widget {
@@ -5699,6 +5716,10 @@ button {
     gap: 14px;
   }
 
+  .landing-unified-board {
+    column-count: 2;
+  }
+
   .landing-memo-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -5740,6 +5761,10 @@ button {
   .landing-hero-mini-grid,
   .landing-widget-wall {
     grid-template-columns: 1fr;
+  }
+
+  .landing-unified-board {
+    column-count: 1;
   }
 
   .landing-widget-sample {
