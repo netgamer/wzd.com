@@ -1573,7 +1573,7 @@ button {
   filter: drop-shadow(0 8px 16px rgba(49, 31, 16, 0.18));
 }
 
-.board-cat-actor[data-behavior="cling"] {
+.board-cat-actor[data-behavior="wait"] {
   filter: drop-shadow(0 6px 12px rgba(49, 31, 16, 0.14));
 }
 
@@ -1598,16 +1598,14 @@ button {
   object-fit: contain;
   image-rendering: pixelated;
   will-change: transform;
-  animation: board-cat-walk-bob 0.72s ease-in-out infinite;
 }
 
-.board-cat-actor[data-behavior="cling"] .board-cat-pose {
-  transform: rotate(-84deg) translate3d(-5px, -2px, 0);
-  animation: board-cat-cling-sway 0.95s ease-in-out infinite;
+.board-cat-actor[data-behavior="wait"] .board-cat-pose {
+  transform: translate3d(0, 0, 0);
 }
 
-.board-cat-actor[data-behavior="cling"][data-direction="right"] .board-cat-pose {
-  transform: scaleX(-1) rotate(-84deg) translate3d(-5px, -2px, 0);
+.board-cat-actor[data-behavior="wait"][data-direction="right"] .board-cat-pose {
+  transform: scaleX(-1);
 }
 
 .board-cat-actor[data-behavior="drop"] .board-cat-pose {
@@ -1628,16 +1626,6 @@ button {
   transform: scaleX(-1) rotate(-18deg) translate3d(0, -2px, 0);
 }
 
-.board-cat-spark {
-  position: absolute;
-  top: 5px;
-  right: -1px;
-  font-size: 10px;
-  line-height: 1;
-  color: rgba(248, 173, 94, 0.92);
-  animation: board-cat-sparkle 1.8s ease-in-out infinite;
-}
-
 .board-cat-shadow {
   position: absolute;
   top: 0;
@@ -1647,38 +1635,6 @@ button {
   border-radius: 999px;
   background: radial-gradient(circle, rgba(76, 53, 29, 0.18), transparent 72%);
   will-change: transform, opacity;
-}
-
-@keyframes board-cat-sparkle {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: translate3d(0, 2px, 0) scale(0.85);
-  }
-  50% {
-    opacity: 1;
-    transform: translate3d(0, -2px, 0) scale(1.1);
-  }
-}
-
-@keyframes board-cat-walk-bob {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(0, -4px, 0);
-  }
-}
-
-@keyframes board-cat-cling-sway {
-  0%,
-  100% {
-    transform: rotate(-84deg) translate3d(-5px, -2px, 0);
-  }
-  50% {
-    transform: rotate(-88deg) translate3d(-7px, 0, 0);
-  }
 }
 
 @keyframes board-cat-drop-wiggle {
