@@ -9,6 +9,7 @@
 } from "react";
 import BoardPage from "./features/board/BoardPage";
 import HomePage from "./features/home/HomePage";
+import LandingPage from "./features/landing/LandingPage";
 import SharePage from "./features/share/SharePage";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
@@ -6306,6 +6307,11 @@ const App = () => {
       ))}
     </div>
   );
+
+  // Show landing page for non-logged-in users (except for shared board views)
+  if (!user && !isReadOnlyBoardView) {
+    return <LandingPage />;
+  }
 
   const showExpandedSidebar = sidebarExpanded && !compactSidebar;
   const CurrentPage = isHomeView ? HomePage : isReadOnlyBoardView ? SharePage : BoardPage;
