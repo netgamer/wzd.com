@@ -2531,6 +2531,8 @@ const App = () => {
   const boardGridRef = useRef<HTMLElement | null>(null);
   const mobileBoardTabsRef = useRef<HTMLDivElement | null>(null);
   const mobileBoardTabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const noteCardRefs = useRef<Record<string, HTMLElement | null>>({});
+  const pendingMobileNewNoteScrollRef = useRef<string | null>(null);
   const boardLongPressTimerRef = useRef<number | null>(null);
   const boardSwipeStartRef = useRef<{ x: number; y: number; active: boolean }>({
     x: 0,
@@ -4278,6 +4280,26 @@ const App = () => {
   }, [mobileViewport, feedMode, selectedBoard?.id]);
 
   useEffect(() => {
+    if (!mobileViewport || !selectedNoteId || pendingMobileNewNoteScrollRef.current !== selectedNoteId) {
+      return;
+    }
+
+    const target = noteCardRefs.current[selectedNoteId];
+    if (!target) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      pendingMobileNewNoteScrollRef.current = null;
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [mobileViewport, selectedNoteId, visibleNotes]);
+
+  useEffect(() => {
     setBoardTitleDraft(selectedBoard?.title ?? "");
     setEditingBoardTitle(false);
   }, [selectedBoard?.id]);
@@ -4986,6 +5008,9 @@ const App = () => {
     setFeedMode("active");
     setSelectedNoteId(note.id);
     setVisibleNoteCount((prev) => Math.max(prev, 1));
+    if (mobileViewport) {
+      pendingMobileNewNoteScrollRef.current = note.id;
+    }
   };
 
   const addRssWidget = () => {
@@ -7520,6 +7545,9 @@ const App = () => {
                       >
                         {showDropPreview && <article className="pin-card pin-drop-preview" aria-hidden="true" />}
                         <article
+                          ref={(node) => {
+                            noteCardRefs.current[note.id] = node;
+                          }}
                           data-note-id={note.id}
                           className={`pin-card note-${note.color} ${useImageHeroCard ? "image-note" : ""} ${
                             useFramedLinkCard ? "link-only-note" : ""
