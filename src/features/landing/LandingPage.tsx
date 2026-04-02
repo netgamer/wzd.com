@@ -14,6 +14,8 @@ type WidgetSample = {
   accentClass: string;
   lines: string[];
   useCase: string;
+  rssSource?: string;
+  rssPreview?: Array<{ headline: string; time: string }>;
 };
 
 type MemoSample = {
@@ -236,7 +238,13 @@ const WIDGET_SAMPLES: WidgetSample[] = [
     badge: "RSS",
     accentClass: "accent-lavender",
     lines: ["AI 뉴스레터", "디자인 시스템 글", "스타트업 업데이트"],
-    useCase: "아침 리서치 루틴과 자료 큐레이션"
+    useCase: "아침 리서치 루틴과 자료 큐레이션",
+    rssSource: "GeekNews - 개발/기술/스타트업 뉴스 서비스",
+    rssPreview: [
+      { headline: "나는 그만둔다. 클랭커들이 이겼다", time: "2026-04-02T15:33:12+09:00" },
+      { headline: "DRAM 가격 상승이 취미용 SBC 시장을 위축시키는 중", time: "2026-04-02T14:33:00+09:00" },
+      { headline: "Claude Code 소스 유출로 탄생한 OpenClaude", time: "2026-04-02T14:04:20+09:00" }
+    ]
   },
   {
     type: "배송 추적",
@@ -855,6 +863,47 @@ const renderShowcaseWidget = (widget: ShowcaseWidget) => {
   );
 };
 
+const renderWidgetSample = (widget: WidgetSample) => {
+  const cardClassName = `landing-widget-sample ${widget.accentClass} ${widget.badge === "RSS" ? "landing-widget-sample-rss" : ""}`.trim();
+
+  return (
+    <article key={widget.badge} className={cardClassName}>
+      <div className="landing-widget-sample-head">
+        <span className="landing-widget-sample-type">{widget.type}</span>
+        <span className="landing-widget-sample-badge">{widget.badge}</span>
+      </div>
+      <div className="landing-widget-sample-body">
+        <h3>{widget.title}</h3>
+        <p>{widget.description}</p>
+        {widget.badge === "RSS" && widget.rssPreview && widget.rssSource ? (
+          <div className="landing-widget-rss-block">
+            <strong className="landing-widget-rss-title">긱뉴스</strong>
+            <span className="landing-widget-rss-source">{widget.rssSource}</span>
+            <div className="landing-widget-rss-feed">
+              {widget.rssPreview.map((item) => (
+                <article key={`${item.time}-${item.headline}`} className="landing-widget-rss-item">
+                  <strong className="landing-widget-rss-item-title">{item.headline}</strong>
+                  <span className="landing-widget-rss-item-date">{item.time}</span>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <ul className="landing-widget-sample-list">
+            {widget.lines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        )}
+        <div className="landing-widget-usecase">
+          <span>이럴 때 씁니다</span>
+          <strong>{widget.useCase}</strong>
+        </div>
+      </div>
+    </article>
+  );
+};
+
 const LandingPage = () => {
   const handleGoogleLogin = async () => {
     if (!supabase) return;
@@ -945,27 +994,7 @@ const LandingPage = () => {
             </div>
 
             <div className="landing-widget-wall">
-              {WIDGET_SAMPLES.map((widget) => (
-                <article key={widget.badge} className={`landing-widget-sample ${widget.accentClass}`}>
-                  <div className="landing-widget-sample-head">
-                    <span className="landing-widget-sample-type">{widget.type}</span>
-                    <span className="landing-widget-sample-badge">{widget.badge}</span>
-                  </div>
-                  <div className="landing-widget-sample-body">
-                    <h3>{widget.title}</h3>
-                    <p>{widget.description}</p>
-                    <ul className="landing-widget-sample-list">
-                      {widget.lines.map((line) => (
-                        <li key={line}>{line}</li>
-                      ))}
-                    </ul>
-                    <div className="landing-widget-usecase">
-                      <span>이럴 때 씁니다</span>
-                      <strong>{widget.useCase}</strong>
-                    </div>
-                  </div>
-                </article>
-              ))}
+              {WIDGET_SAMPLES.map((widget) => renderWidgetSample(widget))}
             </div>
           </div>
         </section>

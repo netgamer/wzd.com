@@ -5033,6 +5033,56 @@ button {
   line-height: 1.45;
 }
 
+.landing-widget-sample-rss {
+  min-height: 540px;
+}
+
+.landing-widget-rss-block {
+  display: grid;
+  gap: 10px;
+}
+
+.landing-widget-rss-title {
+  font-size: 17px;
+  line-height: 1.3;
+  color: #20160d;
+}
+
+.landing-widget-rss-source {
+  color: rgba(32, 22, 13, 0.78);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.landing-widget-rss-feed {
+  display: grid;
+  gap: 10px;
+}
+
+.landing-widget-rss-item {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.76),
+    0 10px 22px rgba(62, 45, 88, 0.08);
+}
+
+.landing-widget-rss-item-title {
+  font-size: 17px;
+  line-height: 1.42;
+  color: #20160d;
+}
+
+.landing-widget-rss-item-date {
+  color: rgba(64, 49, 83, 0.62);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .landing-widget-usecase {
   display: grid;
   gap: 6px;
