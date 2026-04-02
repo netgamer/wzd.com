@@ -6405,6 +6405,7 @@ const App = () => {
   const boardClassName = `pin-board ${isReadOnlyBoardView ? "public-board-grid" : "workspace-board-grid"} ${
     isHomeView ? "home-board-grid" : isSharedView ? "share-board-grid" : ""
   }`.trim();
+  const showBoardCatCompanion = !isReadOnlyBoardView && !isHomeView && feedMode === "active" && visibleNotes.length > 0;
 
   return (
     <CurrentPage showExpandedSidebar={showExpandedSidebar}>
@@ -7221,6 +7222,15 @@ const App = () => {
           <div className="pin-board-track">
           <div className="pin-board-panel swipe-preview-panel">{mobileSwipeEnabled ? renderSwipePreviewPanel(previousBoard, "prev") : null}</div>
           <div className={boardPanelClassName}>
+          {showBoardCatCompanion && (
+            <div className="board-cat-companion" aria-hidden="true">
+              <div className="board-cat-shadow" />
+              <div className="board-cat-sprite">
+                <span className="board-cat-glyph">🐈</span>
+                <span className="board-cat-spark">✦</span>
+              </div>
+            </div>
+          )}
           <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">

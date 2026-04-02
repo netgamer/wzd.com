@@ -1541,6 +1541,122 @@ button {
   pointer-events: none;
 }
 
+.board-page .feed-head,
+.board-page .workspace-board-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.board-cat-companion {
+  position: absolute;
+  inset: 110px 28px 24px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.board-cat-sprite {
+  position: absolute;
+  left: -3%;
+  bottom: 14%;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 2px;
+  transform-origin: center bottom;
+  animation:
+    board-cat-wander 34s linear infinite,
+    board-cat-bob 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 8px 18px rgba(56, 38, 20, 0.18));
+}
+
+.board-cat-glyph {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.board-cat-spark {
+  font-size: 10px;
+  line-height: 1;
+  color: rgba(248, 173, 94, 0.92);
+  transform: translateY(2px);
+  animation: board-cat-sparkle 1.8s ease-in-out infinite;
+}
+
+.board-cat-shadow {
+  position: absolute;
+  left: 0;
+  bottom: 12%;
+  width: 34px;
+  height: 12px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(76, 53, 29, 0.14), transparent 72%);
+  animation: board-cat-shadow-wander 34s linear infinite;
+}
+
+@keyframes board-cat-wander {
+  0% {
+    transform: translate3d(0, 0, 0) scaleX(1);
+  }
+  22% {
+    transform: translate3d(22vw, -8px, 0) scaleX(1);
+  }
+  48% {
+    transform: translate3d(44vw, 6px, 0) scaleX(1);
+  }
+  52% {
+    transform: translate3d(44vw, 6px, 0) scaleX(-1);
+  }
+  76% {
+    transform: translate3d(18vw, -10px, 0) scaleX(-1);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scaleX(-1);
+  }
+}
+
+@keyframes board-cat-shadow-wander {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  22% {
+    transform: translate3d(22vw, 0, 0) scale(1.06);
+  }
+  48% {
+    transform: translate3d(44vw, 0, 0) scale(0.96);
+  }
+  52% {
+    transform: translate3d(44vw, 0, 0) scale(0.96);
+  }
+  76% {
+    transform: translate3d(18vw, 0, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes board-cat-bob {
+  0%,
+  100% {
+    margin-bottom: 0;
+  }
+  50% {
+    margin-bottom: 8px;
+  }
+}
+
+@keyframes board-cat-sparkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(2px) scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.1);
+  }
+}
+
 .swipe-preview-panel {
   opacity: 0.92;
 }
@@ -4036,6 +4152,18 @@ button {
     border-radius: 22px;
   }
 
+  .board-cat-companion {
+    inset: 104px 16px 16px;
+  }
+
+  .board-cat-glyph {
+    font-size: 28px;
+  }
+
+  .board-cat-shadow {
+    width: 30px;
+  }
+
   .board-page .feed-head {
     padding: 14px 14px 12px;
     border-radius: 22px;
@@ -4164,6 +4292,14 @@ button {
   .share-page .public-topbar {
     margin-inline: 0;
     border-radius: 22px;
+  }
+
+  .board-cat-companion {
+    inset: 92px 10px 10px;
+  }
+
+  .board-cat-glyph {
+    font-size: 24px;
   }
 
   .board-page .workspace-topbar .topbar-actions {
