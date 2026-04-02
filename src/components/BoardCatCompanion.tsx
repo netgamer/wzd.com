@@ -100,20 +100,26 @@ const pickCardTarget = (layout: CatLayout, state: MotionState, preset: SpritePre
   }
 
   const viable = layout.cards.filter((card) => card.height > preset.frameHeight * 0.95);
-  const candidates = (viable.length > 0 ? viable : layout.cards).sort((a, b) => Math.abs(a.left - state.x) - Math.abs(b.left - state.x));
+  const candidates = (viable.length > 0 ? viable : layout.cards).sort((a, b) => {
+    const aWallDistance = Math.min(Math.abs(a.left - state.x), Math.abs(a.right - state.x));
+    const bWallDistance = Math.min(Math.abs(b.left - state.x), Math.abs(b.right - state.x));
+    return aWallDistance - bWallDistance;
+  });
   const target = candidates[Math.floor(Math.random() * Math.min(3, candidates.length))] ?? candidates[0];
   if (!target) {
     return null;
   }
 
-  const targetCenter = (target.left + target.right) / 2;
-  const direction = state.x <= targetCenter ? 1 : -1;
-  const x = direction === 1 ? target.left - preset.frameWidth * 0.2 : target.right - preset.frameWidth * 0.8;
-  const y = clamp(
-    target.top + Math.min(54, target.height * 0.24) - preset.frameHeight * 0.16,
-    10,
-    layout.height - preset.frameHeight - 12
-  );
+  const distanceToLeftWall = Math.abs(target.left - state.x);
+  const distanceToRightWall = Math.abs(target.right - state.x);
+  const clingLeftWall = distanceToLeftWall <= distanceToRightWall;
+  const direction = clingLeftWall ? 1 : -1;
+  const wallOverlap = Math.max(4, Math.min(8, preset.frameWidth * 0.12));
+  const x = clingLeftWall
+    ? target.left - preset.frameWidth + wallOverlap
+    : target.right - wallOverlap;
+  const topBand = target.top + Math.max(8, Math.min(24, target.height * 0.12));
+  const y = clamp(topBand, 10, layout.height - preset.frameHeight - 12);
 
   return {
     cardId: target.id,

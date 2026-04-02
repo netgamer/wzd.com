@@ -46,3 +46,7 @@ Replace the floating board cat with a desktop-pet style blue cat that walks, cli
 
 - `/gstack-qa-only`
 - `/gstack-benchmark`
+
+## Follow-up fixes
+
+- 2026-04-02: tighten cling targeting so the cat anchors to a card's outer left/right wall instead of occasionally sticking to the card face interior
