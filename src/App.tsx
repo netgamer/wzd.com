@@ -7172,13 +7172,6 @@ const App = () => {
                   </button>
                 )}
               </div>
-              {!isReadOnlyBoardView && (
-                <div className="trust-actions">
-                  <button className="ghost-action" onClick={saveCurrentBoardToHistory} disabled={!selectedBoard}>
-                    현재 상태 저장
-                  </button>
-                </div>
-              )}
             </div>
           </section>
 

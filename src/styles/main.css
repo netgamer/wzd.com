@@ -1537,7 +1537,7 @@ button {
 }
 
 .board-page .feed-head {
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
   margin-bottom: 14px;
