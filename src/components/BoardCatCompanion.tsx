@@ -411,6 +411,9 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       state.actionDuration = duration;
       state.jumpTarget = target;
       state.waitPose = waitPose;
+      if (target) {
+        state.direction = target.x >= state.x ? 1 : -1;
+      }
     };
 
     const tick = (now: number) => {
@@ -507,6 +510,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
 
         if (actionElapsed >= state.actionDuration) {
           if (state.jumpTarget) {
+            state.direction = state.jumpTarget.x >= state.x ? 1 : -1;
             state.behavior = "leap";
             state.leapFromX = state.x;
             state.leapFromY = state.y;
