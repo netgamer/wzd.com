@@ -70,6 +70,8 @@ type SpritePreset = {
   gravity: number;
 };
 
+const WALK_SPRITE_SHEET = "/companions/walk-cycle.png";
+
 const CAT_FRAMES = {
   idle: ["/companions/blue-cat.png"],
   walk: [
@@ -291,7 +293,7 @@ const pickJumpTarget = (
 export default function BoardCatCompanion({ active, boardRef, compact, mobile }: BoardCatCompanionProps) {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const actorRef = useRef<HTMLDivElement | null>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
+  const imageRef = useRef<HTMLDivElement | null>(null);
   const shadowRef = useRef<HTMLDivElement | null>(null);
   const layoutRef = useRef<CatLayout | null>(null);
   const stateRef = useRef<MotionState | null>(null);
@@ -564,7 +566,16 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
         frameRef.current.at = now;
       }
 
-      image.src = behaviorFrames[frameRef.current.cursor] ?? CAT_FRAMES.idle[0];
+      const currentFrame = behaviorFrames[frameRef.current.cursor] ?? CAT_FRAMES.idle[0];
+      if (frameSequenceKey === "walk") {
+        image.style.backgroundImage = `url("${WALK_SPRITE_SHEET}")`;
+        image.style.backgroundSize = `${preset.frameWidth * CAT_FRAMES.walk.length}px ${preset.frameHeight}px`;
+        image.style.backgroundPosition = `${-frameRef.current.cursor * preset.frameWidth}px 0px`;
+      } else {
+        image.style.backgroundImage = `url("${currentFrame}")`;
+        image.style.backgroundSize = `${preset.frameWidth}px ${preset.frameHeight}px`;
+        image.style.backgroundPosition = "0px 0px";
+      }
 
       actor.style.transform = `translate3d(${state.x}px, ${state.y}px, 0)`;
       const shadowScale = state.behavior === "leap" ? 0.7 : state.behavior === "drop" ? 0.62 : 1;
@@ -594,7 +605,15 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       <div className="board-cat-shadow" ref={shadowRef} />
       <div className="board-cat-actor" ref={actorRef}>
         <div className="board-cat-pose">
-          <img className="board-cat-image" src="/companions/original-frames/04.png" alt="" ref={imageRef} />
+          <div
+            className="board-cat-image"
+            ref={imageRef}
+            style={{
+              backgroundImage: `url("${WALK_SPRITE_SHEET}")`,
+              backgroundSize: "calc(var(--board-cat-frame-w) * 6) var(--board-cat-frame-h)",
+              backgroundPosition: "0px 0px"
+            }}
+          />
         </div>
       </div>
     </div>

@@ -1651,7 +1651,9 @@ button {
   width: var(--board-cat-frame-w);
   height: var(--board-cat-frame-h);
   display: block;
-  object-fit: contain;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: contain;
   image-rendering: pixelated;
   will-change: transform;
 }
