@@ -99,30 +99,6 @@ const FRAME_TIMINGS: Record<CatBehavior, number> = {
   drop: 140
 };
 
-const getFrameSequenceKey = (state: MotionState, surface: CatSurface) => {
-  if (state.behavior === "walk") {
-    return "walk";
-  }
-
-  if (state.behavior === "wait") {
-    if (state.waitPose === "blink") {
-      return "wait-blink";
-    }
-
-    return state.waitPose === "down" || surface.kind === "ground" ? "wait-down" : "wait-up";
-  }
-
-  if (state.behavior === "leap") {
-    return state.jumpTarget && state.jumpTarget.y > state.leapFromY ? "leap-down" : "leap-up";
-  }
-
-  if (state.behavior === "drop") {
-    return "drop";
-  }
-
-  return "idle";
-};
-
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 const getSpritePreset = (compact: boolean, mobile: boolean): SpritePreset => {
@@ -299,7 +275,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
   const introducedRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const lastTickRef = useRef(0);
-  const frameRef = useRef({ behavior: "walk" as CatBehavior, sequenceKey: "walk", cursor: 0, at: 0 });
+  const frameRef = useRef({ behavior: "walk" as CatBehavior, cursor: 0, at: 0 });
 
   useEffect(() => {
     if (!active) {
@@ -323,7 +299,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
     readyAtRef.current = performance.now() + 420;
     stateRef.current = null;
     lastTickRef.current = 0;
-    frameRef.current = { behavior: "walk", sequenceKey: "walk", cursor: 0, at: 0 };
+    frameRef.current = { behavior: "walk", cursor: 0, at: 0 };
 
     const syncLayout = () => {
       const now = performance.now();
@@ -552,14 +528,9 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       actor.dataset.direction = state.direction === 1 ? "right" : "left";
 
       const behaviorFrames = getDisplayFrames(state, surface);
-      const frameSequenceKey = getFrameSequenceKey(state, surface);
       const frameDuration = FRAME_TIMINGS[state.behavior];
-      if (
-        frameRef.current.behavior !== state.behavior ||
-        frameRef.current.sequenceKey !== frameSequenceKey
-      ) {
+      if (frameRef.current.behavior !== state.behavior) {
         frameRef.current.behavior = state.behavior;
-        frameRef.current.sequenceKey = frameSequenceKey;
         frameRef.current.cursor = 0;
         frameRef.current.at = now;
       } else if (now - frameRef.current.at >= frameDuration) {
@@ -597,7 +568,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       <div className="board-cat-shadow" ref={shadowRef} />
       <div className="board-cat-actor" ref={actorRef}>
         <div className="board-cat-pose">
-          <img className="board-cat-image" src="/companions/original-frames/04.png" alt="" ref={imageRef} />
+          <img className="board-cat-image" src="/companions/frames/walk-1.png" alt="" ref={imageRef} />
         </div>
       </div>
     </div>
