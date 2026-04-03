@@ -572,6 +572,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
 
       actor.dataset.behavior = state.behavior;
       actor.dataset.direction = state.direction === 1 ? "right" : "left";
+      actor.style.setProperty("--board-cat-direction-scale", state.direction === 1 ? "-1" : "1");
 
       const behaviorFrames = getDisplayFrames(state, surface);
       const frameSequenceKey = getFrameSequenceKey(state, surface);
