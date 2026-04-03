@@ -94,6 +94,18 @@ const CAT_FRAMES = {
   dropDown: ["/companions/original-frames/78.png"]
 } as const;
 
+const CAT_PRELOAD_SOURCES = Array.from(
+  new Set([
+    WALK_SPRITE_SHEET,
+    CAT_FRAMES.idle[0],
+    ...CAT_FRAMES.waitUp,
+    ...CAT_FRAMES.waitDown,
+    ...CAT_FRAMES.blink,
+    ...CAT_FRAMES.leapUp,
+    ...CAT_FRAMES.dropDown
+  ])
+);
+
 const FRAME_TIMINGS: Record<CatBehavior, number> = {
   walk: 110,
   wait: 240,
@@ -302,6 +314,23 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
   const rafRef = useRef<number | null>(null);
   const lastTickRef = useRef(0);
   const frameRef = useRef({ behavior: "walk" as CatBehavior, sequenceKey: "walk", cursor: 0, at: 0 });
+  const renderedFrameRef = useRef({ sequenceKey: "", cursor: -1, frame: "" });
+
+  useEffect(() => {
+    const preloaders = CAT_PRELOAD_SOURCES.map((src) => {
+      const img = new Image();
+      img.decoding = "sync";
+      img.src = src;
+      void img.decode?.().catch(() => {});
+      return img;
+    });
+
+    return () => {
+      preloaders.forEach((img) => {
+        img.src = "";
+      });
+    };
+  }, []);
 
   useEffect(() => {
     if (!active) {
@@ -326,6 +355,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
     stateRef.current = null;
     lastTickRef.current = 0;
     frameRef.current = { behavior: "walk", sequenceKey: "walk", cursor: 0, at: 0 };
+    renderedFrameRef.current = { sequenceKey: "", cursor: -1, frame: "" };
 
     const syncLayout = () => {
       const now = performance.now();
@@ -567,14 +597,26 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       }
 
       const currentFrame = behaviorFrames[frameRef.current.cursor] ?? CAT_FRAMES.idle[0];
-      if (frameSequenceKey === "walk") {
-        image.style.backgroundImage = `url("${WALK_SPRITE_SHEET}")`;
-        image.style.backgroundSize = `${preset.frameWidth * CAT_FRAMES.walk.length}px ${preset.frameHeight}px`;
-        image.style.backgroundPosition = `${-frameRef.current.cursor * preset.frameWidth}px bottom`;
-      } else {
-        image.style.backgroundImage = `url("${currentFrame}")`;
-        image.style.backgroundSize = "auto";
-        image.style.backgroundPosition = "center bottom";
+      if (
+        renderedFrameRef.current.sequenceKey !== frameSequenceKey ||
+        renderedFrameRef.current.cursor !== frameRef.current.cursor ||
+        renderedFrameRef.current.frame !== currentFrame
+      ) {
+        if (frameSequenceKey === "walk") {
+          image.style.backgroundImage = `url("${WALK_SPRITE_SHEET}")`;
+          image.style.backgroundSize = `${preset.frameWidth * CAT_FRAMES.walk.length}px ${preset.frameHeight}px`;
+          image.style.backgroundPosition = `${-frameRef.current.cursor * preset.frameWidth}px bottom`;
+        } else {
+          image.style.backgroundImage = `url("${currentFrame}")`;
+          image.style.backgroundSize = "auto";
+          image.style.backgroundPosition = "center bottom";
+        }
+
+        renderedFrameRef.current = {
+          sequenceKey: frameSequenceKey,
+          cursor: frameRef.current.cursor,
+          frame: currentFrame
+        };
       }
 
       actor.style.transform = `translate3d(${state.x}px, ${state.y}px, 0)`;
