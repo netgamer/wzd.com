@@ -5,6 +5,14 @@ type BoardCatCompanionProps = {
   boardRef: RefObject<HTMLElement | null>;
   compact: boolean;
   mobile: boolean;
+  command: CatRemoteCommand | null;
+};
+
+export type CatRemoteAction = "jump-left" | "jump-right" | "sit" | "look-down" | "blink" | "drop";
+
+export type CatRemoteCommand = {
+  id: number;
+  action: CatRemoteAction;
 };
 
 type CatBehavior = "walk" | "wait" | "leap" | "drop";
@@ -293,7 +301,59 @@ const pickJumpTarget = (
   };
 };
 
-export default function BoardCatCompanion({ active, boardRef, compact, mobile }: BoardCatCompanionProps) {
+const pickDirectedCommandTarget = (
+  layout: CatLayout,
+  state: MotionState,
+  surface: CatSurface,
+  preset: SpritePreset,
+  direction: -1 | 1
+): JumpTarget | null => {
+  const limit = surface.right - preset.frameWidth;
+  const directedCandidates = layout.surfaces
+    .filter(
+      (candidate) =>
+        candidate.id !== surface.id &&
+        candidate.right - candidate.left > preset.frameWidth + 12 &&
+        (direction === -1 ? candidate.right < state.x + preset.frameWidth * 0.7 : candidate.left > state.x + preset.frameWidth * 0.3)
+    )
+    .map((candidate) => {
+      const anchorX =
+        direction === -1
+          ? clamp(candidate.right - preset.frameWidth - 12, candidate.left, candidate.right - preset.frameWidth)
+          : clamp(candidate.left + 12, candidate.left, candidate.right - preset.frameWidth);
+      const dx = Math.abs(anchorX - state.x);
+      const dy = Math.abs(candidate.y - surface.y);
+      return {
+        surfaceId: candidate.id,
+        x: anchorX,
+        y: candidate.y,
+        direction,
+        kind: candidate.kind,
+        score: dx + dy * 1.8 + (candidate.kind === "ground" ? 80 : 0)
+      };
+    })
+    .sort((a, b) => a.score - b.score);
+
+  const candidate = directedCandidates[0];
+  if (candidate) {
+    return candidate;
+  }
+
+  const hopX = clamp(state.x + direction * Math.max(48, preset.frameWidth * 1.35), surface.left, limit);
+  if (Math.abs(hopX - state.x) < 8) {
+    return null;
+  }
+
+  return {
+    surfaceId: surface.id,
+    x: hopX,
+    y: surface.y,
+    direction,
+    kind: surface.kind
+  };
+};
+
+export default function BoardCatCompanion({ active, boardRef, compact, mobile, command }: BoardCatCompanionProps) {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const actorRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLDivElement | null>(null);
@@ -306,6 +366,16 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
   const lastTickRef = useRef(0);
   const frameRef = useRef({ behavior: "walk" as CatBehavior, sequenceKey: "walk", cursor: 0, at: 0 });
   const renderedFrameRef = useRef({ sequenceKey: "", cursor: -1, frame: "" });
+  const pendingCommandRef = useRef<CatRemoteCommand | null>(null);
+  const handledCommandIdRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!command || handledCommandIdRef.current === command.id) {
+      return;
+    }
+
+    pendingCommandRef.current = command;
+  }, [command]);
 
   useEffect(() => {
     const atlas = new Image();
@@ -339,6 +409,8 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
     introducedRef.current = false;
     readyAtRef.current = performance.now() + 420;
     stateRef.current = null;
+    pendingCommandRef.current = null;
+    handledCommandIdRef.current = null;
     lastTickRef.current = 0;
     frameRef.current = { behavior: "walk", sequenceKey: "walk", cursor: 0, at: 0 };
     renderedFrameRef.current = { sequenceKey: "", cursor: -1, frame: "" };
@@ -402,6 +474,61 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       }
     };
 
+    const executePendingCommand = (now: number) => {
+      const queued = pendingCommandRef.current;
+      const layout = layoutRef.current;
+      const state = stateRef.current;
+      if (!queued || !layout || !state) {
+        return;
+      }
+
+      const surface = findSurfaceById(layout, state.surfaceId);
+      pendingCommandRef.current = null;
+      handledCommandIdRef.current = queued.id;
+
+      switch (queued.action) {
+        case "jump-left": {
+          const target = pickDirectedCommandTarget(layout, state, surface, preset, -1);
+          if (target) {
+            state.direction = -1;
+            startWait(now, target, 260, target.y > surface.y ? "down" : "up");
+          } else {
+            startWait(now, null, 480, "up");
+          }
+          break;
+        }
+        case "jump-right": {
+          const target = pickDirectedCommandTarget(layout, state, surface, preset, 1);
+          if (target) {
+            state.direction = 1;
+            startWait(now, target, 260, target.y > surface.y ? "down" : "up");
+          } else {
+            startWait(now, null, 480, "up");
+          }
+          break;
+        }
+        case "sit":
+          startWait(now, null, 1400, "up");
+          break;
+        case "look-down":
+          startWait(now, null, 1400, "down");
+          break;
+        case "blink":
+          startWait(now, null, 960, "blink");
+          break;
+        case "drop":
+          if (surface.kind !== "ground") {
+            state.direction = state.direction || 1;
+            startDrop(now);
+          } else {
+            startWait(now, null, 720, "down");
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
     const tick = (now: number) => {
       const layout = layoutRef.current;
       if (!layout) {
@@ -455,34 +582,35 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       const lastTick = lastTickRef.current || now;
       const dt = Math.min(0.032, (now - lastTick) / 1000);
       lastTickRef.current = now;
-      const surface = findSurfaceById(layout, state.surfaceId);
+      executePendingCommand(now);
+      const currentSurface = findSurfaceById(layout, state.surfaceId);
       const actionElapsed = now - state.actionStartedAt;
       actor.style.opacity = "1";
 
       if (state.behavior === "walk") {
-        const walkSpeed = surface.kind === "ground" ? preset.stepSpeed : preset.stepSpeed * 0.84;
+        const walkSpeed = currentSurface.kind === "ground" ? preset.stepSpeed : preset.stepSpeed * 0.84;
         state.x += state.direction * walkSpeed * dt;
-        state.y = surface.y;
+        state.y = currentSurface.y;
 
-        if (state.x <= surface.left) {
-          state.x = surface.left;
+        if (state.x <= currentSurface.left) {
+          state.x = currentSurface.left;
           state.direction = 1;
-          const target = surface.kind === "ground" ? null : pickJumpTarget(layout, state, surface, preset);
-          const waitPose: WaitPose = target && target.y > surface.y ? "down" : "up";
+          const target = currentSurface.kind === "ground" ? null : pickJumpTarget(layout, state, currentSurface, preset);
+          const waitPose: WaitPose = target && target.y > currentSurface.y ? "down" : "up";
           startWait(now, target, 380, waitPose);
-        } else if (state.x >= surface.right - preset.frameWidth) {
-          state.x = surface.right - preset.frameWidth;
+        } else if (state.x >= currentSurface.right - preset.frameWidth) {
+          state.x = currentSurface.right - preset.frameWidth;
           state.direction = -1;
-          const target = surface.kind === "ground" ? null : pickJumpTarget(layout, state, surface, preset);
-          const waitPose: WaitPose = target && target.y > surface.y ? "down" : "up";
+          const target = currentSurface.kind === "ground" ? null : pickJumpTarget(layout, state, currentSurface, preset);
+          const waitPose: WaitPose = target && target.y > currentSurface.y ? "down" : "up";
           startWait(now, target, 380, waitPose);
         } else if (now >= state.nextDecisionAt) {
           if (Math.random() < 0.24) {
             startWait(now, null, 960, "blink");
-          } else if (surface.kind === "ground") {
-            const target = pickJumpTarget(layout, state, surface, preset);
+          } else if (currentSurface.kind === "ground") {
+            const target = pickJumpTarget(layout, state, currentSurface, preset);
             if (target) {
-              startWait(now, target, 340, target.y > surface.y ? "down" : "up");
+              startWait(now, target, 340, target.y > currentSurface.y ? "down" : "up");
             } else {
               state.direction = state.direction === 1 ? -1 : 1;
               state.nextDecisionAt = now + 1000 + Math.random() * 1200;
@@ -492,7 +620,7 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
           }
         }
       } else if (state.behavior === "wait") {
-        state.y = surface.y;
+        state.y = currentSurface.y;
 
         if (actionElapsed >= state.actionDuration) {
           if (state.jumpTarget) {
@@ -574,8 +702,8 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       actor.dataset.direction = state.direction === 1 ? "right" : "left";
       actor.style.setProperty("--board-cat-direction-scale", state.direction === 1 ? "-1" : "1");
 
-      const behaviorFrames = getDisplayFrames(state, surface);
-      const frameSequenceKey = getFrameSequenceKey(state, surface);
+      const behaviorFrames = getDisplayFrames(state, currentSurface);
+      const frameSequenceKey = getFrameSequenceKey(state, currentSurface);
       const frameDuration = FRAME_TIMINGS[state.behavior];
       if (frameRef.current.behavior !== state.behavior || frameRef.current.sequenceKey !== frameSequenceKey) {
         frameRef.current.behavior = state.behavior;

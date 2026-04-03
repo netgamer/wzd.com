@@ -7,7 +7,7 @@
   useRef,
   useState
 } from "react";
-import BoardCatCompanion from "./components/BoardCatCompanion";
+import BoardCatCompanion, { type CatRemoteAction, type CatRemoteCommand } from "./components/BoardCatCompanion";
 import BoardPage from "./features/board/BoardPage";
 import HomePage from "./features/home/HomePage";
 import LandingPage from "./features/landing/LandingPage";
@@ -2618,6 +2618,7 @@ const App = () => {
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
+  const [catRemoteCommand, setCatRemoteCommand] = useState<CatRemoteCommand | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<SettingsSection>("menu");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -2654,6 +2655,7 @@ const App = () => {
   const boardGridRef = useRef<HTMLElement | null>(null);
   const mobileBoardTabsRef = useRef<HTMLDivElement | null>(null);
   const mobileBoardTabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const catRemoteCommandIdRef = useRef(0);
   const noteCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const noteEditorRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const pendingMobileNewNoteScrollRef = useRef<string | null>(null);
@@ -7077,6 +7079,13 @@ const App = () => {
     isHomeView ? "home-board-grid" : isSharedView ? "share-board-grid" : ""
   }`.trim();
   const showBoardCatCompanion = boardCatEligible;
+  const issueCatRemoteCommand = (action: CatRemoteAction) => {
+    catRemoteCommandIdRef.current += 1;
+    setCatRemoteCommand({
+      id: catRemoteCommandIdRef.current,
+      action
+    });
+  };
 
   return (
     <CurrentPage showExpandedSidebar={showExpandedSidebar}>
@@ -7864,7 +7873,33 @@ const App = () => {
             boardRef={boardGridRef}
             compact={compactHeader}
             mobile={mobileViewport}
+            command={catRemoteCommand}
           />
+          {showBoardCatCompanion ? (
+            <div className="cat-remote" role="group" aria-label="캣 리모콘">
+              <div className="cat-remote-title">캣 리모콘</div>
+              <div className="cat-remote-actions">
+                <button className="cat-remote-button" onClick={() => issueCatRemoteCommand("jump-left")}>
+                  왼쪽 점프
+                </button>
+                <button className="cat-remote-button" onClick={() => issueCatRemoteCommand("jump-right")}>
+                  오른쪽 점프
+                </button>
+                <button className="cat-remote-button" onClick={() => issueCatRemoteCommand("sit")}>
+                  앉아
+                </button>
+                <button className="cat-remote-button" onClick={() => issueCatRemoteCommand("look-down")}>
+                  아래 보기
+                </button>
+                <button className="cat-remote-button" onClick={() => issueCatRemoteCommand("blink")}>
+                  깜빡
+                </button>
+                <button className="cat-remote-button" onClick={() => issueCatRemoteCommand("drop")}>
+                  떨어져
+                </button>
+              </div>
+            </div>
+          ) : null}
           <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">

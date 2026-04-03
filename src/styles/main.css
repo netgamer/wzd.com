@@ -1371,6 +1371,62 @@ button {
   font-weight: 700;
 }
 
+.cat-remote {
+  position: fixed;
+  left: 96px;
+  bottom: 24px;
+  z-index: 31;
+  width: min(320px, calc(100vw - 144px));
+  padding: 14px;
+  border-radius: 24px;
+  border: 1px solid rgba(104, 72, 48, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 249, 239, 0.96) 100%);
+  box-shadow: 0 18px 42px rgba(123, 84, 44, 0.12);
+  backdrop-filter: blur(16px);
+}
+
+.cat-remote-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(96, 62, 38, 0.82);
+}
+
+.cat-remote-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.cat-remote-button {
+  appearance: none;
+  border: 1px solid rgba(110, 76, 47, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+
+.cat-remote-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(230, 0, 35, 0.18);
+  box-shadow: 0 10px 18px rgba(49, 31, 16, 0.08);
+  background: rgba(255, 255, 255, 1);
+}
+
+.cat-remote-button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .pin-main {
   padding: 8px 14px 28px;
   overflow-x: hidden;
@@ -3940,6 +3996,13 @@ button {
     right: 16px;
     bottom: 88px;
   }
+
+  .cat-remote {
+    left: 84px;
+    bottom: 18px;
+    width: min(300px, calc(100vw - 120px));
+    padding: 12px;
+  }
 }
 
 @media (max-width: 980px) {
@@ -4308,6 +4371,29 @@ button {
 
   .board-cat-companion {
     inset: 104px 16px 16px;
+  }
+
+  .cat-remote {
+    left: 14px;
+    bottom: 14px;
+    width: calc(100vw - 28px);
+    max-width: none;
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .cat-remote-title {
+    font-size: 12px;
+  }
+
+  .cat-remote-actions {
+    gap: 7px;
+  }
+
+  .cat-remote-button {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+    min-height: 38px;
   }
 
   .board-page .feed-head {
