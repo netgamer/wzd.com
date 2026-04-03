@@ -1652,7 +1652,7 @@ button {
   height: var(--board-cat-frame-h);
   display: block;
   background-repeat: no-repeat;
-  background-position: 0 0;
+  background-position: center bottom;
   background-size: contain;
   image-rendering: pixelated;
   will-change: transform;

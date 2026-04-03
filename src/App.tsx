@@ -254,7 +254,6 @@ const BOARD_HISTORY_LIMIT = 20;
 const MOBILE_LAYOUT_BREAKPOINT = 980;
 const MOBILE_SINGLE_COLUMN_BREAKPOINT = 680;
 const COMPACT_SIDEBAR_BREAKPOINT = 1120;
-const BOARD_CAT_IDLE_MS = 10000;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const DEFAULT_BOOKMARK_URL = "https://";
 const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
@@ -2622,7 +2621,6 @@ const App = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<SettingsSection>("menu");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [boardCatIdle, setBoardCatIdle] = useState(false);
   const [boardSwipeOffset, setBoardSwipeOffset] = useState(0);
   const [boardSwipeTransition, setBoardSwipeTransition] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -2665,8 +2663,6 @@ const App = () => {
     y: 0,
     active: false
   });
-  const boardCatIdleTimerRef = useRef<number | null>(null);
-  const boardCatIdleStateRef = useRef(false);
   const boardSwipeAnimatingRef = useRef(false);
   const promptCopyTimerRef = useRef<number | null>(null);
 
@@ -4323,38 +4319,6 @@ const App = () => {
     () => groupNotesByColumn(visibleNotes, columnCount),
     [visibleNotes, columnCount]
   );
-
-  useEffect(() => {
-    const clearIdleTimer = () => {
-      if (boardCatIdleTimerRef.current !== null) {
-        window.clearTimeout(boardCatIdleTimerRef.current);
-        boardCatIdleTimerRef.current = null;
-      }
-    };
-
-    if (!boardCatEligible) {
-      clearIdleTimer();
-      boardCatIdleStateRef.current = false;
-      setBoardCatIdle(false);
-      return;
-    }
-
-    const armIdleTimer = () => {
-      clearIdleTimer();
-      boardCatIdleTimerRef.current = window.setTimeout(() => {
-        boardCatIdleStateRef.current = true;
-        setBoardCatIdle(true);
-      }, BOARD_CAT_IDLE_MS);
-    };
-
-    boardCatIdleStateRef.current = false;
-    setBoardCatIdle(false);
-    armIdleTimer();
-
-    return () => {
-      clearIdleTimer();
-    };
-  }, [boardCatEligible, selectedBoard?.id, boards, notes]);
 
   useEffect(() => {
     if (!supabase) {
@@ -7112,7 +7076,7 @@ const App = () => {
   const boardClassName = `pin-board ${isReadOnlyBoardView ? "public-board-grid" : "workspace-board-grid"} ${
     isHomeView ? "home-board-grid" : isSharedView ? "share-board-grid" : ""
   }`.trim();
-  const showBoardCatCompanion = boardCatEligible && boardCatIdle;
+  const showBoardCatCompanion = boardCatEligible;
 
   return (
     <CurrentPage showExpandedSidebar={showExpandedSidebar}>

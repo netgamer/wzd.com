@@ -570,11 +570,11 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       if (frameSequenceKey === "walk") {
         image.style.backgroundImage = `url("${WALK_SPRITE_SHEET}")`;
         image.style.backgroundSize = `${preset.frameWidth * CAT_FRAMES.walk.length}px ${preset.frameHeight}px`;
-        image.style.backgroundPosition = `${-frameRef.current.cursor * preset.frameWidth}px 0px`;
+        image.style.backgroundPosition = `${-frameRef.current.cursor * preset.frameWidth}px bottom`;
       } else {
         image.style.backgroundImage = `url("${currentFrame}")`;
-        image.style.backgroundSize = `${preset.frameWidth}px ${preset.frameHeight}px`;
-        image.style.backgroundPosition = "0px 0px";
+        image.style.backgroundSize = "auto";
+        image.style.backgroundPosition = "center bottom";
       }
 
       actor.style.transform = `translate3d(${state.x}px, ${state.y}px, 0)`;
