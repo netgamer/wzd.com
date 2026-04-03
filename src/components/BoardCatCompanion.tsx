@@ -70,41 +70,32 @@ type SpritePreset = {
   gravity: number;
 };
 
-const WALK_SPRITE_SHEET = "/companions/walk-cycle.png";
+const CAT_ATLAS = "/companions/cat-atlas.png";
+const CAT_ATLAS_ORDER = ["04", "05", "06", "72", "73", "13", "67", "21", "17", "18", "82", "78"] as const;
+const CAT_FRAME_INDEX: Record<(typeof CAT_ATLAS_ORDER)[number], number> = {
+  "04": 0,
+  "05": 1,
+  "06": 2,
+  "72": 3,
+  "73": 4,
+  "13": 5,
+  "67": 6,
+  "21": 7,
+  "17": 8,
+  "18": 9,
+  "82": 10,
+  "78": 11
+};
 
 const CAT_FRAMES = {
-  idle: ["/companions/blue-cat.png"],
-  walk: [
-    "/companions/original-frames/04.png",
-    "/companions/original-frames/05.png",
-    "/companions/original-frames/06.png",
-    "/companions/original-frames/72.png",
-    "/companions/original-frames/73.png",
-    "/companions/original-frames/13.png"
-  ],
-  waitUp: ["/companions/original-frames/67.png"],
-  waitDown: ["/companions/original-frames/21.png"],
-  blink: [
-    "/companions/original-frames/17.png",
-    "/companions/original-frames/18.png",
-    "/companions/original-frames/17.png",
-    "/companions/original-frames/18.png"
-  ],
-  leapUp: ["/companions/original-frames/82.png"],
-  dropDown: ["/companions/original-frames/78.png"]
+  idle: ["67"],
+  walk: ["04", "05", "06", "72", "73", "13"],
+  waitUp: ["67"],
+  waitDown: ["21"],
+  blink: ["17", "18", "17", "18"],
+  leapUp: ["82"],
+  dropDown: ["78"]
 } as const;
-
-const CAT_PRELOAD_SOURCES = Array.from(
-  new Set([
-    WALK_SPRITE_SHEET,
-    CAT_FRAMES.idle[0],
-    ...CAT_FRAMES.waitUp,
-    ...CAT_FRAMES.waitDown,
-    ...CAT_FRAMES.blink,
-    ...CAT_FRAMES.leapUp,
-    ...CAT_FRAMES.dropDown
-  ])
-);
 
 const FRAME_TIMINGS: Record<CatBehavior, number> = {
   walk: 110,
@@ -317,18 +308,13 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
   const renderedFrameRef = useRef({ sequenceKey: "", cursor: -1, frame: "" });
 
   useEffect(() => {
-    const preloaders = CAT_PRELOAD_SOURCES.map((src) => {
-      const img = new Image();
-      img.decoding = "sync";
-      img.src = src;
-      void img.decode?.().catch(() => {});
-      return img;
-    });
+    const atlas = new Image();
+    atlas.decoding = "sync";
+    atlas.src = CAT_ATLAS;
+    void atlas.decode?.().catch(() => {});
 
     return () => {
-      preloaders.forEach((img) => {
-        img.src = "";
-      });
+      atlas.src = "";
     };
   }, []);
 
@@ -601,20 +587,13 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
       }
 
       const currentFrame = behaviorFrames[frameRef.current.cursor] ?? CAT_FRAMES.idle[0];
+      const frameIndex = CAT_FRAME_INDEX[currentFrame as keyof typeof CAT_FRAME_INDEX] ?? CAT_FRAME_INDEX["67"];
       if (
         renderedFrameRef.current.sequenceKey !== frameSequenceKey ||
         renderedFrameRef.current.cursor !== frameRef.current.cursor ||
         renderedFrameRef.current.frame !== currentFrame
       ) {
-        if (frameSequenceKey === "walk") {
-          image.style.backgroundImage = `url("${WALK_SPRITE_SHEET}")`;
-          image.style.backgroundSize = `${preset.frameWidth * CAT_FRAMES.walk.length}px ${preset.frameHeight}px`;
-          image.style.backgroundPosition = `${-frameRef.current.cursor * preset.frameWidth}px bottom`;
-        } else {
-          image.style.backgroundImage = `url("${currentFrame}")`;
-          image.style.backgroundSize = "auto";
-          image.style.backgroundPosition = "center bottom";
-        }
+        image.style.backgroundPosition = `${-frameIndex * preset.frameWidth}px bottom`;
 
         renderedFrameRef.current = {
           sequenceKey: frameSequenceKey,
@@ -655,8 +634,8 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile }:
             className="board-cat-image"
             ref={imageRef}
             style={{
-              backgroundImage: `url("${WALK_SPRITE_SHEET}")`,
-              backgroundSize: "calc(var(--board-cat-frame-w) * 6) var(--board-cat-frame-h)",
+              backgroundImage: `url("${CAT_ATLAS}")`,
+              backgroundSize: "calc(var(--board-cat-frame-w) * 12) var(--board-cat-frame-h)",
               backgroundPosition: "0px 0px"
             }}
           />
