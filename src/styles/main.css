@@ -731,6 +731,7 @@ button {
 .topbar-board-title {
   min-width: 0;
   flex: 1 1 auto;
+  max-width: clamp(240px, 34vw, 560px);
   overflow: hidden;
 }
 
@@ -2462,6 +2463,178 @@ button {
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-white:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-white:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
   background: linear-gradient(180deg, rgba(46, 52, 69, 0.96), rgba(31, 37, 52, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-yellow,
+.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-yellow {
+  background: linear-gradient(180deg, rgba(86, 71, 24, 0.95), rgba(62, 52, 20, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-pink,
+.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-pink {
+  background: linear-gradient(180deg, rgba(88, 44, 73, 0.95), rgba(65, 34, 55, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-blue,
+.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-blue {
+  background: linear-gradient(180deg, rgba(39, 64, 105, 0.95), rgba(31, 50, 82, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-green,
+.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-green {
+  background: linear-gradient(180deg, rgba(36, 82, 66, 0.95), rgba(28, 61, 50, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-orange,
+.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-orange {
+  background: linear-gradient(180deg, rgba(109, 67, 38, 0.95), rgba(82, 50, 29, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-purple,
+.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-purple {
+  background: linear-gradient(180deg, rgba(72, 54, 112, 0.95), rgba(52, 39, 82, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-mint,
+.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-mint {
+  background: linear-gradient(180deg, rgba(26, 86, 88, 0.95), rgba(20, 63, 65, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-white,
+.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-white {
+  background: linear-gradient(180deg, rgba(46, 52, 69, 0.96), rgba(31, 37, 52, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-yellow,
+.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-yellow {
+  background: linear-gradient(180deg, rgba(86, 71, 24, 0.95), rgba(62, 52, 20, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-pink,
+.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-pink {
+  background: linear-gradient(180deg, rgba(88, 44, 73, 0.95), rgba(65, 34, 55, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-blue,
+.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-blue {
+  background: linear-gradient(180deg, rgba(39, 64, 105, 0.95), rgba(31, 50, 82, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-green,
+.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-green {
+  background: linear-gradient(180deg, rgba(36, 82, 66, 0.95), rgba(28, 61, 50, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-orange,
+.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-orange {
+  background: linear-gradient(180deg, rgba(109, 67, 38, 0.95), rgba(82, 50, 29, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-purple,
+.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-purple {
+  background: linear-gradient(180deg, rgba(72, 54, 112, 0.95), rgba(52, 39, 82, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-mint,
+.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-mint {
+  background: linear-gradient(180deg, rgba(26, 86, 88, 0.95), rgba(20, 63, 65, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-white,
+.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-white {
+  background: linear-gradient(180deg, rgba(46, 52, 69, 0.96), rgba(31, 37, 52, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .pin-title,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .pin-title,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .pin-body-preview,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .pin-body-preview,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .checklist-widget-text,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .checklist-widget-text,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .countdown-widget-value,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .countdown-widget-value,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .trending-title,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .trending-title,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .link-preview-title,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .link-preview-title {
+  color: #f4f7ff;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .pin-body-copy,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .pin-body-copy,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .link-preview-description,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .link-preview-description,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .countdown-widget-date,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .countdown-widget-date,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .countdown-widget-description,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .countdown-widget-description,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .trending-traffic,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .trending-traffic,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .rss-empty,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .rss-empty,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .checklist-widget-summary,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .checklist-widget-summary,
+.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .trending-region,
+.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .trending-region {
+  color: rgba(230, 236, 249, 0.76);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .widget-badge,
+.pin-page.board-page.board-theme-neon-lab .widget-badge,
+.pin-page.board-page.board-theme-midnight-ops .checklist-widget-item,
+.pin-page.board-page.board-theme-neon-lab .checklist-widget-item,
+.pin-page.board-page.board-theme-midnight-ops .countdown-widget-card,
+.pin-page.board-page.board-theme-neon-lab .countdown-widget-card,
+.pin-page.board-page.board-theme-midnight-ops .trending-item,
+.pin-page.board-page.board-theme-neon-lab .trending-item,
+.pin-page.board-page.board-theme-midnight-ops .timetable-preview-item,
+.pin-page.board-page.board-theme-neon-lab .timetable-preview-item,
+.pin-page.board-page.board-theme-midnight-ops .weather-forecast-item,
+.pin-page.board-page.board-theme-neon-lab .weather-forecast-item,
+.pin-page.board-page.board-theme-midnight-ops .delivery-progress-item,
+.pin-page.board-page.board-theme-neon-lab .delivery-progress-item,
+.pin-page.board-page.board-theme-midnight-ops .link-chip,
+.pin-page.board-page.board-theme-neon-lab .link-chip {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(240, 245, 255, 0.86);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .trending-item:hover,
+.pin-page.board-page.board-theme-neon-lab .trending-item:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .trending-rank,
+.pin-page.board-page.board-theme-neon-lab .trending-rank {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff3f6;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta),
+.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f4f7ff;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) strong,
+.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) strong {
+  color: #f4f7ff;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) p,
+.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) p,
+.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) .document-widget-kicker,
+.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) .document-widget-kicker {
+  color: rgba(230, 236, 249, 0.8);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) .document-widget-kicker,
+.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) .document-widget-kicker,
+.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) .document-widget-action,
+.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) .document-widget-action {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f7ff;
 }
 
 .share-page .pin-card {

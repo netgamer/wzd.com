@@ -1769,10 +1769,14 @@ const isDocumentVariant = (value: unknown): value is DocumentWidgetVariant =>
 const getDocumentVariant = (note: NoteV2): DocumentWidgetVariant =>
   isDocumentVariant(note.metadata?.documentVariant) ? note.metadata.documentVariant : DEFAULT_DOCUMENT_VARIANT;
 
-const getDocumentKicker = (note: NoteV2) =>
-  typeof note.metadata?.documentKicker === "string" && note.metadata.documentKicker.trim()
-    ? note.metadata.documentKicker.trim()
-    : DEFAULT_DOCUMENT_KICKER;
+const getDocumentKicker = (note: NoteV2) => {
+  const rawKicker =
+    typeof note.metadata?.documentKicker === "string" && note.metadata.documentKicker.trim()
+      ? note.metadata.documentKicker.trim()
+      : DEFAULT_DOCUMENT_KICKER;
+
+  return rawKicker === "WZD MASTER" ? "" : rawKicker;
+};
 
 const getDocumentBody = (note: NoteV2) =>
   typeof note.metadata?.documentBody === "string" && note.metadata.documentBody.trim()
