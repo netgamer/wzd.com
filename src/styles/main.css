@@ -2424,6 +2424,46 @@ button {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 241, 233, 0.96));
 }
 
+.pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(86, 71, 24, 0.95), rgba(62, 52, 20, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.note-pink:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-pink:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(88, 44, 73, 0.95), rgba(65, 34, 55, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.note-blue:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-blue:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(39, 64, 105, 0.95), rgba(31, 50, 82, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.note-green:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-green:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(36, 82, 66, 0.95), rgba(28, 61, 50, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.note-orange:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-orange:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(109, 67, 38, 0.95), rgba(82, 50, 29, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.note-purple:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-purple:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(72, 54, 112, 0.95), rgba(52, 39, 82, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.note-mint:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-mint:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(26, 86, 88, 0.95), rgba(20, 63, 65, 0.96));
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-card.note-white:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-white:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
+  background: linear-gradient(180deg, rgba(46, 52, 69, 0.96), rgba(31, 37, 52, 0.96));
+}
+
 .share-page .pin-card {
   border-radius: 30px;
   border-color: rgba(96, 73, 48, 0.08);
