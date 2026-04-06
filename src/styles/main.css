@@ -2759,6 +2759,131 @@ button {
   background: rgba(255, 255, 255, 0.12);
 }
 
+.pin-page.board-page.board-theme-midnight-ops .settings-panel,
+.pin-page.board-page.board-theme-neon-lab .settings-panel {
+  background: rgba(17, 24, 39, 0.96);
+  border-color: rgba(143, 171, 255, 0.14);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.34);
+  color: #f4f7ff;
+}
+
+.pin-page.board-page.board-theme-neon-lab .settings-panel {
+  background: rgba(15, 21, 35, 0.97);
+  border-color: rgba(132, 255, 227, 0.16);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .settings-section,
+.pin-page.board-page.board-theme-neon-lab .settings-section {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .settings-kicker,
+.pin-page.board-page.board-theme-neon-lab .settings-kicker,
+.pin-page.board-page.board-theme-midnight-ops .settings-menu-meta,
+.pin-page.board-page.board-theme-neon-lab .settings-menu-meta,
+.pin-page.board-page.board-theme-midnight-ops .settings-info-label,
+.pin-page.board-page.board-theme-neon-lab .settings-info-label,
+.pin-page.board-page.board-theme-midnight-ops .settings-layout-copy,
+.pin-page.board-page.board-theme-neon-lab .settings-layout-copy,
+.pin-page.board-page.board-theme-midnight-ops .settings-theme-description,
+.pin-page.board-page.board-theme-neon-lab .settings-theme-description,
+.pin-page.board-page.board-theme-midnight-ops .settings-theme-accent,
+.pin-page.board-page.board-theme-neon-lab .settings-theme-accent,
+.pin-page.board-page.board-theme-midnight-ops .settings-section-head span,
+.pin-page.board-page.board-theme-neon-lab .settings-section-head span,
+.pin-page.board-page.board-theme-midnight-ops .settings-empty,
+.pin-page.board-page.board-theme-neon-lab .settings-empty,
+.pin-page.board-page.board-theme-midnight-ops .invite-user-copy span,
+.pin-page.board-page.board-theme-neon-lab .invite-user-copy span,
+.pin-page.board-page.board-theme-midnight-ops .invite-feedback,
+.pin-page.board-page.board-theme-neon-lab .invite-feedback {
+  color: rgba(226, 234, 250, 0.76);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .settings-panel-head h2,
+.pin-page.board-page.board-theme-neon-lab .settings-panel-head h2,
+.pin-page.board-page.board-theme-midnight-ops .settings-menu-title,
+.pin-page.board-page.board-theme-neon-lab .settings-menu-title,
+.pin-page.board-page.board-theme-midnight-ops .settings-layout-title,
+.pin-page.board-page.board-theme-neon-lab .settings-layout-title,
+.pin-page.board-page.board-theme-midnight-ops .settings-theme-title,
+.pin-page.board-page.board-theme-neon-lab .settings-theme-title,
+.pin-page.board-page.board-theme-midnight-ops .settings-section-head strong,
+.pin-page.board-page.board-theme-neon-lab .settings-section-head strong,
+.pin-page.board-page.board-theme-midnight-ops .settings-info-item strong,
+.pin-page.board-page.board-theme-neon-lab .settings-info-item strong,
+.pin-page.board-page.board-theme-midnight-ops .invite-user-copy strong,
+.pin-page.board-page.board-theme-neon-lab .invite-user-copy strong {
+  color: #f4f7ff;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .settings-menu-card,
+.pin-page.board-page.board-theme-neon-lab .settings-menu-card,
+.pin-page.board-page.board-theme-midnight-ops .settings-layout-card,
+.pin-page.board-page.board-theme-neon-lab .settings-layout-card,
+.pin-page.board-page.board-theme-midnight-ops .settings-theme-card,
+.pin-page.board-page.board-theme-neon-lab .settings-theme-card,
+.pin-page.board-page.board-theme-midnight-ops .settings-info-item,
+.pin-page.board-page.board-theme-neon-lab .settings-info-item,
+.pin-page.board-page.board-theme-midnight-ops .invite-result-item,
+.pin-page.board-page.board-theme-neon-lab .invite-result-item,
+.pin-page.board-page.board-theme-midnight-ops .invite-member-item,
+.pin-page.board-page.board-theme-neon-lab .invite-member-item {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.09);
+  color: #f4f7ff;
+  box-shadow: none;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .settings-theme-preview,
+.pin-page.board-page.board-theme-neon-lab .settings-theme-preview {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .settings-close,
+.pin-page.board-page.board-theme-neon-lab .settings-close,
+.pin-page.board-page.board-theme-midnight-ops .settings-back,
+.pin-page.board-page.board-theme-neon-lab .settings-back,
+.pin-page.board-page.board-theme-midnight-ops .trash-restore,
+.pin-page.board-page.board-theme-neon-lab .trash-restore,
+.pin-page.board-page.board-theme-midnight-ops .widget-secondary,
+.pin-page.board-page.board-theme-neon-lab .widget-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f4f7ff;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .settings-close:hover,
+.pin-page.board-page.board-theme-neon-lab .settings-close:hover,
+.pin-page.board-page.board-theme-midnight-ops .settings-back:hover,
+.pin-page.board-page.board-theme-neon-lab .settings-back:hover,
+.pin-page.board-page.board-theme-midnight-ops .settings-menu-card:hover,
+.pin-page.board-page.board-theme-neon-lab .settings-menu-card:hover,
+.pin-page.board-page.board-theme-midnight-ops .settings-layout-card:hover,
+.pin-page.board-page.board-theme-neon-lab .settings-layout-card:hover,
+.pin-page.board-page.board-theme-midnight-ops .settings-theme-card:hover,
+.pin-page.board-page.board-theme-neon-lab .settings-theme-card:hover,
+.pin-page.board-page.board-theme-midnight-ops .trash-restore:hover,
+.pin-page.board-page.board-theme-neon-lab .trash-restore:hover,
+.pin-page.board-page.board-theme-midnight-ops .widget-secondary:hover,
+.pin-page.board-page.board-theme-neon-lab .widget-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .settings-layout-card.active,
+.pin-page.board-page.board-theme-neon-lab .settings-layout-card.active {
+  background: rgba(111, 224, 255, 0.12);
+  border-color: rgba(111, 224, 255, 0.28);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .settings-theme-card.active,
+.pin-page.board-page.board-theme-neon-lab .settings-theme-card.active {
+  border-color: rgba(111, 224, 255, 0.26);
+  box-shadow: 0 16px 32px rgba(6, 12, 24, 0.38);
+}
+
 .share-page .pin-card {
   border-radius: 30px;
   border-color: rgba(96, 73, 48, 0.08);
