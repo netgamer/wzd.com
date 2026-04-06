@@ -76,7 +76,7 @@ button {
   transition: padding 240ms ease, background-color 240ms ease;
 }
 
-.board-page .pin-sidebar {
+.pin-page.board-page {
   --board-shell-bg:
     radial-gradient(circle at top left, rgba(255, 235, 205, 0.78), transparent 28%),
     linear-gradient(180deg, #fffefb, #fbf7f0 42%, #f6efe4);
@@ -123,6 +123,13 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.88);
   --board-page-text: #1f1a13;
   --board-page-muted: #74685c;
+  background: var(--board-shell-bg);
+  --text: var(--board-page-text);
+  --muted: var(--board-page-muted);
+  color: var(--board-page-text);
+}
+
+.board-page .pin-sidebar {
   background:
     var(--board-sidebar-bg);
   border-right: 1px solid var(--board-sidebar-border);
@@ -132,13 +139,6 @@ button {
 .pin-sidebar.expanded {
   align-items: stretch;
   padding: 18px 12px;
-}
-
-.pin-page.board-page {
-  background: var(--board-shell-bg);
-  --text: var(--board-page-text);
-  --muted: var(--board-page-muted);
-  color: var(--board-page-text);
 }
 
 .pin-page.board-page.board-theme-focus-desk {
