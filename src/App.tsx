@@ -95,6 +95,7 @@ type BoardTemplateKey =
   | "work"
   | "study"
   | "tips"
+  | "linktree"
   | "homepage"
   | "bookmark"
   | "rss"
@@ -721,6 +722,53 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
     ]
   },
   {
+    key: "linktree",
+    title: "개인 링크 페이지 보드",
+    subtitle: "프로필, 대표 링크, 공지를 한 장의 개인 페이지처럼 정리",
+    tag: "메모 보드",
+    audience: "자기 소개와 링크를 한 번에 보여주고 싶은 분",
+    highlights: ["프로필 카드", "대표 링크", "문의 유도"],
+    backgroundStyle: "paper",
+    layoutStyle: "balanced",
+    notes: [
+      {
+        color: "white",
+        content: "이준호",
+        metadata: {
+          widgetType: "profile",
+          profileName: "이준호",
+          profileBirthdate: "1997-08-17",
+          profileOccupation: "크리에이터 · AI 빌더",
+          profileImageUrl:
+            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=640&q=80"
+        }
+      },
+      {
+        color: "mint",
+        content: "대표 링크",
+        metadata: {
+          widgetType: "bookmark",
+          bookmarkUrls: [
+            "https://instagram.com",
+            "https://youtube.com",
+            "https://openai.com",
+            "https://notion.so"
+          ]
+        }
+      },
+      {
+        color: "pink",
+        content:
+          "소개 문구\n\nAI, 콘텐츠, 프로토타입 작업을 기록합니다.\n협업 문의와 포트폴리오 링크는 아래 카드에서 확인해주세요."
+      },
+      {
+        color: "yellow",
+        content:
+          "문의하기\n\n이메일: hello@wzd.kr\n인스타 DM 또는 메일로 문의 주세요."
+      }
+    ]
+  },
+  {
     key: "homepage",
     title: "시작페이지 보드",
     subtitle: "자주 여는 서비스와 메모를 한 화면에 모아두는 시작 페이지",
@@ -928,13 +976,13 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
   }
 ];
 
-const BOARD_TEMPLATE_SECTIONS: BoardTemplateSection[] = [
-  {
-    key: "notes",
-    title: "메모 보드",
-    subtitle: "텍스트와 링크를 빠르게 정리하는 기본형 보드",
-    templateKeys: ["video", "work", "study", "tips"]
-  },
+  const BOARD_TEMPLATE_SECTIONS: BoardTemplateSection[] = [
+    {
+      key: "notes",
+      title: "메모 보드",
+      subtitle: "텍스트와 링크를 빠르게 정리하는 기본형 보드",
+      templateKeys: ["video", "work", "study", "tips", "linktree"]
+    },
   {
     key: "widgets",
     title: "위젯 보드",
