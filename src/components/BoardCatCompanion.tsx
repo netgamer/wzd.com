@@ -6,6 +6,7 @@ type BoardCatCompanionProps = {
   compact: boolean;
   mobile: boolean;
   command: CatRemoteCommand | null;
+  onActivate?: () => void;
 };
 
 export type CatRemoteAction = "jump-left" | "jump-right" | "sit" | "look-down" | "blink" | "drop";
@@ -353,7 +354,14 @@ const pickDirectedCommandTarget = (
   };
 };
 
-export default function BoardCatCompanion({ active, boardRef, compact, mobile, command }: BoardCatCompanionProps) {
+export default function BoardCatCompanion({
+  active,
+  boardRef,
+  compact,
+  mobile,
+  command,
+  onActivate
+}: BoardCatCompanionProps) {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const actorRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLDivElement | null>(null);
@@ -755,9 +763,22 @@ export default function BoardCatCompanion({ active, boardRef, compact, mobile, c
   }
 
   return (
-    <div className="board-cat-companion" aria-hidden="true" ref={overlayRef}>
+    <div className="board-cat-companion" ref={overlayRef}>
       <div className="board-cat-shadow" ref={shadowRef} />
-      <div className="board-cat-actor" ref={actorRef}>
+      <div
+        className="board-cat-actor"
+        ref={actorRef}
+        role="button"
+        tabIndex={0}
+        aria-label="캣 리모콘 열기"
+        onClick={() => onActivate?.()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onActivate?.();
+          }
+        }}
+      >
         <div className="board-cat-pose">
           <div
             className="board-cat-image"

@@ -2700,6 +2700,7 @@ const App = () => {
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const [catRemoteCommand, setCatRemoteCommand] = useState<CatRemoteCommand | null>(null);
+  const [catRemoteOpen, setCatRemoteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<SettingsSection>("menu");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -4841,6 +4842,10 @@ const App = () => {
     setBoardTitleDraft(selectedBoard?.title ?? "");
     setEditingBoardTitle(false);
   }, [selectedBoard?.id]);
+
+  useEffect(() => {
+    setCatRemoteOpen(false);
+  }, [selectedBoard?.id, feedMode]);
 
   useEffect(() => {
     if (!selectedBoard) {
@@ -8005,20 +8010,26 @@ const App = () => {
           <div className="pin-board-track">
           <div className="pin-board-panel swipe-preview-panel">{mobileSwipeEnabled ? renderSwipePreviewPanel(previousBoard, "prev") : null}</div>
           <div className={boardPanelClassName}>
-          <BoardCatCompanion
-            key={`${selectedBoard?.id ?? "none"}-${feedMode}`}
-            active={showBoardCatCompanion}
-            boardRef={boardGridRef}
-            compact={compactHeader}
-            mobile={mobileViewport}
-            command={catRemoteCommand}
-          />
-          {showBoardCatCompanion ? (
-            <div className="cat-remote" role="group" aria-label="캣 리모콘">
-              <div className="cat-remote-title">캣 리모콘</div>
-              <div className="cat-remote-actions">
-                <button className="cat-remote-button" onClick={() => issueCatRemoteCommand("jump-left")}>
-                  왼쪽 점프
+            <BoardCatCompanion
+              key={`${selectedBoard?.id ?? "none"}-${feedMode}`}
+              active={showBoardCatCompanion}
+              boardRef={boardGridRef}
+              compact={compactHeader}
+              mobile={mobileViewport}
+              command={catRemoteCommand}
+              onActivate={() => setCatRemoteOpen(true)}
+            />
+            {showBoardCatCompanion && catRemoteOpen ? (
+              <div className="cat-remote" role="group" aria-label="캣 리모콘">
+                <div className="cat-remote-head">
+                  <div className="cat-remote-title">캣 리모콘</div>
+                  <button className="cat-remote-close" onClick={() => setCatRemoteOpen(false)} aria-label="캣 리모콘 닫기">
+                    ×
+                  </button>
+                </div>
+                <div className="cat-remote-actions">
+                  <button className="cat-remote-button" onClick={() => issueCatRemoteCommand("jump-left")}>
+                    왼쪽 점프
                 </button>
                 <button className="cat-remote-button" onClick={() => issueCatRemoteCommand("jump-right")}>
                   오른쪽 점프
