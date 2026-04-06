@@ -3,6 +3,7 @@ import { PageShell } from "../shared/PageShell";
 
 type BoardPageProps = {
   showExpandedSidebar: boolean;
+  extraClassName?: string;
   children: ReactNode;
 };
 

@@ -107,6 +107,7 @@ type BoardTemplateKey =
 type BoardTemplateSectionKey = "notes" | "widgets" | "groups";
 type BoardLayoutStyle = "balanced" | "compact" | "visual";
 type SettingsSection = "menu" | "trash" | "history";
+type BoardThemeId = "focus-desk" | "glass-studio" | "midnight-ops" | "creator-mood" | "neon-lab" | "cozy-room";
 
 type BoardHistorySnapshot = {
   id: string;
@@ -2338,12 +2339,88 @@ const BOARD_LAYOUT_STYLES: Array<{
   { key: "visual", label: "종류별 정리", description: "메모와 위젯 비중을 보고 한쪽 컬럼군씩 묶어서 정리합니다." }
 ];
 
+const BOARD_THEME_PRESETS: Array<{
+  key: BoardThemeId;
+  label: string;
+  description: string;
+  accent: string;
+  previewClassName: string;
+}> = [
+  {
+    key: "focus-desk",
+    label: "Focus Desk",
+    description: "따뜻한 종이와 우드 톤으로 집중 보드에 맞는 기본 테마",
+    accent: "크림 · 브라운",
+    previewClassName: "theme-preview-focus-desk"
+  },
+  {
+    key: "glass-studio",
+    label: "Glass Studio",
+    description: "유리 패널과 차가운 블루 톤으로 깔끔한 작업실 분위기",
+    accent: "아이스 블루 · 실버",
+    previewClassName: "theme-preview-glass-studio"
+  },
+  {
+    key: "midnight-ops",
+    label: "Midnight Ops",
+    description: "다크 네이비와 네온 포인트로 야간 작업 보드에 어울리는 테마",
+    accent: "네이비 · 일렉트릭 블루",
+    previewClassName: "theme-preview-midnight-ops"
+  },
+  {
+    key: "creator-mood",
+    label: "Creator Mood",
+    description: "웜 핑크와 살구빛 톤으로 이미지, 링크, 아이디어 보드에 잘 맞는 테마",
+    accent: "살구 · 로즈",
+    previewClassName: "theme-preview-creator-mood"
+  },
+  {
+    key: "neon-lab",
+    label: "Neon Lab",
+    description: "짙은 배경 위 민트와 바이올렛 포인트가 살아 있는 실험용 테마",
+    accent: "민트 · 바이올렛",
+    previewClassName: "theme-preview-neon-lab"
+  },
+  {
+    key: "cozy-room",
+    label: "Cozy Room",
+    description: "패브릭과 오후 햇빛 느낌의 부드러운 생활 기록 테마",
+    accent: "샌드 · 카멜",
+    previewClassName: "theme-preview-cozy-room"
+  }
+];
+
 const isBoardLayoutStyle = (value: unknown): value is BoardLayoutStyle =>
   value === "balanced" || value === "compact" || value === "visual";
+
+const isBoardThemeId = (value: unknown): value is BoardThemeId =>
+  value === "focus-desk" ||
+  value === "glass-studio" ||
+  value === "midnight-ops" ||
+  value === "creator-mood" ||
+  value === "neon-lab" ||
+  value === "cozy-room";
 
 const getBoardLayoutStyle = (board: BoardV2 | null | undefined): BoardLayoutStyle => {
   const value = board?.settings?.layoutStyle;
   return isBoardLayoutStyle(value) ? value : "balanced";
+};
+
+const getBoardThemeId = (board: BoardV2 | null | undefined): BoardThemeId => {
+  const explicitTheme = board?.settings?.themeId;
+  if (isBoardThemeId(explicitTheme)) {
+    return explicitTheme;
+  }
+
+  if (board?.backgroundStyle === "whiteboard") {
+    return "glass-studio";
+  }
+
+  if (board?.backgroundStyle === "cork") {
+    return "creator-mood";
+  }
+
+  return "focus-desk";
 };
 
 const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
@@ -6131,6 +6208,23 @@ const App = () => {
     );
   };
 
+  const updateBoardThemeId = (boardId: string, themeId: BoardThemeId) => {
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === boardId
+          ? {
+              ...board,
+              settings: {
+                ...board.settings,
+                themeId
+              },
+              updatedAt: nowIso()
+            }
+          : board
+      )
+    );
+  };
+
   const applyBoardLayoutStyle = (layoutStyle: BoardLayoutStyle) => {
     if (!selectedBoard) {
       return;
@@ -6140,6 +6234,14 @@ const App = () => {
     const nextColumnCount = getColumnCount();
     setNotes((prev) => autoOrganizeBoardNotes(prev, selectedBoard.id, nextColumnCount, layoutStyle));
     touchBoard(selectedBoard.id);
+  };
+
+  const applyBoardTheme = (themeId: BoardThemeId) => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    updateBoardThemeId(selectedBoard.id, themeId);
   };
 
   const saveCurrentBoardToHistory = () => {
@@ -7079,6 +7181,7 @@ const App = () => {
     isHomeView ? "home-board-grid" : isSharedView ? "share-board-grid" : ""
   }`.trim();
   const showBoardCatCompanion = boardCatEligible;
+  const boardThemeClassName = !isHomeView && !isReadOnlyBoardView && selectedBoard ? `board-theme-${getBoardThemeId(selectedBoard)}` : "";
   const issueCatRemoteCommand = (action: CatRemoteAction) => {
     catRemoteCommandIdRef.current += 1;
     setCatRemoteCommand({
@@ -7088,7 +7191,7 @@ const App = () => {
   };
 
   return (
-    <CurrentPage showExpandedSidebar={showExpandedSidebar}>
+    <CurrentPage showExpandedSidebar={showExpandedSidebar} extraClassName={boardThemeClassName}>
       <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`}>
         <button className="pin-brand" aria-label="WZD 홈" onClick={navigateToPublicLanding}>
           <span>{showExpandedSidebar ? "WZD" : "W"}</span>
@@ -7632,6 +7735,37 @@ const App = () => {
                               >
                                 <span className="settings-layout-title">{style.label}</span>
                                 <span className="settings-layout-copy">{style.description}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="settings-section">
+                        <div className="settings-section-head">
+                          <strong>보드 테마</strong>
+                          <span>작업공간 전체 톤을 개인 취향에 맞게 고를 수 있습니다.</span>
+                        </div>
+                        <div className="settings-theme-grid">
+                          {BOARD_THEME_PRESETS.map((theme) => {
+                            const active = getBoardThemeId(selectedBoard) === theme.key;
+                            return (
+                              <button
+                                key={theme.key}
+                                className={`settings-theme-card ${theme.previewClassName} ${active ? "active" : ""}`}
+                                onClick={() => applyBoardTheme(theme.key)}
+                              >
+                                <div className="settings-theme-preview" aria-hidden="true">
+                                  <span className="settings-theme-preview-topbar" />
+                                  <span className="settings-theme-preview-card large" />
+                                  <span className="settings-theme-preview-card small" />
+                                  <span className="settings-theme-preview-card accent" />
+                                </div>
+                                <div className="settings-theme-copy">
+                                  <span className="settings-theme-title">{theme.label}</span>
+                                  <span className="settings-theme-accent">{theme.accent}</span>
+                                  <span className="settings-theme-description">{theme.description}</span>
+                                </div>
                               </button>
                             );
                           })}

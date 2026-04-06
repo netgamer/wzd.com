@@ -3,11 +3,12 @@
 type PageShellProps = {
   pageClassName: string;
   showExpandedSidebar: boolean;
+  extraClassName?: string;
   children: ReactNode;
 };
 
-export const PageShell = ({ pageClassName, showExpandedSidebar, children }: PageShellProps) => (
-  <div className={`pin-page ${pageClassName} ${showExpandedSidebar ? "sidebar-expanded" : ""}`.trim()}>
+export const PageShell = ({ pageClassName, showExpandedSidebar, extraClassName, children }: PageShellProps) => (
+  <div className={`pin-page ${pageClassName} ${showExpandedSidebar ? "sidebar-expanded" : ""} ${extraClassName ?? ""}`.trim()}>
     {children}
   </div>
 );
