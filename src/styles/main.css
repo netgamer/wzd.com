@@ -2750,13 +2750,23 @@ button {
 
 .pin-page.board-page.board-theme-midnight-ops .board-chip-badge,
 .pin-page.board-page.board-theme-neon-lab .board-chip-badge {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(18, 28, 44, 0.9);
+  border: 1px solid rgba(143, 171, 255, 0.18);
   color: #f4f7ff;
+}
+
+.pin-page.board-page.board-theme-neon-lab .board-chip-badge {
+  background: rgba(17, 24, 39, 0.92);
+  border-color: rgba(132, 255, 227, 0.18);
 }
 
 .pin-page.board-page.board-theme-midnight-ops .pin-sidebar.expanded .board-chip-badge,
 .pin-page.board-page.board-theme-neon-lab .pin-sidebar.expanded .board-chip-badge {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(18, 28, 44, 0.82);
+}
+
+.pin-page.board-page.board-theme-neon-lab .pin-sidebar.expanded .board-chip-badge {
+  background: rgba(17, 24, 39, 0.84);
 }
 
 .pin-page.board-page.board-theme-midnight-ops .settings-panel,
