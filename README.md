@@ -1,4 +1,16 @@
-﻿# WZD Portal Clone
+# WZD Portal Clone
+
+## What is WZD?
+WZD is a personal board page for people who want more than a static link page.
+
+Most link-in-bio tools stop at "put a few links on a mobile-looking page." WZD is for people who miss the old mini-homepage era, like decorating their own space, and want a real personal homepage on the web. Instead of a locked one-column profile page, WZD lets you build a board with memo cards, link cards, widgets, pets, themes, and desktop-sized layouts that still work well on mobile.
+
+The second wedge is interest-specific information boards. Someone deep in AI can build one board that pulls together GeekNews, AI YouTube channels, Threads posts, Twitter links, prompts, and working notes in one place. Someone focused on acting can build a personal acting board from OTR RSS, Filmmakers RSS, Modelnara RSS, audition links, and acting-related YouTube references. The product is not just "save links." It is "make your own page and your own information surface."
+
+## Product direction
+- LinkTree replacement for people who want a customizable personal homepage, not just a short list of links.
+- RSS and content aggregation board for people who want to collect one topic from many sources into a single page.
+- A hybrid space where memos, widgets, links, documents, and visual identity live together on one board.
 
 ## Run locally
 1. Copy `.env.example` to `.env` and fill Supabase values.
