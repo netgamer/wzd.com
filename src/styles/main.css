@@ -2112,7 +2112,6 @@ button {
   width: 100%;
   height: 100%;
   transform-origin: center bottom;
-  transform: scaleX(var(--board-cat-direction-scale));
 }
 
 .board-cat-image {
@@ -2123,20 +2122,22 @@ button {
   background-position: center bottom;
   background-size: contain;
   image-rendering: pixelated;
+  transform-origin: center bottom;
+  transform: scaleX(var(--board-cat-direction-scale));
   will-change: transform;
 }
 
 .board-cat-actor[data-behavior="wait"] .board-cat-pose {
-  transform: scaleX(var(--board-cat-direction-scale)) translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
 }
 
 .board-cat-actor[data-behavior="drop"] .board-cat-pose {
-  transform: scaleX(var(--board-cat-direction-scale)) rotate(12deg) translate3d(0, 0, 0);
+  transform: rotate(12deg) translate3d(0, 0, 0);
   animation: board-cat-drop-wiggle 0.45s ease-in-out infinite;
 }
 
 .board-cat-actor[data-behavior="leap"] .board-cat-pose {
-  transform: scaleX(var(--board-cat-direction-scale)) rotate(-18deg) translate3d(0, -2px, 0);
+  transform: rotate(-18deg) translate3d(0, -2px, 0);
   animation: board-cat-leap-stretch 0.42s ease-in-out infinite;
 }
 
