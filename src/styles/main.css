@@ -2637,6 +2637,80 @@ button {
   color: #f4f7ff;
 }
 
+.pin-page.board-page.board-theme-midnight-ops .rss-item,
+.pin-page.board-page.board-theme-neon-lab .rss-item,
+.pin-page.board-page.board-theme-midnight-ops .widget-menu,
+.pin-page.board-page.board-theme-neon-lab .widget-menu,
+.pin-page.board-page.board-theme-midnight-ops .mobile-widget-menu,
+.pin-page.board-page.board-theme-neon-lab .mobile-widget-menu,
+.pin-page.board-page.board-theme-midnight-ops .cat-remote {
+  background: rgba(24, 31, 48, 0.94);
+  border-color: rgba(143, 171, 255, 0.14);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
+}
+
+.pin-page.board-page.board-theme-neon-lab .cat-remote {
+  background: rgba(19, 23, 36, 0.95);
+  border-color: rgba(132, 255, 227, 0.16);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .rss-item-title,
+.pin-page.board-page.board-theme-neon-lab .rss-item-title,
+.pin-page.board-page.board-theme-midnight-ops .widget-menu-item,
+.pin-page.board-page.board-theme-neon-lab .widget-menu-item,
+.pin-page.board-page.board-theme-midnight-ops .cat-remote-title,
+.pin-page.board-page.board-theme-neon-lab .cat-remote-title,
+.pin-page.board-page.board-theme-midnight-ops .cat-remote-button,
+.pin-page.board-page.board-theme-neon-lab .cat-remote-button,
+.pin-page.board-page.board-theme-midnight-ops .board-chip-label,
+.pin-page.board-page.board-theme-neon-lab .board-chip-label,
+.pin-page.board-page.board-theme-midnight-ops .side-icon-label,
+.pin-page.board-page.board-theme-neon-lab .side-icon-label,
+.pin-page.board-page.board-theme-midnight-ops .side-icon,
+.pin-page.board-page.board-theme-neon-lab .side-icon,
+.pin-page.board-page.board-theme-midnight-ops .board-chip,
+.pin-page.board-page.board-theme-neon-lab .board-chip {
+  color: #f4f7ff;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .rss-item-date,
+.pin-page.board-page.board-theme-neon-lab .rss-item-date,
+.pin-page.board-page.board-theme-midnight-ops .cat-remote-title,
+.pin-page.board-page.board-theme-neon-lab .cat-remote-title {
+  color: rgba(226, 234, 250, 0.72);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .rss-item,
+.pin-page.board-page.board-theme-neon-lab .rss-item,
+.pin-page.board-page.board-theme-midnight-ops .widget-menu-item,
+.pin-page.board-page.board-theme-neon-lab .widget-menu-item,
+.pin-page.board-page.board-theme-midnight-ops .cat-remote-button,
+.pin-page.board-page.board-theme-neon-lab .cat-remote-button {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .widget-menu-item:hover,
+.pin-page.board-page.board-theme-neon-lab .widget-menu-item:hover,
+.pin-page.board-page.board-theme-midnight-ops .cat-remote-button:hover,
+.pin-page.board-page.board-theme-neon-lab .cat-remote-button:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .board-chip-badge,
+.pin-page.board-page.board-theme-neon-lab .board-chip-badge {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f4f7ff;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-sidebar.expanded .board-chip-badge,
+.pin-page.board-page.board-theme-neon-lab .pin-sidebar.expanded .board-chip-badge {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .share-page .pin-card {
   border-radius: 30px;
   border-color: rgba(96, 73, 48, 0.08);
