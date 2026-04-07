@@ -8378,3 +8378,173 @@ html {
     border: 2px solid currentColor;
   }
 }
+
+/* ============================================
+   Widget Add Modal - Bento Grid Style
+   ============================================ */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.widget-modal {
+  background: linear-gradient(180deg, #1a1f2e, #141825);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 680px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 
+    0 24px 48px rgba(0, 0, 0, 0.4),
+    0 0 1px rgba(255, 255, 255, 0.1) inset;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.widget-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.widget-modal .modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #f0f4ff;
+}
+
+.widget-modal .icon-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #8892a8;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+
+.widget-modal .icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f0f4ff;
+}
+
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.widget-card {
+  background: var(--bg-gradient, linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.widget-card:hover {
+  border-color: var(--accent, #4d7cff);
+  box-shadow: 
+    0 0 0 1px var(--accent, #4d7cff),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 20px color-mix(in srgb, var(--accent, #4d7cff) 20%, transparent);
+  transform: translateY(-2px);
+}
+
+.widget-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.widget-preview {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.widget-preview pre {
+  margin: 0;
+  font-family: "Pretendard Variable", "SUIT Variable", "Noto Sans KR", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: left;
+}
+
+.widget-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.widget-info strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0f4ff;
+}
+
+.widget-info span {
+  font-size: 12px;
+  color: #8892a8;
+  line-height: 1.4;
+}
+
+/* Dark theme adjustments */
+.board-theme-midnight-ops .widget-modal,
+.board-theme-neon-lab .widget-modal {
+  background: linear-gradient(180deg, rgba(20, 25, 40, 0.98), rgba(15, 20, 32, 0.98));
+}
+
+.board-theme-midnight-ops .widget-card:hover {
+  box-shadow: 
+    0 0 0 1px rgba(77, 124, 255, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(77, 124, 255, 0.15);
+}
+
+.board-theme-neon-lab .widget-card:hover {
+  box-shadow: 
+    0 0 0 1px rgba(66, 255, 216, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(66, 255, 216, 0.15);
+}
