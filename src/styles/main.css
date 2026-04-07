@@ -8383,11 +8383,15 @@ html {
    Widget Add Modal - Bento Grid Style
    ============================================ */
 
+/* ============================================
+   Widget Add Modal - Enhanced Showcase
+   ============================================ */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8400,25 +8404,23 @@ html {
   to { opacity: 1; }
 }
 
-.widget-modal {
+.widget-modal-large {
   background: linear-gradient(180deg, #1a1f2e, #141825);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 24px;
-  max-width: 680px;
-  width: 90%;
-  max-height: 85vh;
-  overflow-y: auto;
+  border-radius: 20px;
+  padding: 28px;
+  max-width: 600px;
+  width: 95%;
   box-shadow: 
-    0 24px 48px rgba(0, 0, 0, 0.4),
+    0 32px 64px rgba(0, 0, 0, 0.5),
     0 0 1px rgba(255, 255, 255, 0.1) inset;
-  animation: slideUp 0.2s ease-out;
+  animation: modalSlideIn 0.25s ease-out;
 }
 
-@keyframes slideUp {
+@keyframes modalSlideIn {
   from { 
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
+    transform: translateY(24px) scale(0.96);
   }
   to { 
     opacity: 1;
@@ -8426,125 +8428,176 @@ html {
   }
 }
 
-.widget-modal .modal-header {
+.widget-modal-large .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 8px;
 }
 
-.widget-modal .modal-header h2 {
+.widget-modal-large .modal-header h2 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #f0f4ff;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.5px;
 }
 
-.widget-modal .icon-button {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  color: #8892a8;
+.widget-modal-large .icon-button {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #9ca3af;
   cursor: pointer;
-  padding: 8px 12px;
-  font-size: 14px;
-  transition: all 0.15s ease;
-}
-
-.widget-modal .icon-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f0f4ff;
-}
-
-.widget-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
-}
-
-.widget-card {
-  background: var(--bg-gradient, linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)));
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  padding: 16px;
-  cursor: pointer;
-  text-align: left;
+  padding: 10px 14px;
+  font-size: 16px;
   transition: all 0.2s ease;
+}
+
+.widget-modal-large .icon-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+.modal-subtitle {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0 0 20px 0;
+}
+
+/* Showcase Cards - Full Width List */
+.widget-showcase {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
-.widget-card:hover {
+.widget-showcase-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+}
+
+.widget-showcase-card:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
   border-color: var(--accent, #4d7cff);
+  transform: translateX(6px);
   box-shadow: 
     0 0 0 1px var(--accent, #4d7cff),
-    0 8px 24px rgba(0, 0, 0, 0.3),
-    0 0 20px color-mix(in srgb, var(--accent, #4d7cff) 20%, transparent);
-  transform: translateY(-2px);
+    0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
-.widget-card:active {
-  transform: translateY(0) scale(0.98);
+.widget-showcase-card:active {
+  transform: translateX(2px) scale(0.99);
 }
 
-.widget-preview {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-  padding: 12px;
-  min-height: 80px;
+.widget-icon-large {
+  font-size: 28px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
 }
 
-.widget-preview pre {
-  margin: 0;
-  font-family: "Pretendard Variable", "SUIT Variable", "Noto Sans KR", monospace;
-  font-size: 11px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.7);
-  white-space: pre-wrap;
-  word-break: break-word;
-  text-align: left;
-}
-
-.widget-info {
+.widget-showcase-card .widget-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
-.widget-info strong {
-  font-size: 14px;
+.widget-showcase-card .widget-info strong {
+  font-size: 16px;
   font-weight: 600;
-  color: #f0f4ff;
+  color: #ffffff;
 }
 
-.widget-info span {
+.widget-showcase-card .widget-info span {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.widget-arrow {
+  font-size: 20px;
+  color: #4b5563;
+  transition: all 0.2s ease;
+}
+
+.widget-showcase-card:hover .widget-arrow {
+  color: var(--accent, #4d7cff);
+  transform: translateX(4px);
+}
+
+/* Compact Grid - Alternative View */
+.widget-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.widget-card-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.widget-card-compact:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent, #4d7cff);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.widget-card-compact .widget-icon {
+  font-size: 24px;
+}
+
+.widget-card-compact .widget-label {
   font-size: 12px;
-  color: #8892a8;
-  line-height: 1.4;
+  font-weight: 500;
+  color: #d1d5db;
 }
 
-/* Dark theme adjustments */
-.board-theme-midnight-ops .widget-modal,
-.board-theme-neon-lab .widget-modal {
-  background: linear-gradient(180deg, rgba(20, 25, 40, 0.98), rgba(15, 20, 32, 0.98));
+/* Theme Adjustments */
+.board-theme-midnight-ops .widget-modal-large {
+  background: linear-gradient(180deg, rgba(15, 20, 32, 0.98), rgba(10, 14, 24, 0.98));
 }
 
-.board-theme-midnight-ops .widget-card:hover {
+.board-theme-midnight-ops .widget-showcase-card:hover {
   box-shadow: 
     0 0 0 1px rgba(77, 124, 255, 0.5),
-    0 8px 24px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(77, 124, 255, 0.15);
+    0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-.board-theme-neon-lab .widget-card:hover {
+.board-theme-neon-lab .widget-modal-large {
+  background: linear-gradient(180deg, rgba(12, 16, 28, 0.98), rgba(8, 12, 22, 0.98));
+  border-color: rgba(66, 255, 216, 0.15);
+}
+
+.board-theme-neon-lab .widget-showcase-card:hover {
   box-shadow: 
-    0 0 0 1px rgba(66, 255, 216, 0.5),
-    0 8px 24px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(66, 255, 216, 0.15);
+    0 0 0 1px rgba(66, 255, 216, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(66, 255, 216, 0.1);
 }
