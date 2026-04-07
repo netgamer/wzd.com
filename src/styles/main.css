@@ -14,6 +14,73 @@
   --shadow: 0 18px 36px rgba(34, 23, 12, 0.08);
   --shadow-soft: 0 20px 48px rgba(48, 31, 14, 0.08);
   --shadow-strong: 0 28px 64px rgba(41, 25, 10, 0.12);
+
+  /* Typography Scale (1.2 ratio) */
+  --font-xs: 0.694rem;
+  --font-sm: 0.833rem;
+  --font-base: 1rem;
+  --font-md: 1.2rem;
+  --font-lg: 1.44rem;
+  --font-xl: 1.728rem;
+  --font-2xl: 2.074rem;
+  --font-3xl: 2.488rem;
+
+  /* Line Heights */
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* Spacing Scale (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Border Radius Scale */
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 999px;
+
+  /* Layered Shadow System */
+  --shadow-sm:
+    0 1px 3px rgba(31, 26, 19, 0.06),
+    0 1px 2px rgba(31, 26, 19, 0.04);
+  --shadow-md:
+    0 4px 6px -1px rgba(31, 26, 19, 0.08),
+    0 2px 4px -1px rgba(31, 26, 19, 0.04);
+  --shadow-lg:
+    0 10px 15px -3px rgba(31, 26, 19, 0.08),
+    0 4px 6px -2px rgba(31, 26, 19, 0.04);
+  --shadow-xl:
+    0 20px 25px -5px rgba(31, 26, 19, 0.08),
+    0 10px 10px -5px rgba(31, 26, 19, 0.02);
+
+  /* Elevation (for cards/panels) */
+  --shadow-elevation-1:
+    0 1px 3px rgba(31, 26, 19, 0.04),
+    0 4px 12px rgba(31, 26, 19, 0.06);
+  --shadow-elevation-2:
+    0 2px 4px rgba(31, 26, 19, 0.04),
+    0 8px 24px rgba(31, 26, 19, 0.08);
+  --shadow-elevation-3:
+    0 4px 8px rgba(31, 26, 19, 0.04),
+    0 16px 40px rgba(31, 26, 19, 0.1);
+
+  /* Transition System */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 * {
@@ -69,11 +136,18 @@ button {
   gap: 14px;
   padding: 18px 0;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(252, 246, 238, 0.92));
-  border-right: 1px solid rgba(72, 51, 26, 0.08);
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.72);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(252, 246, 238, 0.94));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-right: 1px solid rgba(72, 51, 26, 0.06);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.8),
+    4px 0 24px rgba(31, 26, 19, 0.03);
   overflow: hidden;
-  transition: padding 240ms ease, background-color 240ms ease;
+  transition:
+    padding var(--duration-normal) var(--ease-out),
+    background-color var(--duration-normal) var(--ease-out),
+    width var(--duration-normal) var(--ease-out);
 }
 
 .pin-page.board-page {
@@ -143,211 +217,317 @@ button {
 
 .pin-page.board-page.board-theme-focus-desk {
   --board-shell-bg:
-    radial-gradient(circle at top left, rgba(255, 232, 197, 0.82), transparent 28%),
-    linear-gradient(180deg, #fffefb, #fbf6ee 42%, #f3ebde);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(244, 232, 217, 0.94));
+    radial-gradient(circle at top left, rgba(255, 238, 212, 0.75), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(255, 245, 230, 0.5), transparent 40%),
+    linear-gradient(180deg, #fffefb, #fcf8f2 40%, #f5efe6);
+  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 253, 250, 0.96), rgba(248, 240, 228, 0.92));
+  --board-sidebar-border: rgba(91, 62, 31, 0.07);
+  --board-sidebar-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.9),
+    16px 0 36px rgba(76, 49, 23, 0.04);
   --board-brand-bg: linear-gradient(135deg, #ff1747, #b5122f);
-  --board-brand-shadow: 0 16px 30px rgba(204, 22, 56, 0.24);
+  --board-brand-shadow: 0 14px 28px rgba(204, 22, 56, 0.22);
+  --board-chip-bg: rgba(255, 255, 255, 0.72);
+  --board-chip-border: rgba(93, 68, 41, 0.05);
+  --board-chip-hover-bg: rgba(255, 255, 255, 0.88);
   --board-chip-active-bg: linear-gradient(135deg, #ff1747, #c71437);
-  --board-chip-active-shadow: 0 16px 30px rgba(208, 26, 60, 0.26);
+  --board-chip-active-shadow: 0 14px 28px rgba(208, 26, 60, 0.24);
   --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(255, 241, 220, 0.92), transparent 32%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 250, 244, 0.88));
+    radial-gradient(circle at top left, rgba(255, 244, 225, 0.88), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 252, 247, 0.85));
+  --board-topbar-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 18px 40px rgba(60, 38, 15, 0.06);
+  --board-search-bg: rgba(255, 255, 255, 0.82);
+  --board-search-border: rgba(92, 67, 40, 0.06);
   --board-panel-bg:
-    radial-gradient(circle at top left, rgba(255, 246, 231, 0.78), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 248, 240, 0.66)),
-    rgba(255, 255, 255, 0.52);
+    radial-gradient(circle at top left, rgba(255, 248, 235, 0.72), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 250, 243, 0.72)),
+    rgba(255, 255, 255, 0.56);
+  --board-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 24px 48px rgba(58, 38, 15, 0.06);
+  --board-base-card-shadow:
+    0 2px 4px rgba(44, 31, 15, 0.04),
+    0 16px 28px rgba(44, 31, 15, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
 .pin-page.board-page.board-theme-glass-studio {
   --board-shell-bg:
-    radial-gradient(circle at top left, rgba(216, 241, 255, 0.78), transparent 26%),
-    linear-gradient(180deg, #f6fbff, #eef6fc 48%, #e7f0f8);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(246, 252, 255, 0.96), rgba(225, 238, 247, 0.92));
-  --board-sidebar-border: rgba(84, 118, 147, 0.12);
-  --board-sidebar-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.86), 18px 0 40px rgba(73, 104, 135, 0.08);
+    radial-gradient(circle at top left, rgba(210, 238, 255, 0.72), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(230, 245, 255, 0.5), transparent 36%),
+    linear-gradient(180deg, #f8fcff, #f0f7fc 46%, #e9f2f9);
+  --board-sidebar-bg: linear-gradient(180deg, rgba(250, 253, 255, 0.94), rgba(230, 242, 250, 0.9));
+  --board-sidebar-border: rgba(84, 118, 147, 0.1);
+  --board-sidebar-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.92),
+    16px 0 36px rgba(73, 104, 135, 0.06);
   --board-brand-bg: linear-gradient(135deg, #4ca4ff, #6d7cff);
-  --board-brand-shadow: 0 16px 30px rgba(83, 129, 255, 0.2);
-  --board-chip-bg: rgba(255, 255, 255, 0.56);
-  --board-chip-border: rgba(90, 124, 151, 0.1);
+  --board-brand-shadow: 0 14px 28px rgba(83, 129, 255, 0.2);
+  --board-chip-bg: rgba(255, 255, 255, 0.62);
+  --board-chip-border: rgba(90, 124, 151, 0.08);
   --board-chip-badge-bg: rgba(78, 120, 168, 0.1);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.8);
-  --board-chip-hover-border: rgba(82, 119, 148, 0.16);
+  --board-chip-hover-bg: rgba(255, 255, 255, 0.85);
+  --board-chip-hover-border: rgba(82, 119, 148, 0.14);
   --board-chip-active-bg: linear-gradient(135deg, #4ca4ff, #6d7cff);
-  --board-chip-active-shadow: 0 16px 30px rgba(83, 129, 255, 0.22);
+  --board-chip-active-shadow: 0 14px 28px rgba(83, 129, 255, 0.2);
   --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(225, 246, 255, 0.92), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(240, 248, 255, 0.8));
-  --board-topbar-border: rgba(100, 133, 160, 0.1);
-  --board-topbar-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 20px 46px rgba(82, 115, 149, 0.09);
-  --board-search-bg: rgba(255, 255, 255, 0.7);
-  --board-search-border: rgba(96, 130, 160, 0.12);
+    radial-gradient(circle at top left, rgba(220, 244, 255, 0.85), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(245, 251, 255, 0.78));
+  --board-topbar-border: rgba(100, 133, 160, 0.08);
+  --board-topbar-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 18px 40px rgba(82, 115, 149, 0.07);
+  --board-search-bg: rgba(255, 255, 255, 0.76);
+  --board-search-border: rgba(96, 130, 160, 0.1);
   --board-kicker-color: #5f84a3;
   --board-new-note-bg: linear-gradient(135deg, #4ca4ff, #6d7cff);
-  --board-new-note-shadow: 0 16px 28px rgba(83, 129, 255, 0.22);
+  --board-new-note-shadow: 0 14px 26px rgba(83, 129, 255, 0.2);
   --board-widget-bg: linear-gradient(135deg, #1f3445, #122736);
-  --board-widget-shadow: 0 14px 26px rgba(22, 40, 56, 0.18);
-  --board-ghost-bg: rgba(255, 255, 255, 0.68);
-  --board-ghost-border: rgba(96, 130, 160, 0.1);
+  --board-widget-shadow: 0 12px 24px rgba(22, 40, 56, 0.16);
+  --board-ghost-bg: rgba(255, 255, 255, 0.72);
+  --board-ghost-border: rgba(96, 130, 160, 0.08);
   --board-panel-bg:
-    radial-gradient(circle at top left, rgba(228, 244, 255, 0.7), transparent 26%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(237, 246, 255, 0.7)),
-    rgba(255, 255, 255, 0.46);
-  --board-panel-border: rgba(96, 130, 160, 0.12);
-  --board-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 26px 54px rgba(92, 121, 148, 0.1);
-  --board-panel-outline: rgba(138, 180, 214, 0.34);
-  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(238, 246, 255, 0.92));
-  --board-base-card-border: rgba(98, 132, 160, 0.12);
-  --board-base-card-shadow: 0 18px 40px rgba(92, 121, 148, 0.1), 0 1px 0 rgba(255, 255, 255, 0.82) inset;
+    radial-gradient(circle at top left, rgba(225, 244, 255, 0.65), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(242, 249, 255, 0.72)),
+    rgba(255, 255, 255, 0.5);
+  --board-panel-border: rgba(96, 130, 160, 0.1);
+  --board-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 24px 48px rgba(92, 121, 148, 0.08);
+  --board-panel-outline: rgba(138, 180, 214, 0.3);
+  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 249, 255, 0.94));
+  --board-base-card-border: rgba(98, 132, 160, 0.1);
+  --board-base-card-shadow:
+    0 2px 4px rgba(92, 121, 148, 0.04),
+    0 16px 36px rgba(92, 121, 148, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
 .pin-page.board-page.board-theme-midnight-ops {
   --board-shell-bg:
-    radial-gradient(circle at top left, rgba(59, 77, 128, 0.5), transparent 24%),
-    linear-gradient(180deg, #0f1725, #151f32 46%, #1f2740);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(18, 28, 44, 0.96), rgba(24, 34, 56, 0.94));
-  --board-sidebar-border: rgba(137, 166, 255, 0.12);
-  --board-sidebar-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04), 18px 0 40px rgba(0, 0, 0, 0.18);
+    radial-gradient(circle at top left, rgba(65, 85, 140, 0.45), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(50, 70, 120, 0.25), transparent 36%),
+    linear-gradient(180deg, #0e1522, #141d2e 44%, #1c2640);
+  --board-sidebar-bg: linear-gradient(180deg, rgba(16, 25, 40, 0.96), rgba(22, 32, 52, 0.94));
+  --board-sidebar-border: rgba(137, 166, 255, 0.1);
+  --board-sidebar-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.04),
+    16px 0 36px rgba(0, 0, 0, 0.2);
   --board-brand-bg: linear-gradient(135deg, #4d7cff, #44d5ff);
-  --board-brand-shadow: 0 16px 30px rgba(77, 124, 255, 0.26);
-  --board-chip-bg: rgba(255, 255, 255, 0.06);
-  --board-chip-border: rgba(143, 171, 255, 0.12);
-  --board-chip-badge-bg: rgba(143, 171, 255, 0.12);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.12);
-  --board-chip-hover-border: rgba(143, 171, 255, 0.2);
+  --board-brand-shadow: 0 14px 28px rgba(77, 124, 255, 0.24);
+  --board-chip-bg: rgba(255, 255, 255, 0.07);
+  --board-chip-border: rgba(143, 171, 255, 0.1);
+  --board-chip-badge-bg: rgba(143, 171, 255, 0.14);
+  --board-chip-hover-bg: rgba(255, 255, 255, 0.14);
+  --board-chip-hover-border: rgba(143, 171, 255, 0.18);
   --board-chip-active-bg: linear-gradient(135deg, #4d7cff, #44d5ff);
-  --board-chip-active-shadow: 0 16px 30px rgba(77, 124, 255, 0.24);
+  --board-chip-active-shadow: 0 14px 28px rgba(77, 124, 255, 0.22);
   --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(57, 86, 150, 0.24), transparent 34%),
-    linear-gradient(180deg, rgba(14, 24, 41, 0.92), rgba(20, 30, 48, 0.88));
-  --board-topbar-border: rgba(143, 171, 255, 0.12);
-  --board-topbar-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 20px 46px rgba(0, 0, 0, 0.22);
-  --board-search-bg: rgba(255, 255, 255, 0.06);
-  --board-search-border: rgba(143, 171, 255, 0.12);
-  --board-kicker-color: #9bb9ff;
+    radial-gradient(circle at top left, rgba(60, 90, 155, 0.2), transparent 38%),
+    linear-gradient(180deg, rgba(13, 22, 38, 0.94), rgba(18, 28, 45, 0.9));
+  --board-topbar-border: rgba(143, 171, 255, 0.1);
+  --board-topbar-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 40px rgba(0, 0, 0, 0.24);
+  --board-search-bg: rgba(255, 255, 255, 0.07);
+  --board-search-border: rgba(143, 171, 255, 0.1);
+  --board-kicker-color: #a3c4ff;
   --board-new-note-bg: linear-gradient(135deg, #4d7cff, #44d5ff);
-  --board-new-note-shadow: 0 16px 28px rgba(77, 124, 255, 0.24);
-  --board-widget-bg: linear-gradient(135deg, #0f1321, #151b30);
-  --board-widget-shadow: 0 14px 26px rgba(0, 0, 0, 0.24);
-  --board-ghost-bg: rgba(255, 255, 255, 0.06);
-  --board-ghost-border: rgba(143, 171, 255, 0.12);
+  --board-new-note-shadow: 0 14px 26px rgba(77, 124, 255, 0.22);
+  --board-widget-bg: linear-gradient(135deg, #0e1220, #141a2e);
+  --board-widget-shadow: 0 12px 24px rgba(0, 0, 0, 0.26);
+  --board-ghost-bg: rgba(255, 255, 255, 0.07);
+  --board-ghost-border: rgba(143, 171, 255, 0.1);
   --board-panel-bg:
-    radial-gradient(circle at top left, rgba(66, 96, 166, 0.18), transparent 26%),
-    linear-gradient(180deg, rgba(20, 28, 46, 0.9), rgba(24, 34, 54, 0.88)),
-    rgba(18, 26, 42, 0.72);
-  --board-panel-border: rgba(143, 171, 255, 0.14);
-  --board-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 26px 54px rgba(0, 0, 0, 0.24);
-  --board-panel-outline: rgba(128, 158, 255, 0.22);
+    radial-gradient(circle at top left, rgba(70, 100, 170, 0.15), transparent 28%),
+    linear-gradient(180deg, rgba(18, 26, 44, 0.92), rgba(22, 32, 52, 0.9)),
+    rgba(16, 24, 40, 0.76);
+  --board-panel-border: rgba(143, 171, 255, 0.12);
+  --board-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 24px 48px rgba(0, 0, 0, 0.26);
+  --board-panel-outline: rgba(128, 158, 255, 0.2);
   --board-feed-bg: rgba(255, 255, 255, 0.03);
-  --board-feed-border: rgba(143, 171, 255, 0.1);
-  --board-base-card-bg: linear-gradient(180deg, rgba(26, 37, 58, 0.96), rgba(21, 31, 50, 0.94));
-  --board-base-card-border: rgba(143, 171, 255, 0.12);
-  --board-base-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.26), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
-  --board-page-text: #eef4ff;
-  --board-page-muted: #a9b8d7;
+  --board-feed-border: rgba(143, 171, 255, 0.08);
+  --board-base-card-bg: linear-gradient(180deg, rgba(24, 35, 56, 0.97), rgba(20, 30, 48, 0.95));
+  --board-base-card-border: rgba(143, 171, 255, 0.1);
+  --board-base-card-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 16px 36px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --board-page-text: #f0f4ff;
+  --board-page-muted: #b0c0e0;
 }
 
 .pin-page.board-page.board-theme-creator-mood {
   --board-shell-bg:
-    radial-gradient(circle at top left, rgba(255, 222, 204, 0.76), transparent 24%),
-    linear-gradient(180deg, #fff8f4, #fff0ea 45%, #fde6dd);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 247, 242, 0.96), rgba(251, 231, 222, 0.94));
-  --board-sidebar-border: rgba(149, 95, 79, 0.1);
-  --board-sidebar-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.8), 18px 0 40px rgba(141, 86, 69, 0.07);
+    radial-gradient(circle at top left, rgba(255, 225, 210, 0.7), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(255, 235, 220, 0.5), transparent 36%),
+    linear-gradient(180deg, #fff9f6, #fff2ec 44%, #fdeae2);
+  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 250, 247, 0.94), rgba(252, 238, 230, 0.9));
+  --board-sidebar-border: rgba(149, 95, 79, 0.08);
+  --board-sidebar-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.88),
+    16px 0 36px rgba(141, 86, 69, 0.05);
   --board-brand-bg: linear-gradient(135deg, #ff7c8b, #ff9c5f);
-  --board-brand-shadow: 0 16px 30px rgba(255, 124, 139, 0.24);
+  --board-brand-shadow: 0 14px 28px rgba(255, 124, 139, 0.22);
+  --board-chip-bg: rgba(255, 255, 255, 0.7);
+  --board-chip-border: rgba(149, 95, 79, 0.06);
+  --board-chip-hover-bg: rgba(255, 255, 255, 0.86);
   --board-chip-active-bg: linear-gradient(135deg, #ff7c8b, #ff9c5f);
-  --board-chip-active-shadow: 0 16px 30px rgba(255, 124, 139, 0.22);
+  --board-chip-active-shadow: 0 14px 28px rgba(255, 124, 139, 0.2);
   --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(255, 225, 214, 0.92), transparent 32%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 243, 237, 0.88));
-  --board-search-bg: rgba(255, 255, 255, 0.82);
-  --board-search-border: rgba(149, 95, 79, 0.1);
+    radial-gradient(circle at top left, rgba(255, 230, 218, 0.85), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 248, 243, 0.84));
+  --board-topbar-border: rgba(149, 95, 79, 0.08);
+  --board-topbar-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 18px 40px rgba(141, 86, 69, 0.06);
+  --board-search-bg: rgba(255, 255, 255, 0.84);
+  --board-search-border: rgba(149, 95, 79, 0.08);
   --board-kicker-color: #af6556;
   --board-new-note-bg: linear-gradient(135deg, #ff7c8b, #ff9c5f);
-  --board-new-note-shadow: 0 16px 28px rgba(255, 124, 139, 0.22);
+  --board-new-note-shadow: 0 14px 26px rgba(255, 124, 139, 0.2);
   --board-widget-bg: linear-gradient(135deg, #674239, #34211d);
-  --board-widget-shadow: 0 14px 26px rgba(52, 33, 29, 0.18);
+  --board-widget-shadow: 0 12px 24px rgba(52, 33, 29, 0.16);
+  --board-ghost-bg: rgba(255, 255, 255, 0.76);
+  --board-ghost-border: rgba(149, 95, 79, 0.06);
   --board-panel-bg:
-    radial-gradient(circle at top left, rgba(255, 232, 218, 0.74), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 245, 239, 0.72)),
-    rgba(255, 252, 249, 0.52);
-  --board-panel-outline: rgba(210, 154, 138, 0.22);
-  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 244, 237, 0.94));
+    radial-gradient(circle at top left, rgba(255, 235, 222, 0.68), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 248, 242, 0.74)),
+    rgba(255, 253, 251, 0.54);
+  --board-panel-border: rgba(149, 95, 79, 0.08);
+  --board-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 24px 48px rgba(141, 86, 69, 0.06);
+  --board-panel-outline: rgba(210, 154, 138, 0.18);
+  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 242, 0.95));
+  --board-base-card-shadow:
+    0 2px 4px rgba(141, 86, 69, 0.04),
+    0 16px 32px rgba(141, 86, 69, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .pin-page.board-page.board-theme-neon-lab {
   --board-shell-bg:
-    radial-gradient(circle at top left, rgba(66, 255, 216, 0.18), transparent 24%),
-    radial-gradient(circle at top right, rgba(164, 116, 255, 0.18), transparent 26%),
-    linear-gradient(180deg, #0d1018, #141827 46%, #181c2f);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(18, 21, 33, 0.96), rgba(24, 28, 44, 0.94));
-  --board-sidebar-border: rgba(132, 255, 227, 0.12);
-  --board-sidebar-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03), 18px 0 40px rgba(0, 0, 0, 0.22);
+    radial-gradient(circle at top left, rgba(66, 255, 216, 0.15), transparent 28%),
+    radial-gradient(circle at top right, rgba(164, 116, 255, 0.15), transparent 30%),
+    radial-gradient(circle at bottom center, rgba(100, 200, 255, 0.08), transparent 32%),
+    linear-gradient(180deg, #0c0f16, #131724 44%, #171b2c);
+  --board-sidebar-bg: linear-gradient(180deg, rgba(16, 19, 30, 0.97), rgba(22, 26, 42, 0.95));
+  --board-sidebar-border: rgba(132, 255, 227, 0.1);
+  --board-sidebar-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.03),
+    16px 0 36px rgba(0, 0, 0, 0.24),
+    0 0 48px rgba(66, 255, 216, 0.03);
   --board-brand-bg: linear-gradient(135deg, #42ffd8, #a474ff);
-  --board-brand-shadow: 0 16px 30px rgba(132, 116, 255, 0.24);
-  --board-chip-bg: rgba(255, 255, 255, 0.05);
-  --board-chip-border: rgba(132, 255, 227, 0.14);
-  --board-chip-badge-bg: rgba(132, 255, 227, 0.12);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.11);
-  --board-chip-hover-border: rgba(132, 255, 227, 0.24);
+  --board-brand-shadow:
+    0 14px 28px rgba(132, 116, 255, 0.22),
+    0 0 24px rgba(66, 255, 216, 0.15);
+  --board-chip-bg: rgba(255, 255, 255, 0.06);
+  --board-chip-border: rgba(132, 255, 227, 0.12);
+  --board-chip-badge-bg: rgba(132, 255, 227, 0.14);
+  --board-chip-hover-bg: rgba(255, 255, 255, 0.12);
+  --board-chip-hover-border: rgba(132, 255, 227, 0.22);
   --board-chip-active-bg: linear-gradient(135deg, #42ffd8, #a474ff);
-  --board-chip-active-shadow: 0 16px 30px rgba(132, 116, 255, 0.24);
+  --board-chip-active-shadow:
+    0 14px 28px rgba(132, 116, 255, 0.22),
+    0 0 20px rgba(66, 255, 216, 0.12);
   --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(66, 255, 216, 0.14), transparent 32%),
-    linear-gradient(180deg, rgba(17, 20, 32, 0.92), rgba(23, 27, 42, 0.9));
-  --board-topbar-border: rgba(132, 255, 227, 0.12);
-  --board-topbar-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 20px 46px rgba(0, 0, 0, 0.22);
-  --board-search-bg: rgba(255, 255, 255, 0.05);
-  --board-search-border: rgba(132, 255, 227, 0.12);
-  --board-kicker-color: #86ffe8;
+    radial-gradient(circle at top left, rgba(66, 255, 216, 0.12), transparent 36%),
+    radial-gradient(circle at top right, rgba(164, 116, 255, 0.08), transparent 32%),
+    linear-gradient(180deg, rgba(15, 18, 30, 0.94), rgba(21, 25, 40, 0.92));
+  --board-topbar-border: rgba(132, 255, 227, 0.1);
+  --board-topbar-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 40px rgba(0, 0, 0, 0.24),
+    0 0 32px rgba(66, 255, 216, 0.04);
+  --board-search-bg: rgba(255, 255, 255, 0.06);
+  --board-search-border: rgba(132, 255, 227, 0.1);
+  --board-kicker-color: #8cffe8;
   --board-new-note-bg: linear-gradient(135deg, #42ffd8, #1fd8ff);
-  --board-new-note-shadow: 0 16px 28px rgba(31, 216, 255, 0.24);
+  --board-new-note-shadow:
+    0 14px 26px rgba(31, 216, 255, 0.22),
+    0 0 20px rgba(66, 255, 216, 0.1);
   --board-widget-bg: linear-gradient(135deg, #4a2c79, #1d1738);
-  --board-widget-shadow: 0 14px 26px rgba(18, 13, 36, 0.26);
-  --board-ghost-bg: rgba(255, 255, 255, 0.05);
-  --board-ghost-border: rgba(132, 255, 227, 0.12);
+  --board-widget-shadow:
+    0 12px 24px rgba(18, 13, 36, 0.28),
+    0 0 16px rgba(164, 116, 255, 0.08);
+  --board-ghost-bg: rgba(255, 255, 255, 0.06);
+  --board-ghost-border: rgba(132, 255, 227, 0.1);
   --board-panel-bg:
-    radial-gradient(circle at top left, rgba(66, 255, 216, 0.1), transparent 26%),
-    linear-gradient(180deg, rgba(18, 22, 36, 0.9), rgba(23, 27, 42, 0.88)),
-    rgba(16, 19, 30, 0.74);
-  --board-panel-border: rgba(132, 255, 227, 0.12);
-  --board-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 26px 54px rgba(0, 0, 0, 0.26);
-  --board-panel-outline: rgba(132, 255, 227, 0.2);
+    radial-gradient(circle at top left, rgba(66, 255, 216, 0.08), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(164, 116, 255, 0.06), transparent 26%),
+    linear-gradient(180deg, rgba(16, 20, 34, 0.92), rgba(21, 25, 40, 0.9)),
+    rgba(14, 17, 28, 0.78);
+  --board-panel-border: rgba(132, 255, 227, 0.1);
+  --board-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 24px 48px rgba(0, 0, 0, 0.28),
+    0 0 36px rgba(66, 255, 216, 0.03);
+  --board-panel-outline: rgba(132, 255, 227, 0.18);
   --board-feed-bg: rgba(255, 255, 255, 0.03);
-  --board-feed-border: rgba(132, 255, 227, 0.08);
-  --board-base-card-bg: linear-gradient(180deg, rgba(26, 31, 48, 0.96), rgba(20, 24, 40, 0.94));
-  --board-base-card-border: rgba(132, 255, 227, 0.1);
-  --board-base-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.28), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
-  --board-page-text: #f6f7ff;
-  --board-page-muted: #b8bdd7;
+  --board-feed-border: rgba(132, 255, 227, 0.07);
+  --board-base-card-bg: linear-gradient(180deg, rgba(24, 29, 46, 0.97), rgba(18, 22, 38, 0.95));
+  --board-base-card-border: rgba(132, 255, 227, 0.08);
+  --board-base-card-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.22),
+    0 16px 36px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 20px rgba(66, 255, 216, 0.02);
+  --board-page-text: #f4f6ff;
+  --board-page-muted: #bcc2dc;
 }
 
 .pin-page.board-page.board-theme-cozy-room {
   --board-shell-bg:
-    radial-gradient(circle at top left, rgba(255, 233, 199, 0.72), transparent 24%),
-    linear-gradient(180deg, #fffdf9, #f9f1e6 44%, #f1e4d6);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 250, 245, 0.98), rgba(242, 226, 210, 0.94));
-  --board-sidebar-border: rgba(116, 88, 55, 0.1);
-  --board-sidebar-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.8), 18px 0 40px rgba(90, 67, 39, 0.06);
+    radial-gradient(circle at top left, rgba(255, 238, 210, 0.68), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(255, 240, 220, 0.45), transparent 36%),
+    linear-gradient(180deg, #fffdf9, #faf4ec 42%, #f3e9dc);
+  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 252, 248, 0.96), rgba(246, 234, 220, 0.92));
+  --board-sidebar-border: rgba(116, 88, 55, 0.08);
+  --board-sidebar-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.88),
+    16px 0 36px rgba(90, 67, 39, 0.04);
   --board-brand-bg: linear-gradient(135deg, #d28f55, #9d5b34);
-  --board-brand-shadow: 0 16px 30px rgba(157, 91, 52, 0.24);
+  --board-brand-shadow: 0 14px 28px rgba(157, 91, 52, 0.22);
+  --board-chip-bg: rgba(255, 255, 255, 0.7);
+  --board-chip-border: rgba(116, 88, 55, 0.06);
+  --board-chip-hover-bg: rgba(255, 255, 255, 0.86);
   --board-chip-active-bg: linear-gradient(135deg, #d28f55, #9d5b34);
-  --board-chip-active-shadow: 0 16px 30px rgba(157, 91, 52, 0.22);
+  --board-chip-active-shadow: 0 14px 28px rgba(157, 91, 52, 0.2);
   --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(255, 235, 205, 0.88), transparent 32%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 244, 236, 0.9));
+    radial-gradient(circle at top left, rgba(255, 240, 212, 0.82), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(253, 248, 241, 0.86));
+  --board-topbar-border: rgba(116, 88, 55, 0.07);
+  --board-topbar-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 18px 40px rgba(90, 67, 39, 0.05);
+  --board-search-bg: rgba(255, 255, 255, 0.82);
+  --board-search-border: rgba(116, 88, 55, 0.07);
   --board-kicker-color: #9a6a43;
   --board-new-note-bg: linear-gradient(135deg, #d28f55, #b86b3a);
-  --board-new-note-shadow: 0 16px 28px rgba(184, 107, 58, 0.22);
+  --board-new-note-shadow: 0 14px 26px rgba(184, 107, 58, 0.2);
   --board-widget-bg: linear-gradient(135deg, #4c3425, #281a12);
-  --board-widget-shadow: 0 14px 26px rgba(40, 26, 18, 0.18);
+  --board-widget-shadow: 0 12px 24px rgba(40, 26, 18, 0.16);
+  --board-ghost-bg: rgba(255, 255, 255, 0.74);
+  --board-ghost-border: rgba(116, 88, 55, 0.06);
   --board-panel-bg:
-    radial-gradient(circle at top left, rgba(255, 241, 219, 0.74), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(248, 239, 228, 0.74)),
-    rgba(255, 251, 245, 0.54);
-  --board-panel-outline: rgba(188, 153, 119, 0.2);
-  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 241, 231, 0.95));
+    radial-gradient(circle at top left, rgba(255, 244, 225, 0.68), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 244, 235, 0.76)),
+    rgba(255, 253, 248, 0.56);
+  --board-panel-border: rgba(116, 88, 55, 0.08);
+  --board-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 24px 48px rgba(90, 67, 39, 0.05);
+  --board-panel-outline: rgba(188, 153, 119, 0.16);
+  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 245, 237, 0.96));
+  --board-base-card-shadow:
+    0 2px 4px rgba(90, 67, 39, 0.04),
+    0 16px 32px rgba(90, 67, 39, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .theme-preview-focus-desk .settings-theme-preview {
@@ -410,14 +590,30 @@ button {
 .board-chip {
   width: 42px;
   height: 42px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   display: grid;
   place-items: center;
   background: transparent;
   color: var(--text);
   cursor: pointer;
-  transition: transform 120ms ease, background-color 120ms ease, width 240ms ease, border-radius 240ms ease,
-    padding 240ms ease;
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    width var(--duration-normal) var(--ease-out),
+    border-radius var(--duration-normal) var(--ease-out),
+    padding var(--duration-normal) var(--ease-out);
+}
+
+.side-icon:hover,
+.board-chip:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.side-icon:active,
+.board-chip:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: var(--duration-fast);
 }
 
 .pin-brand {
@@ -492,6 +688,19 @@ button {
   position: relative;
   justify-items: center;
   overflow: hidden;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+.board-page .board-chip {
+  background: var(--board-chip-bg);
+  border-color: var(--board-chip-border);
+}
+
+.board-page .board-chip:hover {
+  background: var(--board-chip-hover-bg);
+  border-color: var(--board-chip-hover-border);
+  box-shadow: var(--shadow-md);
 }
 
 .board-chip-badge {
@@ -704,18 +913,24 @@ button {
   justify-content: space-between;
   gap: 18px;
   padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--line);
+  transition:
+    background-color var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
 }
 
 .board-page .pin-topbar {
   width: min(1540px, calc(100% - 40px));
   margin: 18px auto 0;
-  padding: 18px 22px 16px;
+  padding: var(--space-5) var(--space-6) var(--space-4);
   background: var(--board-topbar-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--board-topbar-border);
-  border-radius: 32px;
+  border-radius: var(--radius-2xl);
   border-bottom-color: var(--board-topbar-border);
   box-shadow: var(--board-topbar-shadow);
 }
@@ -836,18 +1051,37 @@ button {
   align-items: center;
   gap: 10px;
   background: var(--surface-muted);
-  border-radius: 18px;
-  padding: 0 14px;
+  border-radius: var(--radius-lg);
+  padding: 0 var(--space-4);
   min-height: 48px;
+  border: 1px solid transparent;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.search-shell:focus-within {
+  background: var(--surface);
+  border-color: rgba(29, 111, 216, 0.2);
+  box-shadow: 0 0 0 3px rgba(29, 111, 216, 0.12);
 }
 
 .board-page .search-shell {
   min-height: 58px;
-  padding: 0 18px;
-  border-radius: 22px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-xl);
   background: var(--board-search-bg);
   border: 1px solid var(--board-search-border);
-  box-shadow: 0 18px 34px rgba(54, 37, 19, 0.08);
+  box-shadow: var(--shadow-md);
+}
+
+.board-page .search-shell:focus-within {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(29, 111, 216, 0.24);
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 3px rgba(29, 111, 216, 0.12);
 }
 
 .search-icon {
@@ -878,24 +1112,38 @@ button {
 .widget-pill,
 .ghost-action {
   min-height: 42px;
-  padding: 0 16px;
-  border-radius: 999px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    box-shadow var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
 }
 
 .new-note-pill {
   background: var(--accent);
   color: #fff;
   font-weight: 700;
+  box-shadow: var(--shadow-md);
+}
+
+.new-note-pill:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+.new-note-pill:active {
+  transform: translateY(0) scale(0.96);
+  transition-duration: var(--duration-fast);
 }
 
 .board-page .new-note-pill,
 .board-page .widget-pill,
 .board-page .ghost-action {
   min-height: 46px;
-  padding: 0 18px;
-  border-radius: 18px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-lg);
 }
 
 .board-page .new-note-pill {
@@ -903,15 +1151,38 @@ button {
   box-shadow: var(--board-new-note-shadow);
 }
 
+.board-page .new-note-pill:hover {
+  box-shadow:
+    0 18px 32px rgba(209, 25, 60, 0.26),
+    0 0 0 2px rgba(255, 255, 255, 0.15) inset;
+}
+
 .widget-pill {
   background: #1f1a13;
   color: #fff;
   font-weight: 700;
+  box-shadow: var(--shadow-md);
+}
+
+.widget-pill:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+.widget-pill:active {
+  transform: translateY(0) scale(0.96);
+  transition-duration: var(--duration-fast);
 }
 
 .board-page .widget-pill {
   background: var(--board-widget-bg);
   box-shadow: var(--board-widget-shadow);
+}
+
+.board-page .widget-pill:hover {
+  box-shadow:
+    0 16px 30px rgba(28, 20, 12, 0.22),
+    0 0 0 2px rgba(255, 255, 255, 0.08) inset;
 }
 
 .widget-menu-wrap {
@@ -947,12 +1218,31 @@ button {
 .ghost-action {
   background: var(--surface-soft);
   color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.ghost-action:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--shadow-md);
+  background: var(--surface);
+}
+
+.ghost-action:active {
+  transform: translateY(0) scale(0.96);
+  transition-duration: var(--duration-fast);
 }
 
 .board-page .ghost-action {
   background: var(--board-ghost-bg);
   border: 1px solid var(--board-ghost-border);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74);
+}
+
+.board-page .ghost-action:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    var(--shadow-md);
 }
 
 .ghost-action.ghost-danger {
@@ -1058,12 +1348,15 @@ button {
   cursor: pointer;
 }
 
-.new-note-pill:hover,
-.widget-pill:hover,
-.ghost-action:hover,
 .pin-icon-button:hover,
 .font-chip:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.pin-icon-button:active,
+.font-chip:active {
+  transform: translateY(0) scale(0.96);
+  transition-duration: var(--duration-fast);
 }
 
 .profile-pill {
@@ -2343,26 +2636,26 @@ button {
   display: grid;
   grid-template-columns: repeat(var(--pin-columns, 4), minmax(0, 1fr));
   align-items: stretch;
-  gap: 18px;
+  gap: var(--space-5);
   width: 100%;
 }
 
 .board-page .pin-board {
-  gap: 28px;
+  gap: var(--space-8);
 }
 
 .board-page .pin-column {
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .share-page .pin-board {
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .home-page .pin-board {
   grid-template-columns: repeat(var(--pin-columns, 4), minmax(0, 1fr));
   align-items: stretch;
-  gap: 20px;
+  gap: var(--space-5);
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -2370,17 +2663,17 @@ button {
 .pin-column {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-5);
   min-width: 0;
   min-height: 100%;
 }
 
 .share-page .pin-column {
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .home-page .pin-column {
-  gap: 28px;
+  gap: var(--space-8);
 }
 
 .pin-card-slot {
@@ -2419,20 +2712,39 @@ button {
   display: inline-flex;
   flex-direction: column;
   margin: 0;
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   background: var(--surface);
   border: 1px solid var(--line);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-elevation-1);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
+  will-change: transform;
+}
+
+.pin-card:hover {
+  transform: translateY(-6px) scale(1.008);
+  box-shadow: var(--shadow-elevation-3);
+}
+
+.pin-card:active {
+  transform: translateY(-3px) scale(1.004);
+  transition-duration: var(--duration-fast);
 }
 
 .board-page .pin-card {
-  border-radius: 32px;
+  border-radius: var(--radius-2xl);
   border-color: var(--board-base-card-border);
   background: var(--board-base-card-bg);
   box-shadow: var(--board-base-card-shadow);
+}
+
+.board-page .pin-card:hover {
+  box-shadow:
+    var(--shadow-elevation-3),
+    0 0 0 1px var(--board-base-card-border);
 }
 
 .board-page .pin-card.note-yellow {
@@ -2468,35 +2780,75 @@ button {
 }
 
 .board-page .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(255, 251, 228, 0.98), rgba(255, 243, 190, 0.96));
+  background:
+    linear-gradient(180deg, rgba(255, 252, 235, 0.99), rgba(255, 246, 200, 0.97));
+  box-shadow:
+    var(--shadow-elevation-1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 3px rgba(198, 154, 58, 0.06);
 }
 
 .board-page .pin-card.note-pink:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(255, 241, 246, 0.98), rgba(251, 224, 234, 0.96));
+  background:
+    linear-gradient(180deg, rgba(255, 245, 249, 0.99), rgba(253, 230, 240, 0.97));
+  box-shadow:
+    var(--shadow-elevation-1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 3px rgba(200, 113, 146, 0.06);
 }
 
 .board-page .pin-card.note-blue:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(240, 246, 255, 0.98), rgba(220, 233, 255, 0.96));
+  background:
+    linear-gradient(180deg, rgba(244, 249, 255, 0.99), rgba(228, 240, 255, 0.97));
+  box-shadow:
+    var(--shadow-elevation-1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 3px rgba(116, 149, 214, 0.06);
 }
 
 .board-page .pin-card.note-green:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(241, 251, 243, 0.98), rgba(221, 242, 225, 0.96));
+  background:
+    linear-gradient(180deg, rgba(245, 253, 247, 0.99), rgba(228, 246, 232, 0.97));
+  box-shadow:
+    var(--shadow-elevation-1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 3px rgba(101, 162, 108, 0.06);
 }
 
 .board-page .pin-card.note-orange:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(255, 246, 236, 0.98), rgba(255, 230, 204, 0.96));
+  background:
+    linear-gradient(180deg, rgba(255, 249, 242, 0.99), rgba(255, 236, 214, 0.97));
+  box-shadow:
+    var(--shadow-elevation-1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 3px rgba(204, 139, 78, 0.06);
 }
 
 .board-page .pin-card.note-purple:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(245, 239, 255, 0.98), rgba(232, 222, 252, 0.96));
+  background:
+    linear-gradient(180deg, rgba(248, 244, 255, 0.99), rgba(238, 228, 254, 0.97));
+  box-shadow:
+    var(--shadow-elevation-1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 3px rgba(140, 108, 194, 0.06);
 }
 
 .board-page .pin-card.note-mint:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(238, 251, 247, 0.98), rgba(217, 243, 235, 0.96));
+  background:
+    linear-gradient(180deg, rgba(242, 253, 250, 0.99), rgba(224, 247, 240, 0.97));
+  box-shadow:
+    var(--shadow-elevation-1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 3px rgba(81, 161, 149, 0.06);
 }
 
 .board-page .pin-card.note-white:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 241, 233, 0.96));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.995), rgba(250, 246, 240, 0.97));
+  box-shadow:
+    var(--shadow-elevation-1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 3px rgba(172, 146, 116, 0.05);
 }
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
@@ -7821,5 +8173,138 @@ button {
   .landing-final-cta-inner {
     padding: 30px 18px;
     border-radius: 26px;
+  }
+}
+
+/* ==========================================================================
+   Micro-Interactions & Animations
+   ========================================================================== */
+
+/* Skeleton loading shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(31, 26, 19, 0.06) 0%,
+    rgba(31, 26, 19, 0.12) 50%,
+    rgba(31, 26, 19, 0.06) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* Fade-in animation for loaded content */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pin-card {
+  animation: fadeInUp var(--duration-normal) var(--ease-out) both;
+}
+
+/* Staggered card animations */
+.pin-column > .pin-card-slot:nth-child(1) .pin-card { animation-delay: 0ms; }
+.pin-column > .pin-card-slot:nth-child(2) .pin-card { animation-delay: 50ms; }
+.pin-column > .pin-card-slot:nth-child(3) .pin-card { animation-delay: 100ms; }
+.pin-column > .pin-card-slot:nth-child(4) .pin-card { animation-delay: 150ms; }
+.pin-column > .pin-card-slot:nth-child(5) .pin-card { animation-delay: 200ms; }
+.pin-column > .pin-card-slot:nth-child(n+6) .pin-card { animation-delay: 250ms; }
+
+/* Icon bounce on hover */
+@keyframes iconBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.side-icon:hover .side-icon-glyph svg,
+.board-chip:hover .board-chip-badge {
+  animation: iconBounce var(--duration-normal) var(--ease-spring);
+}
+
+/* Enhanced focus states */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(29, 111, 216, 0.3);
+  border-radius: inherit;
+}
+
+/* Dark theme focus ring */
+.pin-page.board-page.board-theme-midnight-ops :focus-visible,
+.pin-page.board-page.board-theme-neon-lab :focus-visible {
+  box-shadow: 0 0 0 3px rgba(77, 124, 255, 0.4);
+}
+
+/* Neon Lab special glow focus */
+.pin-page.board-page.board-theme-neon-lab :focus-visible {
+  box-shadow:
+    0 0 0 3px rgba(66, 255, 216, 0.35),
+    0 0 20px rgba(66, 255, 216, 0.15);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .pin-card:hover {
+    transform: none;
+  }
+
+  .side-icon:hover,
+  .board-chip:hover,
+  .new-note-pill:hover,
+  .widget-pill:hover,
+  .ghost-action:hover {
+    transform: none;
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+  .pin-card {
+    border-width: 2px;
+  }
+
+  .board-chip,
+  .new-note-pill,
+  .widget-pill,
+  .ghost-action {
+    border: 2px solid currentColor;
   }
 }
