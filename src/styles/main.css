@@ -306,59 +306,56 @@ button {
 }
 
 .pin-page.board-page.board-theme-midnight-ops {
+  /* Bento-inspired Sophisticated Dark: Single accent, sharp shadows, high contrast */
   --board-shell-bg:
-    radial-gradient(circle at top left, rgba(65, 85, 140, 0.45), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(50, 70, 120, 0.25), transparent 36%),
-    linear-gradient(180deg, #0e1522, #141d2e 44%, #1c2640);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(16, 25, 40, 0.96), rgba(22, 32, 52, 0.94));
-  --board-sidebar-border: rgba(137, 166, 255, 0.1);
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(77, 124, 255, 0.12), transparent 60%),
+    linear-gradient(180deg, #090d14, #0f1621 60%, #151d2d);
+  --board-sidebar-bg: linear-gradient(180deg, #0b1018, #101620);
+  --board-sidebar-border: rgba(77, 124, 255, 0.15);
   --board-sidebar-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.04),
-    16px 0 36px rgba(0, 0, 0, 0.2);
-  --board-brand-bg: linear-gradient(135deg, #4d7cff, #44d5ff);
-  --board-brand-shadow: 0 14px 28px rgba(77, 124, 255, 0.24);
-  --board-chip-bg: rgba(255, 255, 255, 0.07);
-  --board-chip-border: rgba(143, 171, 255, 0.1);
-  --board-chip-badge-bg: rgba(143, 171, 255, 0.14);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.14);
-  --board-chip-hover-border: rgba(143, 171, 255, 0.18);
-  --board-chip-active-bg: linear-gradient(135deg, #4d7cff, #44d5ff);
-  --board-chip-active-shadow: 0 14px 28px rgba(77, 124, 255, 0.22);
-  --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(60, 90, 155, 0.2), transparent 38%),
-    linear-gradient(180deg, rgba(13, 22, 38, 0.94), rgba(18, 28, 45, 0.9));
-  --board-topbar-border: rgba(143, 171, 255, 0.1);
+    inset 1px 0 0 rgba(77, 124, 255, 0.08),
+    8px 0 24px rgba(0, 0, 0, 0.3);
+  --board-brand-bg: #4d7cff;
+  --board-brand-shadow: 0 4px 16px rgba(77, 124, 255, 0.4);
+  --board-chip-bg: rgba(255, 255, 255, 0.04);
+  --board-chip-border: rgba(77, 124, 255, 0.12);
+  --board-chip-badge-bg: rgba(77, 124, 255, 0.15);
+  --board-chip-hover-bg: rgba(77, 124, 255, 0.1);
+  --board-chip-hover-border: rgba(77, 124, 255, 0.25);
+  --board-chip-active-bg: #4d7cff;
+  --board-chip-active-shadow: 0 2px 8px rgba(77, 124, 255, 0.3);
+  --board-topbar-bg: linear-gradient(180deg, #0a0f18, #0e1520);
+  --board-topbar-border: rgba(77, 124, 255, 0.1);
   --board-topbar-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 18px 40px rgba(0, 0, 0, 0.24);
-  --board-search-bg: rgba(255, 255, 255, 0.07);
-  --board-search-border: rgba(143, 171, 255, 0.1);
-  --board-kicker-color: #a3c4ff;
-  --board-new-note-bg: linear-gradient(135deg, #4d7cff, #44d5ff);
-  --board-new-note-shadow: 0 14px 26px rgba(77, 124, 255, 0.22);
-  --board-widget-bg: linear-gradient(135deg, #0e1220, #141a2e);
-  --board-widget-shadow: 0 12px 24px rgba(0, 0, 0, 0.26);
-  --board-ghost-bg: rgba(255, 255, 255, 0.07);
-  --board-ghost-border: rgba(143, 171, 255, 0.1);
-  --board-panel-bg:
-    radial-gradient(circle at top left, rgba(70, 100, 170, 0.15), transparent 28%),
-    linear-gradient(180deg, rgba(18, 26, 44, 0.92), rgba(22, 32, 52, 0.9)),
-    rgba(16, 24, 40, 0.76);
-  --board-panel-border: rgba(143, 171, 255, 0.12);
+    inset 0 1px 0 rgba(77, 124, 255, 0.06),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+  --board-search-bg: rgba(255, 255, 255, 0.03);
+  --board-search-border: rgba(77, 124, 255, 0.1);
+  --board-kicker-color: #6b8fcc;
+  --board-new-note-bg: #4d7cff;
+  --board-new-note-shadow: 0 4px 16px rgba(77, 124, 255, 0.35);
+  --board-widget-bg: linear-gradient(135deg, #0c1018, #111828);
+  --board-widget-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(77, 124, 255, 0.05);
+  --board-ghost-bg: rgba(77, 124, 255, 0.03);
+  --board-ghost-border: rgba(77, 124, 255, 0.08);
+  --board-panel-bg: linear-gradient(180deg, #0f1622, #131c28);
+  --board-panel-border: rgba(77, 124, 255, 0.12);
   --board-panel-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 24px 48px rgba(0, 0, 0, 0.26);
-  --board-panel-outline: rgba(128, 158, 255, 0.2);
-  --board-feed-bg: rgba(255, 255, 255, 0.03);
-  --board-feed-border: rgba(143, 171, 255, 0.08);
-  --board-base-card-bg: linear-gradient(180deg, rgba(24, 35, 56, 0.97), rgba(20, 30, 48, 0.95));
-  --board-base-card-border: rgba(143, 171, 255, 0.1);
+    inset 0 1px 0 rgba(77, 124, 255, 0.08),
+    0 8px 32px rgba(0, 0, 0, 0.35);
+  --board-panel-outline: rgba(77, 124, 255, 0.15);
+  --board-feed-bg: rgba(255, 255, 255, 0.02);
+  --board-feed-border: rgba(77, 124, 255, 0.06);
+  --board-base-card-bg: linear-gradient(180deg, #131a26, #0f1520);
+  --board-base-card-border: rgba(77, 124, 255, 0.08);
   --board-base-card-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.2),
-    0 16px 36px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  --board-page-text: #f0f4ff;
-  --board-page-muted: #b0c0e0;
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --board-page-text: #e8edf5;
+  --board-page-muted: #7a8ba8;
 }
 
 .pin-page.board-page.board-theme-creator-mood {
@@ -411,74 +408,73 @@ button {
 }
 
 .pin-page.board-page.board-theme-neon-lab {
+  /* Cyberpunk Bento: Triple neon accent (mint + violet + cyan), strong glow, dramatic lighting */
   --board-shell-bg:
-    radial-gradient(circle at top left, rgba(66, 255, 216, 0.15), transparent 28%),
-    radial-gradient(circle at top right, rgba(164, 116, 255, 0.15), transparent 30%),
-    radial-gradient(circle at bottom center, rgba(100, 200, 255, 0.08), transparent 32%),
-    linear-gradient(180deg, #0c0f16, #131724 44%, #171b2c);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(16, 19, 30, 0.97), rgba(22, 26, 42, 0.95));
-  --board-sidebar-border: rgba(132, 255, 227, 0.1);
+    radial-gradient(ellipse 100% 60% at 0% 0%, rgba(66, 255, 216, 0.12), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 100% 20%, rgba(164, 116, 255, 0.1), transparent 45%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(0, 212, 255, 0.06), transparent 40%),
+    linear-gradient(180deg, #080b12, #0d1220 50%, #101525);
+  --board-sidebar-bg: linear-gradient(180deg, #090c14, #0f1422);
+  --board-sidebar-border: rgba(66, 255, 216, 0.2);
   --board-sidebar-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.03),
-    16px 0 36px rgba(0, 0, 0, 0.24),
-    0 0 48px rgba(66, 255, 216, 0.03);
-  --board-brand-bg: linear-gradient(135deg, #42ffd8, #a474ff);
+    inset 1px 0 0 rgba(66, 255, 216, 0.15),
+    inset -1px 0 0 rgba(164, 116, 255, 0.1),
+    8px 0 24px rgba(0, 0, 0, 0.35),
+    0 0 40px rgba(66, 255, 216, 0.05);
+  --board-brand-bg: linear-gradient(135deg, #42ffd8 0%, #a474ff 50%, #00d4ff 100%);
   --board-brand-shadow:
-    0 14px 28px rgba(132, 116, 255, 0.22),
-    0 0 24px rgba(66, 255, 216, 0.15);
-  --board-chip-bg: rgba(255, 255, 255, 0.06);
-  --board-chip-border: rgba(132, 255, 227, 0.12);
-  --board-chip-badge-bg: rgba(132, 255, 227, 0.14);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.12);
-  --board-chip-hover-border: rgba(132, 255, 227, 0.22);
+    0 4px 20px rgba(66, 255, 216, 0.5),
+    0 0 40px rgba(164, 116, 255, 0.3),
+    0 0 60px rgba(0, 212, 255, 0.2);
+  --board-chip-bg: rgba(66, 255, 216, 0.04);
+  --board-chip-border: rgba(66, 255, 216, 0.15);
+  --board-chip-badge-bg: rgba(164, 116, 255, 0.2);
+  --board-chip-hover-bg: rgba(66, 255, 216, 0.08);
+  --board-chip-hover-border: rgba(66, 255, 216, 0.3);
   --board-chip-active-bg: linear-gradient(135deg, #42ffd8, #a474ff);
   --board-chip-active-shadow:
-    0 14px 28px rgba(132, 116, 255, 0.22),
-    0 0 20px rgba(66, 255, 216, 0.12);
-  --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(66, 255, 216, 0.12), transparent 36%),
-    radial-gradient(circle at top right, rgba(164, 116, 255, 0.08), transparent 32%),
-    linear-gradient(180deg, rgba(15, 18, 30, 0.94), rgba(21, 25, 40, 0.92));
-  --board-topbar-border: rgba(132, 255, 227, 0.1);
+    0 4px 16px rgba(66, 255, 216, 0.4),
+    0 0 24px rgba(164, 116, 255, 0.25);
+  --board-topbar-bg: linear-gradient(180deg, #090c14, #0d1120);
+  --board-topbar-border: rgba(66, 255, 216, 0.12);
   --board-topbar-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 18px 40px rgba(0, 0, 0, 0.24),
-    0 0 32px rgba(66, 255, 216, 0.04);
-  --board-search-bg: rgba(255, 255, 255, 0.06);
-  --board-search-border: rgba(132, 255, 227, 0.1);
-  --board-kicker-color: #8cffe8;
-  --board-new-note-bg: linear-gradient(135deg, #42ffd8, #1fd8ff);
+    inset 0 1px 0 rgba(66, 255, 216, 0.1),
+    inset 0 -1px 0 rgba(164, 116, 255, 0.05),
+    0 4px 24px rgba(0, 0, 0, 0.3),
+    0 0 30px rgba(66, 255, 216, 0.03);
+  --board-search-bg: rgba(66, 255, 216, 0.03);
+  --board-search-border: rgba(66, 255, 216, 0.15);
+  --board-kicker-color: #42ffd8;
+  --board-new-note-bg: linear-gradient(135deg, #42ffd8, #00d4ff);
   --board-new-note-shadow:
-    0 14px 26px rgba(31, 216, 255, 0.22),
-    0 0 20px rgba(66, 255, 216, 0.1);
-  --board-widget-bg: linear-gradient(135deg, #4a2c79, #1d1738);
+    0 4px 20px rgba(66, 255, 216, 0.5),
+    0 0 30px rgba(0, 212, 255, 0.25);
+  --board-widget-bg: linear-gradient(135deg, rgba(66, 255, 216, 0.08), rgba(164, 116, 255, 0.06)), #0a0e18;
   --board-widget-shadow:
-    0 12px 24px rgba(18, 13, 36, 0.28),
-    0 0 16px rgba(164, 116, 255, 0.08);
-  --board-ghost-bg: rgba(255, 255, 255, 0.06);
-  --board-ghost-border: rgba(132, 255, 227, 0.1);
-  --board-panel-bg:
-    radial-gradient(circle at top left, rgba(66, 255, 216, 0.08), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(164, 116, 255, 0.06), transparent 26%),
-    linear-gradient(180deg, rgba(16, 20, 34, 0.92), rgba(21, 25, 40, 0.9)),
-    rgba(14, 17, 28, 0.78);
-  --board-panel-border: rgba(132, 255, 227, 0.1);
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(66, 255, 216, 0.1),
+    0 0 20px rgba(164, 116, 255, 0.08);
+  --board-ghost-bg: rgba(164, 116, 255, 0.05);
+  --board-ghost-border: rgba(66, 255, 216, 0.12);
+  --board-panel-bg: linear-gradient(180deg, #0d1120, #0a0e18);
+  --board-panel-border: rgba(66, 255, 216, 0.15);
   --board-panel-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 24px 48px rgba(0, 0, 0, 0.28),
-    0 0 36px rgba(66, 255, 216, 0.03);
-  --board-panel-outline: rgba(132, 255, 227, 0.18);
-  --board-feed-bg: rgba(255, 255, 255, 0.03);
-  --board-feed-border: rgba(132, 255, 227, 0.07);
-  --board-base-card-bg: linear-gradient(180deg, rgba(24, 29, 46, 0.97), rgba(18, 22, 38, 0.95));
-  --board-base-card-border: rgba(132, 255, 227, 0.08);
+    inset 0 1px 0 rgba(66, 255, 216, 0.12),
+    inset 1px 0 0 rgba(164, 116, 255, 0.08),
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 0 40px rgba(66, 255, 216, 0.04);
+  --board-panel-outline: rgba(66, 255, 216, 0.25);
+  --board-feed-bg: rgba(0, 212, 255, 0.02);
+  --board-feed-border: rgba(164, 116, 255, 0.1);
+  --board-base-card-bg: linear-gradient(180deg, rgba(16, 20, 32, 0.95), rgba(12, 16, 26, 0.98));
+  --board-base-card-border: rgba(66, 255, 216, 0.12);
   --board-base-card-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.22),
-    0 16px 36px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 0 20px rgba(66, 255, 216, 0.02);
-  --board-page-text: #f4f6ff;
-  --board-page-muted: #bcc2dc;
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(66, 255, 216, 0.08),
+    0 0 16px rgba(66, 255, 216, 0.03);
+  --board-page-text: #e8f4ff;
+  --board-page-muted: #8090b0;
 }
 
 .pin-page.board-page.board-theme-cozy-room {
@@ -2859,6 +2855,43 @@ button {
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow,
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow {
   border-color: rgba(177, 146, 77, 0.42);
+}
+
+/* Neon Lab note card glow effects */
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow:hover {
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-pink:hover {
+  border-color: rgba(255, 105, 180, 0.5);
+  box-shadow: 0 0 16px rgba(255, 105, 180, 0.15), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-blue:hover {
+  border-color: rgba(66, 255, 216, 0.5);
+  box-shadow: 0 0 16px rgba(66, 255, 216, 0.2), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-green:hover {
+  border-color: rgba(0, 255, 136, 0.5);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.15), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-purple:hover {
+  border-color: rgba(164, 116, 255, 0.5);
+  box-shadow: 0 0 16px rgba(164, 116, 255, 0.2), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.pin-page.board-page.board-theme-neon-lab .pin-card.note-mint:hover {
+  border-color: rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.2), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Midnight Ops: Subtle card adjustments */
+.pin-page.board-page.board-theme-midnight-ops .pin-card.note-blue:hover {
+  border-color: rgba(77, 124, 255, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-pink:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
@@ -8254,11 +8287,48 @@ button {
   box-shadow: 0 0 0 3px rgba(77, 124, 255, 0.4);
 }
 
-/* Neon Lab special glow focus */
+/* Midnight Ops: Sharp focus with single accent */
+.pin-page.board-page.board-theme-midnight-ops :focus-visible {
+  box-shadow:
+    0 0 0 2px rgba(77, 124, 255, 0.5);
+}
+
+/* Neon Lab: Cyberpunk glow effects */
 .pin-page.board-page.board-theme-neon-lab :focus-visible {
   box-shadow:
     0 0 0 3px rgba(66, 255, 216, 0.35),
-    0 0 20px rgba(66, 255, 216, 0.15);
+    0 0 20px rgba(66, 255, 216, 0.2);
+}
+
+/* Neon Lab: Card glow on hover */
+.pin-page.board-page.board-theme-neon-lab .pin-card:hover {
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 0 24px rgba(66, 255, 216, 0.1),
+    0 0 40px rgba(164, 116, 255, 0.05);
+}
+
+/* Neon Lab: Active chip glow pulse */
+.pin-page.board-page.board-theme-neon-lab .board-chip.active {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(66, 255, 216, 0.4), 0 0 24px rgba(164, 116, 255, 0.25);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(66, 255, 216, 0.6), 0 0 36px rgba(164, 116, 255, 0.4);
+  }
+}
+
+/* Midnight Ops: Subtle hover lift */
+.pin-page.board-page.board-theme-midnight-ops .pin-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 /* Reduced motion preference */
