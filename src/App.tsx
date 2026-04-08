@@ -6108,6 +6108,24 @@ const App = () => {
   }, [deliveryCarriers.length]);
 
   useEffect(() => {
+    if (!widgetMenuOpen) {
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("touch-action");
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, [widgetMenuOpen]);
+
+  useEffect(() => {
     if (!selectedBoard || feedMode !== "active") {
       return;
     }

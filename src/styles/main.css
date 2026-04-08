@@ -9293,6 +9293,7 @@ html {
 
 .widget-gallery-backdrop {
   z-index: 1200;
+  overscroll-behavior: contain;
 }
 
 .widget-gallery-modal {
@@ -9304,6 +9305,7 @@ html {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overscroll-behavior: contain;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), rgba(249, 247, 243, 0.98) 42%, rgba(244, 240, 233, 0.98) 100%);
   border: 1px solid rgba(26, 26, 26, 0.06);
@@ -9340,6 +9342,10 @@ html {
   display: grid;
   grid-template-rows: repeat(4, minmax(0, 1fr));
   gap: 10px;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
 }
 
 .widget-gallery-tab {
@@ -9388,6 +9394,7 @@ html {
   flex-direction: column;
   gap: 16px;
   overflow: hidden;
+  overscroll-behavior: contain;
   box-shadow:
     0 10px 34px rgba(15, 23, 42, 0.06),
     0 1px 0 rgba(255, 255, 255, 0.72) inset;
@@ -9431,6 +9438,9 @@ html {
   display: grid;
   gap: 16px;
   align-content: start;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
 }
 
 .widget-gallery-grid-regular {
