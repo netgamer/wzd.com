@@ -312,14 +312,52 @@ button {
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.75;
+  opacity: 0.92;
   background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.88) 0 1.2px, transparent 1.5px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.62) 0 1.8px, transparent 2.1px),
-    radial-gradient(circle, rgba(234, 246, 255, 0.95) 0 2.4px, transparent 2.8px);
-  background-size: 180px 180px, 260px 260px, 340px 340px;
-  background-position: 20px 0, 80px -120px, 140px -220px;
-  animation: glass-studio-snowfall 24s linear infinite;
+    radial-gradient(circle, rgba(255, 255, 255, 0.96) 0 1.4px, transparent 1.9px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.82) 0 2px, transparent 2.6px),
+    radial-gradient(circle, rgba(234, 246, 255, 0.95) 0 2.8px, transparent 3.4px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.5px);
+  background-size: 120px 120px, 180px 180px, 260px 260px, 90px 90px;
+  background-position: 18px -16px, 72px -108px, 126px -188px, 40px -36px;
+  animation: glass-studio-snowfall 16s linear infinite;
+}
+
+.pin-page.board-page.board-theme-glass-studio .pin-card {
+  overflow: hidden;
+}
+
+.pin-page.board-page.board-theme-glass-studio .pin-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.pin-page.board-page.board-theme-glass-studio .pin-card::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  right: 12px;
+  height: 16px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.96;
+  background:
+    radial-gradient(circle at 12% 58%, rgba(255, 255, 255, 0.92) 0 11px, transparent 12px),
+    radial-gradient(circle at 38% 48%, rgba(255, 255, 255, 0.98) 0 13px, transparent 14px),
+    radial-gradient(circle at 66% 58%, rgba(255, 255, 255, 0.9) 0 11px, transparent 12px),
+    radial-gradient(circle at 88% 50%, rgba(255, 255, 255, 0.84) 0 9px, transparent 10px),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96),
+      rgba(247, 252, 255, 0.9) 62%,
+      rgba(239, 247, 253, 0.18)
+    );
+  box-shadow:
+    0 2px 8px rgba(255, 255, 255, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.28));
 }
 
 .pin-page.board-page.board-theme-midnight-ops {
@@ -2530,11 +2568,11 @@ button {
 
 @keyframes glass-studio-snowfall {
   0% {
-    background-position: 20px 0, 80px -120px, 140px -220px;
+    background-position: 18px -16px, 72px -108px, 126px -188px, 40px -36px;
   }
 
   100% {
-    background-position: -40px 220px, 28px 340px, 92px 420px;
+    background-position: -36px 248px, 18px 328px, 86px 438px, -12px 216px;
   }
 }
 
