@@ -2848,7 +2848,7 @@ button {
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(108, 94, 38, 0.94), rgba(76, 67, 28, 0.96));
+  background: linear-gradient(180deg, rgba(118, 98, 24, 0.95), rgba(86, 71, 18, 0.97));
 }
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow,
