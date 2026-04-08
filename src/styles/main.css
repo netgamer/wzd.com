@@ -424,6 +424,57 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
+.pin-page.board-page.board-theme-creator-mood .pin-main {
+  position: relative;
+  isolation: isolate;
+}
+
+.pin-page.board-page.board-theme-creator-mood .pin-main::before {
+  content: "";
+  position: absolute;
+  top: 112px;
+  right: 18px;
+  width: min(34vw, 360px);
+  height: min(28vw, 280px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(255, 210, 226, 0.92) 0 16px, transparent 18px),
+    radial-gradient(circle at 30% 16%, rgba(255, 225, 234, 0.86) 0 14px, transparent 16px),
+    radial-gradient(circle at 42% 26%, rgba(255, 214, 229, 0.84) 0 18px, transparent 20px),
+    radial-gradient(circle at 56% 18%, rgba(255, 228, 236, 0.8) 0 15px, transparent 17px),
+    radial-gradient(circle at 72% 28%, rgba(255, 210, 222, 0.82) 0 16px, transparent 18px),
+    radial-gradient(circle at 64% 8%, rgba(255, 236, 241, 0.76) 0 12px, transparent 14px),
+    linear-gradient(145deg, transparent 0 32%, rgba(109, 70, 60, 0.3) 33% 37%, transparent 38%),
+    linear-gradient(122deg, transparent 0 48%, rgba(109, 70, 60, 0.24) 49% 52%, transparent 53%),
+    linear-gradient(100deg, transparent 0 60%, rgba(126, 83, 72, 0.2) 61% 64%, transparent 65%);
+  background-repeat: no-repeat;
+}
+
+.pin-page.board-page.board-theme-creator-mood .pin-topbar,
+.pin-page.board-page.board-theme-creator-mood .pin-board-stage {
+  position: relative;
+  z-index: 1;
+}
+
+.pin-page.board-page.board-theme-creator-mood .current-board-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.72;
+  background-image:
+    radial-gradient(ellipse 8px 5px, rgba(255, 214, 226, 0.86) 0 56%, transparent 62%),
+    radial-gradient(ellipse 10px 6px, rgba(255, 236, 241, 0.74) 0 56%, transparent 62%),
+    radial-gradient(ellipse 7px 4px, rgba(255, 197, 215, 0.7) 0 56%, transparent 62%);
+  background-size: 180px 220px, 260px 300px, 340px 360px;
+  background-position: 24px -20px, 120px -110px, 210px -180px;
+  animation: creator-mood-petals 22s linear infinite;
+}
+
 .pin-page.board-page.board-theme-neon-lab {
   /* Cyberpunk Bento: Triple neon accent (mint + violet + cyan), strong glow, dramatic lighting */
   --board-shell-bg:
@@ -2487,8 +2538,22 @@ button {
   }
 }
 
+@keyframes creator-mood-petals {
+  0% {
+    background-position: 24px -20px, 120px -110px, 210px -180px;
+  }
+
+  100% {
+    background-position: -48px 260px, 64px 380px, 146px 460px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pin-page.board-page.board-theme-glass-studio .current-board-panel::after {
+    animation: none;
+  }
+
+  .pin-page.board-page.board-theme-creator-mood .current-board-panel::after {
     animation: none;
   }
 }
@@ -5730,6 +5795,14 @@ button {
     border-radius: 22px;
   }
 
+  .pin-page.board-page.board-theme-creator-mood .pin-main::before {
+    top: 96px;
+    right: 10px;
+    width: min(42vw, 280px);
+    height: min(30vw, 220px);
+    opacity: 0.46;
+  }
+
   .board-cat-companion {
     inset: 104px 16px 16px;
   }
@@ -5909,6 +5982,14 @@ button {
   .board-page .current-board-panel::before {
     inset: 8px;
     border-radius: 16px;
+  }
+
+  .pin-page.board-page.board-theme-creator-mood .pin-main::before {
+    top: 86px;
+    right: 4px;
+    width: 210px;
+    height: 160px;
+    opacity: 0.38;
   }
 
   .share-page .public-board-panel,
