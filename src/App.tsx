@@ -149,6 +149,7 @@ type BoardTemplateKey =
   | "family"
   | "couple";
 type BoardTemplateSectionKey = "notes" | "widgets" | "groups";
+type WidgetGalleryCategory = "collect" | "organize" | "utility" | "identity";
 type BoardLayoutStyle = "balanced" | "compact" | "visual";
 type SettingsSection = "menu" | "trash" | "history";
 type BoardThemeId = "focus-desk" | "glass-studio" | "midnight-ops" | "creator-mood" | "neon-lab" | "cozy-room";
@@ -190,6 +191,24 @@ type BoardTemplateSection = {
   title: string;
   subtitle: string;
   templateKeys: BoardTemplateKey[];
+};
+
+type WidgetGalleryItemDefinition = {
+  type: WidgetType;
+  title: string;
+  subtitle: string;
+  kicker: string;
+  previewTitle: string;
+  previewLines: string[];
+  previewMeta?: string;
+  accent: string;
+};
+
+type WidgetGallerySectionDefinition = {
+  key: WidgetGalleryCategory;
+  title: string;
+  subtitle: string;
+  items: WidgetGalleryItemDefinition[];
 };
 
 const EditIcon = () => (
@@ -1021,7 +1040,7 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
   }
 ];
 
-  const BOARD_TEMPLATE_SECTIONS: BoardTemplateSection[] = [
+const BOARD_TEMPLATE_SECTIONS: BoardTemplateSection[] = [
     {
       key: "notes",
       title: "메모 보드",
@@ -1039,6 +1058,227 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
     title: "그룹 보드",
     subtitle: "여럿이 함께 보는 공유형 보드 예시",
     templateKeys: ["ai-share", "aistudio", "group-chat", "family", "couple"]
+  }
+];
+
+const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
+  {
+    key: "collect",
+    title: "수집 & 큐레이션",
+    subtitle: "링크와 외부 정보를 빠르게 모아 바로 쓸 수 있는 위젯입니다.",
+    items: [
+      {
+        type: "rss",
+        title: "RSS 리더",
+        subtitle: "뉴스와 피드 모아보기",
+        kicker: "FEED",
+        previewTitle: "GeekNews",
+        previewLines: ["핵심 뉴스 헤드라인 3개", "새 글이 올라오면 바로 확인"],
+        previewMeta: "업데이트 자동 반영",
+        accent: "#8f7cff"
+      },
+      {
+        type: "bookmark",
+        title: "북마크",
+        subtitle: "자주 가는 링크 정리",
+        kicker: "LINK",
+        previewTitle: "AI 참고 링크",
+        previewLines: ["OpenAI Docs", "GenSpark", "Claude MCP 가이드"],
+        previewMeta: "링크 붙여넣기로 바로 생성",
+        accent: "#f5b941"
+      },
+      {
+        type: "trending",
+        title: "실시간 검색어",
+        subtitle: "지금 많이 보는 주제",
+        kicker: "TREND",
+        previewTitle: "실시간 인기 키워드",
+        previewLines: ["1. 전기차", "2. 로봇", "3. 반도체"],
+        previewMeta: "빠른 훑어보기",
+        accent: "#fb7f57"
+      },
+      {
+        type: "delivery",
+        title: "택배 추적",
+        subtitle: "송장 상태 확인",
+        kicker: "TRACK",
+        previewTitle: "CJ대한통운 6894…",
+        previewLines: ["배송 중", "오늘 오후 도착 예정"],
+        previewMeta: "택배사 자동 조회",
+        accent: "#48c4ff"
+      },
+      {
+        type: "food",
+        title: "오늘은 뭐 먹지",
+        subtitle: "지역 기반 맛집 추천",
+        kicker: "TASTE",
+        previewTitle: "서울 금천구 추천",
+        previewLines: ["흑백요리사 픽", "인스타 화제", "실시간 인기"],
+        previewMeta: "다시 추천 가능",
+        accent: "#ff8b7d"
+      }
+    ]
+  },
+  {
+    key: "organize",
+    title: "정리 & 집중",
+    subtitle: "일정, 루틴, 작업 흐름을 눈에 보이게 정리하는 위젯입니다.",
+    items: [
+      {
+        type: "checklist",
+        title: "TODO",
+        subtitle: "체크리스트 정리",
+        kicker: "TASK",
+        previewTitle: "오늘 할 일",
+        previewLines: ["핵심 작업 정리", "공유 전 확인", "완료 후 체크"],
+        previewMeta: "완료 개수 자동 계산",
+        accent: "#52cf9a"
+      },
+      {
+        type: "countdown",
+        title: "디데이",
+        subtitle: "중요 일정 카운트다운",
+        kicker: "D-DAY",
+        previewTitle: "프로젝트 공개",
+        previewLines: ["D-7", "중요 일정까지 남은 시간"],
+        previewMeta: "날짜 기반 자동 계산",
+        accent: "#b0c7ff"
+      },
+      {
+        type: "timetable",
+        title: "시간표",
+        subtitle: "요일별 일정 배치",
+        kicker: "PLAN",
+        previewTitle: "이번 주 일정",
+        previewLines: ["월 10:00 팀 미팅", "수 14:00 강의", "금 16:00 작업 리뷰"],
+        previewMeta: "한눈에 보는 주간 계획",
+        accent: "#76d2ff"
+      },
+      {
+        type: "focus",
+        title: "포커스 타이머",
+        subtitle: "집중 세션 관리",
+        kicker: "FOCUS",
+        previewTitle: "25:00 집중 모드",
+        previewLines: ["오늘 누적 1시간 40분", "지금 해야 할 일과 연결"],
+        previewMeta: "작업 몰입용",
+        accent: "#5ea6ff"
+      },
+      {
+        type: "routine",
+        title: "루틴",
+        subtitle: "반복 습관 체크",
+        kicker: "HABIT",
+        previewTitle: "아침 루틴",
+        previewLines: ["물 마시기", "스트레칭", "메일 정리"],
+        previewMeta: "연속 달성용 보드",
+        accent: "#67d5ba"
+      }
+    ]
+  },
+  {
+    key: "utility",
+    title: "정보 & 유틸리티",
+    subtitle: "바로 확인하고 계속 열어보게 되는 대시보드성 위젯입니다.",
+    items: [
+      {
+        type: "weather",
+        title: "날씨",
+        subtitle: "지역별 오늘/내일 날씨",
+        kicker: "WEATHER",
+        previewTitle: "서울",
+        previewLines: ["29° · 부분적으로 흐림", "내일 비 예보 60%"],
+        previewMeta: "기온과 상태 요약",
+        accent: "#9e8dff"
+      },
+      {
+        type: "clock",
+        title: "시계",
+        subtitle: "디지털/아날로그 시계",
+        kicker: "CLOCK",
+        previewTitle: "10:45 PM",
+        previewLines: ["Seoul · UTC+09:00", "작업 흐름에 맞춘 시간 확인"],
+        previewMeta: "심플 데스크 위젯",
+        accent: "#7dd5ff"
+      },
+      {
+        type: "player",
+        title: "음악 플레이어",
+        subtitle: "MP3 / YouTube 오디오",
+        kicker: "AUDIO",
+        previewTitle: "Retro Session",
+        previewLines: ["재생 / 일시정지 / 앞으로", "옛 MP3처럼 보기"],
+        previewMeta: "배경 음악용",
+        accent: "#ff84b7"
+      },
+      {
+        type: "prompt",
+        title: "AI 프롬프트",
+        subtitle: "자주 쓰는 프롬프트 저장",
+        kicker: "PROMPT",
+        previewTitle: "광고 카피 생성",
+        previewLines: ["역할/목표/톤 변수 관리", "한 번에 복사해 쓰기"],
+        previewMeta: "AI 작업 전용",
+        accent: "#7ce3dd"
+      },
+      {
+        type: "document",
+        title: "문서 섹션",
+        subtitle: "랜딩/소개 문단 구성",
+        kicker: "DOC",
+        previewTitle: "새 섹션",
+        previewLines: ["한 문단을 크게 읽히게 배치", "CTA나 소개 섹션 작성"],
+        previewMeta: "홈 보드용 추천",
+        accent: "#95a9ff"
+      }
+    ]
+  },
+  {
+    key: "identity",
+    title: "개성 & 분위기",
+    subtitle: "보드의 감성과 정체성을 강하게 보여주는 위젯입니다.",
+    items: [
+      {
+        type: "cover",
+        title: "보드 커버",
+        subtitle: "대표 소개 카드",
+        kicker: "COVER",
+        previewTitle: "WZD Board",
+        previewLines: ["한 장의 대표 비주얼", "소개 문구와 분위기 전달"],
+        previewMeta: "공유 보드 추천",
+        accent: "#f6a3ba"
+      },
+      {
+        type: "profile",
+        title: "내 정보",
+        subtitle: "프로필/소개 카드",
+        kicker: "PROFILE",
+        previewTitle: "이준호",
+        previewLines: ["아이디어 프로토타이퍼", "한국 나이 · 생년월일"],
+        previewMeta: "개인 페이지용",
+        accent: "#f3c2ff"
+      },
+      {
+        type: "mood",
+        title: "오늘의 무드",
+        subtitle: "기분과 에너지 기록",
+        kicker: "MOOD",
+        previewTitle: "오늘은 차분함",
+        previewLines: ["집중도 높음", "에너지 보통"],
+        previewMeta: "감성 기록용",
+        accent: "#ff9bd2"
+      },
+      {
+        type: "pet",
+        title: "방문자 캐릭터",
+        subtitle: "방문/활동량 성장 펫",
+        kicker: "PET",
+        previewTitle: "오늘도 찾아온 고양이",
+        previewLines: ["방문자가 늘수록 성장", "보드에 생기를 주는 요소"],
+        previewMeta: "공유 보드 인기",
+        accent: "#7aa7ff"
+      }
+    ]
   }
 ];
 
@@ -2867,7 +3107,7 @@ const App = () => {
   const [petVisitCounts, setPetVisitCounts] = useState<Record<string, number>>(() => loadPetVisitCounts());
   const [focusNow, setFocusNow] = useState(() => Date.now());
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarPinned, setSidebarPinned] = useState(false);
   const [compactSidebar, setCompactSidebar] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < COMPACT_SIDEBAR_BREAKPOINT : false
   );
@@ -2878,6 +3118,7 @@ const App = () => {
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
+  const [widgetGalleryCategory, setWidgetGalleryCategory] = useState<WidgetGalleryCategory>("collect");
   const [catRemoteCommand, setCatRemoteCommand] = useState<CatRemoteCommand | null>(null);
   const [catRemoteOpen, setCatRemoteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -3164,10 +3405,10 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (compactSidebar && sidebarExpanded) {
-      setSidebarExpanded(false);
+    if (compactSidebar && sidebarPinned) {
+      setSidebarPinned(false);
     }
-  }, [compactSidebar, sidebarExpanded]);
+  }, [compactSidebar, sidebarPinned]);
 
   const persistCloudSnapshot = async () => {
     if (!supabase || !latestUserIdRef.current) {
@@ -6724,66 +6965,61 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
-  const renderWidgetMenuItems = () => (
-    <>
-      <button className="widget-menu-item" onClick={addRssWidget}>
-        RSS 리더
-      </button>
-      <button className="widget-menu-item" onClick={addBookmarkWidget}>
-        북마크
-      </button>
-      <button className="widget-menu-item" onClick={addChecklistWidget}>
-        TODO
-      </button>
-      <button className="widget-menu-item" onClick={addCountdownWidget}>
-        디데이
-      </button>
-      <button className="widget-menu-item" onClick={addTimetableWidget}>
-        시간표
-      </button>
-      <button className="widget-menu-item" onClick={addPlayerWidget}>
-        음악 플레이어
-      </button>
-      <button className="widget-menu-item" onClick={addClockWidget}>
-        시계
-      </button>
-      <button className="widget-menu-item" onClick={addProfileWidget}>
-        내 정보
-      </button>
-      <button className="widget-menu-item" onClick={addWeatherWidget}>
-        날씨
-      </button>
-      <button className="widget-menu-item" onClick={addTrendingWidget}>
-        실시간 검색어
-      </button>
-      <button className="widget-menu-item" onClick={addDeliveryWidget}>
-        택배 추적
-      </button>
-      <button className="widget-menu-item" onClick={addPetWidget}>
-        방문자 캐릭터
-      </button>
-      <button className="widget-menu-item" onClick={addCoverWidget}>
-        보드 커버
-      </button>
-      <button className="widget-menu-item" onClick={addDocumentWidget}>
-        문서 섹션
-      </button>
-      <button className="widget-menu-item" onClick={addFocusWidget}>
-        포커스 타이머
-      </button>
-      <button className="widget-menu-item" onClick={addMoodWidget}>
-        오늘의 무드
-      </button>
-      <button className="widget-menu-item" onClick={addRoutineWidget}>
-        루틴
-      </button>
-      <button className="widget-menu-item" onClick={addPromptWidget}>
-        AI 프롬프트
-      </button>
-      <button className="widget-menu-item" onClick={addFoodWidget}>
-        오늘은 뭐 먹지
-      </button>
-    </>
+  const addWidgetByType = (type: WidgetType) => {
+    const actions: Record<Exclude<WidgetType, "note">, () => void> = {
+      rss: addRssWidget,
+      bookmark: addBookmarkWidget,
+      checklist: addChecklistWidget,
+      countdown: addCountdownWidget,
+      timetable: addTimetableWidget,
+      player: addPlayerWidget,
+      clock: addClockWidget,
+      profile: addProfileWidget,
+      weather: addWeatherWidget,
+      trending: addTrendingWidget,
+      delivery: addDeliveryWidget,
+      pet: addPetWidget,
+      cover: addCoverWidget,
+      document: addDocumentWidget,
+      focus: addFocusWidget,
+      mood: addMoodWidget,
+      routine: addRoutineWidget,
+      prompt: addPromptWidget,
+      food: addFoodWidget
+    };
+
+    if (type === "note") {
+      return;
+    }
+
+    actions[type]();
+  };
+
+  const activeWidgetGallerySection =
+    WIDGET_GALLERY_SECTIONS.find((section) => section.key === widgetGalleryCategory) ?? WIDGET_GALLERY_SECTIONS[0]!;
+
+  const renderWidgetGalleryPreview = (item: WidgetGalleryItemDefinition) => (
+    <button
+      key={item.type}
+      className="widget-gallery-card"
+      style={{ "--widget-accent": item.accent } as CSSProperties}
+      onClick={() => addWidgetByType(item.type)}
+    >
+      <div className="widget-gallery-preview">
+        <span className="widget-gallery-kicker">{item.kicker}</span>
+        <strong>{item.previewTitle}</strong>
+        <div className="widget-gallery-preview-lines">
+          {item.previewLines.map((line) => (
+            <span key={`${item.type}-${line}`}>{line}</span>
+          ))}
+        </div>
+        {item.previewMeta ? <span className="widget-gallery-meta">{item.previewMeta}</span> : null}
+      </div>
+      <div className="widget-gallery-copy">
+        <strong>{item.title}</strong>
+        <span>{item.subtitle}</span>
+      </div>
+    </button>
   );
 
   const updateBoardLayoutStyle = (boardId: string, layoutStyle: BoardLayoutStyle) => {
@@ -7804,7 +8040,7 @@ const App = () => {
     return <LandingPage />;
   }
 
-  const showExpandedSidebar = sidebarExpanded && !compactSidebar;
+  const showExpandedSidebar = sidebarPinned && !compactSidebar;
   const CurrentPage = isHomeView ? HomePage : isReadOnlyBoardView ? SharePage : BoardPage;
   const pageModeClassName = isHomeView ? "mode-home" : isReadOnlyBoardView ? "mode-share" : "mode-board";
   const topbarClassName = `pin-topbar ${compactHeader ? "compact-header" : ""} ${
@@ -7833,23 +8069,29 @@ const App = () => {
   return (
     <CurrentPage showExpandedSidebar={showExpandedSidebar} extraClassName={boardThemeClassName}>
       <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`}>
-        <button className="pin-brand" aria-label="WZD 홈" onClick={navigateToPublicLanding}>
-          <span>{showExpandedSidebar ? "WZD" : "W"}</span>
-        </button>
+        <button
+          className="pin-brand"
+          aria-label={showExpandedSidebar ? "WZD 홈으로 이동" : "사이드 메뉴 펼치기"}
+          onClick={() => {
+            if (!compactSidebar && !showExpandedSidebar) {
+              setSidebarPinned(true);
+              return;
+            }
 
-        {!compactSidebar && (
-          <button
-            className={`side-icon subtle sidebar-toggle-button ${showExpandedSidebar ? "expanded" : ""}`}
-            onClick={() => setSidebarExpanded((prev) => !prev)}
-            aria-label={showExpandedSidebar ? "사이드 메뉴 접기" : "사이드 메뉴 펼치기"}
-            title={showExpandedSidebar ? "사이드 메뉴 접기" : "사이드 메뉴 펼치기"}
-          >
-            <span className="side-icon-glyph sidebar-toggle-glyph" aria-hidden="true">
-              <SidebarToggleIcon />
+            navigateToPublicLanding();
+          }}
+        >
+          <span className="pin-brand-inner">
+            <span className="pin-brand-logo" aria-hidden="true">
+              {showExpandedSidebar ? "WZD" : "W"}
             </span>
-            <span className="side-icon-label">{showExpandedSidebar ? "사이드 메뉴 접기" : "사이드 메뉴 펼치기"}</span>
-          </button>
-        )}
+            {!showExpandedSidebar && !compactSidebar ? (
+              <span className="pin-brand-toggle" aria-hidden="true">
+                <SidebarToggleIcon />
+              </span>
+            ) : null}
+          </span>
+        </button>
 
         <div className="board-menu">
           <div
@@ -7902,6 +8144,9 @@ const App = () => {
                       return;
                     }
 
+                    if (!compactSidebar) {
+                      setSidebarPinned(true);
+                    }
                     setSelectedBoardId(boardItem.id);
                     setSelectedNoteId(null);
                     setFeedMode("active");
@@ -7917,7 +8162,16 @@ const App = () => {
           </div>
         </div>
 
-        <button className="side-icon" onClick={openTemplatePicker} aria-label="새 보드">
+        <button
+          className="side-icon"
+          onClick={() => {
+            if (!compactSidebar) {
+              setSidebarPinned(true);
+            }
+            openTemplatePicker();
+          }}
+          aria-label="새 보드"
+        >
           <span className="side-icon-glyph" aria-hidden="true">
             +
           </span>
@@ -7929,6 +8183,9 @@ const App = () => {
         <button
           className={`side-icon subtle settings-icon ${settingsOpen ? "active" : ""}`}
           onClick={() => {
+            if (!compactSidebar) {
+              setSidebarPinned(true);
+            }
             if (settingsOpen) {
               setSettingsOpen(false);
             } else {
@@ -8037,14 +8294,15 @@ const App = () => {
             )}
             {!compactHeader && !isReadOnlyBoardView && (
               <div className="widget-menu-wrap">
-                <button className="widget-pill" onClick={() => setWidgetMenuOpen((prev) => !prev)}>
+                <button
+                  className="widget-pill"
+                  onClick={() => {
+                    setWidgetGalleryCategory("collect");
+                    setWidgetMenuOpen(true);
+                  }}
+                >
                   위젯 추가
                 </button>
-                {widgetMenuOpen && (
-                  <div className="widget-menu">
-                    {renderWidgetMenuItems()}
-                  </div>
-                )}
               </div>
             )}
             {!compactHeader && canBoardSettings && (
@@ -8103,14 +8361,17 @@ const App = () => {
                   <div className="mobile-board-widget-group">
                     <button
                       className={`mobile-board-action ${widgetMenuOpen ? "active" : ""}`}
-                      onClick={() => setWidgetMenuOpen((prev) => !prev)}
+                      onClick={() => {
+                        setWidgetGalleryCategory("collect");
+                        setWidgetMenuOpen(true);
+                        setMobileBoardMenuOpen(false);
+                      }}
                     >
                       <span className="mobile-board-action-icon" aria-hidden="true">
                         ◫
                       </span>
                       <span>위젯 추가</span>
                     </button>
-                    {widgetMenuOpen && <div className="mobile-widget-menu">{renderWidgetMenuItems()}</div>}
                   </div>
                 )}
                 <button
@@ -8228,6 +8489,52 @@ const App = () => {
                     </div>
                   </section>
                 ))}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {widgetMenuOpen && (
+          <div className="modal-backdrop widget-gallery-backdrop" onClick={() => setWidgetMenuOpen(false)}>
+            <section className="widget-modal-large widget-gallery-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="modal-header widget-gallery-header">
+                <div>
+                  <p className="settings-kicker">위젯 갤러리</p>
+                  <h2>어떤 위젯을 추가할까요?</h2>
+                  <p className="modal-subtitle">위젯 샘플을 보고 지금 보드에 어울리는 카드를 바로 고르세요.</p>
+                </div>
+                <button className="icon-button" onClick={() => setWidgetMenuOpen(false)} aria-label="위젯 갤러리 닫기">
+                  ×
+                </button>
+              </div>
+
+              <div className="widget-gallery-layout">
+                <nav className="widget-gallery-nav" aria-label="위젯 카테고리">
+                  {WIDGET_GALLERY_SECTIONS.map((section) => (
+                    <button
+                      key={section.key}
+                      className={`widget-gallery-tab ${widgetGalleryCategory === section.key ? "active" : ""}`}
+                      onClick={() => setWidgetGalleryCategory(section.key)}
+                    >
+                      <strong>{section.title}</strong>
+                      <span>{section.subtitle}</span>
+                    </button>
+                  ))}
+                </nav>
+
+                <div className="widget-gallery-panel">
+                  <div className="widget-gallery-panel-head">
+                    <div>
+                      <strong>{activeWidgetGallerySection.title}</strong>
+                      <span>{activeWidgetGallerySection.subtitle}</span>
+                    </div>
+                    <em>{activeWidgetGallerySection.items.length}개 위젯</em>
+                  </div>
+
+                  <div className={`widget-gallery-grid widget-gallery-grid-${activeWidgetGallerySection.items.length >= 5 ? "wide" : "regular"}`}>
+                    {activeWidgetGallerySection.items.map((item) => renderWidgetGalleryPreview(item))}
+                  </div>
+                </div>
               </div>
             </section>
           </div>
@@ -8634,6 +8941,11 @@ const App = () => {
           <div
             className={`pin-board-stage ${mobileSwipeEnabled ? "mobile-swipe-enabled" : ""} ${boardSwipeTransition ? "swipe-transition" : ""}`}
             style={{ "--board-swipe-offset": `${boardSwipeOffset}px` } as CSSProperties}
+            onPointerDownCapture={() => {
+              if (!compactSidebar && sidebarPinned) {
+                setSidebarPinned(false);
+              }
+            }}
             onTouchStart={onBoardTouchStart}
             onTouchMove={onBoardTouchMove}
             onTouchEnd={onBoardTouchEnd}
