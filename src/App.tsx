@@ -318,6 +318,7 @@ const CLOUD_SAVE_DEBOUNCE_MS = 120;
 const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const BOARD_HISTORY_LIMIT = 20;
+const SETTINGS_PANEL_ANIMATION_MS = 220;
 const MOBILE_LAYOUT_BREAKPOINT = 980;
 const MOBILE_SINGLE_COLUMN_BREAKPOINT = 680;
 const COMPACT_SIDEBAR_BREAKPOINT = 1120;
@@ -3160,6 +3161,8 @@ const App = () => {
   const [catRemoteCommand, setCatRemoteCommand] = useState<CatRemoteCommand | null>(null);
   const [catRemoteOpen, setCatRemoteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsRendered, setSettingsRendered] = useState(false);
+  const [settingsClosing, setSettingsClosing] = useState(false);
   const [settingsSection, setSettingsSection] = useState<SettingsSection>("menu");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [boardSwipeOffset, setBoardSwipeOffset] = useState(0);
@@ -5594,6 +5597,28 @@ const App = () => {
 
     void refreshBoardMembers(selectedBoard.id);
   }, [settingsOpen, selectedBoard?.id, isBoardOwner]);
+
+  useEffect(() => {
+    if (settingsOpen) {
+      setSettingsRendered(true);
+      const frame = window.requestAnimationFrame(() => {
+        setSettingsClosing(false);
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    if (!settingsRendered) {
+      return;
+    }
+
+    setSettingsClosing(true);
+    const timeout = window.setTimeout(() => {
+      setSettingsRendered(false);
+      setSettingsClosing(false);
+    }, SETTINGS_PANEL_ANIMATION_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [settingsOpen, settingsRendered]);
 
   useEffect(() => {
     if (!inviteOpen) {
@@ -8773,9 +8798,9 @@ const App = () => {
           </div>
         )}
 
-        {settingsOpen && (
-          <div className="settings-overlay" onClick={() => setSettingsOpen(false)}>
-            <section className="settings-panel" onClick={(event) => event.stopPropagation()}>
+        {settingsRendered && (
+          <div className={`settings-overlay ${settingsClosing ? "is-closing" : "is-open"}`} onClick={() => setSettingsOpen(false)}>
+            <section className={`settings-panel ${settingsClosing ? "is-closing" : "is-open"}`} onClick={(event) => event.stopPropagation()}>
               <div className="settings-panel-head">
                 <div>
                   <p className="settings-kicker">설정</p>

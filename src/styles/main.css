@@ -1604,6 +1604,8 @@ button {
   padding: 24px;
   background: rgba(31, 26, 19, 0.18);
   backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 220ms ease;
 }
 
 .settings-panel {
@@ -1615,6 +1617,28 @@ button {
   border: 1px solid rgba(31, 26, 19, 0.08);
   box-shadow: var(--shadow);
   padding: 22px;
+  opacity: 0;
+  transform: translateX(42px);
+  transition: transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 220ms ease;
+  will-change: transform, opacity;
+}
+
+.settings-overlay.is-open {
+  opacity: 1;
+}
+
+.settings-panel.is-open {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.settings-overlay.is-closing {
+  opacity: 0;
+}
+
+.settings-panel.is-closing {
+  opacity: 0;
+  transform: translateX(42px);
 }
 
 .settings-panel-head,
