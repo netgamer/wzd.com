@@ -4088,6 +4088,7 @@ button {
 .cover-widget,
 .focus-widget,
 .mood-widget,
+.mp3-widget,
 .prompt-widget,
 .food-widget,
 .document-widget {
@@ -4541,6 +4542,99 @@ button {
   justify-content: flex-end;
 }
 
+.mp3-widget {
+  gap: 10px;
+  padding: 16px;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(228, 231, 236, 0.98), rgba(198, 203, 210, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(91, 98, 109, 0.15),
+    0 16px 28px rgba(18, 24, 35, 0.08);
+}
+
+.mp3-widget-screen {
+  display: grid;
+  gap: 4px;
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(218, 233, 198, 0.92), rgba(183, 210, 162, 0.96));
+  border: 1px solid rgba(65, 80, 58, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.mp3-widget-mode {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: rgba(44, 57, 38, 0.76);
+  text-transform: uppercase;
+}
+
+.mp3-widget-screen strong {
+  font-size: 18px;
+  line-height: 1.2;
+  color: #1f281c;
+}
+
+.mp3-widget-screen > span:not(.mp3-widget-mode) {
+  color: rgba(40, 52, 35, 0.74);
+}
+
+.mp3-widget-time {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(40, 52, 35, 0.72);
+}
+
+.mp3-widget-progress {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(33, 40, 48, 0.16);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.mp3-widget-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(30, 35, 43, 0.9), rgba(84, 96, 114, 0.92));
+  transition: width 160ms ease;
+}
+
+.mp3-widget-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.mp3-widget-control {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(74, 81, 91, 0.18);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(251, 252, 253, 0.98), rgba(214, 219, 226, 0.96));
+  color: #252b34;
+  font-size: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 6px 14px rgba(26, 32, 42, 0.08);
+}
+
+.mp3-widget-control.primary {
+  width: 52px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(45, 50, 58, 0.98), rgba(20, 24, 30, 0.98));
+  color: #f7fbff;
+}
+
 .focus-widget-timer {
   font-size: 34px;
   font-weight: 800;
@@ -4653,6 +4747,7 @@ button {
 .cover-widget.compact,
 .focus-widget.compact,
 .mood-widget.compact,
+.mp3-widget.compact,
 .prompt-widget.compact,
 .food-widget.compact,
 .document-widget.compact {
@@ -4681,6 +4776,30 @@ button {
 .food-widget.compact .food-widget-card {
   padding: 12px;
   gap: 4px;
+}
+
+.mp3-widget.compact {
+  gap: 8px;
+  padding: 12px;
+}
+
+.mp3-widget.compact .mp3-widget-screen {
+  padding: 12px;
+}
+
+.mp3-widget.compact .mp3-widget-screen strong {
+  font-size: 16px;
+}
+
+.mp3-widget.compact .mp3-widget-control {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+}
+
+.mp3-widget.compact .mp3-widget-control.primary {
+  width: 44px;
+  border-radius: 14px;
 }
 
 .document-widget.compact strong {

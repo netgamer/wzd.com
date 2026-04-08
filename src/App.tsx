@@ -66,6 +66,7 @@ type WidgetType =
   | "checklist"
   | "countdown"
   | "timetable"
+  | "player"
   | "clock"
   | "profile"
   | "weather"
@@ -276,6 +277,8 @@ const DEFAULT_TIMETABLE_TEXT = [
   "목|15:00|16:00|피드백 정리|노트북",
   "금|16:30|17:30|다음 주 준비|라운지"
 ].join("\n");
+const DEFAULT_PLAYER_ARTIST = "Unknown Artist";
+const DEFAULT_PLAYER_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 const DEFAULT_CLOCK_MODE: ClockWidgetMode = "digital";
 const DEFAULT_PROFILE_NAME = "홍길동";
 const DEFAULT_PROFILE_BIRTHDATE = "1995-05-12";
@@ -1719,6 +1722,7 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "checklist" ||
   note.metadata?.widgetType === "countdown" ||
   note.metadata?.widgetType === "timetable" ||
+  note.metadata?.widgetType === "player" ||
   note.metadata?.widgetType === "clock" ||
   note.metadata?.widgetType === "profile" ||
   note.metadata?.widgetType === "weather" ||
@@ -1970,6 +1974,26 @@ const normalizeTimetableText = (value: string) =>
     .map((line) => line.trim())
     .filter(Boolean)
     .join("\n");
+
+const getPlayerArtist = (note: NoteV2) =>
+  typeof note.metadata?.playerArtist === "string" && note.metadata.playerArtist.trim()
+    ? note.metadata.playerArtist.trim()
+    : DEFAULT_PLAYER_ARTIST;
+
+const getPlayerUrl = (note: NoteV2) =>
+  typeof note.metadata?.playerUrl === "string" && note.metadata.playerUrl.trim()
+    ? note.metadata.playerUrl.trim()
+    : DEFAULT_PLAYER_URL;
+
+const formatAudioTime = (seconds: number) => {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return "00:00";
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainSeconds = Math.floor(seconds % 60);
+  return `${String(minutes).padStart(2, "0")}:${String(remainSeconds).padStart(2, "0")}`;
+};
 
 const parseTimetableEntries = (value: string): TimetableEntry[] =>
   value
@@ -2336,6 +2360,7 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   if (widgetType === "cover") return -1;
   if (widgetType === "document") return 0;
   if (widgetType === "focus") return 1;
+  if (widgetType === "player") return 1;
   if (widgetType === "clock") return 1;
   if (widgetType === "profile") return 1;
   if (widgetType === "mood") return 2;
@@ -2480,6 +2505,7 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   if (widgetType === "cover") return "cover";
   if (widgetType === "document") return "cover";
   if (widgetType === "focus") return "focus";
+  if (widgetType === "player") return "focus";
   if (widgetType === "mood") return "mood";
   if (widgetType === "routine") return "routine";
   if (widgetType === "prompt") return "prompt";
@@ -2598,6 +2624,7 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
     return layoutStyle === "compact" ? 250 : 300;
   }
   if (widgetType === "focus") return layoutStyle === "compact" ? 220 : 250;
+  if (widgetType === "player") return layoutStyle === "compact" ? 220 : 260;
   if (widgetType === "mood") return layoutStyle === "compact" ? 200 : 230;
   if (widgetType === "routine") return layoutStyle === "compact" ? 240 : 280;
   if (widgetType === "prompt") return layoutStyle === "compact" ? 230 : 270;
@@ -2733,6 +2760,7 @@ const App = () => {
   const [trendingWidgets, setTrendingWidgets] = useState<Record<string, TrendingState>>({});
   const [deliveryWidgets, setDeliveryWidgets] = useState<Record<string, DeliveryState>>({});
   const [deliveryCarriers, setDeliveryCarriers] = useState<DeliveryCarrier[]>([]);
+  const [playerWidgets, setPlayerWidgets] = useState<Record<string, { playing: boolean; currentTime: number; duration: number }>>({});
   const [petVisitCounts, setPetVisitCounts] = useState<Record<string, number>>(() => loadPetVisitCounts());
   const [focusNow, setFocusNow] = useState(() => Date.now());
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
@@ -2788,6 +2816,7 @@ const App = () => {
   const catRemoteCommandIdRef = useRef(0);
   const noteCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const noteEditorRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const playerAudioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const pendingMobileNewNoteScrollRef = useRef<string | null>(null);
   const boardLongPressTimerRef = useRef<number | null>(null);
   const boardSwipeStartRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -3024,6 +3053,188 @@ const App = () => {
                     {entry.location && <span>{entry.location}</span>}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "player") {
+      const artist = getPlayerArtist(note);
+      const playerUrl = getPlayerUrl(note);
+      const playback = playerWidgets[note.id] ?? { playing: false, currentTime: 0, duration: 0 };
+      const progress = playback.duration > 0 ? Math.min(1, playback.currentTime / playback.duration) : 0;
+
+      const syncPlayerState = (patch: Partial<{ playing: boolean; currentTime: number; duration: number }>) => {
+        setPlayerWidgets((prev) => ({
+          ...prev,
+          [note.id]: {
+            playing: patch.playing ?? prev[note.id]?.playing ?? false,
+            currentTime: patch.currentTime ?? prev[note.id]?.currentTime ?? 0,
+            duration: patch.duration ?? prev[note.id]?.duration ?? 0
+          }
+        }));
+      };
+
+      const stopOtherPlayers = (exceptId: string) => {
+        Object.entries(playerAudioRefs.current).forEach(([audioId, audio]) => {
+          if (audioId !== exceptId && audio && !audio.paused) {
+            audio.pause();
+          }
+        });
+      };
+
+      const togglePlayback = async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        const audio = playerAudioRefs.current[note.id];
+        if (!audio || !playerUrl) {
+          return;
+        }
+
+        try {
+          if (audio.paused) {
+            stopOtherPlayers(note.id);
+            await audio.play();
+          } else {
+            audio.pause();
+          }
+        } catch (error) {
+          console.error("Failed to toggle player widget", error);
+        }
+      };
+
+      const restartPlayback = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        const audio = playerAudioRefs.current[note.id];
+        if (!audio) {
+          return;
+        }
+        audio.currentTime = 0;
+        void audio.play().catch((error) => console.error("Failed to restart player widget", error));
+      };
+
+      const seekPlayback = (event: React.MouseEvent<HTMLDivElement>) => {
+        event.stopPropagation();
+        const audio = playerAudioRefs.current[note.id];
+        if (!audio || !playback.duration) {
+          return;
+        }
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+        audio.currentTime = ratio * playback.duration;
+        syncPlayerState({ currentTime: audio.currentTime });
+      };
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">MUSIC</span>
+            <p className="pin-title">{asText(note.content).trim() || "MP3 플레이어"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <input
+                className="widget-input"
+                value={artist}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "player",
+                      playerArtist: event.target.value,
+                      playerUrl
+                    }
+                  })
+                }
+                placeholder="아티스트"
+              />
+              <input
+                className="widget-input"
+                value={playerUrl}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "player",
+                      playerArtist: artist,
+                      playerUrl: event.target.value
+                    }
+                  })
+                }
+                placeholder="mp3 URL"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`mp3-widget ${compact ? "compact" : ""}`}>
+              <audio
+                ref={(element) => {
+                  playerAudioRefs.current[note.id] = element;
+                }}
+                src={playerUrl}
+                preload="metadata"
+                onLoadedMetadata={(event) =>
+                  syncPlayerState({ duration: event.currentTarget.duration || 0, currentTime: event.currentTarget.currentTime || 0 })
+                }
+                onTimeUpdate={(event) =>
+                  syncPlayerState({ currentTime: event.currentTarget.currentTime || 0, duration: event.currentTarget.duration || 0 })
+                }
+                onPlay={() => syncPlayerState({ playing: true })}
+                onPause={() => syncPlayerState({ playing: false })}
+                onEnded={() => syncPlayerState({ playing: false, currentTime: 0 })}
+              />
+              <div className="mp3-widget-screen">
+                <span className="mp3-widget-mode">PLAY MODE</span>
+                <strong>{asText(note.content).trim() || "MP3 플레이어"}</strong>
+                <span>{artist}</span>
+                <div className="mp3-widget-time">
+                  <span>{formatAudioTime(playback.currentTime)}</span>
+                  <span>{formatAudioTime(playback.duration)}</span>
+                </div>
+              </div>
+              <div className="mp3-widget-progress" onClick={seekPlayback} role="button" tabIndex={0}>
+                <div className="mp3-widget-progress-fill" style={{ width: `${progress * 100}%` }} />
+              </div>
+              <div className="mp3-widget-controls">
+                <button className="mp3-widget-control" onClick={restartPlayback} aria-label="처음부터 재생">
+                  ⏮
+                </button>
+                <button className="mp3-widget-control primary" onClick={togglePlayback} aria-label={playback.playing ? "일시정지" : "재생"}>
+                  {playback.playing ? "❚❚" : "▶"}
+                </button>
+                <button
+                  className="mp3-widget-control"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    const audio = playerAudioRefs.current[note.id];
+                    if (!audio) {
+                      return;
+                    }
+                    audio.currentTime = Math.min((audio.duration || 0), (audio.currentTime || 0) + 10);
+                  }}
+                  aria-label="10초 앞으로"
+                >
+                  ⏭
+                </button>
               </div>
             </div>
           )}
@@ -5769,6 +5980,38 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addPlayerWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "MP3 플레이어"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "player",
+      playerArtist: DEFAULT_PLAYER_ARTIST,
+      playerUrl: DEFAULT_PLAYER_URL
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const addWeatherWidget = () => {
     if (!selectedBoard) {
       return;
@@ -6205,6 +6448,9 @@ const App = () => {
       </button>
       <button className="widget-menu-item" onClick={addTimetableWidget}>
         시간표
+      </button>
+      <button className="widget-menu-item" onClick={addPlayerWidget}>
+        음악 플레이어
       </button>
       <button className="widget-menu-item" onClick={addClockWidget}>
         시계
