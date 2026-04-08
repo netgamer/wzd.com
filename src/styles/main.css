@@ -2841,7 +2841,7 @@ button {
 }
 
 .board-page .pin-card.note-yellow {
-  border-color: rgba(198, 154, 58, 0.34);
+  border-color: rgba(154, 171, 191, 0.24);
 }
 
 .board-page .pin-card.note-pink {
@@ -2874,11 +2874,11 @@ button {
 
 .board-page .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
   background:
-    linear-gradient(180deg, rgba(255, 252, 235, 0.99), rgba(255, 246, 200, 0.97));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(241, 246, 252, 0.97));
   box-shadow:
     var(--shadow-elevation-1),
     inset 0 1px 2px rgba(255, 255, 255, 0.9),
-    inset 0 -1px 3px rgba(198, 154, 58, 0.06);
+    inset 0 -1px 3px rgba(170, 184, 203, 0.08);
 }
 
 .board-page .pin-card.note-pink:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
@@ -2946,7 +2946,7 @@ button {
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(118, 98, 24, 0.95), rgba(86, 71, 18, 0.97));
+  background: linear-gradient(180deg, rgba(223, 232, 243, 0.18), rgba(191, 204, 221, 0.12));
 }
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow,
@@ -3055,7 +3055,7 @@ button {
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-yellow,
 .pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-yellow {
-  background: linear-gradient(180deg, rgba(95, 76, 34, 0.95), rgba(70, 57, 28, 0.96));
+  background: linear-gradient(180deg, rgba(223, 232, 243, 0.16), rgba(191, 204, 221, 0.1));
 }
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-pink,
@@ -3694,7 +3694,7 @@ button {
 
 .pin-card.link-only-note.note-yellow {
   background:
-    linear-gradient(180deg, rgba(255, 252, 236, 0.98), rgba(255, 246, 208, 0.98));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 252, 0.98));
 }
 
 .pin-card.link-only-note.note-pink {
@@ -3829,7 +3829,7 @@ button {
 }
 
 .board-page .pin-card.rss-widget.note-yellow {
-  background: linear-gradient(180deg, rgba(255, 251, 228, 0.98), rgba(255, 243, 190, 0.96));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 252, 0.96));
 }
 
 .board-page .pin-card.rss-widget.note-pink {
@@ -4793,7 +4793,7 @@ button {
 .pin-card.landing-home-note.note-white,
 .pin-card.landing-home-note.note-yellow {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 249, 240, 0.94));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(243, 247, 252, 0.94));
 }
 
 .pin-card.landing-home-note.note-mint {
@@ -5274,7 +5274,7 @@ button {
 }
 
 .chip-yellow {
-  background: #ffe08a;
+  background: linear-gradient(180deg, #ffffff, #eef4fb);
 }
 
 .chip-pink {
@@ -5306,7 +5306,7 @@ button {
 }
 
 .note-yellow {
-  background: #fff0ad;
+  background: linear-gradient(180deg, #ffffff, #f3f7fd);
 }
 
 .note-pink {
