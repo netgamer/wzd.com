@@ -349,11 +349,11 @@ button {
   --board-feed-bg: rgba(255, 255, 255, 0.02);
   --board-feed-border: rgba(77, 124, 255, 0.06);
   --board-base-card-bg: linear-gradient(180deg, #131a26, #0f1520);
-  --board-base-card-border: rgba(77, 124, 255, 0.08);
+  --board-base-card-border: rgba(255, 255, 255, 0.05);
   --board-base-card-shadow:
     0 1px 2px rgba(0, 0, 0, 0.3),
     0 4px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    inset 0 1px 0 rgba(255, 255, 255, 0.015);
   --board-page-text: #e8edf5;
   --board-page-muted: #7a8ba8;
 }
@@ -467,12 +467,11 @@ button {
   --board-feed-bg: rgba(0, 212, 255, 0.02);
   --board-feed-border: rgba(164, 116, 255, 0.1);
   --board-base-card-bg: linear-gradient(180deg, rgba(16, 20, 32, 0.95), rgba(12, 16, 26, 0.98));
-  --board-base-card-border: rgba(66, 255, 216, 0.12);
+  --board-base-card-border: rgba(255, 255, 255, 0.055);
   --board-base-card-shadow:
     0 2px 4px rgba(0, 0, 0, 0.25),
     0 8px 24px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(66, 255, 216, 0.08),
-    0 0 16px rgba(66, 255, 216, 0.03);
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
   --board-page-text: #e8f4ff;
   --board-page-muted: #8090b0;
 }
@@ -2854,44 +2853,36 @@ button {
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow,
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow {
-  border-color: rgba(177, 146, 77, 0.42);
+  border-color: var(--board-base-card-border);
 }
 
-/* Neon Lab note card glow effects */
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow:hover {
-  border-color: rgba(255, 215, 0, 0.5);
-  box-shadow: 0 0 16px rgba(255, 215, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-pink:hover {
-  border-color: rgba(255, 105, 180, 0.5);
-  box-shadow: 0 0 16px rgba(255, 105, 180, 0.15), 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-blue:hover {
-  border-color: rgba(66, 255, 216, 0.5);
-  box-shadow: 0 0 16px rgba(66, 255, 216, 0.2), 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-green:hover {
-  border-color: rgba(0, 255, 136, 0.5);
-  box-shadow: 0 0 16px rgba(0, 255, 136, 0.15), 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-purple:hover {
-  border-color: rgba(164, 116, 255, 0.5);
-  box-shadow: 0 0 16px rgba(164, 116, 255, 0.2), 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-mint:hover {
-  border-color: rgba(0, 212, 255, 0.5);
-  box-shadow: 0 0 16px rgba(0, 212, 255, 0.2), 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 /* Midnight Ops: Subtle card adjustments */
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-blue:hover {
-  border-color: rgba(77, 124, 255, 0.5);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-pink:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
@@ -2901,7 +2892,7 @@ button {
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-pink,
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-pink {
-  border-color: rgba(166, 102, 145, 0.4);
+  border-color: var(--board-base-card-border);
 }
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-blue:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
@@ -2911,7 +2902,7 @@ button {
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-blue,
 .pin-page.board-page.board-theme-neon-lab .pin-card.note-blue {
-  border-color: rgba(104, 136, 196, 0.38);
+  border-color: var(--board-base-card-border);
 }
 
 .pin-page.board-page.board-theme-midnight-ops .pin-card.note-green:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
@@ -8298,10 +8289,9 @@ button {
 /* Neon Lab: Card glow on hover */
 .pin-page.board-page.board-theme-neon-lab .pin-card:hover {
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.25),
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    0 0 24px rgba(66, 255, 216, 0.1),
-    0 0 40px rgba(164, 116, 255, 0.05);
+    0 2px 4px rgba(0, 0, 0, 0.28),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 /* Neon Lab: Active chip glow pulse */
@@ -8323,7 +8313,8 @@ button {
   transform: translateY(-1px);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.3),
-    0 8px 24px rgba(0, 0, 0, 0.2);
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.16);
 }
 
 /* Reduced motion preference */
