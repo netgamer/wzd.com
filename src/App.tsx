@@ -7451,6 +7451,51 @@ const App = () => {
     </div>
   );
 
+  const renderFeedLoadingSkeleton = () => {
+    const skeletonColumnCount = compactHeader ? 2 : Math.min(4, Math.max(2, columnCount));
+    const skeletonCards = Array.from({ length: skeletonColumnCount * 2 }, (_, index) => ({
+      id: index,
+      tall: index % 3 === 1,
+      image: index % 4 === 0
+    }));
+
+    return (
+      <div className="feed-loading-overlay-content">
+        <div className="feed-loading-header">
+          <div className="feed-loading-title">
+            <span className="skeleton feed-loading-kicker" />
+            <span className="skeleton feed-loading-heading" />
+          </div>
+          <div className="feed-loading-chips">
+            <span className="skeleton feed-loading-chip" />
+            <span className="skeleton feed-loading-chip short" />
+          </div>
+        </div>
+        <div
+          className="feed-loading-skeleton-grid"
+          style={{ "--loading-columns": String(skeletonColumnCount) } as CSSProperties}
+        >
+          {skeletonCards.map((card) => (
+            <div
+              key={card.id}
+              className={`feed-loading-skeleton-card ${card.tall ? "tall" : ""} ${card.image ? "image" : ""}`}
+            >
+              <span className="skeleton feed-loading-dot" />
+              <div className="feed-loading-card-body">
+                <span className="skeleton feed-loading-badge" />
+                <span className="skeleton feed-loading-line title" />
+                <span className="skeleton feed-loading-line" />
+                <span className="skeleton feed-loading-line short" />
+                {card.image ? <span className="skeleton feed-loading-image" /> : null}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="feed-loading-message">보드를 준비하고 있어요.</div>
+      </div>
+    );
+  };
+
   if (publicLandingRoute && !isSharedView) {
     return <LandingPage user={user} onOpenWorkspace={navigateToWorkspace} />;
   }
@@ -8346,7 +8391,7 @@ const App = () => {
           <div className={`feed-stage ${loading ? "is-loading" : ""}`} aria-busy={loading}>
             {loading && (
               <div className="feed-loading-overlay" role="status" aria-live="polite">
-                <div className="feed-loading-message">보드를 불러오는 중입니다.</div>
+                {renderFeedLoadingSkeleton()}
               </div>
             )}
           <section className={feedHeadClassName}>
