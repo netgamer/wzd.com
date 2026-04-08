@@ -305,6 +305,23 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
+.pin-page.board-page.board-theme-glass-studio .current-board-panel::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.75;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.88) 0 1.2px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.62) 0 1.8px, transparent 2.1px),
+    radial-gradient(circle, rgba(234, 246, 255, 0.95) 0 2.4px, transparent 2.8px);
+  background-size: 180px 180px, 260px 260px, 340px 340px;
+  background-position: 20px 0, 80px -120px, 140px -220px;
+  animation: glass-studio-snowfall 24s linear infinite;
+}
+
 .pin-page.board-page.board-theme-midnight-ops {
   /* Bento-inspired Sophisticated Dark: Single accent, sharp shadows, high contrast */
   --board-shell-bg:
@@ -2457,6 +2474,22 @@ button {
   }
   50% {
     transform: rotate(-10deg) translate3d(0, -6px, 0) scale(1.04, 0.96);
+  }
+}
+
+@keyframes glass-studio-snowfall {
+  0% {
+    background-position: 20px 0, 80px -120px, 140px -220px;
+  }
+
+  100% {
+    background-position: -40px 220px, 28px 340px, 92px 420px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pin-page.board-page.board-theme-glass-studio .current-board-panel::after {
+    animation: none;
   }
 }
 
