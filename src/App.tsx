@@ -8097,6 +8097,12 @@ const App = () => {
               </div>
             </div>
           ) : null}
+          <div className={`feed-stage ${loading ? "is-loading" : ""}`} aria-busy={loading}>
+            {loading && (
+              <div className="feed-loading-overlay" role="status" aria-live="polite">
+                <div className="feed-loading-message">보드를 불러오는 중입니다.</div>
+              </div>
+            )}
           <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">
@@ -8145,9 +8151,7 @@ const App = () => {
             }}
             onDrop={(event) => onPinDrop(event, undefined, dragPreviewColumn ?? 0)}
           >
-            {loading ? (
-              <div className="feed-empty">보드를 불러오는 중입니다.</div>
-            ) : !selectedBoard ? (
+            {!loading && !selectedBoard ? (
               <div className="feed-empty empty-templates full-span">
                 <div className="feed-empty-copy">
                   <strong>어떤 보드로 시작할까요?</strong>
@@ -8944,9 +8948,11 @@ const App = () => {
             )}
           </section>
           <div className="infinite-scroll-status" aria-live="polite">
-              {visibleNoteCount < filteredNotes.length
-              ? "아래로 스크롤하면 메모가 계속 로드됩니다."
-              : `${filteredNotes.length}개의 메모가 모두 표시되었습니다.`}
+            {!loading &&
+              (visibleNoteCount < filteredNotes.length
+                ? "아래로 스크롤하면 메모가 계속 로드됩니다."
+                : `${filteredNotes.length}개의 메모가 모두 표시되었습니다.`)}
+          </div>
           </div>
           </div>
           <div className="pin-board-panel swipe-preview-panel">{mobileSwipeEnabled ? renderSwipePreviewPanel(nextSwipeBoard, "next") : null}</div>

@@ -5056,6 +5056,35 @@ button {
   border: 1px dashed rgba(31, 26, 19, 0.1);
 }
 
+.feed-stage {
+  position: relative;
+  min-height: 420px;
+}
+
+.feed-stage.is-loading > :not(.feed-loading-overlay) {
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.feed-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--board-page-surface, #fffdf9) 92%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.feed-loading-message {
+  color: var(--board-page-text, #1f1a13);
+  font-size: clamp(16px, 1.8vw, 20px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
 .feed-empty.empty-templates {
   place-items: stretch;
   align-content: start;
