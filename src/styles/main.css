@@ -4554,6 +4554,15 @@ button {
     0 16px 28px rgba(18, 24, 35, 0.08);
 }
 
+.mp3-widget-hidden-player {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 .mp3-widget-screen {
   display: grid;
   gap: 4px;

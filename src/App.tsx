@@ -51,6 +51,48 @@ interface LocalSnapshot {
   selectedBoardId: string | null;
 }
 
+type YouTubePlayerInstance = {
+  playVideo: () => void;
+  pauseVideo: () => void;
+  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
+  getCurrentTime: () => number;
+  getDuration: () => number;
+  getPlayerState: () => number;
+  destroy: () => void;
+};
+
+type YouTubePlayerStatic = new (
+  element: HTMLElement,
+  options: {
+    videoId: string;
+    width?: string;
+    height?: string;
+    playerVars?: Record<string, string | number>;
+    events?: {
+      onReady?: (event: { target: YouTubePlayerInstance }) => void;
+      onStateChange?: (event: { data: number; target: YouTubePlayerInstance }) => void;
+      onError?: () => void;
+    };
+  }
+) => YouTubePlayerInstance;
+
+declare global {
+  interface Window {
+    YT?: {
+      Player: YouTubePlayerStatic;
+      PlayerState: {
+        UNSTARTED: -1;
+        ENDED: 0;
+        PLAYING: 1;
+        PAUSED: 2;
+        BUFFERING: 3;
+        CUED: 5;
+      };
+    };
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
 type NoteFontSize = 14 | 16 | 18 | 20;
 type FeedMode = "active" | "archived";
 type CloudSaveState = "idle" | "saving" | "saved" | "error";
@@ -1985,6 +2027,67 @@ const getPlayerUrl = (note: NoteV2) =>
     ? note.metadata.playerUrl.trim()
     : DEFAULT_PLAYER_URL;
 
+const extractYouTubeVideoId = (rawUrl: string) => {
+  try {
+    const url = new URL(normalizeExternalUrl(rawUrl));
+    const host = url.hostname.replace(/^www\./i, "");
+
+    if (host === "youtu.be") {
+      return url.pathname.split("/").filter(Boolean)[0] ?? null;
+    }
+
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
+      if (url.pathname === "/watch") {
+        return url.searchParams.get("v");
+      }
+
+      const segments = url.pathname.split("/").filter(Boolean);
+      if (segments[0] === "shorts" || segments[0] === "embed" || segments[0] === "live") {
+        return segments[1] ?? null;
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
+const isYouTubePlayerUrl = (rawUrl: string) => Boolean(extractYouTubeVideoId(rawUrl));
+
+let youtubeIframeApiPromise: Promise<void> | null = null;
+
+const loadYouTubeIframeApi = () => {
+  if (typeof window === "undefined") {
+    return Promise.resolve();
+  }
+
+  if (window.YT?.Player) {
+    return Promise.resolve();
+  }
+
+  if (!youtubeIframeApiPromise) {
+    youtubeIframeApiPromise = new Promise((resolve) => {
+      const existingScript = document.querySelector<HTMLScriptElement>('script[src="https://www.youtube.com/iframe_api"]');
+      const previousReady = window.onYouTubeIframeAPIReady;
+
+      window.onYouTubeIframeAPIReady = () => {
+        previousReady?.();
+        resolve();
+      };
+
+      if (!existingScript) {
+        const script = document.createElement("script");
+        script.src = "https://www.youtube.com/iframe_api";
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    });
+  }
+
+  return youtubeIframeApiPromise;
+};
+
 const formatAudioTime = (seconds: number) => {
   if (!Number.isFinite(seconds) || seconds < 0) {
     return "00:00";
@@ -2817,6 +2920,8 @@ const App = () => {
   const noteCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const noteEditorRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const playerAudioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
+  const youtubePlayerHosts = useRef<Record<string, HTMLDivElement | null>>({});
+  const youtubePlayerRefs = useRef<Record<string, YouTubePlayerInstance | null>>({});
   const pendingMobileNewNoteScrollRef = useRef<string | null>(null);
   const boardLongPressTimerRef = useRef<number | null>(null);
   const boardSwipeStartRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -2831,6 +2936,44 @@ const App = () => {
   const activeBoards = useMemo(() => orderedBoards.filter((board) => !isBoardTrashed(board)), [orderedBoards]);
   const trashedBoards = useMemo(() => orderedBoards.filter((board) => isBoardTrashed(board)), [orderedBoards]);
   const isSharedView = Boolean(sharedBoardSlug && sharedBoardReadOnly);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      Object.entries(youtubePlayerRefs.current).forEach(([noteId, player]) => {
+        if (!player) {
+          return;
+        }
+
+        const currentTime = player.getCurrentTime?.() ?? 0;
+        const duration = player.getDuration?.() ?? 0;
+        const state = player.getPlayerState?.();
+
+        setPlayerWidgets((prev) => {
+          const previous = prev[noteId];
+          const playing = state === 1;
+          if (
+            previous &&
+            Math.abs(previous.currentTime - currentTime) < 0.4 &&
+            Math.abs(previous.duration - duration) < 0.4 &&
+            previous.playing === playing
+          ) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            [noteId]: {
+              playing,
+              currentTime,
+              duration
+            }
+          };
+        });
+      });
+    }, 500);
+
+    return () => window.clearInterval(timer);
+  }, []);
   const isReadOnlyBoardView = Boolean((sharedBoardSlug || homeBoardRoute) && sharedBoardReadOnly);
   const pendingAuthHash = hasPendingAuthHash();
   const storedSupabaseSession = hasStoredSupabaseSession();
@@ -2846,6 +2989,97 @@ const App = () => {
   const canBoardSettings = canShareBoard;
   const canRenameBoard = feedMode === "active" && Boolean(selectedBoard) && !isReadOnlyBoardView && isBoardOwner;
   const boardHistorySnapshots = useMemo(() => getBoardHistorySnapshots(selectedBoard), [selectedBoard]);
+  const activePlayerNotes = useMemo(
+    () =>
+      notes.filter(
+        (note) =>
+          note.boardId === selectedBoard?.id &&
+          !isNoteTrashed(note) &&
+          getWidgetType(note) === "player" &&
+          isYouTubePlayerUrl(getPlayerUrl(note))
+      ),
+    [notes, selectedBoard?.id]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const attachPlayers = async () => {
+      const activeIds = new Set(activePlayerNotes.map((note) => note.id));
+      Object.entries(youtubePlayerRefs.current).forEach(([noteId, player]) => {
+        if (!activeIds.has(noteId) && player) {
+          player.destroy();
+          youtubePlayerRefs.current[noteId] = null;
+        }
+      });
+
+      if (activePlayerNotes.length === 0) {
+        return;
+      }
+
+      await loadYouTubeIframeApi();
+      const YT = window.YT;
+      if (cancelled || !YT?.Player) {
+        return;
+      }
+
+      activePlayerNotes.forEach((note) => {
+        const host = youtubePlayerHosts.current[note.id];
+        const existing = youtubePlayerRefs.current[note.id];
+        const videoId = extractYouTubeVideoId(getPlayerUrl(note));
+        if (!host || existing || !videoId) {
+          return;
+        }
+
+        youtubePlayerRefs.current[note.id] = new YT.Player(host, {
+          width: "1",
+          height: "1",
+          videoId,
+          playerVars: {
+            autoplay: 0,
+            controls: 0,
+            disablekb: 1,
+            playsinline: 1,
+            rel: 0,
+            modestbranding: 1
+          },
+          events: {
+            onReady: (event) => {
+              setPlayerWidgets((prev) => ({
+                ...prev,
+                [note.id]: {
+                  playing: false,
+                  currentTime: event.target.getCurrentTime() || 0,
+                  duration: event.target.getDuration() || 0
+                }
+              }));
+            },
+            onStateChange: (event) => {
+              const state = event.data;
+              setPlayerWidgets((prev) => ({
+                ...prev,
+                [note.id]: {
+                  playing: state === 1,
+                  currentTime: event.target.getCurrentTime() || prev[note.id]?.currentTime || 0,
+                  duration: event.target.getDuration() || prev[note.id]?.duration || 0
+                }
+              }));
+            },
+            onError: () => {
+              youtubePlayerRefs.current[note.id]?.destroy();
+              youtubePlayerRefs.current[note.id] = null;
+            }
+          }
+        });
+      });
+    };
+
+    void attachPlayers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activePlayerNotes]);
 
   useEffect(() => {
     latestBoardsRef.current = boards;
@@ -3063,6 +3297,8 @@ const App = () => {
     if (widgetType === "player") {
       const artist = getPlayerArtist(note);
       const playerUrl = getPlayerUrl(note);
+      const youtubeVideoId = extractYouTubeVideoId(playerUrl);
+      const isYouTubePlayer = Boolean(youtubeVideoId);
       const playback = playerWidgets[note.id] ?? { playing: false, currentTime: 0, duration: 0 };
       const progress = playback.duration > 0 ? Math.min(1, playback.currentTime / playback.duration) : 0;
 
@@ -3083,21 +3319,42 @@ const App = () => {
             audio.pause();
           }
         });
+        Object.entries(youtubePlayerRefs.current).forEach(([playerId, player]) => {
+          if (playerId !== exceptId && player && player.getPlayerState() === window.YT?.PlayerState.PLAYING) {
+            player.pauseVideo();
+          }
+        });
       };
 
       const togglePlayback = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
-        const audio = playerAudioRefs.current[note.id];
-        if (!audio || !playerUrl) {
+        if (!playerUrl) {
           return;
         }
 
         try {
-          if (audio.paused) {
+          if (isYouTubePlayer) {
+            const player = youtubePlayerRefs.current[note.id];
+            if (!player) {
+              return;
+            }
             stopOtherPlayers(note.id);
-            await audio.play();
+            if (player.getPlayerState() === window.YT?.PlayerState.PLAYING) {
+              player.pauseVideo();
+            } else {
+              player.playVideo();
+            }
           } else {
-            audio.pause();
+            const audio = playerAudioRefs.current[note.id];
+            if (!audio) {
+              return;
+            }
+            if (audio.paused) {
+              stopOtherPlayers(note.id);
+              await audio.play();
+            } else {
+              audio.pause();
+            }
           }
         } catch (error) {
           console.error("Failed to toggle player widget", error);
@@ -3106,6 +3363,17 @@ const App = () => {
 
       const restartPlayback = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
+        if (isYouTubePlayer) {
+          const player = youtubePlayerRefs.current[note.id];
+          if (!player) {
+            return;
+          }
+          stopOtherPlayers(note.id);
+          player.seekTo(0, true);
+          player.playVideo();
+          return;
+        }
+
         const audio = playerAudioRefs.current[note.id];
         if (!audio) {
           return;
@@ -3116,14 +3384,29 @@ const App = () => {
 
       const seekPlayback = (event: React.MouseEvent<HTMLDivElement>) => {
         event.stopPropagation();
-        const audio = playerAudioRefs.current[note.id];
-        if (!audio || !playback.duration) {
+        if (!playback.duration) {
           return;
         }
 
         const rect = event.currentTarget.getBoundingClientRect();
         const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-        audio.currentTime = ratio * playback.duration;
+        const targetTime = ratio * playback.duration;
+
+        if (isYouTubePlayer) {
+          const player = youtubePlayerRefs.current[note.id];
+          if (!player) {
+            return;
+          }
+          player.seekTo(targetTime, true);
+          syncPlayerState({ currentTime: targetTime });
+          return;
+        }
+
+        const audio = playerAudioRefs.current[note.id];
+        if (!audio) {
+          return;
+        }
+        audio.currentTime = targetTime;
         syncPlayerState({ currentTime: audio.currentTime });
       };
 
@@ -3172,7 +3455,7 @@ const App = () => {
                     }
                   })
                 }
-                placeholder="mp3 URL"
+                placeholder="mp3 또는 YouTube 링크"
               />
               <button
                 className="widget-confirm"
@@ -3186,24 +3469,33 @@ const App = () => {
             </div>
           ) : (
             <div className={`mp3-widget ${compact ? "compact" : ""}`}>
-              <audio
-                ref={(element) => {
-                  playerAudioRefs.current[note.id] = element;
-                }}
-                src={playerUrl}
-                preload="metadata"
-                onLoadedMetadata={(event) =>
-                  syncPlayerState({ duration: event.currentTarget.duration || 0, currentTime: event.currentTarget.currentTime || 0 })
-                }
-                onTimeUpdate={(event) =>
-                  syncPlayerState({ currentTime: event.currentTarget.currentTime || 0, duration: event.currentTarget.duration || 0 })
-                }
-                onPlay={() => syncPlayerState({ playing: true })}
-                onPause={() => syncPlayerState({ playing: false })}
-                onEnded={() => syncPlayerState({ playing: false, currentTime: 0 })}
-              />
+              {isYouTubePlayer ? (
+                <div
+                  className="mp3-widget-hidden-player"
+                  ref={(element) => {
+                    youtubePlayerHosts.current[note.id] = element;
+                  }}
+                />
+              ) : (
+                <audio
+                  ref={(element) => {
+                    playerAudioRefs.current[note.id] = element;
+                  }}
+                  src={playerUrl}
+                  preload="metadata"
+                  onLoadedMetadata={(event) =>
+                    syncPlayerState({ duration: event.currentTarget.duration || 0, currentTime: event.currentTarget.currentTime || 0 })
+                  }
+                  onTimeUpdate={(event) =>
+                    syncPlayerState({ currentTime: event.currentTarget.currentTime || 0, duration: event.currentTarget.duration || 0 })
+                  }
+                  onPlay={() => syncPlayerState({ playing: true })}
+                  onPause={() => syncPlayerState({ playing: false })}
+                  onEnded={() => syncPlayerState({ playing: false, currentTime: 0 })}
+                />
+              )}
               <div className="mp3-widget-screen">
-                <span className="mp3-widget-mode">PLAY MODE</span>
+                <span className="mp3-widget-mode">{isYouTubePlayer ? "YOUTUBE AUDIO" : "PLAY MODE"}</span>
                 <strong>{asText(note.content).trim() || "MP3 플레이어"}</strong>
                 <span>{artist}</span>
                 <div className="mp3-widget-time">
