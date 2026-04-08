@@ -1085,7 +1085,7 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
       {
         type: "social",
         title: "SNS 피드",
-        subtitle: "블루스카이·마스토돈 최신 글",
+        subtitle: "블루스카이·X·마스토돈 최신 글",
         kicker: "SOCIAL",
         previewTitle: "OpenAI Feed",
         previewLines: ["최신 게시물 3개", "트윗 카드처럼 가볍게 확인"],
@@ -4354,7 +4354,7 @@ const App = () => {
                     }
                   });
                 }}
-                placeholder="Bluesky 핸들, Mastodon 주소, RSS 주소"
+                placeholder="Bluesky, X/Twitter, Mastodon, RSS 주소"
               />
               <button
                 className="widget-confirm"
@@ -4409,7 +4409,9 @@ const App = () => {
                         <span className="social-feed-card-date">{formatSocialDate(post.createdAt)}</span>
                       </div>
                       <p className="social-feed-card-text">{post.text}</p>
-                      <span className="social-feed-card-link">{socialFeed.sourceType.toUpperCase()}</span>
+                      <span className="social-feed-card-link">
+                        {socialFeed.sourceType === "twitter" ? "X" : socialFeed.sourceType.toUpperCase()}
+                      </span>
                     </a>
                   ))}
                 </div>

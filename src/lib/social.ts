@@ -12,7 +12,7 @@ export interface SocialFeedPreview {
   title: string;
   handle: string;
   sourceUrl: string;
-  sourceType: "bluesky" | "mastodon" | "rss";
+  sourceType: "bluesky" | "mastodon" | "rss" | "twitter";
   avatar?: string;
   posts: SocialPostPreview[];
   error?: string;

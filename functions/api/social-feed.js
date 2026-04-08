@@ -31,6 +31,42 @@ const toAbsoluteUrl = (value, base) => {
   }
 };
 
+const X_RESERVED_PATHS = new Set([
+  "",
+  "home",
+  "explore",
+  "notifications",
+  "messages",
+  "compose",
+  "search",
+  "settings",
+  "i",
+  "intent",
+  "share"
+]);
+
+const extractXHandle = (value = "") => {
+  const trimmed = value.trim().replace(/^@/, "");
+  if (!trimmed) return "";
+
+  try {
+    const url = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+    if (!/(^|\.)x\.com$/i.test(url.hostname) && !/(^|\.)twitter\.com$/i.test(url.hostname)) {
+      return "";
+    }
+    const firstSegment = url.pathname.split("/").filter(Boolean)[0] || "";
+    if (!firstSegment || X_RESERVED_PATHS.has(firstSegment.toLowerCase())) {
+      return "";
+    }
+    return firstSegment.replace(/^@/, "");
+  } catch {
+    if (!/[/.]/.test(trimmed) && /^[a-z0-9_]{1,15}$/i.test(trimmed)) {
+      return trimmed;
+    }
+    return "";
+  }
+};
+
 const parseRssItems = (xml, limit = 5, baseUrl = "") => {
   const itemMatches = [...xml.matchAll(/<item\b[\s\S]*?<\/item>/gi)].slice(0, limit);
   const entryMatches = itemMatches.length > 0 ? [] : [...xml.matchAll(/<entry\b[\s\S]*?<\/entry>/gi)].slice(0, limit);
@@ -60,6 +96,11 @@ const normalizeSource = (rawSource) => {
   const source = rawSource.trim();
   if (!source) {
     throw new Error("source is required");
+  }
+
+  const xHandle = extractXHandle(source);
+  if (xHandle) {
+    return { type: "twitter", handle: xHandle };
   }
 
   if (/^(https?:\/\/)?(bsky\.app\/profile\/)?[a-z0-9.-]+\.[a-z]{2,}$/i.test(source.replace(/^@/, "")) && !source.includes("/@")) {
@@ -170,6 +211,34 @@ const fetchBlueskyFeed = async (actor) => {
   };
 };
 
+const fetchTwitterFeed = async (handle) => {
+  const normalizedHandle = handle.replace(/^@/, "");
+  const bridgeCandidates = [
+    `https://rsshub.app/twitter/user/${encodeURIComponent(normalizedHandle)}`,
+    `https://nitter.poast.org/${encodeURIComponent(normalizedHandle)}/rss`,
+    `https://nitter.privacydev.net/${encodeURIComponent(normalizedHandle)}/rss`,
+    `https://nitter.net/${encodeURIComponent(normalizedHandle)}/rss`
+  ];
+
+  let lastError = null;
+  for (const candidate of bridgeCandidates) {
+    try {
+      const feed = await fetchRssFeed(candidate, "twitter");
+      return {
+        ...feed,
+        handle: `@${normalizedHandle}`,
+        sourceUrl: `https://x.com/${normalizedHandle}`,
+        sourceType: "twitter"
+      };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  const message = lastError instanceof Error ? lastError.message : "twitter bridge unavailable";
+  throw new Error(`twitter bridge unavailable: ${message}`);
+};
+
 export const onRequestGet = async ({ request }) => {
   try {
     const requestUrl = new URL(request.url);
@@ -179,6 +248,8 @@ export const onRequestGet = async ({ request }) => {
     let feed;
     if (normalized.type === "bluesky") {
       feed = await fetchBlueskyFeed(normalized.actor);
+    } else if (normalized.type === "twitter") {
+      feed = await fetchTwitterFeed(normalized.handle);
     } else if (normalized.type === "mastodon") {
       feed = await fetchRssFeed(normalized.url, "mastodon");
     } else {
