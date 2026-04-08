@@ -3961,6 +3961,130 @@ button {
   gap: 10px;
 }
 
+.social-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.social-widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.social-widget-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--text);
+  flex: 0 0 38px;
+}
+
+.social-widget-avatar.small {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+  font-size: 12px;
+}
+
+.social-widget-avatar.fallback {
+  letter-spacing: 0.04em;
+}
+
+.social-widget-meta,
+.social-feed-card-author {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.social-widget-meta strong,
+.social-feed-card-author strong {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.social-widget-meta span,
+.social-feed-card-author span,
+.social-feed-card-date,
+.social-feed-card-link {
+  font-size: 12px;
+  color: rgba(31, 26, 19, 0.62);
+}
+
+.social-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.social-feed-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.84);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 140ms ease, background-color 140ms ease;
+}
+
+.social-feed-card:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.social-feed-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.social-feed-card-user {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  align-items: center;
+}
+
+.social-feed-card-date {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.social-feed-card-text {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.social-feed-card-link {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.social-widget.compact .social-feed-list {
+  gap: 8px;
+}
+
+.social-widget.compact .social-feed-card {
+  padding: 10px 12px;
+}
+
 .bookmark-list {
   display: flex;
   flex-direction: column;

@@ -17,6 +17,7 @@ import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
 import { fetchRssFeed, type RssFeedPreview } from "./lib/rss";
+import { fetchSocialFeed, type SocialFeedPreview } from "./lib/social";
 import { fetchTrendingKeywords, type TrendingPreview } from "./lib/trending";
 import { fetchWeatherPreview, type WeatherPreview } from "./lib/weather";
 import {
@@ -98,12 +99,14 @@ type FeedMode = "active" | "archived";
 type CloudSaveState = "idle" | "saving" | "saved" | "error";
 type LinkPreviewState = LinkPreview | null;
 type RssFeedState = RssFeedPreview | null;
+type SocialFeedState = SocialFeedPreview | null;
 type WeatherState = WeatherPreview | null;
 type TrendingState = TrendingPreview | null;
 type DeliveryState = DeliveryTrackingPreview | null;
 type WidgetType =
   | "note"
   | "rss"
+  | "social"
   | "bookmark"
   | "checklist"
   | "countdown"
@@ -319,6 +322,7 @@ const MOBILE_LAYOUT_BREAKPOINT = 980;
 const MOBILE_SINGLE_COLUMN_BREAKPOINT = 680;
 const COMPACT_SIDEBAR_BREAKPOINT = 1120;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
+const DEFAULT_SOCIAL_SOURCE = "https://bsky.app/profile/openai.com";
 const DEFAULT_BOOKMARK_URL = "https://";
 const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
   { text: "핵심 작업 정리", checked: false },
@@ -1076,6 +1080,16 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
         previewLines: ["핵심 뉴스 헤드라인 3개", "새 글이 올라오면 바로 확인"],
         previewMeta: "업데이트 자동 반영",
         accent: "#8f7cff"
+      },
+      {
+        type: "social",
+        title: "SNS 피드",
+        subtitle: "블루스카이·마스토돈 최신 글",
+        kicker: "SOCIAL",
+        previewTitle: "OpenAI Feed",
+        previewLines: ["최신 게시물 3개", "트윗 카드처럼 가볍게 확인"],
+        previewMeta: "공개 피드 자동 반영",
+        accent: "#5db8ff"
       },
       {
         type: "bookmark",
@@ -2000,6 +2014,7 @@ const sortBoards = (boards: BoardV2[]) =>
   });
 const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "rss" ||
+  note.metadata?.widgetType === "social" ||
   note.metadata?.widgetType === "bookmark" ||
   note.metadata?.widgetType === "checklist" ||
   note.metadata?.widgetType === "countdown" ||
@@ -2024,6 +2039,10 @@ const getRssFeedUrl = (note: NoteV2) =>
   typeof note.metadata?.feedUrl === "string" && note.metadata.feedUrl.trim()
     ? note.metadata.feedUrl.trim()
     : DEFAULT_RSS_FEED_URL;
+const getSocialSource = (note: NoteV2) =>
+  typeof note.metadata?.socialSource === "string" && note.metadata.socialSource.trim()
+    ? note.metadata.socialSource.trim()
+    : DEFAULT_SOCIAL_SOURCE;
 const getBookmarkUrl = (note: NoteV2) =>
   typeof note.metadata?.bookmarkUrl === "string" && note.metadata.bookmarkUrl.trim()
     ? normalizeExternalUrl(note.metadata.bookmarkUrl)
@@ -2291,6 +2310,24 @@ const extractYouTubeVideoId = (rawUrl: string) => {
   }
 
   return null;
+};
+
+const formatSocialDate = (value: string) => {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleString("ko-KR", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
 };
 
 const isYouTubePlayerUrl = (rawUrl: string) => Boolean(extractYouTubeVideoId(rawUrl));
@@ -3099,6 +3136,7 @@ const App = () => {
   const [columnCount, setColumnCount] = useState(() => getColumnCount());
   const [linkPreviews, setLinkPreviews] = useState<Record<string, LinkPreviewState>>({});
   const [rssFeeds, setRssFeeds] = useState<Record<string, RssFeedState>>({});
+  const [socialWidgets, setSocialWidgets] = useState<Record<string, SocialFeedState>>({});
   const [weatherWidgets, setWeatherWidgets] = useState<Record<string, WeatherState>>({});
   const [trendingWidgets, setTrendingWidgets] = useState<Record<string, TrendingState>>({});
   const [deliveryWidgets, setDeliveryWidgets] = useState<Record<string, DeliveryState>>({});
@@ -4270,6 +4308,114 @@ const App = () => {
             </div>
           ) : (
             <p className="rss-empty">운송장 번호를 입력하면 배송 상태를 볼 수 있습니다.</p>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "social") {
+      const source = getSocialSource(note);
+      const socialFeed = socialWidgets[note.id];
+      const visiblePosts = socialFeed?.posts.slice(0, compact ? 2 : 4) ?? [];
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">SNS</span>
+            <p className="pin-title">{asText(note.content).trim() || "SNS 피드"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <input
+                className="widget-input"
+                value={source}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => {
+                  setSocialWidgets((prev) => {
+                    const next = { ...prev };
+                    delete next[note.id];
+                    return next;
+                  });
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "social",
+                      socialSource: event.target.value
+                    }
+                  });
+                }}
+                placeholder="Bluesky 핸들, Mastodon 주소, RSS 주소"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : socialFeed ? (
+            <div className={`social-widget ${compact ? "compact" : ""}`}>
+              <div className="social-widget-head">
+                {socialFeed.avatar ? (
+                  <img className="social-widget-avatar" src={socialFeed.avatar} alt={socialFeed.title} />
+                ) : (
+                  <div className="social-widget-avatar fallback" aria-hidden="true">
+                    {(socialFeed.title || "S").slice(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <div className="social-widget-meta">
+                  <strong>{socialFeed.title}</strong>
+                  <span>{socialFeed.handle}</span>
+                </div>
+              </div>
+              {visiblePosts.length > 0 ? (
+                <div className="social-feed-list">
+                  {visiblePosts.map((post) => (
+                    <a
+                      key={`${note.id}-social-${post.id}`}
+                      className="social-feed-card"
+                      href={post.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <div className="social-feed-card-head">
+                        <div className="social-feed-card-user">
+                          {post.avatar ? (
+                            <img className="social-widget-avatar small" src={post.avatar} alt={post.author} />
+                          ) : (
+                            <div className="social-widget-avatar fallback small" aria-hidden="true">
+                              {(post.author || "S").slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="social-feed-card-author">
+                            <strong>{post.author}</strong>
+                            <span>{post.handle}</span>
+                          </div>
+                        </div>
+                        <span className="social-feed-card-date">{formatSocialDate(post.createdAt)}</span>
+                      </div>
+                      <p className="social-feed-card-text">{post.text}</p>
+                      <span className="social-feed-card-link">{socialFeed.sourceType.toUpperCase()}</span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="rss-empty">공개 최신 글을 불러오고 있습니다.</p>
+              )}
+            </div>
+          ) : (
+            <p className="rss-empty">공개 최신 글을 불러오고 있습니다.</p>
           )}
         </>
       );
@@ -5779,6 +5925,43 @@ const App = () => {
 
   useEffect(() => {
     const noteIds = visibleNotes
+      .filter((note) => getWidgetType(note) === "social")
+      .map((note) => note.id)
+      .filter((id) => !(id in socialWidgets));
+
+    if (noteIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void Promise.all(
+      noteIds.map(async (noteId) => {
+        const note = visibleNotes.find((item) => item.id === noteId);
+        if (!note) {
+          return;
+        }
+
+        try {
+          const feed = await fetchSocialFeed(getSocialSource(note));
+          if (!cancelled) {
+            setSocialWidgets((prev) => ({ ...prev, [noteId]: feed }));
+          }
+        } catch {
+          if (!cancelled) {
+            setSocialWidgets((prev) => ({ ...prev, [noteId]: null }));
+          }
+        }
+      })
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleNotes, socialWidgets]);
+
+  useEffect(() => {
+    const noteIds = visibleNotes
       .filter((note) => getWidgetType(note) === "weather")
       .map((note) => note.id)
       .filter((id) => !(id in weatherWidgets));
@@ -6933,6 +7116,37 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addSocialWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "SNS 피드"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "social",
+      socialSource: DEFAULT_SOCIAL_SOURCE
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const addFoodWidget = () => {
     if (!selectedBoard) {
       return;
@@ -6985,6 +7199,7 @@ const App = () => {
       mood: addMoodWidget,
       routine: addRoutineWidget,
       prompt: addPromptWidget,
+      social: addSocialWidget,
       food: addFoodWidget
     };
 
