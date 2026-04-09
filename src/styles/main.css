@@ -4817,6 +4817,106 @@ button {
   justify-content: flex-end;
 }
 
+.pin-page.board-page.board-theme-midnight-ops .food-widget-header strong,
+.pin-page.board-page.board-theme-neon-lab .food-widget-header strong {
+  color: rgba(245, 248, 255, 0.94);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .food-widget-kicker,
+.pin-page.board-page.board-theme-neon-lab .food-widget-kicker {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(240, 245, 255, 0.86);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .food-widget-card,
+.pin-page.board-page.board-theme-neon-lab .food-widget-card {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .food-widget-card strong,
+.pin-page.board-page.board-theme-neon-lab .food-widget-card strong {
+  color: rgba(245, 248, 255, 0.92);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .food-widget-card p,
+.pin-page.board-page.board-theme-neon-lab .food-widget-card p {
+  color: rgba(230, 236, 249, 0.86);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .food-widget-card small,
+.pin-page.board-page.board-theme-neon-lab .food-widget-card small {
+  color: rgba(208, 216, 232, 0.72);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .food-widget-label.chef,
+.pin-page.board-page.board-theme-neon-lab .food-widget-label.chef,
+.pin-page.board-page.board-theme-midnight-ops .food-widget-label.instagram,
+.pin-page.board-page.board-theme-neon-lab .food-widget-label.instagram,
+.pin-page.board-page.board-theme-midnight-ops .food-widget-label.trending,
+.pin-page.board-page.board-theme-neon-lab .food-widget-label.trending {
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .food-widget-label.chef,
+.pin-page.board-page.board-theme-neon-lab .food-widget-label.chef {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(245, 248, 255, 0.86);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .food-widget-label.instagram,
+.pin-page.board-page.board-theme-neon-lab .food-widget-label.instagram {
+  background: rgba(255, 120, 142, 0.18);
+  color: rgba(255, 211, 220, 0.92);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .food-widget-label.trending,
+.pin-page.board-page.board-theme-neon-lab .food-widget-label.trending {
+  background: rgba(115, 160, 255, 0.18);
+  color: rgba(214, 228, 255, 0.92);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .weather-current,
+.pin-page.board-page.board-theme-neon-lab .weather-current {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .weather-current strong,
+.pin-page.board-page.board-theme-neon-lab .weather-current strong {
+  color: rgba(245, 248, 255, 0.92);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .weather-current span,
+.pin-page.board-page.board-theme-neon-lab .weather-current span {
+  color: rgba(208, 216, 232, 0.74);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pet-widget,
+.pin-page.board-page.board-theme-neon-lab .pet-widget {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pet-widget strong,
+.pin-page.board-page.board-theme-neon-lab .pet-widget strong {
+  color: rgba(245, 248, 255, 0.92);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pet-widget span,
+.pin-page.board-page.board-theme-neon-lab .pet-widget span {
+  color: rgba(208, 216, 232, 0.76);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pet-stats span,
+.pin-page.board-page.board-theme-neon-lab .pet-stats span {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(230, 236, 249, 0.82);
+}
+
 .mp3-widget {
   gap: 10px;
   padding: 16px;

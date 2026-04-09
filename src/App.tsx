@@ -7941,6 +7941,12 @@ const App = () => {
                     : previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.");
                   const displaySite = hasExternalLink ? getLinkDisplaySite(linkPreview) : "";
                   const displayHost = hasExternalLink ? getLinkDisplayHost(linkPreview) : "";
+                  const isInstagramLink = hasExternalLink && isInstagramLinkPreview(noteUrl ?? "", linkPreview);
+                  const keepPreviewImage =
+                    Boolean(linkPreview?.image) &&
+                    (!isLinkPreviewDuplicateText(note.content, noteUrl ?? "", linkPreview) ||
+                      isInstagramLink ||
+                      Boolean(extractYouTubeVideoId(noteUrl ?? "")));
 
                   return (
                     <article
@@ -8013,12 +8019,19 @@ const App = () => {
                             </div>
                           </>
                         ) : (
-                          <div className="pin-note-stack">
+                            <div className="pin-note-stack">
                             <p className="pin-title">{displayTitle}</p>
                             {hasExternalLink &&
                               (linkPreview ? (
-                                <a className="link-preview-card" href={linkPreview.finalUrl} target="_blank" rel="noreferrer">
-                                  {linkPreview.image && (
+                                <a
+                                  className={`link-preview-card ${keepPreviewImage ? "has-preview-image" : "text-only-link-card"} ${
+                                    !keepPreviewImage ? "signature-link-card" : ""
+                                  }`}
+                                  href={linkPreview.finalUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  {keepPreviewImage && (
                                     <img
                                       className="link-preview-image"
                                       src={getImageProxyUrl(linkPreview.image)}
@@ -9419,6 +9432,8 @@ const App = () => {
                     const useImageHeroCard = hasImagePreview && !selected && !isInstagramLink;
                     const isFramedLinkNote = feedMode === "active" && hasExternalLink;
                     const useFramedLinkCard = !selected && hasExternalLink && (isPureLinkNote || isInstagramLink);
+                    const keepPreviewImage =
+                      Boolean(linkPreview?.image) && (!isPureLinkNote || isInstagramLink || Boolean(extractYouTubeVideoId(noteUrl ?? "")));
                     const moreClicks = noteMoreState[note.id] ?? 0;
                     const rssVisibleCount = 5 + moreClicks * 5;
                     const bookmarkVisibleCount = 2 + moreClicks * 2;
@@ -10012,14 +10027,14 @@ const App = () => {
                                       (linkPreview ? (
                                         <a
                                           className={`link-preview-card ${isInstagramLink ? "instagram-link-card" : ""} ${
-                                            linkPreview.image ? "has-preview-image" : "text-only-link-card"
+                                            keepPreviewImage ? "has-preview-image" : "text-only-link-card"
                                           } ${isPureLinkNote ? "signature-link-card" : ""}`}
                                           href={linkPreview.finalUrl}
                                           target="_blank"
                                           rel="noreferrer"
                                           onClick={(event) => event.stopPropagation()}
                                         >
-                                          {linkPreview.image && (
+                                          {keepPreviewImage && (
                                             <img
                                               className="link-preview-image"
                                               src={getImageProxyUrl(linkPreview.image)}
