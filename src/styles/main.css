@@ -3555,6 +3555,23 @@ button {
   box-shadow: 0 16px 32px rgba(6, 12, 24, 0.38);
 }
 
+.pin-page.board-page.board-theme-midnight-ops .pin-icon-button:not(.danger),
+.pin-page.board-page.board-theme-neon-lab .pin-icon-button:not(.danger),
+.pin-page.board-page.board-theme-midnight-ops .note-color-toggle,
+.pin-page.board-page.board-theme-neon-lab .note-color-toggle {
+  background: rgba(250, 252, 255, 0.96);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(30, 37, 52, 0.96);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .pin-icon-button:not(.danger):hover,
+.pin-page.board-page.board-theme-neon-lab .pin-icon-button:not(.danger):hover,
+.pin-page.board-page.board-theme-midnight-ops .note-color-toggle:hover,
+.pin-page.board-page.board-theme-neon-lab .note-color-toggle:hover {
+  background: rgba(255, 255, 255, 1);
+  color: rgba(20, 25, 38, 1);
+}
+
 .share-page .pin-card {
   border-radius: 30px;
   border-color: rgba(96, 73, 48, 0.08);
