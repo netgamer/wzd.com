@@ -57,7 +57,7 @@ The second wedge is interest-specific information boards. Someone deep in AI can
    - `PORT`
    - `ALLOWED_ORIGIN`
    - `GROQ_API_KEY`
-   - `GROQ_MODEL`
+   - `GROQ_MODEL` (`openai/gpt-oss-120b` recommended)
    - `N8N_BASE_URL`
    - `N8N_API_KEY`
 4. Start once on VM:

@@ -14,6 +14,7 @@ import LandingPage from "./features/landing/LandingPage";
 import MarketPage from "./features/market/MarketPage";
 import SharePage from "./features/share/SharePage";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
+import { runAgentChat } from "./lib/agent";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
 import { fetchRssFeed, type RssFeedPreview } from "./lib/rss";
@@ -112,6 +113,7 @@ type TrendingState = TrendingPreview | null;
 type DeliveryState = DeliveryTrackingPreview | null;
 type WidgetType =
   | "note"
+  | "brain"
   | "rss"
   | "social"
   | "bookmark"
@@ -137,6 +139,7 @@ type ClockWidgetMode = "digital" | "analog";
 type ChecklistItem = { text: string; checked: boolean };
 type TimetableEntry = { day: string; start: string; end: string; title: string; location: string };
 type FoodCategoryKey = "chef" | "instagram" | "trending";
+type AgentRole = "developer" | "planner" | "pm";
 type FoodRecommendation = {
   name: string;
   menu: string;
@@ -386,6 +389,9 @@ const DEFAULT_PROMPT_TEXT = `당신은 아이디어를 구조화하는 조력자
 
 위 내용을 바탕으로 짧고 명확한 초안을 만들어주세요.`;
 const DEFAULT_FOOD_REGION = "서울 금천구";
+const DEFAULT_BRAIN_AGENT_TYPE: AgentRole = "planner";
+const DEFAULT_BRAIN_PROMPT = "흩어진 메모와 링크를 오늘 할 일 기준으로 정리해줘.";
+const DEFAULT_BRAIN_CONTEXT = "이 보드는 개인 작업 보드입니다. 우선순위, 바로 실행할 일, 빠진 정보까지 함께 정리해줘.";
 const FOCUS_TICK_INTERVAL_MS = 1000;
 
 const FOOD_CATEGORY_LABELS: Record<FoodCategoryKey, string> = {
@@ -1079,6 +1085,16 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
     title: "수집 & 큐레이션",
     subtitle: "링크와 외부 정보를 빠르게 모아 바로 쓸 수 있는 위젯입니다.",
     items: [
+      {
+        type: "brain",
+        title: "AI 브레인",
+        subtitle: "보드 내용을 실행 계획으로 정리",
+        kicker: "AI",
+        previewTitle: "오늘 작업 정리",
+        previewLines: ["실행 계획", "즉시 할 일", "검증 포인트"],
+        previewMeta: "Groq 에이전트 연결",
+        accent: "#6e9bff"
+      },
       {
         type: "rss",
         title: "RSS 리더",
@@ -2021,6 +2037,7 @@ const sortBoards = (boards: BoardV2[]) =>
     return a.updatedAt.localeCompare(b.updatedAt);
   });
 const getWidgetType = (note: NoteV2): WidgetType =>
+  note.metadata?.widgetType === "brain" ||
   note.metadata?.widgetType === "rss" ||
   note.metadata?.widgetType === "social" ||
   note.metadata?.widgetType === "bookmark" ||
@@ -2051,6 +2068,22 @@ const getSocialSource = (note: NoteV2) =>
   typeof note.metadata?.socialSource === "string" && note.metadata.socialSource.trim()
     ? note.metadata.socialSource.trim()
     : DEFAULT_SOCIAL_SOURCE;
+const isBrainAgentRole = (value: unknown): value is AgentRole =>
+  value === "developer" || value === "planner" || value === "pm";
+const getBrainAgentType = (note: NoteV2): AgentRole =>
+  isBrainAgentRole(note.metadata?.brainAgentType) ? note.metadata.brainAgentType : DEFAULT_BRAIN_AGENT_TYPE;
+const getBrainPrompt = (note: NoteV2) =>
+  typeof note.metadata?.brainPrompt === "string" && note.metadata.brainPrompt.trim()
+    ? note.metadata.brainPrompt
+    : DEFAULT_BRAIN_PROMPT;
+const getBrainContext = (note: NoteV2) =>
+  typeof note.metadata?.brainContext === "string" && note.metadata.brainContext.trim()
+    ? note.metadata.brainContext
+    : DEFAULT_BRAIN_CONTEXT;
+const getBrainAnswer = (note: NoteV2) =>
+  typeof note.metadata?.brainAnswer === "string" && note.metadata.brainAnswer.trim() ? note.metadata.brainAnswer : "";
+const getBrainError = (note: NoteV2) =>
+  typeof note.metadata?.brainError === "string" && note.metadata.brainError.trim() ? note.metadata.brainError : "";
 const getBookmarkUrl = (note: NoteV2) =>
   typeof note.metadata?.bookmarkUrl === "string" && note.metadata.bookmarkUrl.trim()
     ? normalizeExternalUrl(note.metadata.bookmarkUrl)
@@ -2892,6 +2925,7 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   const widgetType = getWidgetType(note);
   if (widgetType === "cover") return "cover";
   if (widgetType === "document") return "cover";
+  if (widgetType === "brain") return "prompt";
   if (widgetType === "focus") return "focus";
   if (widgetType === "player") return "focus";
   if (widgetType === "mood") return "mood";
@@ -3011,6 +3045,7 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
     if (variant === "feature") return layoutStyle === "compact" ? 220 : 250;
     return layoutStyle === "compact" ? 250 : 300;
   }
+  if (widgetType === "brain") return layoutStyle === "compact" ? 260 : 320;
   if (widgetType === "focus") return layoutStyle === "compact" ? 220 : 250;
   if (widgetType === "player") return layoutStyle === "compact" ? 220 : 260;
   if (widgetType === "mood") return layoutStyle === "compact" ? 200 : 230;
@@ -3151,6 +3186,7 @@ const App = () => {
   const [trendingWidgets, setTrendingWidgets] = useState<Record<string, TrendingState>>({});
   const [deliveryWidgets, setDeliveryWidgets] = useState<Record<string, DeliveryState>>({});
   const [deliveryCarriers, setDeliveryCarriers] = useState<DeliveryCarrier[]>([]);
+  const [runningBrainIds, setRunningBrainIds] = useState<Record<string, boolean>>({});
   const [playerWidgets, setPlayerWidgets] = useState<Record<string, { playing: boolean; currentTime: number; duration: number }>>({});
   const [petVisitCounts, setPetVisitCounts] = useState<Record<string, number>>(() => loadPetVisitCounts());
   const [focusNow, setFocusNow] = useState(() => Date.now());
@@ -3517,6 +3553,174 @@ const App = () => {
 
   const renderExtraWidgetBody = (note: NoteV2, selected: boolean, compact = false) => {
     const widgetType = getWidgetType(note);
+
+    if (widgetType === "brain") {
+      const agentType = getBrainAgentType(note);
+      const promptText = getBrainPrompt(note);
+      const contextText = getBrainContext(note);
+      const answerText = getBrainAnswer(note);
+      const errorText = getBrainError(note);
+      const running = Boolean(runningBrainIds[note.id]);
+      const roleLabel = agentType === "developer" ? "개발자" : agentType === "planner" ? "기획자" : "PM";
+
+      const handleRunBrain = async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        if (running || !promptText.trim()) {
+          return;
+        }
+
+        setRunningBrainIds((prev) => ({ ...prev, [note.id]: true }));
+
+        try {
+          const answer = await runAgentChat({
+            agentType,
+            prompt: promptText.trim(),
+            context: contextText.trim()
+          });
+
+          updateNote(note.id, {
+            metadata: {
+              ...note.metadata,
+              widgetType: "brain",
+              brainAgentType: agentType,
+              brainPrompt: promptText,
+              brainContext: contextText,
+              brainAnswer: answer,
+              brainError: ""
+            }
+          });
+        } catch (error) {
+          updateNote(note.id, {
+            metadata: {
+              ...note.metadata,
+              widgetType: "brain",
+              brainAgentType: agentType,
+              brainPrompt: promptText,
+              brainContext: contextText,
+              brainError: error instanceof Error ? error.message : "AI 요청에 실패했습니다."
+            }
+          });
+        } finally {
+          setRunningBrainIds((prev) => ({ ...prev, [note.id]: false }));
+        }
+      };
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">AI</span>
+            <p className="pin-title">{asText(note.content).trim() || "AI 브레인"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <select
+                className="widget-input"
+                value={agentType}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "brain",
+                      brainAgentType: isBrainAgentRole(event.target.value) ? event.target.value : DEFAULT_BRAIN_AGENT_TYPE
+                    }
+                  })
+                }
+              >
+                <option value="planner">기획자 에이전트</option>
+                <option value="developer">개발자 에이전트</option>
+                <option value="pm">PM 에이전트</option>
+              </select>
+              <textarea
+                className="widget-textarea"
+                value={promptText}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "brain",
+                      brainPrompt: event.target.value
+                    }
+                  })
+                }
+                placeholder="AI에게 맡길 목표를 입력하세요"
+                rows={4}
+              />
+              <textarea
+                className="widget-textarea"
+                value={contextText}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "brain",
+                      brainContext: event.target.value
+                    }
+                  })
+                }
+                placeholder="보드 상황이나 배경 정보를 입력하세요"
+                rows={5}
+              />
+              <div className="brain-widget-actions">
+                <button className="widget-secondary" onClick={handleRunBrain} disabled={running || !promptText.trim()}>
+                  {running ? "실행중..." : "AI 실행"}
+                </button>
+                <button
+                  className="widget-confirm"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedNoteId(null);
+                  }}
+                >
+                  확인
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className={`brain-widget ${compact ? "compact" : ""}`}>
+              <div className="brain-widget-topline">
+                <span className="brain-widget-role">{roleLabel}</span>
+                <span className="brain-widget-status">{running ? "응답 생성 중" : answerText ? "최근 응답 저장됨" : "실행 대기"}</span>
+              </div>
+              <div className="brain-widget-block">
+                <strong>목표</strong>
+                <p>{promptText}</p>
+              </div>
+              {answerText ? (
+                <div className="brain-widget-block answer">
+                  <strong>응답</strong>
+                  <pre>{answerText}</pre>
+                </div>
+              ) : errorText ? (
+                <div className="brain-widget-block error">
+                  <strong>오류</strong>
+                  <p>{errorText}</p>
+                </div>
+              ) : (
+                <div className="brain-widget-block muted">
+                  <strong>응답</strong>
+                  <p>AI 실행 버튼을 눌러 실행 계획을 받아보세요.</p>
+                </div>
+              )}
+              {!compact && (
+                <button className="widget-secondary" onClick={handleRunBrain} disabled={running || !promptText.trim()}>
+                  {running ? "실행중..." : answerText ? "다시 실행" : "AI 실행"}
+                </button>
+              )}
+            </div>
+          )}
+        </>
+      );
+    }
 
     if (widgetType === "timetable") {
       const timetableText = getTimetableText(note);
@@ -6794,6 +6998,41 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addBrainWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "blue",
+      content: "AI 브레인"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "brain",
+      brainAgentType: DEFAULT_BRAIN_AGENT_TYPE,
+      brainPrompt: DEFAULT_BRAIN_PROMPT,
+      brainContext: DEFAULT_BRAIN_CONTEXT,
+      brainAnswer: "",
+      brainError: ""
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const addBookmarkWidget = () => {
     if (!selectedBoard) {
       return;
@@ -7409,6 +7648,7 @@ const App = () => {
 
   const addWidgetByType = (type: WidgetType) => {
     const actions: Record<Exclude<WidgetType, "note">, () => void> = {
+      brain: addBrainWidget,
       rss: addRssWidget,
       bookmark: addBookmarkWidget,
       checklist: addChecklistWidget,

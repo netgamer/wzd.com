@@ -4363,6 +4363,7 @@ button {
 }
 
 .cover-widget,
+.brain-widget,
 .focus-widget,
 .mood-widget,
 .mp3-widget,
@@ -5163,7 +5164,75 @@ button {
   justify-self: start;
 }
 
+.brain-widget {
+  display: grid;
+  gap: 12px;
+}
+
+.brain-widget-topline,
+.brain-widget-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.brain-widget-role,
+.brain-widget-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(31, 26, 19, 0.08);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.brain-widget-status {
+  background: rgba(87, 118, 255, 0.12);
+  color: rgba(60, 78, 162, 0.92);
+}
+
+.brain-widget-block {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(31, 26, 19, 0.08);
+}
+
+.brain-widget-block strong {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.brain-widget-block p,
+.brain-widget-block pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  line-height: 1.55;
+  color: rgba(31, 26, 19, 0.84);
+}
+
+.brain-widget-block.answer {
+  background: rgba(244, 247, 255, 0.9);
+}
+
+.brain-widget-block.error {
+  background: rgba(255, 239, 240, 0.92);
+}
+
+.brain-widget-block.muted {
+  background: rgba(255, 255, 255, 0.58);
+}
+
 .cover-widget.compact,
+.brain-widget.compact,
 .focus-widget.compact,
 .mood-widget.compact,
 .mp3-widget.compact,
