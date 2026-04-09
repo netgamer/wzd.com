@@ -25,6 +25,10 @@ Add a board-native AI widget that calls the existing Groq-backed agent server an
 - If the agent API base URL is missing or unreachable, the widget must fail gracefully without breaking the board.
 - Persisting long responses in note metadata could make cards visually noisy if the layout is not constrained.
 
+## Notes
+
+- Frontend AI calls require `VITE_AGENT_API_BASE_URL` in the web app environment. `server/.env` alone is not enough because browser bundles cannot read server-only env files.
+
 ## Pass criteria
 
 - `981px+`: `AI 브레인` appears in the widget gallery and can be added to a board.
