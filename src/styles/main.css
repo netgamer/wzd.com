@@ -4142,6 +4142,12 @@ button {
   padding: 10px 12px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.72);
+  transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.checklist-widget-item:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .checklist-widget-checkbox {
@@ -4310,6 +4316,12 @@ button {
   background: rgba(255, 255, 255, 0.72);
   color: var(--text);
   text-decoration: none;
+  transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.rss-item:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .rss-item-title {
@@ -6937,8 +6949,17 @@ button {
   grid-template-columns: 48px 32px 1fr;
   align-items: center;
   gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
   font-size: 12px;
   color: rgba(31, 26, 19, 0.76);
+  transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.weather-forecast-item:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .trending-widget {
