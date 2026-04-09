@@ -6842,9 +6842,9 @@ button {
 .profile-widget {
   display: grid;
   gap: 14px;
-  padding: 14px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(250, 243, 233, 0.82));
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .profile-widget-head {
@@ -6919,7 +6919,7 @@ button {
 
 .profile-widget.compact {
   gap: 12px;
-  padding: 12px;
+  padding: 0;
 }
 
 .profile-widget.compact .profile-widget-avatar {
