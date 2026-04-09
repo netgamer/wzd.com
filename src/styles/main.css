@@ -3692,6 +3692,15 @@ button {
   justify-content: flex-end;
 }
 
+.pin-card.stacked-image-note .pin-card-head {
+  order: -1;
+  padding-bottom: 10px;
+}
+
+.pin-card.stacked-image-note .pin-card-body {
+  padding-top: 14px;
+}
+
 .image-note-caption {
   position: absolute;
   left: 12px;
@@ -4915,6 +4924,32 @@ button {
 .pin-page.board-page.board-theme-neon-lab .pet-stats span {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(230, 236, 249, 0.82);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .profile-widget-identity strong,
+.pin-page.board-page.board-theme-neon-lab .profile-widget-identity strong {
+  color: rgba(245, 248, 255, 0.92);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .profile-widget-identity span,
+.pin-page.board-page.board-theme-neon-lab .profile-widget-identity span {
+  color: rgba(208, 216, 232, 0.74);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .profile-widget-meta-item,
+.pin-page.board-page.board-theme-neon-lab .profile-widget-meta-item {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .profile-widget-meta-item span,
+.pin-page.board-page.board-theme-neon-lab .profile-widget-meta-item span {
+  color: rgba(208, 216, 232, 0.72);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .profile-widget-meta-item strong,
+.pin-page.board-page.board-theme-neon-lab .profile-widget-meta-item strong {
+  color: rgba(245, 248, 255, 0.9);
 }
 
 .mp3-widget {

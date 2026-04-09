@@ -29,6 +29,8 @@ import {
   inviteBoardMember,
   isBoardShareSlugTaken,
   listBoardMembers,
+  loadBoardNotesV2,
+  loadBoardShellsV2,
   loadBoardsV2,
   loadEditableHomeBoardV2,
   loadEditableSharedBoardV2,
@@ -51,6 +53,11 @@ interface LocalSnapshot {
   notes: NoteV2[];
   selectedBoardId: string | null;
 }
+
+const replaceBoardNotes = (currentNotes: NoteV2[], boardId: string, nextBoardNotes: NoteV2[]) => [
+  ...currentNotes.filter((note) => note.boardId !== boardId),
+  ...nextBoardNotes
+];
 
 type YouTubePlayerInstance = {
   playVideo: () => void;
@@ -310,8 +317,8 @@ const SidebarToggleIcon = () => (
 
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const LAST_VIEWED_BOARD_KEY = "wzd-board-v2-last-viewed";
-const INITIAL_VISIBLE_NOTE_COUNT = 24;
-const VISIBLE_NOTE_BATCH_SIZE = 16;
+const INITIAL_VISIBLE_NOTE_COUNT = 8;
+const VISIBLE_NOTE_BATCH_SIZE = 12;
 const DEFAULT_FONT_SIZE: NoteFontSize = 16;
 const NOTE_COLORS: NoteColor[] = ["yellow", "pink", "blue", "green", "orange", "purple", "mint", "white"];
 const CLOUD_SAVE_DEBOUNCE_MS = 120;
@@ -3127,6 +3134,8 @@ const App = () => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [backgroundBoardHydrating, setBackgroundBoardHydrating] = useState(false);
+  const [boardContentLoading, setBoardContentLoading] = useState(false);
   const [runningDragNoteId, setRunningDragNoteId] = useState<string | null>(null);
   const [dragPreviewNoteId, setDragPreviewNoteId] = useState<string | null>(null);
   const [dragPreviewColumn, setDragPreviewColumn] = useState<number | null>(null);
@@ -3194,6 +3203,8 @@ const App = () => {
   const latestUserIdRef = useRef<string | null>(user?.id ?? null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const saveStateResetTimerRef = useRef<number | null>(null);
+  const loadedBoardNotesRef = useRef<Set<string>>(new Set(createDefaultSnapshot().boards.map((board) => board.id)));
+  const pendingBoardNotesRef = useRef<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const boardGridRef = useRef<HTMLElement | null>(null);
   const mobileBoardTabsRef = useRef<HTMLDivElement | null>(null);
@@ -3481,6 +3492,22 @@ const App = () => {
       setCloudSaveState("idle");
       saveStateResetTimerRef.current = null;
     }, 2200);
+  };
+
+  const fetchBoardNotesIntoState = async (boardId: string) => {
+    if (!boardId || pendingBoardNotesRef.current.has(boardId) || loadedBoardNotesRef.current.has(boardId)) {
+      return;
+    }
+
+    pendingBoardNotesRef.current.add(boardId);
+
+    try {
+      const boardNotes = sanitizeNotes(await loadBoardNotesV2([boardId]));
+      setNotes((prev) => replaceBoardNotes(prev, boardId, boardNotes));
+      loadedBoardNotesRef.current.add(boardId);
+    } finally {
+      pendingBoardNotesRef.current.delete(boardId);
+    }
   };
 
   const updateDragPreview = (noteId: string | null, column: number | null) => {
@@ -5121,7 +5148,8 @@ const App = () => {
             <div className="food-widget-actions">
               <button
                 className="widget-secondary"
-                onClick={() =>
+                onClick={(event) => {
+                  event.stopPropagation();
                   setNotes((prev) =>
                     prev.map((current) =>
                       current.id === note.id
@@ -5136,8 +5164,8 @@ const App = () => {
                           }
                         : current
                     )
-                  )
-                }
+                  );
+                }}
               >
                 다시 추천
               </button>
@@ -5352,8 +5380,12 @@ const App = () => {
       const local = loadLocalSnapshot();
       setBoards(local.boards);
       setNotes(local.notes);
+      loadedBoardNotesRef.current = new Set(local.boards.map((board) => board.id));
+      pendingBoardNotesRef.current.clear();
       setSelectedBoardId(local.selectedBoardId ?? local.boards[0]?.id ?? null);
       setLoading(false);
+      setBackgroundBoardHydrating(false);
+      setBoardContentLoading(false);
       return;
     }
 
@@ -5397,8 +5429,12 @@ const App = () => {
         setSharedBoardReadOnly(true);
         setBoards([fallbackSnapshot.board]);
         setNotes(sanitizeNotes(fallbackSnapshot.notes));
+        loadedBoardNotesRef.current = new Set([fallbackSnapshot.board.id]);
+        pendingBoardNotesRef.current.clear();
         setSelectedBoardId(fallbackSnapshot.board.id);
         setLoading(false);
+        setBackgroundBoardHydrating(false);
+        setBoardContentLoading(false);
         return;
       }
 
@@ -5444,28 +5480,40 @@ const App = () => {
             setSharedBoardReadOnly(true);
             setBoards([]);
             setNotes([]);
+            loadedBoardNotesRef.current.clear();
+            pendingBoardNotesRef.current.clear();
             setSelectedBoardId(null);
             setSelectedNoteId(null);
             setLoading(false);
+            setBackgroundBoardHydrating(false);
+            setBoardContentLoading(false);
             return;
           }
 
           setSharedBoardReadOnly(readOnly);
           setBoards([payload.board]);
           setNotes(sanitizeNotes(payload.notes));
+          loadedBoardNotesRef.current = new Set([payload.board.id]);
+          pendingBoardNotesRef.current.clear();
           setSelectedBoardId(payload.board.id);
           setSelectedNoteId(null);
           setFeedMode("active");
           setLoading(false);
+          setBackgroundBoardHydrating(false);
+          setBoardContentLoading(false);
         })
         .catch(() => {
           if (active) {
             setSharedBoardReadOnly(true);
             setBoards([]);
             setNotes([]);
+            loadedBoardNotesRef.current.clear();
+            pendingBoardNotesRef.current.clear();
             setSelectedBoardId(null);
             setSelectedNoteId(null);
             setLoading(false);
+            setBackgroundBoardHydrating(false);
+            setBoardContentLoading(false);
           }
         });
 
@@ -5478,8 +5526,12 @@ const App = () => {
       if (!supabase) {
         setBoards([]);
         setNotes([]);
+        loadedBoardNotesRef.current.clear();
+        pendingBoardNotesRef.current.clear();
         setSelectedBoardId(null);
         setLoading(false);
+        setBackgroundBoardHydrating(false);
+        setBoardContentLoading(false);
         return;
       }
 
@@ -5504,28 +5556,40 @@ const App = () => {
             setSharedBoardReadOnly(true);
             setBoards([]);
             setNotes([]);
+            loadedBoardNotesRef.current.clear();
+            pendingBoardNotesRef.current.clear();
             setSelectedBoardId(null);
             setSelectedNoteId(null);
             setLoading(false);
+            setBackgroundBoardHydrating(false);
+            setBoardContentLoading(false);
             return;
           }
 
           setSharedBoardReadOnly(readOnly);
           setBoards([payload.board]);
           setNotes(sanitizeNotes(payload.notes));
+          loadedBoardNotesRef.current = new Set([payload.board.id]);
+          pendingBoardNotesRef.current.clear();
           setSelectedBoardId(payload.board.id);
           setSelectedNoteId(null);
           setFeedMode("active");
           setLoading(false);
+          setBackgroundBoardHydrating(false);
+          setBoardContentLoading(false);
         })
         .catch(() => {
           if (active) {
             setSharedBoardReadOnly(true);
             setBoards([]);
             setNotes([]);
+            loadedBoardNotesRef.current.clear();
+            pendingBoardNotesRef.current.clear();
             setSelectedBoardId(null);
             setSelectedNoteId(null);
             setLoading(false);
+            setBackgroundBoardHydrating(false);
+            setBoardContentLoading(false);
           }
         });
 
@@ -5540,39 +5604,119 @@ const App = () => {
       const local = loadLocalSnapshot();
       setBoards(local.boards);
       setNotes(local.notes);
+      loadedBoardNotesRef.current = new Set(local.boards.map((board) => board.id));
+      pendingBoardNotesRef.current.clear();
       setSelectedBoardId(local.selectedBoardId ?? local.boards[0]?.id ?? null);
       setLoading(false);
+      setBackgroundBoardHydrating(false);
+      setBoardContentLoading(false);
       return;
     }
 
     setLoading(true);
+    setBackgroundBoardHydrating(false);
+    setBoardContentLoading(false);
 
-    loadBoardsV2(user.id)
+    const localSnapshot = readStoredLocalSnapshot();
+    const hasLocalImport = hasCustomLocalSnapshot(localSnapshot);
+    if (localSnapshot?.boards?.length) {
+      setBoards(localSnapshot.boards);
+      setNotes(sanitizeNotes(localSnapshot.notes));
+      loadedBoardNotesRef.current = new Set(localSnapshot.boards.map((board) => board.id));
+      pendingBoardNotesRef.current.clear();
+      setSelectedBoardId(localSnapshot.selectedBoardId ?? localSnapshot.boards[0]?.id ?? null);
+      setLoading(false);
+    }
+
+    (hasLocalImport ? loadBoardsV2(user.id) : Promise.resolve(null))
       .then(async (payload) => {
         if (!active) {
           return;
         }
 
-        const merged = await mergeLocalSnapshotToCloud(user.id, payload.boards, payload.notes);
+        if (payload) {
+          const merged = await mergeLocalSnapshotToCloud(user.id, payload.boards, payload.notes);
+          if (!active) {
+            return;
+          }
+
+          skipNextCloudSaveRef.current = true;
+          loadedBoardNotesRef.current = new Set(merged.boards.map((board) => board.id));
+          pendingBoardNotesRef.current.clear();
+          setBoards(merged.boards);
+          setNotes(sanitizeNotes(merged.notes));
+          const preferredBoardId = loadLastViewedBoardId(user.id);
+          const homeBoardId = getPreferredHomeBoardId(merged.boards);
+          const restoredBoardId = merged.boards.some((board) => !isBoardTrashed(board) && board.id === preferredBoardId)
+            ? preferredBoardId
+            : homeBoardId ?? merged.selectedBoardId;
+          setSelectedBoardId(restoredBoardId);
+          setSelectedNoteId(null);
+          setLoading(false);
+          setBackgroundBoardHydrating(false);
+          setBoardContentLoading(false);
+          return;
+        }
+
+        const remoteBoards = await loadBoardShellsV2(user.id);
         if (!active) {
           return;
         }
 
-        skipNextCloudSaveRef.current = true;
-        setBoards(merged.boards);
-        setNotes(sanitizeNotes(merged.notes));
         const preferredBoardId = loadLastViewedBoardId(user.id);
-        const homeBoardId = getPreferredHomeBoardId(merged.boards);
-        const restoredBoardId = merged.boards.some((board) => !isBoardTrashed(board) && board.id === preferredBoardId)
+        const homeBoardId = getPreferredHomeBoardId(remoteBoards);
+        const initialBoardId = remoteBoards.some((board) => !isBoardTrashed(board) && board.id === preferredBoardId)
           ? preferredBoardId
-          : homeBoardId ?? merged.selectedBoardId;
-        setSelectedBoardId(restoredBoardId);
+          : homeBoardId ?? remoteBoards[0]?.id ?? null;
+        skipNextCloudSaveRef.current = true;
+        loadedBoardNotesRef.current.clear();
+        pendingBoardNotesRef.current.clear();
+        setBoards(remoteBoards);
+        setNotes([]);
+        setSelectedBoardId(initialBoardId);
         setSelectedNoteId(null);
         setLoading(false);
+        setBoardContentLoading(Boolean(initialBoardId));
+
+        const initialNotes = sanitizeNotes(await loadBoardNotesV2(initialBoardId ? [initialBoardId] : []));
+        if (!active) {
+          return;
+        }
+
+        if (initialBoardId) {
+          loadedBoardNotesRef.current = new Set([initialBoardId]);
+        } else {
+          loadedBoardNotesRef.current.clear();
+        }
+        setNotes(initialNotes);
+        setBoardContentLoading(false);
+
+        const deferredBoardIds = remoteBoards.map((board) => board.id).filter((boardId) => boardId !== initialBoardId);
+        if (deferredBoardIds.length === 0) {
+          setBackgroundBoardHydrating(false);
+          return;
+        }
+
+        setBackgroundBoardHydrating(true);
+        void (async () => {
+          for (const boardId of deferredBoardIds) {
+            if (!active) {
+              return;
+            }
+
+            await fetchBoardNotesIntoState(boardId);
+          }
+
+          if (active) {
+            setBackgroundBoardHydrating(false);
+          }
+        })();
       })
       .catch(() => {
         if (active) {
           setLoading(false);
+          setBackgroundBoardHydrating(false);
+          setBoardContentLoading(false);
         }
       });
 
@@ -5580,6 +5724,26 @@ const App = () => {
       active = false;
     };
   }, [user?.id, sharedBoardSlug, homeBoardRoute]);
+
+  useEffect(() => {
+    if (
+      loading ||
+      !backgroundBoardHydrating ||
+      !selectedBoardId ||
+      !user?.id ||
+      !supabase ||
+      sharedBoardSlug ||
+      homeBoardRoute ||
+      loadedBoardNotesRef.current.has(selectedBoardId)
+    ) {
+      return;
+    }
+
+    setBoardContentLoading(true);
+    void fetchBoardNotesIntoState(selectedBoardId).finally(() => {
+      setBoardContentLoading(false);
+    });
+  }, [backgroundBoardHydrating, homeBoardRoute, loading, selectedBoardId, sharedBoardSlug, user?.id]);
 
   useEffect(() => {
     setProfileMenuOpen(false);
@@ -5645,7 +5809,7 @@ const App = () => {
       return;
     }
 
-    if (loading) {
+    if (loading || backgroundBoardHydrating) {
       return;
     }
 
@@ -5669,7 +5833,7 @@ const App = () => {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [boards, notes, selectedBoard?.id, user?.id, loading, isReadOnlyBoardView]);
+  }, [backgroundBoardHydrating, boards, notes, selectedBoard?.id, user?.id, loading, isReadOnlyBoardView]);
 
   useEffect(() => {
     if (isReadOnlyBoardView || homeBoardRoute || feedMode !== "active") {
@@ -5833,6 +5997,25 @@ const App = () => {
       return Math.max(INITIAL_VISIBLE_NOTE_COUNT, Math.min(prev, filteredNotes.length));
     });
   }, [filteredNotes.length, feedMode, selectedBoard?.id]);
+
+  useEffect(() => {
+    if (loading || boardContentLoading || filteredNotes.length <= INITIAL_VISIBLE_NOTE_COUNT) {
+      return;
+    }
+
+    const targetCount = Math.min(filteredNotes.length, INITIAL_VISIBLE_NOTE_COUNT + VISIBLE_NOTE_BATCH_SIZE);
+    if (visibleNoteCount >= targetCount) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setVisibleNoteCount((prev) => Math.max(prev, targetCount));
+    }, 180);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [boardContentLoading, filteredNotes.length, loading, selectedBoard?.id, visibleNoteCount]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -9265,8 +9448,8 @@ const App = () => {
               </div>
             </div>
           ) : null}
-          <div className={`feed-stage ${loading ? "is-loading" : ""}`} aria-busy={loading}>
-            {loading && (
+          <div className={`feed-stage ${loading ? "is-loading" : ""}`} aria-busy={loading || boardContentLoading}>
+            {loading && !selectedBoard && (
               <div className="feed-loading-overlay" role="status" aria-live="polite">
                 {renderFeedLoadingSkeleton()}
               </div>
@@ -9329,6 +9512,10 @@ const App = () => {
                 <button className="ghost-action starter-template-more" onClick={openTemplatePicker}>
                   모든 템플릿 보기
                 </button>
+              </div>
+            ) : boardContentLoading && selectedBoard ? (
+              <div className="full-span" role="status" aria-live="polite">
+                {renderFeedLoadingSkeleton()}
               </div>
             ) : visibleNotes.length === 0 ? (
               feedMode === "active" ? (
@@ -9428,12 +9615,15 @@ const App = () => {
                     const displaySite = hasExternalLink ? getLinkDisplaySite(linkPreview) : "";
                     const displayHost = hasExternalLink ? getLinkDisplayHost(linkPreview) : "";
                     const isInstagramLink = hasExternalLink && isInstagramLinkPreview(noteUrl ?? "", linkPreview);
-                    const hideHoverMetadata = Boolean(attachedImageUrl && hasExternalLink && !selected && !isInstagramLink);
-                    const useImageHeroCard = hasImagePreview && !selected && !isInstagramLink;
+                    const isAttachedLinkCard = Boolean(attachedImageUrl && hasExternalLink && !selected && !isInstagramLink);
+                    const hideHoverMetadata = Boolean(attachedImageUrl && hasExternalLink && !selected && !isInstagramLink && !isAttachedLinkCard);
+                    const useImageHeroCard = hasImagePreview && !selected && !isInstagramLink && !isAttachedLinkCard;
                     const isFramedLinkNote = feedMode === "active" && hasExternalLink;
                     const useFramedLinkCard = !selected && hasExternalLink && (isPureLinkNote || isInstagramLink);
                     const keepPreviewImage =
-                      Boolean(linkPreview?.image) && (!isPureLinkNote || isInstagramLink || Boolean(extractYouTubeVideoId(noteUrl ?? "")));
+                      Boolean(linkPreview?.image) &&
+                      !attachedImageUrl &&
+                      (!isPureLinkNote || isInstagramLink || Boolean(extractYouTubeVideoId(noteUrl ?? "")));
                     const moreClicks = noteMoreState[note.id] ?? 0;
                     const rssVisibleCount = 5 + moreClicks * 5;
                     const bookmarkVisibleCount = 2 + moreClicks * 2;
@@ -9461,6 +9651,8 @@ const App = () => {
                           data-note-id={note.id}
                           className={`pin-card note-${note.color} ${useImageHeroCard ? "image-note" : ""} ${
                             useFramedLinkCard ? "link-only-note" : ""
+                          } ${isAttachedLinkCard ? "stacked-image-note" : ""} ${
+                            isAttachedLinkCard ? "has-hover-copy" : ""
                           } ${isDocumentWidget ? "document-note" : ""} ${
                             isDocumentWidget && isHomeView ? "landing-home-note" : ""
                           } ${documentVariant ? `document-${documentVariant}-note` : ""} ${

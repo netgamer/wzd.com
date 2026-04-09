@@ -245,7 +245,7 @@ export const inviteBoardMember = async (boardId: string, userId: string): Promis
   }
 };
 
-export const loadBoardsV2 = async (userId: string): Promise<{ boards: BoardV2[]; notes: NoteV2[] }> => {
+const listAccessibleBoards = async (userId: string): Promise<BoardV2[]> => {
   ensureSupabase();
 
   const memberQuery = await supabase!.from("board_members").select("board_id").eq("user_id", userId);
@@ -279,12 +279,21 @@ export const loadBoardsV2 = async (userId: string): Promise<{ boards: BoardV2[];
     boards = [await createBoardV2(userId)];
   }
 
-  const boardIds = boards.map((board) => board.id);
+  return boards;
+};
+
+export const loadBoardNotesV2 = async (boardIds: string[]): Promise<NoteV2[]> => {
+  ensureSupabase();
+
+  const normalizedBoardIds = Array.from(new Set(boardIds.filter((boardId) => typeof boardId === "string" && boardId.length > 0)));
+  if (normalizedBoardIds.length === 0) {
+    return [];
+  }
 
   const notesQuery = await supabase!
     .from("notes")
     .select("id,board_id,user_id,content,color,x,y,w,h,z_index,rotation,pinned,archived,metadata,updated_at")
-    .in("board_id", boardIds)
+    .in("board_id", normalizedBoardIds)
     .order("z_index", { ascending: true })
     .order("updated_at", { ascending: true });
 
@@ -292,7 +301,16 @@ export const loadBoardsV2 = async (userId: string): Promise<{ boards: BoardV2[];
     throw notesQuery.error;
   }
 
-  const notes = ((notesQuery.data ?? []) as NoteRow[]).map(mapNoteRow);
+  return ((notesQuery.data ?? []) as NoteRow[]).map(mapNoteRow);
+};
+
+export const loadBoardShellsV2 = async (userId: string): Promise<BoardV2[]> => {
+  return listAccessibleBoards(userId);
+};
+
+export const loadBoardsV2 = async (userId: string): Promise<{ boards: BoardV2[]; notes: NoteV2[] }> => {
+  const boards = await listAccessibleBoards(userId);
+  const notes = await loadBoardNotesV2(boards.map((board) => board.id));
   return { boards, notes };
 };
 
