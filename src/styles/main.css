@@ -4329,13 +4329,20 @@ button {
 .mood-widget,
 .mp3-widget,
 .prompt-widget,
-.food-widget,
 .document-widget {
   display: grid;
   gap: 12px;
   padding: 14px 16px;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.8);
+}
+
+.food-widget {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .document-widget {
@@ -4997,10 +5004,14 @@ button {
 .mood-widget.compact,
 .mp3-widget.compact,
 .prompt-widget.compact,
-.food-widget.compact,
 .document-widget.compact {
   gap: 8px;
   padding: 12px;
+}
+
+.food-widget.compact {
+  gap: 8px;
+  padding: 0;
 }
 
 .cover-widget.compact strong,
