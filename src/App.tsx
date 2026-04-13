@@ -121,6 +121,7 @@ type WidgetType =
   | "countdown"
   | "timetable"
   | "player"
+  | "calculator"
   | "clock"
   | "profile"
   | "weather"
@@ -136,6 +137,7 @@ type WidgetType =
   | "food";
 type DocumentWidgetVariant = "hero" | "section" | "feature" | "cta";
 type ClockWidgetMode = "digital" | "analog";
+type CalculatorOperator = "+" | "-" | "×" | "÷";
 type ChecklistItem = { text: string; checked: boolean };
 type TimetableEntry = { day: string; start: string; end: string; title: string; location: string };
 type FoodCategoryKey = "chef" | "instagram" | "trending";
@@ -355,6 +357,7 @@ const DEFAULT_TIMETABLE_TEXT = [
 ].join("\n");
 const DEFAULT_PLAYER_ARTIST = "Unknown Artist";
 const DEFAULT_PLAYER_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+const DEFAULT_CALCULATOR_DISPLAY = "0";
 const DEFAULT_CLOCK_MODE: ClockWidgetMode = "digital";
 const DEFAULT_PROFILE_NAME = "홍길동";
 const DEFAULT_PROFILE_BIRTHDATE = "1995-05-12";
@@ -1240,6 +1243,16 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
         accent: "#7dd5ff"
       },
       {
+        type: "calculator",
+        title: "계산기",
+        subtitle: "빠른 사칙연산 계산",
+        kicker: "CALC",
+        previewTitle: "12 × 8",
+        previewLines: ["= 96", "기본 사칙연산", "작업 중 바로 계산"],
+        previewMeta: "즉시 계산용",
+        accent: "#6fd7c8"
+      },
+      {
         type: "player",
         title: "음악 플레이어",
         subtitle: "MP3 / YouTube 오디오",
@@ -2045,6 +2058,7 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "countdown" ||
   note.metadata?.widgetType === "timetable" ||
   note.metadata?.widgetType === "player" ||
+  note.metadata?.widgetType === "calculator" ||
   note.metadata?.widgetType === "clock" ||
   note.metadata?.widgetType === "profile" ||
   note.metadata?.widgetType === "weather" ||
@@ -2326,6 +2340,49 @@ const getPlayerUrl = (note: NoteV2) =>
   typeof note.metadata?.playerUrl === "string" && note.metadata.playerUrl.trim()
     ? note.metadata.playerUrl.trim()
     : DEFAULT_PLAYER_URL;
+
+const getCalculatorDisplay = (note: NoteV2) =>
+  typeof note.metadata?.calculatorDisplay === "string" && note.metadata.calculatorDisplay.trim()
+    ? note.metadata.calculatorDisplay.trim()
+    : DEFAULT_CALCULATOR_DISPLAY;
+
+const getCalculatorStoredValue = (note: NoteV2) =>
+  typeof note.metadata?.calculatorStoredValue === "number" && Number.isFinite(note.metadata.calculatorStoredValue)
+    ? note.metadata.calculatorStoredValue
+    : null;
+
+const isCalculatorOperator = (value: unknown): value is CalculatorOperator =>
+  value === "+" || value === "-" || value === "×" || value === "÷";
+
+const getCalculatorOperator = (note: NoteV2) =>
+  isCalculatorOperator(note.metadata?.calculatorOperator) ? note.metadata.calculatorOperator : null;
+
+const getCalculatorReplaceOnInput = (note: NoteV2) => Boolean(note.metadata?.calculatorReplaceOnInput);
+
+const formatCalculatorNumber = (value: number) => {
+  if (!Number.isFinite(value)) {
+    return "오류";
+  }
+
+  const rounded = Math.round((value + Number.EPSILON) * 100000000) / 100000000;
+  const raw = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(8).replace(/0+$/, "").replace(/\.$/, "");
+  return raw === "-0" ? "0" : raw;
+};
+
+const computeCalculatorResult = (left: number, right: number, operator: CalculatorOperator) => {
+  switch (operator) {
+    case "+":
+      return left + right;
+    case "-":
+      return left - right;
+    case "×":
+      return left * right;
+    case "÷":
+      return right === 0 ? NaN : left / right;
+    default:
+      return right;
+  }
+};
 
 const extractYouTubeVideoId = (rawUrl: string) => {
   try {
@@ -2782,6 +2839,7 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   if (widgetType === "document") return 0;
   if (widgetType === "focus") return 1;
   if (widgetType === "player") return 1;
+  if (widgetType === "calculator") return 1;
   if (widgetType === "clock") return 1;
   if (widgetType === "profile") return 1;
   if (widgetType === "mood") return 2;
@@ -2928,6 +2986,7 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   if (widgetType === "brain") return "prompt";
   if (widgetType === "focus") return "focus";
   if (widgetType === "player") return "focus";
+  if (widgetType === "calculator") return "clock";
   if (widgetType === "mood") return "mood";
   if (widgetType === "routine") return "routine";
   if (widgetType === "prompt") return "prompt";
@@ -3048,6 +3107,7 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
   if (widgetType === "brain") return layoutStyle === "compact" ? 260 : 320;
   if (widgetType === "focus") return layoutStyle === "compact" ? 220 : 250;
   if (widgetType === "player") return layoutStyle === "compact" ? 220 : 260;
+  if (widgetType === "calculator") return layoutStyle === "compact" ? 230 : 270;
   if (widgetType === "mood") return layoutStyle === "compact" ? 200 : 230;
   if (widgetType === "routine") return layoutStyle === "compact" ? 240 : 280;
   if (widgetType === "prompt") return layoutStyle === "compact" ? 230 : 270;
@@ -4122,6 +4182,239 @@ const App = () => {
           ) : (
             <p className="rss-empty">날씨 정보를 불러오는 중입니다.</p>
           )}
+        </>
+      );
+    }
+
+    if (widgetType === "calculator") {
+      const display = getCalculatorDisplay(note);
+      const storedValue = getCalculatorStoredValue(note);
+      const operator = getCalculatorOperator(note);
+      const replaceOnInput = getCalculatorReplaceOnInput(note);
+
+      const patchCalculator = (nextPatch: Record<string, unknown>) => {
+        updateNote(note.id, {
+          metadata: {
+            ...note.metadata,
+            widgetType: "calculator",
+            ...nextPatch
+          }
+        });
+      };
+
+      const inputDigit = (digit: string) => {
+        const baseDisplay = display === "오류" ? DEFAULT_CALCULATOR_DISPLAY : display;
+        const nextDisplay =
+          replaceOnInput || baseDisplay === DEFAULT_CALCULATOR_DISPLAY
+            ? digit
+            : `${baseDisplay}${digit}`;
+
+        patchCalculator({
+          calculatorDisplay: nextDisplay,
+          calculatorReplaceOnInput: false
+        });
+      };
+
+      const inputDot = () => {
+        if (display === "오류") {
+          patchCalculator({
+            calculatorDisplay: "0.",
+            calculatorReplaceOnInput: false
+          });
+          return;
+        }
+
+        if (replaceOnInput) {
+          patchCalculator({
+            calculatorDisplay: "0.",
+            calculatorReplaceOnInput: false
+          });
+          return;
+        }
+
+        if (display.includes(".")) {
+          return;
+        }
+
+        patchCalculator({
+          calculatorDisplay: `${display}.`,
+          calculatorReplaceOnInput: false
+        });
+      };
+
+      const clearCalculator = () => {
+        patchCalculator({
+          calculatorDisplay: DEFAULT_CALCULATOR_DISPLAY,
+          calculatorStoredValue: null,
+          calculatorOperator: null,
+          calculatorReplaceOnInput: false
+        });
+      };
+
+      const toggleSign = () => {
+        const numeric = Number(display);
+        if (!Number.isFinite(numeric) || display === "오류") {
+          return;
+        }
+        patchCalculator({
+          calculatorDisplay: numeric === 0 ? "0" : formatCalculatorNumber(numeric * -1),
+          calculatorReplaceOnInput: false
+        });
+      };
+
+      const applyPercent = () => {
+        const numeric = Number(display);
+        if (!Number.isFinite(numeric) || display === "오류") {
+          return;
+        }
+        patchCalculator({
+          calculatorDisplay: formatCalculatorNumber(numeric / 100),
+          calculatorReplaceOnInput: true
+        });
+      };
+
+      const chooseOperator = (nextOperator: CalculatorOperator) => {
+        const current = Number(display);
+        if (!Number.isFinite(current) || display === "오류") {
+          return;
+        }
+
+        if (storedValue !== null && operator && !replaceOnInput) {
+          const computed = computeCalculatorResult(storedValue, current, operator);
+          patchCalculator({
+            calculatorDisplay: formatCalculatorNumber(computed),
+            calculatorStoredValue: Number.isFinite(computed) ? computed : null,
+            calculatorOperator: Number.isFinite(computed) ? nextOperator : null,
+            calculatorReplaceOnInput: true
+          });
+          return;
+        }
+
+        patchCalculator({
+          calculatorStoredValue: current,
+          calculatorOperator: nextOperator,
+          calculatorReplaceOnInput: true
+        });
+      };
+
+      const resolveCalculation = () => {
+        const current = Number(display);
+        if (!operator || storedValue === null || !Number.isFinite(current) || display === "오류") {
+          return;
+        }
+
+        const computed = computeCalculatorResult(storedValue, current, operator);
+        patchCalculator({
+          calculatorDisplay: formatCalculatorNumber(computed),
+          calculatorStoredValue: null,
+          calculatorOperator: null,
+          calculatorReplaceOnInput: true
+        });
+      };
+
+      const handleCalculatorAction = (event: React.MouseEvent<HTMLButtonElement>, action: string) => {
+        event.stopPropagation();
+
+        if (/^\d$/.test(action)) {
+          inputDigit(action);
+          return;
+        }
+
+        switch (action) {
+          case ".":
+            inputDot();
+            break;
+          case "clear":
+            clearCalculator();
+            break;
+          case "sign":
+            toggleSign();
+            break;
+          case "percent":
+            applyPercent();
+            break;
+          case "equals":
+            resolveCalculation();
+            break;
+          case "+":
+          case "-":
+          case "×":
+          case "÷":
+            chooseOperator(action);
+            break;
+          default:
+            break;
+        }
+      };
+
+      const calculatorButtons: Array<{ key: string; label: string; className?: string }> = [
+        { key: "clear", label: "C", className: "function" },
+        { key: "sign", label: "±", className: "function" },
+        { key: "percent", label: "%", className: "function" },
+        { key: "÷", label: "÷", className: "operator" },
+        { key: "7", label: "7" },
+        { key: "8", label: "8" },
+        { key: "9", label: "9" },
+        { key: "×", label: "×", className: "operator" },
+        { key: "4", label: "4" },
+        { key: "5", label: "5" },
+        { key: "6", label: "6" },
+        { key: "-", label: "−", className: "operator" },
+        { key: "1", label: "1" },
+        { key: "2", label: "2" },
+        { key: "3", label: "3" },
+        { key: "+", label: "+", className: "operator" },
+        { key: "0", label: "0", className: "zero" },
+        { key: ".", label: "." },
+        { key: "equals", label: "=", className: "equals" }
+      ];
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">CALC</span>
+            <p className="pin-title">{asText(note.content).trim() || "계산기"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="계산기 위젯 제목"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : null}
+          <div className={`calculator-widget ${compact ? "compact" : ""} ${selected ? "editing" : ""}`}>
+            <div className="calculator-screen">
+              <div className="calculator-screen-meta">
+                <span>{storedValue !== null ? formatCalculatorNumber(storedValue) : ""}</span>
+                <strong>{operator ?? ""}</strong>
+              </div>
+              <div className="calculator-display">{display}</div>
+            </div>
+            <div className="calculator-grid">
+              {calculatorButtons.map((button) => (
+                <button
+                  key={`${note.id}-${button.key}`}
+                  className={`calculator-key ${button.className ?? ""}`}
+                  onClick={(event) => handleCalculatorAction(event, button.key)}
+                >
+                  {button.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </>
       );
     }
@@ -7257,6 +7550,40 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addCalculatorWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "계산기"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "calculator",
+      calculatorDisplay: DEFAULT_CALCULATOR_DISPLAY,
+      calculatorStoredValue: null,
+      calculatorOperator: null,
+      calculatorReplaceOnInput: false
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const addProfileWidget = () => {
     if (!selectedBoard) {
       return;
@@ -7655,6 +7982,7 @@ const App = () => {
       countdown: addCountdownWidget,
       timetable: addTimetableWidget,
       player: addPlayerWidget,
+      calculator: addCalculatorWidget,
       clock: addClockWidget,
       profile: addProfileWidget,
       weather: addWeatherWidget,

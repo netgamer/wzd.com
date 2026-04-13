@@ -7072,6 +7072,118 @@ button {
   height: 54px;
 }
 
+.calculator-widget {
+  display: grid;
+  gap: 12px;
+}
+
+.calculator-widget.editing {
+  margin-top: 4px;
+}
+
+.calculator-screen {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.calculator-screen-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 18px;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(31, 26, 19, 0.58);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.calculator-display {
+  font-size: 36px;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  font-weight: 800;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: rgba(31, 26, 19, 0.92);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calculator-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.calculator-key {
+  min-height: 48px;
+  border-radius: 16px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.72);
+  color: rgba(31, 26, 19, 0.88);
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.calculator-key:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.calculator-key.function {
+  background: rgba(31, 26, 19, 0.08);
+}
+
+.calculator-key.operator {
+  background: linear-gradient(135deg, rgba(109, 212, 195, 0.18), rgba(77, 123, 255, 0.2));
+}
+
+.calculator-key.equals {
+  background: linear-gradient(135deg, #1f1a13, #2f3d5a);
+  color: #fff;
+}
+
+.calculator-key.equals:hover {
+  background: linear-gradient(135deg, #16120c, #25314b);
+}
+
+.calculator-key.zero {
+  grid-column: span 2;
+}
+
+.calculator-widget.compact {
+  gap: 10px;
+}
+
+.calculator-widget.compact .calculator-screen {
+  padding: 12px 14px;
+}
+
+.calculator-widget.compact .calculator-display {
+  font-size: 30px;
+}
+
+.calculator-widget.compact .calculator-grid {
+  gap: 8px;
+}
+
+.calculator-widget.compact .calculator-key {
+  min-height: 42px;
+  font-size: 15px;
+  border-radius: 14px;
+}
+
 .profile-widget {
   display: grid;
   gap: 14px;
@@ -9303,6 +9415,10 @@ button {
 .pin-page.board-page.board-theme-neon-lab .delivery-widget-card,
 .pin-page.board-page.board-theme-midnight-ops .focus-widget-panel,
 .pin-page.board-page.board-theme-neon-lab .focus-widget-panel,
+.pin-page.board-page.board-theme-midnight-ops .calculator-screen,
+.pin-page.board-page.board-theme-neon-lab .calculator-screen,
+.pin-page.board-page.board-theme-midnight-ops .calculator-key,
+.pin-page.board-page.board-theme-neon-lab .calculator-key,
 .pin-page.board-page.board-theme-midnight-ops .prompt-widget-card,
 .pin-page.board-page.board-theme-neon-lab .prompt-widget-card,
 .pin-page.board-page.board-theme-midnight-ops .routine-widget-item,
@@ -9311,6 +9427,50 @@ button {
 .pin-page.board-page.board-theme-neon-lab .mood-widget-option {
   border-color: rgba(255, 255, 255, 0.04) !important;
   box-shadow: none !important;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .calculator-screen,
+.pin-page.board-page.board-theme-neon-lab .calculator-screen {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .calculator-display,
+.pin-page.board-page.board-theme-neon-lab .calculator-display,
+.pin-page.board-page.board-theme-midnight-ops .calculator-screen-meta,
+.pin-page.board-page.board-theme-neon-lab .calculator-screen-meta {
+  color: rgba(240, 244, 250, 0.92);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .calculator-key,
+.pin-page.board-page.board-theme-neon-lab .calculator-key {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(240, 244, 250, 0.9);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .calculator-key.function,
+.pin-page.board-page.board-theme-neon-lab .calculator-key.function {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .calculator-key.operator,
+.pin-page.board-page.board-theme-neon-lab .calculator-key.operator {
+  background: rgba(95, 186, 255, 0.18);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .calculator-key:hover,
+.pin-page.board-page.board-theme-neon-lab .calculator-key:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.pin-page.board-page.board-theme-midnight-ops .calculator-key.equals,
+.pin-page.board-page.board-theme-neon-lab .calculator-key.equals {
+  background: rgba(243, 247, 255, 0.92);
+  color: #122039;
+}
+
+.pin-page.board-page.board-theme-midnight-ops .calculator-key.equals:hover,
+.pin-page.board-page.board-theme-neon-lab .calculator-key.equals:hover {
+  background: rgba(255, 255, 255, 0.98);
 }
 
 /* Reduced motion preference */
