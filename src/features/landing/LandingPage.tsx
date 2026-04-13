@@ -157,18 +157,18 @@ type ShowcaseWidget =
 const FEATURES: LandingFeature[] = [
   {
     icon: "01",
-    title: "메모와 위젯을 같은 보드에서",
-    description: "단순 메모장에서 끝나지 않고 뉴스, 날씨, 할 일, 북마크까지 한 화면에서 같이 씁니다."
+    title: "브라우저 첫 화면을 내 식으로",
+    description: "기본 시작페이지 대신, 내가 가장 자주 여는 링크와 정보만 모아 둔 개인화 첫 페이지를 만듭니다."
   },
   {
     icon: "02",
-    title: "개인 보드와 공유 보드를 분리해서",
-    description: "혼자 쓰는 정리판과 팀이 함께 보는 작업공간을 같은 방식으로 운영할 수 있습니다."
+    title: "북마크와 RSS를 한 화면에서",
+    description: "자주 가는 사이트와 관심 있는 읽을거리를 같은 보드 안에 배치해 매일 보는 화면을 더 유용하게 만듭니다."
   },
   {
     icon: "03",
-    title: "보자마자 감이 오는 화면",
-    description: "설명보다 샘플을 먼저 보여줘서 로그인 전에도 어떤 보드를 만들 수 있는지 바로 이해됩니다."
+    title: "필요하면 공유 가능한 개인 페이지로",
+    description: "내가 매일 쓰는 첫 페이지를, 원할 때는 링크페이지처럼 외부에 보여줄 수 있는 방향으로 확장할 수 있습니다."
   }
 ];
 
@@ -176,7 +176,7 @@ const WIDGET_SAMPLES: WidgetSample[] = [
   {
     type: "메모",
     title: "빠른 메모",
-    description: "아이디어, 회의 메모, 해야 할 일을 가장 빨리 붙이는 기본 카드입니다.",
+    description: "북마크와 RSS 사이에 짧은 생각을 붙여두는 보조 카드입니다.",
     badge: "NOTE",
     accentClass: "accent-paper",
     lines: ["회의 전 질문 3개", "담당 문장 한 줄 정리", "https://example.com"],
@@ -185,7 +185,7 @@ const WIDGET_SAMPLES: WidgetSample[] = [
   {
     type: "북마크",
     title: "자주 여는 링크",
-    description: "브라우저 탭 대신 자주 보는 링크를 보드 안에서 분류 없이 바로 꺼냅니다.",
+    description: "브라우저를 열자마자 가장 먼저 눌러야 하는 링크를 첫 화면에 고정합니다.",
     badge: "BOOKMARK",
     accentClass: "accent-sand",
     lines: ["OpenAI Docs", "클라이언트 대시보드", "최신 광고 레퍼런스"],
@@ -239,7 +239,7 @@ const WIDGET_SAMPLES: WidgetSample[] = [
   {
     type: "RSS",
     title: "읽을 거리 모음",
-    description: "구독 중인 피드를 보드에 꽂아 두고 메모와 함께 읽습니다.",
+    description: "매일 확인하는 RSS 피드를 첫 페이지에 꽂아 두고 한곳에서 훑습니다.",
     badge: "RSS",
     accentClass: "accent-lavender",
     lines: ["AI 뉴스레터", "디자인 시스템 글", "스타트업 업데이트"],
