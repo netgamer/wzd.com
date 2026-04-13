@@ -1090,6 +1090,12 @@ button {
   overflow: hidden;
 }
 
+.mobile-topbar-title-row,
+.mobile-topbar-heading,
+.mobile-topbar-meta {
+  display: contents;
+}
+
 .readonly-board-title {
   display: flex;
   flex-direction: column;
@@ -2810,18 +2816,18 @@ button {
 }
 
 .trust-chip.save-state-saving {
-  background: rgba(255, 196, 76, 0.18);
-  color: #8a6110;
+  background: rgba(181, 146, 69, 0.12);
+  color: #735929;
 }
 
 .trust-chip.save-state-saved {
-  background: rgba(71, 165, 112, 0.14);
-  color: #2b6a47;
+  background: rgba(86, 136, 111, 0.12);
+  color: #446956;
 }
 
 .trust-chip.save-state-error {
-  background: rgba(230, 0, 35, 0.12);
-  color: #a20f2c;
+  background: rgba(163, 83, 92, 0.12);
+  color: #7f4f56;
 }
 
 .trust-chip-action {
@@ -6212,6 +6218,21 @@ button {
     min-width: 0;
   }
 
+  .mobile-topbar-title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobile-topbar-heading {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+    flex: 1;
+  }
+
   .topbar-board-title h1 {
     font-size: 25px;
     white-space: nowrap;
@@ -6532,18 +6553,89 @@ button {
     width: auto;
     margin: 12px 12px 0;
     border-radius: 24px;
-    padding: 16px 14px 14px;
+    padding: 14px 14px 12px;
+    gap: 12px;
   }
 
   .board-page .workspace-topbar .topbar-primary {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    align-items: flex-start;
+    gap: 0;
   }
 
   .board-page .workspace-topbar .topbar-actions {
-    padding: 10px;
-    gap: 10px;
-    border-radius: 22px;
+    width: 100%;
+    justify-content: flex-end;
+    padding: 0;
+    gap: 8px;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .board-page .workspace-topbar.compact-header {
+    align-items: stretch;
+  }
+
+  .board-page .workspace-topbar.compact-header .topbar-primary {
+    width: 100%;
+  }
+
+  .board-page .workspace-topbar.compact-header .topbar-board-title {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    max-width: none;
+  }
+
+  .board-page .workspace-topbar.compact-header .topbar-board-title .feed-kicker {
+    display: block;
+    margin: 0;
+    color: rgba(104, 80, 56, 0.72);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+  }
+
+  .board-page .workspace-topbar.compact-header .topbar-board-title h1,
+  .board-page .workspace-topbar.compact-header .board-title-input {
+    font-size: clamp(23px, 7vw, 28px);
+    line-height: 1.06;
+  }
+
+  .mobile-topbar-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .topbar-status-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    max-width: 100%;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(96, 70, 42, 0.07);
+    color: #695a4b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .topbar-status-pill.save-state-saving {
+    background: rgba(181, 146, 69, 0.11);
+    color: #735929;
+  }
+
+  .topbar-status-pill.save-state-saved {
+    background: rgba(86, 136, 111, 0.11);
+    color: #446956;
+  }
+
+  .topbar-status-pill.save-state-error {
+    background: rgba(163, 83, 92, 0.11);
+    color: #7f4f56;
   }
 
   .board-page .current-board-panel {

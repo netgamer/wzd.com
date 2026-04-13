@@ -5571,23 +5571,24 @@ const App = () => {
   const latestHistorySnapshot = boardHistorySnapshots[0] ?? null;
   const totalTrashCount = sortedTrashedBoards.length + sortedTrashedNotes.length;
   const lastPersistedLabel = formatSavedAtLabel(lastPersistedAt);
+  const noteCountLabel = feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`;
   const persistenceStatusLabel = isReadOnlyBoardView
     ? "읽기 전용"
     : hasSupabaseConfig && user
       ? cloudSaveState === "saving"
-        ? "클라우드 저장 중"
+        ? "저장 중"
         : cloudSaveState === "saved"
           ? lastPersistedLabel
-            ? `${lastPersistedLabel} 저장 완료`
-            : "클라우드 저장 완료"
+            ? `${lastPersistedLabel} 저장됨`
+            : "저장됨"
           : cloudSaveState === "error"
-            ? "클라우드 저장 실패"
+            ? "저장 확인 필요"
             : lastPersistedLabel
-              ? `${lastPersistedLabel} 마지막 저장`
-              : "클라우드 동기화 대기"
+              ? `${lastPersistedLabel} 저장됨`
+              : "저장 대기 중"
       : lastPersistedLabel
-        ? `${lastPersistedLabel} 브라우저 저장`
-        : "브라우저 저장";
+        ? `${lastPersistedLabel} 브라우저 저장됨`
+        : "브라우저에 저장 중";
   const currentNotes = feedMode === "active" ? activeNotes : archivedNotes;
 
   const filteredNotes = useMemo(() => {
@@ -8718,6 +8719,42 @@ const App = () => {
     </div>
   );
 
+  const showMobileWorkspaceMeta = compactHeader && !isReadOnlyBoardView;
+  const boardHeading = canRenameBoard && editingBoardTitle ? (
+    <input
+      className="board-title-input"
+      value={boardTitleDraft}
+      onChange={(event) => setBoardTitleDraft(event.target.value.slice(0, MAX_BOARD_TITLE_LENGTH))}
+      onBlur={commitBoardTitle}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          commitBoardTitle();
+        }
+
+        if (event.key === "Escape") {
+          setBoardTitleDraft(selectedBoard?.title ?? "");
+          setEditingBoardTitle(false);
+        }
+      }}
+      maxLength={MAX_BOARD_TITLE_LENGTH}
+      autoFocus
+    />
+  ) : (
+    <h1
+      className={canRenameBoard ? "editable-board-title" : undefined}
+      onClick={() => {
+        if (!canRenameBoard) {
+          return;
+        }
+        setBoardTitleDraft(selectedBoard?.title ?? "");
+        setEditingBoardTitle(true);
+      }}
+    >
+      {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}
+    </h1>
+  );
+
   const renderFeedLoadingSkeleton = () => {
     const skeletonColumnCount = compactHeader ? 2 : Math.min(4, Math.max(2, columnCount));
     const skeletonCards = Array.from({ length: skeletonColumnCount * 2 }, (_, index) => ({
@@ -8954,53 +8991,37 @@ const App = () => {
 
       <div className={`pin-app ${pageModeClassName}-app`}>
         <header className={topbarClassName}>
-            <div className="topbar-primary">
+          <div className="topbar-primary">
             <div className={`topbar-board-title ${isReadOnlyBoardView ? "readonly-board-title" : ""}`}>
-              {compactHeader && (
-                <button
-                  className="mobile-icon-action mobile-board-toggle"
-                  onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
-                  aria-label="보드 메뉴"
-                >
-                  ≡
-                </button>
-              )}
-              <p className="feed-kicker">
-                {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
-              </p>
-              {canRenameBoard && editingBoardTitle ? (
-                <input
-                  className="board-title-input"
-                  value={boardTitleDraft}
-                  onChange={(event) => setBoardTitleDraft(event.target.value.slice(0, MAX_BOARD_TITLE_LENGTH))}
-                  onBlur={commitBoardTitle}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      commitBoardTitle();
-                    }
-
-                    if (event.key === "Escape") {
-                      setBoardTitleDraft(selectedBoard?.title ?? "");
-                      setEditingBoardTitle(false);
-                    }
-                  }}
-                  maxLength={MAX_BOARD_TITLE_LENGTH}
-                  autoFocus
-                />
+              {compactHeader ? (
+                <div className="mobile-topbar-title-row">
+                  <button
+                    className="mobile-icon-action mobile-board-toggle"
+                    onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+                    aria-label="보드 메뉴"
+                  >
+                    ≡
+                  </button>
+                  <div className="mobile-topbar-heading">
+                    <p className="feed-kicker">
+                      {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
+                    </p>
+                    {boardHeading}
+                  </div>
+                </div>
               ) : (
-                <h1
-                  className={canRenameBoard ? "editable-board-title" : undefined}
-                  onClick={() => {
-                    if (!canRenameBoard) {
-                      return;
-                    }
-                    setBoardTitleDraft(selectedBoard?.title ?? "");
-                    setEditingBoardTitle(true);
-                  }}
-                >
-                  {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}
-                </h1>
+                <>
+                  <p className="feed-kicker">
+                    {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
+                  </p>
+                  {boardHeading}
+                </>
+              )}
+              {showMobileWorkspaceMeta && (
+                <div className="mobile-topbar-meta" aria-live="polite">
+                  <span className={`topbar-status-pill save-state-${cloudSaveState}`}>{persistenceStatusLabel}</span>
+                  <span className="topbar-status-pill">{noteCountLabel}</span>
+                </div>
               )}
               {isReadOnlyBoardView && selectedBoard?.description?.trim() && (
                 <div className="readonly-board-copy">
@@ -9752,12 +9773,12 @@ const App = () => {
           <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">
-                <span className={`trust-chip save-state-${cloudSaveState}`}>
-                  {persistenceStatusLabel}
-                </span>
-                <span className="trust-chip">
-                  {feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`}
-                </span>
+                {(!showMobileWorkspaceMeta || isReadOnlyBoardView) && (
+                  <span className={`trust-chip save-state-${cloudSaveState}`}>
+                    {persistenceStatusLabel}
+                  </span>
+                )}
+                {(!showMobileWorkspaceMeta || isReadOnlyBoardView) && <span className="trust-chip">{noteCountLabel}</span>}
                 {!isReadOnlyBoardView && (
                   <button
                     className="trust-chip trust-chip-action"
