@@ -1005,7 +1005,7 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
         <div className="landing-header-inner">
           <div className="landing-logo-lockup">
             <div className="landing-logo">WZD</div>
-            <span>보드 위에 메모와 위젯을 같이 쌓는 워크스페이스</span>
+            <span>브라우저를 열면 가장 먼저 보고 싶은 개인화 첫 페이지</span>
           </div>
           {user ? (
             <button className="landing-profile-btn" onClick={onOpenWorkspace}>
@@ -1023,34 +1023,33 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
         <section className="landing-hero">
           <div className="landing-hero-inner">
             <div className="landing-hero-copy">
-              <p className="landing-kicker">WZD WIDGET BOARD</p>
+              <p className="landing-kicker">PERSONALIZED FIRST PAGE</p>
               <h1 className="landing-title">
-                메모 앱이 아니라,
+                브라우저를 열면
                 <br />
-                위젯이 붙는 보드입니다
+                가장 먼저 보고 싶은 페이지
               </h1>
               <p className="landing-subtitle">
-                링크 몇 개 저장하는 수준이 아니라, 메모와 체크리스트와 날씨와 RSS와 배송 추적까지 한 보드 안에
-                같이 놓고 보는 작업공간입니다.
+                자주 여는 북마크와 매일 확인하는 RSS를 한 화면에 모아두고, 내 취향대로 배치해서 쓰는 개인화 첫 페이지입니다.
               </p>
               <div className="landing-cta">
                 <button className="landing-cta-primary" onClick={handleGoogleLogin}>
                   무료로 바로 시작
                 </button>
                 <a className="landing-cta-secondary" href="#widget-gallery">
-                  위젯 전체 보기
+                  첫 화면 구성 보기
                 </a>
               </div>
               <div className="landing-proof-strip" aria-label="주요 특성">
-                <span>메모 + 위젯 혼합 보드</span>
-                <span>개인/팀 보드 지원</span>
-                <span>링크, 피드, 루틴 한 화면 정리</span>
+                <span>북마크 + RSS 한 화면</span>
+                <span>개인화 첫 페이지</span>
+                <span>공유 가능한 개인 페이지 확장</span>
               </div>
             </div>
             <div className="landing-hero-panel">
               <div className="landing-hero-panel-head">
-                <span>샘플 워크스페이스</span>
-                <strong>오늘 자주 쓰는 조합</strong>
+                <span>샘플 첫 페이지</span>
+                <strong>오늘 가장 먼저 보고 싶은 조합</strong>
               </div>
               <div className="landing-hero-mini-grid">
                 {HERO_PREVIEW_WIDGETS.map((widget) => (
@@ -1078,10 +1077,10 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
         <section className="landing-widgets" id="widget-gallery">
           <div className="landing-widgets-inner">
             <div className="landing-section-header">
-              <p className="landing-section-kicker">ALL WIDGETS AT A GLANCE</p>
-              <h2>메모와 위젯이 한 보드에 섞여 있는 모습을 바로 보세요</h2>
+              <p className="landing-section-kicker">FIRST PAGE PREVIEW</p>
+              <h2>북마크와 RSS가 첫 화면에서 어떻게 보이는지 바로 보세요</h2>
               <p className="landing-section-desc">
-                메모 샘플과 실제 위젯형 카드를 한 화면에 같이 놓아서, 로그인 전에 어떤 식으로 보드를 쓰게 되는지 바로 이해할 수 있습니다.
+                자주 여는 링크, 읽을거리, 짧은 메모가 한 화면에서 어떻게 함께 보이는지 미리 보여줘서 WZD를 어떤 첫 페이지로 쓸 수 있는지 바로 이해할 수 있습니다.
               </p>
             </div>
 
@@ -1114,10 +1113,10 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
         <section className="landing-shared-board">
           <div className="landing-shared-board-inner">
             <div className="landing-section-header left">
-              <p className="landing-section-kicker">SHARED BOARD EXAMPLE</p>
-              <h2>회사와 모임에서는 이렇게 공유 보드로 같이 씁니다</h2>
+              <p className="landing-section-kicker">SHAREABLE PAGE</p>
+              <h2>원하면 이렇게 공유 가능한 개인 페이지로도 이어집니다</h2>
               <p className="landing-section-desc">
-                일정, 공용 링크, 운영 체크리스트, 비품 배송, 공지 문서를 한 보드에 묶어 두면 팀원 모두가 같은 화면을 보고 움직일 수 있습니다.
+                기본은 내가 매일 보는 첫 페이지지만, 필요할 때는 링크와 정보가 정리된 페이지를 다른 사람에게 보여주는 용도로도 확장할 수 있습니다.
               </p>
             </div>
 
@@ -1130,18 +1129,18 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
         <section className="landing-showcase">
           <div className="landing-showcase-inner">
             <p className="landing-section-kicker">WHY IT FEELS DIFFERENT</p>
-            <h2>보드는 하나인데 메모장과 대시보드와 위키가 같이 움직입니다</h2>
+            <h2>기본 시작페이지보다 더 유용하고, 링크페이지보다 더 살아 있는 화면입니다</h2>
             <p>
-              메모 따로, 링크 따로, 피드 따로 여는 구조가 아니라 자주 확인하는 정보 블록을 한 보드에 같이 쌓는
-              방식입니다. 그래서 랜딩도 기능 설명보다 샘플 카드와 실제 내용을 먼저 보여 주는 쪽이 맞습니다.
+              검색창만 있는 기본 화면이나 링크 몇 개만 나열된 페이지가 아니라, 내가 실제로 자주 여는 링크와 읽을거리를
+              내 방식대로 정리해두는 첫 화면이라는 점이 WZD의 차별점입니다.
             </p>
           </div>
         </section>
 
         <section className="landing-final-cta">
           <div className="landing-final-cta-inner">
-            <h2>마음에 드는 조합을 바로 자기 보드로 가져가면 됩니다</h2>
-            <p>로그인하면 메모, 위젯, 문서 카드를 한 화면에 배치한 자기 작업 보드를 곧바로 시작할 수 있습니다.</p>
+            <h2>이제 브라우저 첫 화면을 네 방식대로 바꾸면 됩니다</h2>
+            <p>로그인하면 자주 여는 북마크와 RSS를 모아 둔 나만의 첫 페이지를 바로 시작할 수 있습니다.</p>
             <button className="landing-cta-primary" onClick={handleGoogleLogin}>
               Google로 시작하기
             </button>
