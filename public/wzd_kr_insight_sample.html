@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WZD Insight Reader MVP Sample</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0b1020; }
+    .glass { background: rgba(255,255,255,0.06); backdrop-filter: blur(10px); }
+  </style>
+</head>
+<body class="text-white min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <div class="text-sm text-slate-400">wzd.kr sample</div>
+        <h1 class="text-3xl md:text-4xl font-bold">Insight Reader</h1>
+        <p class="text-slate-300 mt-2">오늘 중요한 인사이트 12개 · 수익화 기회 4개 발견</p>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="px-4 py-2 rounded-xl bg-white text-slate-900 font-semibold">전체 보기</button>
+        <button class="px-4 py-2 rounded-xl glass border border-white/10">북마크</button>
+        <button class="px-4 py-2 rounded-xl glass border border-white/10">소스 관리</button>
+      </div>
+    </header>
+
+    <main class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <section class="xl:col-span-8 space-y-6">
+        <div class="rounded-3xl p-6 bg-gradient-to-br from-indigo-500/30 to-cyan-500/20 border border-white/10 shadow-2xl">
+          <div class="text-sm text-cyan-300 mb-2">오늘의 핵심</div>
+          <h2 class="text-2xl md:text-3xl font-bold leading-tight">Browser AI Agents are becoming the next workflow layer</h2>
+          <p class="text-slate-200 mt-3 text-base md:text-lg">브라우저 자동화를 에이전트가 대체하는 흐름이 빨라지고 있음. 반복 작업 자동화 시장에서 직접적인 사업 기회가 커지는 중.</p>
+          <div class="mt-4 text-sm text-slate-300">출처: Latent.Space · 중요도 9.1 · 수익화 9.4</div>
+          <div class="mt-5 flex gap-2 flex-wrap">
+            <button class="px-4 py-2 rounded-xl bg-white text-slate-900 font-semibold">요약 보기</button>
+            <button class="px-4 py-2 rounded-xl glass border border-white/10">원문 보기</button>
+            <button class="px-4 py-2 rounded-xl glass border border-white/10">북마크</button>
+          </div>
+        </div>
+
+        <div class="glass border border-white/10 rounded-3xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold">지금 뜨는 트렌드</h3>
+            <span class="text-sm text-slate-400">최근 7일 기준</span>
+          </div>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+              <div class="text-lg font-semibold">AI Agents</div>
+              <div class="text-sm text-slate-400 mt-1">관련 글 12개 · 급상승</div>
+              <p class="mt-3 text-slate-300 text-sm">반복 작업 자동화, 웹 탐색, SaaS 조합 흐름이 같이 증가 중</p>
+              <button class="mt-4 text-cyan-300 text-sm">관련 글 보기 →</button>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+              <div class="text-lg font-semibold">Vertical AI SaaS</div>
+              <div class="text-sm text-slate-400 mt-1">관련 글 7개</div>
+              <p class="mt-3 text-slate-300 text-sm">특정 산업 문제를 해결하는 초소형 SaaS 사례 증가</p>
+              <button class="mt-4 text-cyan-300 text-sm">관련 글 보기 →</button>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+              <div class="text-lg font-semibold">Creator Automation</div>
+              <div class="text-sm text-slate-400 mt-1">관련 글 5개</div>
+              <p class="mt-3 text-slate-300 text-sm">개인 크리에이터의 콘텐츠 생산 자동화 툴 조합 확산</p>
+              <button class="mt-4 text-cyan-300 text-sm">관련 글 보기 →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass border border-white/10 rounded-3xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold">빠르게 읽기</h3>
+            <button class="text-sm text-cyan-300">전체 피드 보기</button>
+          </div>
+          <div class="space-y-4">
+            <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+              <div class="font-semibold">How founders use AI ops to reduce support cost</div>
+              <div class="text-slate-300 mt-2">지원 자동화로 운영비를 줄이는 실전 사례</div>
+              <div class="text-sm text-slate-400 mt-2">태그: ai · ops · monetization</div>
+              <div class="mt-3 flex gap-2"><button class="px-3 py-1.5 rounded-lg bg-white text-slate-900 text-sm font-medium">읽기</button><button class="px-3 py-1.5 rounded-lg glass border border-white/10 text-sm">저장</button></div>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+              <div class="font-semibold">New browser-use framework roundup</div>
+              <div class="text-slate-300 mt-2">브라우저 자동화 프레임워크 비교 정리</div>
+              <div class="text-sm text-slate-400 mt-2">태그: automation · devtools</div>
+              <div class="mt-3 flex gap-2"><button class="px-3 py-1.5 rounded-lg bg-white text-slate-900 text-sm font-medium">읽기</button><button class="px-3 py-1.5 rounded-lg glass border border-white/10 text-sm">저장</button></div>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+              <div class="font-semibold">Micro SaaS pricing lessons from 2026</div>
+              <div class="text-slate-300 mt-2">초소형 SaaS 과금 전략에서 반복되는 패턴 정리</div>
+              <div class="text-sm text-slate-400 mt-2">태그: saas · pricing · monetization</div>
+              <div class="mt-3 flex gap-2"><button class="px-3 py-1.5 rounded-lg bg-white text-slate-900 text-sm font-medium">읽기</button><button class="px-3 py-1.5 rounded-lg glass border border-white/10 text-sm">저장</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="xl:col-span-4 space-y-6">
+        <div class="glass border border-white/10 rounded-3xl p-6">
+          <h3 class="text-xl font-semibold mb-4">다시 볼 북마크</h3>
+          <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+            <div class="font-semibold">AI newsletter workflow</div>
+            <p class="text-slate-300 mt-2 text-sm">지난주 저장한 자료. 지금 트렌드와 연결됨. 블로그/자동화 아이템으로 확장 가능.</p>
+            <div class="mt-4 flex gap-2">
+              <button class="px-3 py-1.5 rounded-lg bg-white text-slate-900 text-sm font-medium">다시 보기</button>
+              <button class="px-3 py-1.5 rounded-lg glass border border-white/10 text-sm">메모 추가</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass border border-white/10 rounded-3xl p-6">
+          <h3 class="text-xl font-semibold mb-4">바로 실행할 수 있는 액션</h3>
+          <div class="space-y-4">
+            <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+              <div class="font-semibold">블로그 기획: AI Agents로 반복 업무 줄이는 방법</div>
+              <div class="text-sm text-slate-300 mt-2">기대효과: 검색 유입 + 정보성 콘텐츠 확보</div>
+              <div class="text-sm text-slate-400 mt-1">난이도: 낮음</div>
+              <button class="mt-4 text-cyan-300 text-sm">실행안 보기 →</button>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+              <div class="font-semibold">앱 아이디어: 북마크 기반 AI 리서치 요약기</div>
+              <div class="text-sm text-slate-300 mt-2">기대효과: 빠른 MVP 검증 가능</div>
+              <div class="text-sm text-slate-400 mt-1">난이도: 중간</div>
+              <button class="mt-4 text-cyan-300 text-sm">실행안 보기 →</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>

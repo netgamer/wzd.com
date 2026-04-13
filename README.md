@@ -49,6 +49,11 @@ WZD can also grow into a shareable personal page. Someone deep in AI can make a 
    - `VITE_APP_ENV`
    - `VITE_AGENT_API_BASE_URL`
 
+## Insight Reader MVP assets
+- Static sample page: `public/wzd_kr_insight_sample.html`
+- Supabase schema/function seed: `supabase/insight-reader-mvp.sql`
+- The SQL file includes the `get_home_payload` RPC, trending/hero/feed views, bookmark support, and seed data for the insight-style first-page MVP.
+
 ## Agent server (GCP VM) + GitHub deploy
 1. Clone this repo on VM to `/opt/wzd-app`.
 2. Install runtime on VM:
