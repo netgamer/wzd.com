@@ -14,6 +14,8 @@ import InsightReaderPage from "./features/insight/InsightReaderPage";
 import LandingPage from "./features/landing/LandingPage";
 import MarketPage from "./features/market/MarketPage";
 import SharePage from "./features/share/SharePage";
+import UpdateDetailPage from "./features/updates/UpdateDetailPage";
+import UpdatesIndexPage from "./features/updates/UpdatesIndexPage";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { runAgentChat } from "./lib/agent";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
@@ -1859,6 +1861,23 @@ const isInsightLocation = () => {
   return window.location.pathname === "/insight";
 };
 
+const isUpdatesIndexLocation = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.location.pathname === "/updates";
+};
+
+const getUpdateSlugFromLocation = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const match = window.location.pathname.match(/^\/updates\/([a-z0-9-]+)$/i);
+  return match?.[1] ?? null;
+};
+
 const hasPendingAuthHash = () => {
   if (typeof window === "undefined") {
     return false;
@@ -3237,6 +3256,8 @@ const App = () => {
   const [publicLandingRoute, setPublicLandingRoute] = useState<boolean>(() => isPublicLandingLocation());
   const [marketRoute, setMarketRoute] = useState<boolean>(() => isMarketLocation());
   const [insightRoute, setInsightRoute] = useState<boolean>(() => isInsightLocation());
+  const [updatesIndexRoute, setUpdatesIndexRoute] = useState<boolean>(() => isUpdatesIndexLocation());
+  const [updateSlugRoute, setUpdateSlugRoute] = useState<string | null>(() => getUpdateSlugFromLocation());
   const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
   const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(
     () => Boolean(getSharedBoardSlugFromLocation()) || isHomeBoardLocation()
@@ -3488,11 +3509,15 @@ const App = () => {
       const nextPublicLandingRoute = isPublicLandingLocation();
       const nextMarketRoute = isMarketLocation();
       const nextInsightRoute = isInsightLocation();
+      const nextUpdatesIndexRoute = isUpdatesIndexLocation();
+      const nextUpdateSlugRoute = getUpdateSlugFromLocation();
       const nextSlug = getSharedBoardSlugFromLocation();
       setHomeBoardRoute(nextHomeRoute);
       setPublicLandingRoute(nextPublicLandingRoute);
       setMarketRoute(nextMarketRoute);
       setInsightRoute(nextInsightRoute);
+      setUpdatesIndexRoute(nextUpdatesIndexRoute);
+      setUpdateSlugRoute(nextUpdateSlugRoute);
       setSharedBoardSlug(nextSlug);
       setSharedBoardReadOnly(Boolean(nextSlug) || nextHomeRoute);
     };
@@ -6707,6 +6732,8 @@ const App = () => {
     setPublicLandingRoute(true);
     setMarketRoute(false);
     setInsightRoute(false);
+    setUpdatesIndexRoute(false);
+    setUpdateSlugRoute(null);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
@@ -6723,6 +6750,8 @@ const App = () => {
     setPublicLandingRoute(false);
     setMarketRoute(false);
     setInsightRoute(false);
+    setUpdatesIndexRoute(false);
+    setUpdateSlugRoute(null);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
@@ -8744,6 +8773,14 @@ const App = () => {
 
   if (insightRoute && !isSharedView) {
     return <InsightReaderPage onNavigateBack={navigateToPublicLanding} userId={user?.id ?? null} />;
+  }
+
+  if (updatesIndexRoute && !isSharedView) {
+    return <UpdatesIndexPage onNavigateBack={navigateToPublicLanding} />;
+  }
+
+  if (updateSlugRoute && !isSharedView) {
+    return <UpdateDetailPage slug={updateSlugRoute} onNavigateBack={navigateToPublicLanding} />;
   }
 
   if (!user && !isSharedView && waitingForAuthResolution) {
