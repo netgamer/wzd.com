@@ -90,3 +90,6 @@ WZD can also grow into a shareable personal page. Someone deep in AI can make a 
 - Agent widget chat execution via GCP agent server
 - n8n workflow creation request from agent widget
 - Agent run/step history persistence to Supabase (with RLS)
+
+## Sync note
+- WSL OpenClaw commit/push path verified.
