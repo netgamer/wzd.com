@@ -10,6 +10,7 @@
 import BoardCatCompanion, { type CatRemoteAction, type CatRemoteCommand } from "./components/BoardCatCompanion";
 import BoardPage from "./features/board/BoardPage";
 import HomePage from "./features/home/HomePage";
+import InsightReaderPage from "./features/insight/InsightReaderPage";
 import LandingPage from "./features/landing/LandingPage";
 import MarketPage from "./features/market/MarketPage";
 import SharePage from "./features/share/SharePage";
@@ -1850,6 +1851,14 @@ const isMarketLocation = () => {
   return window.location.pathname === "/market";
 };
 
+const isInsightLocation = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.location.pathname === "/insight";
+};
+
 const hasPendingAuthHash = () => {
   if (typeof window === "undefined") {
     return false;
@@ -3227,6 +3236,7 @@ const App = () => {
   const [homeBoardRoute, setHomeBoardRoute] = useState<boolean>(() => isHomeBoardLocation());
   const [publicLandingRoute, setPublicLandingRoute] = useState<boolean>(() => isPublicLandingLocation());
   const [marketRoute, setMarketRoute] = useState<boolean>(() => isMarketLocation());
+  const [insightRoute, setInsightRoute] = useState<boolean>(() => isInsightLocation());
   const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
   const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(
     () => Boolean(getSharedBoardSlugFromLocation()) || isHomeBoardLocation()
@@ -3477,10 +3487,12 @@ const App = () => {
       const nextHomeRoute = isHomeBoardLocation();
       const nextPublicLandingRoute = isPublicLandingLocation();
       const nextMarketRoute = isMarketLocation();
+      const nextInsightRoute = isInsightLocation();
       const nextSlug = getSharedBoardSlugFromLocation();
       setHomeBoardRoute(nextHomeRoute);
       setPublicLandingRoute(nextPublicLandingRoute);
       setMarketRoute(nextMarketRoute);
+      setInsightRoute(nextInsightRoute);
       setSharedBoardSlug(nextSlug);
       setSharedBoardReadOnly(Boolean(nextSlug) || nextHomeRoute);
     };
@@ -6694,6 +6706,7 @@ const App = () => {
     setHomeBoardRoute(false);
     setPublicLandingRoute(true);
     setMarketRoute(false);
+    setInsightRoute(false);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
@@ -6709,6 +6722,7 @@ const App = () => {
     setHomeBoardRoute(false);
     setPublicLandingRoute(false);
     setMarketRoute(false);
+    setInsightRoute(false);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
@@ -8726,6 +8740,10 @@ const App = () => {
 
   if (marketRoute && !isSharedView) {
     return <MarketPage user={user} onNavigateBack={user ? navigateToWorkspace : navigateToPublicLanding} />;
+  }
+
+  if (insightRoute && !isSharedView) {
+    return <InsightReaderPage onNavigateBack={navigateToPublicLanding} userId={user?.id ?? null} />;
   }
 
   if (!user && !isSharedView && waitingForAuthResolution) {
