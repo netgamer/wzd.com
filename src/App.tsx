@@ -3496,6 +3496,7 @@ const App = () => {
     [activeBoards, selectedBoardId]
   );
   const isHomeView = homeBoardRoute && Boolean(selectedBoard && isHomeBoard(selectedBoard));
+  const showWorkspaceBoardTabs = !isHomeView && !isReadOnlyBoardView && activeBoards.length > 0;
   const isBoardOwner = Boolean(user?.id && selectedBoard && selectedBoard.userId === user.id);
   const canShareBoard = feedMode === "active" && Boolean(selectedBoard) && !isReadOnlyBoardView && isBoardOwner;
   const canInviteBoard = canShareBoard;
@@ -3593,6 +3594,34 @@ const App = () => {
       cancelled = true;
     };
   }, [activePlayerNotes]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (!showWorkspaceBoardTabs || mobileViewport) {
+      setWorkspaceTabsHidden(false);
+      return;
+    }
+
+    let lastY = window.scrollY;
+
+    const onScroll = () => {
+      const nextY = window.scrollY;
+
+      if (nextY < 24 || nextY < lastY - 6) {
+        setWorkspaceTabsHidden(false);
+      } else if (nextY > 88 && nextY > lastY + 6) {
+        setWorkspaceTabsHidden(true);
+      }
+
+      lastY = nextY;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [mobileViewport, showWorkspaceBoardTabs]);
 
   useEffect(() => {
     latestBoardsRef.current = boards;
@@ -9171,34 +9200,6 @@ const App = () => {
   const topbarClassName = `pin-topbar ${compactHeader ? "compact-header" : ""} ${
     isReadOnlyBoardView ? "public-topbar" : "workspace-topbar"
   } ${pageModeClassName}-topbar`.trim();
-  const showWorkspaceBoardTabs = !isHomeView && !isReadOnlyBoardView && activeBoards.length > 0;
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    if (!showWorkspaceBoardTabs || compactHeader) {
-      setWorkspaceTabsHidden(false);
-      return;
-    }
-
-    let lastY = window.scrollY;
-
-    const onScroll = () => {
-      const nextY = window.scrollY;
-
-      if (nextY < 24 || nextY < lastY - 6) {
-        setWorkspaceTabsHidden(false);
-      } else if (nextY > 88 && nextY > lastY + 6) {
-        setWorkspaceTabsHidden(true);
-      }
-
-      lastY = nextY;
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [compactHeader, showWorkspaceBoardTabs]);
   const mainClassName = `pin-main ${isReadOnlyBoardView ? "public-main" : "workspace-main"} ${pageModeClassName}-main`.trim();
   const boardPanelClassName = isHomeView
     ? "pin-board-panel current-board-panel public-board-panel home-board-panel"
