@@ -9209,8 +9209,8 @@ const App = () => {
             </span>
           </button>
 
-          <nav className="sidebar-nav" aria-label="작업공간 탐색">
-            <div className="sidebar-section sidebar-section-apps">
+          <nav className="sidebar-nav sidebar-nav-utility" aria-label="작업공간 탐색">
+            <div className="sidebar-section sidebar-section-workspace">
               <button
                 className={`side-icon pinterest-rail-icon ${!publicLandingRoute && !insightRoute && !updatesIndexRoute && !updateSlugRoute ? "active" : ""}`}
                 onClick={navigateToWorkspace}
