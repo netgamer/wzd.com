@@ -3997,7 +3997,8 @@ button {
 }
 
 .board-page .pin-card-head {
-  padding: 10px 14px 4px;
+  justify-content: flex-end;
+  padding: 4px 10px 0;
 }
 
 .board-page .pin-dot {
@@ -4128,7 +4129,7 @@ button {
 }
 
 .board-page .pin-card-body {
-  padding: 0 18px 18px;
+  padding: 0 16px 16px;
   gap: 14px;
 }
 
