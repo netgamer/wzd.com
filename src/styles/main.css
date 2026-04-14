@@ -1040,6 +1040,7 @@ button {
 
 .pin-app {
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -2334,6 +2335,7 @@ button {
 }
 
 .board-page .workspace-main {
+  min-width: 0;
   padding: 20px 20px 42px;
 }
 
@@ -6399,6 +6401,25 @@ button {
 
   .pin-main {
     overflow: hidden;
+  }
+
+  .board-page .workspace-main {
+    padding-top: 6px;
+  }
+
+  .board-page .pin-board-stage {
+    min-height: max(360px, calc(100dvh - 232px));
+  }
+
+  .board-page .current-board-panel {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .board-page .feed-stage {
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .board-page .pin-board-stage.mobile-swipe-enabled .pin-board-track {

@@ -8994,24 +8994,72 @@ const App = () => {
           <div className="topbar-primary">
             <div className={`topbar-board-title ${isReadOnlyBoardView ? "readonly-board-title" : ""}`}>
               {compactHeader ? (
-                <>
-                  <div className="mobile-topbar-control-row">
-                    <button
-                      className="mobile-icon-action mobile-board-toggle"
-                      onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
-                      aria-label="보드 메뉴"
-                    >
-                      <span className="mobile-board-toggle-glyph" aria-hidden="true">
-                        ≡
-                      </span>
-                      <span className="mobile-board-toggle-label">보드</span>
-                    </button>
-                    <div className="mobile-topbar-action-cluster">
-                      {!isReadOnlyBoardView && (
-                        <button className="mobile-icon-action mobile-new-note-action" onClick={addNote} aria-label="새 메모 만들기">
-                          +
-                        </button>
-                      )}
+                isReadOnlyBoardView ? (
+                  <>
+                    <div className="mobile-topbar-control-row">
+                      <button
+                        className="mobile-icon-action mobile-board-toggle"
+                        onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+                        aria-label="보드 메뉴"
+                      >
+                        <span className="mobile-board-toggle-glyph" aria-hidden="true">
+                          ≡
+                        </span>
+                        <span className="mobile-board-toggle-label">보드</span>
+                      </button>
+                      <div className="mobile-topbar-action-cluster">
+                        {hasSupabaseConfig ? (
+                          user ? (
+                            <div className="profile-menu-wrap" ref={profileMenuRef}>
+                              <button
+                                className="mobile-profile-button"
+                                onClick={() => setProfileMenuOpen((prev) => !prev)}
+                                aria-expanded={profileMenuOpen}
+                              >
+                                <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+                              </button>
+                              {profileMenuOpen && (
+                                <div className="profile-menu-popover">
+                                  <button className="profile-menu-item" onClick={() => void onLogout()}>
+                                    로그아웃
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <button className="mobile-icon-action mobile-auth-action" onClick={onGoogleLogin}>
+                              로그인
+                            </button>
+                          )
+                        ) : (
+                          <div className="profile-pill muted mobile-local-mode-pill">로컬 모드</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mobile-topbar-heading">
+                      <p className="feed-kicker">
+                        {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
+                      </p>
+                      {boardHeading}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mobile-topbar-board-row">
+                      <button
+                        className="mobile-icon-action mobile-board-toggle"
+                        onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+                        aria-label="보드 메뉴"
+                      >
+                        <span className="mobile-board-toggle-glyph" aria-hidden="true">
+                          ≡
+                        </span>
+                        <span className="mobile-board-toggle-label">보드</span>
+                      </button>
+                      <div className="mobile-topbar-board-copy">
+                        <p className="feed-kicker">{feedMode === "active" ? "보드 선택" : "보관 메모"}</p>
+                        {boardHeading}
+                      </div>
                       {hasSupabaseConfig ? (
                         user ? (
                           <div className="profile-menu-wrap" ref={profileMenuRef}>
@@ -9039,14 +9087,12 @@ const App = () => {
                         <div className="profile-pill muted mobile-local-mode-pill">로컬 모드</div>
                       )}
                     </div>
-                  </div>
-                  <div className="mobile-topbar-heading">
-                    <p className="feed-kicker">
-                      {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
-                    </p>
-                    {boardHeading}
-                  </div>
-                </>
+                    <div className="mobile-topbar-meta" aria-live="polite">
+                      <span className={`topbar-status-pill save-state-${cloudSaveState}`}>{persistenceStatusLabel}</span>
+                      <span className="topbar-status-pill">{noteCountLabel}</span>
+                    </div>
+                  </>
+                )
               ) : (
                 <>
                   <p className="feed-kicker">
@@ -9054,12 +9100,6 @@ const App = () => {
                   </p>
                   {boardHeading}
                 </>
-              )}
-              {showMobileWorkspaceMeta && (
-                <div className="mobile-topbar-meta" aria-live="polite">
-                  <span className={`topbar-status-pill save-state-${cloudSaveState}`}>{persistenceStatusLabel}</span>
-                  <span className="topbar-status-pill">{noteCountLabel}</span>
-                </div>
               )}
               {isReadOnlyBoardView && selectedBoard?.description?.trim() && (
                 <div className="readonly-board-copy">
@@ -10670,6 +10710,55 @@ const App = () => {
           </div>
           </div>
         </main>
+
+        {compactHeader && !isReadOnlyBoardView && (
+          <nav className="mobile-bottom-nav-shell" aria-label="작업공간 빠른 메뉴">
+            <button
+              className={`mobile-bottom-nav-item ${mobileBoardMenuOpen ? "active" : ""}`}
+              onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+            >
+              <span className="mobile-bottom-nav-icon" aria-hidden="true">
+                ≡
+              </span>
+              <span>보드</span>
+            </button>
+            {feedMode === "active" && selectedBoard ? (
+              <>
+                <button className="mobile-bottom-nav-item mobile-bottom-nav-item-primary" onClick={addNote}>
+                  <span className="mobile-bottom-nav-icon" aria-hidden="true">
+                    +
+                  </span>
+                  <span>새 메모</span>
+                </button>
+                <button
+                  className={`mobile-bottom-nav-item ${widgetMenuOpen ? "active" : ""}`}
+                  onClick={() => {
+                    setWidgetGalleryCategory("collect");
+                    setWidgetMenuOpen(true);
+                    setMobileBoardMenuOpen(false);
+                  }}
+                >
+                  <span className="mobile-bottom-nav-icon" aria-hidden="true">
+                    ◫
+                  </span>
+                  <span>위젯</span>
+                </button>
+              </>
+            ) : null}
+            <button
+              className={`mobile-bottom-nav-item ${settingsOpen ? "active" : ""}`}
+              onClick={() => {
+                openBoardSettings();
+                setMobileBoardMenuOpen(false);
+              }}
+            >
+              <span className="mobile-bottom-nav-icon settings-glyph" aria-hidden="true">
+                <SettingsIcon />
+              </span>
+              <span>설정</span>
+            </button>
+          </nav>
+        )}
 
         {feedMode === "active" && runningDragNoteId && (
           <button
