@@ -1774,6 +1774,45 @@ const getNoteTitle = (content: unknown) => {
   return firstLine.slice(0, 48);
 };
 
+const renderMemoTextWithLinks = (content: unknown) => {
+  const text = normalizeUrlsInText(content);
+  if (!text.trim()) {
+    return null;
+  }
+
+  const parts = text.split(
+    /((?:https?:\/\/https?:\/\/\S+|https?:\/\/https?\/\/\S+|https?:\/\/\S+|https?\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+))/gi
+  );
+
+  return parts
+    .filter(Boolean)
+    .map((part, index) => {
+      const normalized = normalizeExternalUrl(part);
+      const isUrlPart = /^(?:https?:\/\/\S+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+)$/i.test(normalized);
+
+      if (!isUrlPart) {
+        return <span key={`memo-text-${index}`}>{part}</span>;
+      }
+
+      if (normalized.startsWith("data:image/")) {
+        return null;
+      }
+
+      return (
+        <a
+          key={`memo-link-${index}`}
+          className="memo-inline-link"
+          href={normalized}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(event) => event.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    });
+};
+
 const isPlaceholderNoteTitle = (value: string) => {
   const trimmed = value.trim();
   return !trimmed || trimmed === "새 메모";
@@ -3358,7 +3397,6 @@ const App = () => {
   const [inviteResults, setInviteResults] = useState<BoardUserProfile[]>([]);
   const [boardMembers, setBoardMembers] = useState<BoardMemberProfile[]>([]);
   const [trashDropActive, setTrashDropActive] = useState(false);
-  const [editorDropNoteId, setEditorDropNoteId] = useState<string | null>(null);
   const [noteMoreState, setNoteMoreState] = useState<Record<string, number>>({});
   const [homeBoardRoute, setHomeBoardRoute] = useState<boolean>(() => isHomeBoardLocation());
   const [publicLandingRoute, setPublicLandingRoute] = useState<boolean>(() => isPublicLandingLocation());
@@ -3370,6 +3408,7 @@ const App = () => {
   const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(
     () => Boolean(getSharedBoardSlugFromLocation()) || isHomeBoardLocation()
   );
+  const [workspaceTabsHidden, setWorkspaceTabsHidden] = useState(false);
 
   useEffect(() => {
     persistSiteLanguage(siteLanguage);
@@ -6638,10 +6677,6 @@ const App = () => {
       new Set(
         visibleNotes.flatMap((note) => {
           const urls = [] as string[];
-          const noteUrl = extractFirstUrl(note.content);
-          if (noteUrl && !isImageUrl(noteUrl)) {
-            urls.push(noteUrl);
-          }
           if (getWidgetType(note) === "bookmark") {
             getBookmarkUrls(note).forEach((bookmarkUrl) => {
               if (bookmarkUrl && !isImageUrl(bookmarkUrl)) {
@@ -8406,109 +8441,6 @@ const App = () => {
     });
   };
 
-  const uploadPastedImage = async (note: NoteV2, file: File) => {
-    if (!supabase || !user?.id) {
-      return null;
-    }
-
-    const extension = (file.type.split("/")[1] || "png").replace(/[^a-z0-9]/gi, "").toLowerCase() || "png";
-    const path = `${user.id}/${note.boardId}/${note.id}-${Date.now()}.${extension}`;
-    const bucket = "note-images";
-    const uploadResult = await supabase.storage.from(bucket).upload(path, file, {
-      upsert: false,
-      contentType: file.type
-    });
-
-    if (uploadResult.error) {
-      throw uploadResult.error;
-    }
-
-    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-    return data.publicUrl || null;
-  };
-
-  const applyImageFileToNote = async (note: NoteV2, file: File) => {
-    try {
-      const uploadedUrl = await uploadPastedImage(note, file);
-      if (uploadedUrl) {
-        updateNote(note.id, {
-          metadata: {
-            ...note.metadata,
-            pastedImageUrl: uploadedUrl
-          }
-        });
-        return;
-      }
-    } catch (error) {
-      console.error("Failed to upload pasted image", error);
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      if (!result) {
-        return;
-      }
-
-      updateNote(note.id, {
-        metadata: {
-          ...note.metadata,
-          pastedImageUrl: result
-        }
-      });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const onEditorPaste = async (note: NoteV2, event: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
-    if (!imageItem) {
-      return;
-    }
-
-    const file = imageItem.getAsFile();
-    if (!file) {
-      return;
-    }
-
-    event.preventDefault();
-    await applyImageFileToNote(note, file);
-  };
-
-  const onEditorDragOver = (note: NoteV2, event: ReactDragEvent<HTMLTextAreaElement>) => {
-    const hasImageFile = Array.from(event.dataTransfer?.files ?? []).some((file) => file.type.startsWith("image/"));
-    if (!hasImageFile) {
-      return;
-    }
-
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-    if (editorDropNoteId !== note.id) {
-      setEditorDropNoteId(note.id);
-    }
-  };
-
-  const onEditorDragLeave = (note: NoteV2, event: ReactDragEvent<HTMLTextAreaElement>) => {
-    if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
-      return;
-    }
-
-    if (editorDropNoteId === note.id) {
-      setEditorDropNoteId(null);
-    }
-  };
-
-  const onEditorDrop = async (note: NoteV2, event: ReactDragEvent<HTMLTextAreaElement>) => {
-    const imageFile = Array.from(event.dataTransfer?.files ?? []).find((file) => file.type.startsWith("image/"));
-    if (!imageFile) {
-      return;
-    }
-
-    event.preventDefault();
-    setEditorDropNoteId(null);
-    await applyImageFileToNote(note, imageFile);
-  };
-
   const archiveNote = (noteId: string) => {
     const targetNote = notes.find((note) => note.id === noteId);
     if (!targetNote) {
@@ -8733,6 +8665,7 @@ const App = () => {
                   const isBookmarkWidget = widgetType === "bookmark";
                   const isChecklistWidget = widgetType === "checklist";
                   const isCountdownWidget = widgetType === "countdown";
+                  const isPlainMemo = !widgetType;
                   const extraWidgetBody = renderExtraWidgetBody(note, false, true);
                   const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
                   const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
@@ -8740,22 +8673,25 @@ const App = () => {
                   const checklistItems = isChecklistWidget ? getChecklistItems(note) : [];
                   const countdownTargetDate = isCountdownWidget ? getCountdownTargetDate(note) : "";
                   const countdownDescription = isCountdownWidget ? getCountdownDescription(note) : "";
-                  const attachedImageUrl = getAttachedImageUrl(note);
+                  const attachedImageUrl = isPlainMemo ? "" : getAttachedImageUrl(note);
                   const noteUrl = extractFirstUrl(note.content);
-                  const cardImageUrl = attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : "");
+                  const cardImageUrl = !isPlainMemo && (attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : ""));
                   const previewText = stripUrls(note.content);
                   const hasExternalLink = Boolean(noteUrl && !isImageUrl(noteUrl));
-                  const linkPreview = hasExternalLink ? linkPreviews[noteUrl] : undefined;
-                  const displayTitle = hasExternalLink
+                  const linkPreview = !isPlainMemo && hasExternalLink ? linkPreviews[noteUrl] : undefined;
+                  const displayTitle = !isPlainMemo && hasExternalLink
                     ? getLinkDisplayTitle(note.content, noteUrl, linkPreview)
                     : getNoteTitle(note.content);
-                  const displayDescription = hasExternalLink
+                  const displayDescription = isPlainMemo
+                    ? asText(note.content).trim() || "메모를 클릭해서 편집하세요."
+                    : hasExternalLink
                     ? getLinkDisplayDescription(note.content, noteUrl, linkPreview)
                     : previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.");
                   const displaySite = hasExternalLink ? getLinkDisplaySite(linkPreview) : "";
                   const displayHost = hasExternalLink ? getLinkDisplayHost(linkPreview) : "";
                   const isInstagramLink = hasExternalLink && isInstagramLinkPreview(noteUrl ?? "", linkPreview);
                   const keepPreviewImage =
+                    !isPlainMemo &&
                     Boolean(linkPreview?.image) &&
                     (!isLinkPreviewDuplicateText(note.content, noteUrl ?? "", linkPreview) ||
                       isInstagramLink ||
@@ -8832,9 +8768,10 @@ const App = () => {
                             </div>
                           </>
                         ) : (
-                            <div className="pin-note-stack">
-                            <p className="pin-title">{displayTitle}</p>
-                            {hasExternalLink &&
+                          <div className="pin-note-stack">
+                            {!isPlainMemo && <p className="pin-title">{displayTitle}</p>}
+                            {!isPlainMemo &&
+                              hasExternalLink &&
                               (linkPreview ? (
                                 <a
                                   className={`link-preview-card ${keepPreviewImage ? "has-preview-image" : "text-only-link-card"} ${
@@ -8877,7 +8814,7 @@ const App = () => {
                                 <span className="link-chip">{noteUrl}</span>
                               ))}
                             <p className="pin-body-preview" style={{ fontSize: `${fontSize}px` }}>
-                              {displayDescription}
+                              {isPlainMemo ? renderMemoTextWithLinks(note.content) : displayDescription}
                             </p>
                           </div>
                         )}
@@ -9235,6 +9172,33 @@ const App = () => {
     isReadOnlyBoardView ? "public-topbar" : "workspace-topbar"
   } ${pageModeClassName}-topbar`.trim();
   const showWorkspaceBoardTabs = !isHomeView && !isReadOnlyBoardView && activeBoards.length > 0;
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (!showWorkspaceBoardTabs || compactHeader) {
+      setWorkspaceTabsHidden(false);
+      return;
+    }
+
+    let lastY = window.scrollY;
+
+    const onScroll = () => {
+      const nextY = window.scrollY;
+
+      if (nextY < 24 || nextY < lastY - 6) {
+        setWorkspaceTabsHidden(false);
+      } else if (nextY > 88 && nextY > lastY + 6) {
+        setWorkspaceTabsHidden(true);
+      }
+
+      lastY = nextY;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [compactHeader, showWorkspaceBoardTabs]);
   const mainClassName = `pin-main ${isReadOnlyBoardView ? "public-main" : "workspace-main"} ${pageModeClassName}-main`.trim();
   const boardPanelClassName = isHomeView
     ? "pin-board-panel current-board-panel public-board-panel home-board-panel"
@@ -9333,6 +9297,9 @@ const App = () => {
         <div className="sidebar-spacer" />
 
         <div className="sidebar-footer">
+          <div className="sidebar-section sidebar-section-language">
+            {languageToggle}
+          </div>
           <div className="sidebar-section sidebar-section-settings">
             <button
               className={`side-icon subtle settings-icon pinterest-rail-icon ${settingsOpen ? "active" : ""}`}
@@ -9356,7 +9323,7 @@ const App = () => {
 
       <div className={`pin-app ${pageModeClassName}-app`}>
         {showWorkspaceBoardTabs ? (
-          <header className={`${topbarClassName} board-tabs-only-topbar`}>
+          <header className={`${topbarClassName} board-tabs-only-topbar ${workspaceTabsHidden ? "is-scroll-hidden" : ""}`.trim()}>
             <div className="workspace-board-tabs" role="tablist" aria-label="보드 목록" ref={mobileBoardTabsRef}>
               {activeBoards.map((boardItem) => (
                 <button
@@ -10335,6 +10302,7 @@ const App = () => {
                     const isBookmarkWidget = widgetType === "bookmark";
                     const isChecklistWidget = widgetType === "checklist";
                     const isCountdownWidget = widgetType === "countdown";
+                    const isPlainMemo = !widgetType;
                     const extraWidgetBody = renderExtraWidgetBody(note, selected, false);
                     const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
                     const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
@@ -10342,25 +10310,27 @@ const App = () => {
                     const checklistItems = isChecklistWidget ? getChecklistItems(note) : [];
                     const countdownTargetDate = isCountdownWidget ? getCountdownTargetDate(note) : "";
                     const countdownDescription = isCountdownWidget ? getCountdownDescription(note) : "";
-                    const attachedImageUrl = getAttachedImageUrl(note);
+                    const attachedImageUrl = isPlainMemo ? "" : getAttachedImageUrl(note);
                     const noteUrl = extractFirstUrl(note.content);
-                    const cardImageUrl = attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : "");
+                    const cardImageUrl = !isPlainMemo && (attachedImageUrl || (noteUrl && isImageUrl(noteUrl) ? noteUrl : ""));
                     const previewText = stripUrls(note.content);
                     const hasExternalLink = Boolean(noteUrl && !isImageUrl(noteUrl));
-                    const linkPreview = hasExternalLink ? linkPreviews[noteUrl] : undefined;
+                    const linkPreview = !isPlainMemo && hasExternalLink ? linkPreviews[noteUrl] : undefined;
                     const hasImagePreview = Boolean(cardImageUrl);
-                    const hasTextPreview = previewText.trim().length > 0;
+                    const hasTextPreview = (isPlainMemo ? asText(note.content) : previewText).trim().length > 0;
                     const hasLinkPreview = hasExternalLink;
-                    const isPureLinkNote =
+                    const isPureLinkNote = !isPlainMemo &&
                       hasExternalLink &&
                       !hasImagePreview &&
                       (!hasTextPreview || isLinkPreviewDuplicateText(note.content, noteUrl, linkPreview));
                     const isDocumentWidget = widgetType === "document";
                     const documentVariant = isDocumentWidget ? getDocumentVariant(note) : null;
-                    const displayTitle = hasExternalLink
+                    const displayTitle = !isPlainMemo && hasExternalLink
                       ? getLinkDisplayTitle(note.content, noteUrl, linkPreview)
                       : getNoteTitle(note.content);
-                    const displayDescription = hasExternalLink
+                    const displayDescription = isPlainMemo
+                      ? asText(note.content).trim() || "메모를 클릭해서 편집하세요."
+                      : hasExternalLink
                       ? getLinkDisplayDescription(note.content, noteUrl, linkPreview)
                       : previewText || (noteUrl ? getUrlSnippet(noteUrl) : "메모를 클릭해서 편집하세요.");
                     const displaySite = hasExternalLink ? getLinkDisplaySite(linkPreview) : "";
@@ -10369,9 +10339,10 @@ const App = () => {
                     const isAttachedLinkCard = Boolean(attachedImageUrl && hasExternalLink && !selected && !isInstagramLink);
                     const hideHoverMetadata = Boolean(attachedImageUrl && hasExternalLink && !selected && !isInstagramLink && !isAttachedLinkCard);
                     const useImageHeroCard = hasImagePreview && !selected && !isInstagramLink && !isAttachedLinkCard;
-                    const isFramedLinkNote = feedMode === "active" && hasExternalLink;
-                    const useFramedLinkCard = !selected && hasExternalLink && (isPureLinkNote || isInstagramLink);
+                    const isFramedLinkNote = !isPlainMemo && feedMode === "active" && hasExternalLink;
+                    const useFramedLinkCard = !isPlainMemo && !selected && hasExternalLink && (isPureLinkNote || isInstagramLink);
                     const keepPreviewImage =
+                      !isPlainMemo &&
                       Boolean(linkPreview?.image) &&
                       !attachedImageUrl &&
                       (!isPureLinkNote || isInstagramLink || Boolean(extractYouTubeVideoId(noteUrl ?? "")));
@@ -10442,11 +10413,6 @@ const App = () => {
                               if (isFramedLinkNote && noteUrl) {
                                 window.open(noteUrl, "_blank", "noopener,noreferrer");
                               }
-                              return;
-                            }
-
-                            if (!selected && isFramedLinkNote && noteUrl) {
-                              window.open(noteUrl, "_blank", "noopener,noreferrer");
                               return;
                             }
 
@@ -10922,51 +10888,37 @@ const App = () => {
                               </>
                             ) : (
                               <div className="pin-note-stack">
-                                {!useFramedLinkCard &&
+                                {!isPlainMemo &&
+                                  !useFramedLinkCard &&
                                   (!useImageHeroCard || (!hideHoverMetadata && (hasTextPreview || hasLinkPreview))) && (
                                   <p className="pin-title">{displayTitle}</p>
                                   )}
 
                                 {selected ? (
                                   <>
-                                    {attachedImageUrl && (
-                                      <div className="pin-image-wrap editor-image-preview">
-                                        <img
-                                          className="pin-image editor-image-preview-media"
-                                          src={getImageProxyUrl(attachedImageUrl)}
-                                          alt={getNoteTitle(note.content)}
-                                        />
-                                      </div>
-                                    )}
                                     <textarea
                                       ref={(node) => {
                                         noteEditorRefs.current[note.id] = node;
                                       }}
-                                      className={`pin-editor ${editorDropNoteId === note.id ? "drop-active" : ""}`}
+                                      className="pin-editor"
                                       value={note.content}
                                       style={{ fontSize: `${fontSize}px` }}
                                       onMouseDown={(event) => event.stopPropagation()}
-                                      onPaste={(event) => {
-                                        void onEditorPaste(note, event);
-                                      }}
-                                      onDragOver={(event) => onEditorDragOver(note, event)}
-                                      onDragLeave={(event) => onEditorDragLeave(note, event)}
-                                      onDrop={(event) => {
-                                        void onEditorDrop(note, event);
-                                      }}
                                       onFocus={() => setSelectedNoteId(note.id)}
                                       onChange={(event) => {
                                         updateNote(note.id, { content: event.target.value });
                                         event.currentTarget.style.height = "0px";
                                         event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
                                       }}
-                                      placeholder="메모, 링크, 이미지 URL을 입력하세요"
+                                      placeholder="메모를 입력하세요"
                                       rows={1}
                                     />
                                   </>
                                 ) : (
                                   <>
-                                    {hasExternalLink && !hideHoverMetadata &&
+                                    {!isPlainMemo &&
+                                      hasExternalLink &&
+                                      !hideHoverMetadata &&
                                       (linkPreview ? (
                                         <a
                                           className={`link-preview-card ${isInstagramLink ? "instagram-link-card" : ""} ${
@@ -11019,14 +10971,14 @@ const App = () => {
                                           {noteUrl}
                                         </a>
                                       ))}
-                                    {!isPureLinkNote &&
+                                    {(isPlainMemo || !isPureLinkNote) &&
                                       (!useImageHeroCard || (!hideHoverMetadata && (hasTextPreview || hasLinkPreview))) && (
                                       <>
                                         <p
                                           className={`pin-body-preview ${textNeedsMore && !textExpanded ? "clamped" : ""}`}
                                           style={{ fontSize: `${fontSize}px` }}
                                         >
-                                          {displayDescription}
+                                          {isPlainMemo ? renderMemoTextWithLinks(note.content) : displayDescription}
                                         </p>
                                         {textNeedsMore && !textExpanded && (
                                           <button
@@ -11153,7 +11105,6 @@ const App = () => {
         )}
       </div>
     </CurrentPage>
-    {languageToggle}
     </>
   );
 };

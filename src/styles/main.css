@@ -1267,6 +1267,15 @@ button {
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  transition:
+    transform 220ms ease,
+    opacity 180ms ease;
+}
+
+.board-page .board-tabs-only-topbar.is-scroll-hidden {
+  transform: translateY(calc(-100% - 18px));
+  opacity: 0;
+  pointer-events: none;
 }
 
 .workspace-board-tabs {
@@ -3628,6 +3637,11 @@ button {
   color: rgba(240, 245, 255, 0.86);
 }
 
+.pin-page.board-page.board-theme-midnight-ops .memo-inline-link,
+.pin-page.board-page.board-theme-neon-lab .memo-inline-link {
+  color: rgba(201, 224, 255, 0.92);
+}
+
 .pin-page.board-page.board-theme-midnight-ops .trending-item:hover,
 .pin-page.board-page.board-theme-neon-lab .trending-item:hover {
   background: rgba(255, 255, 255, 0.14);
@@ -5870,6 +5884,14 @@ button {
 .board-page .pin-body-preview {
   color: #4b3a2c;
   line-height: 1.72;
+}
+
+.memo-inline-link {
+  color: #2162ad;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+  word-break: break-all;
 }
 
 .pin-body-preview.clamped {
@@ -11417,10 +11439,6 @@ html {
 }
 
 .global-language-toggle {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 1200;
   display: inline-flex;
   gap: 6px;
   padding: 6px;
@@ -11430,6 +11448,43 @@ html {
   box-shadow: 0 16px 34px rgba(41, 28, 15, 0.12);
   backdrop-filter: blur(16px) saturate(170%);
   -webkit-backdrop-filter: blur(16px) saturate(170%);
+}
+
+.sidebar-section-language {
+  width: 100%;
+}
+
+.board-page .sidebar-section-language {
+  align-items: stretch;
+}
+
+.board-page .sidebar-section-language .global-language-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 18px;
+  background: rgba(255, 251, 246, 0.82);
+  border: 1px solid rgba(67, 46, 24, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 10px 20px rgba(41, 28, 15, 0.08);
+}
+
+.board-page .sidebar-section-language .global-language-option {
+  min-width: 0;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.pin-page:not(.board-page) .global-language-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1200;
 }
 
 .global-language-option {
@@ -11498,7 +11553,7 @@ html {
     border-radius: 20px;
   }
 
-  .global-language-toggle {
+  .pin-page:not(.board-page) .global-language-toggle {
     top: auto;
     right: 12px;
     bottom: 12px;
