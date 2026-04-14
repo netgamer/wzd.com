@@ -123,7 +123,7 @@ button {
 }
 
 .pin-page.sidebar-expanded {
-  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-columns: 236px minmax(0, 1fr);
 }
 
 .pin-sidebar {
@@ -133,8 +133,8 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 18px 0;
+  gap: 16px;
+  padding: 18px 8px 16px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(252, 246, 238, 0.94));
   backdrop-filter: blur(20px) saturate(180%);
@@ -211,9 +211,69 @@ button {
   box-shadow: var(--board-sidebar-shadow);
 }
 
+.sidebar-primary-stack {
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.sidebar-nav,
+.sidebar-footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-section-label {
+  display: none;
+  width: 100%;
+  margin: 0;
+  padding: 0 10px;
+  color: rgba(112, 85, 55, 0.7);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.board-page .sidebar-section-label {
+  color: var(--board-kicker-color);
+}
+
+.board-page .board-menu,
+.board-page .sidebar-section-workspace,
+.board-page .sidebar-footer .sidebar-section {
+  border: 1px solid rgba(92, 67, 40, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(250, 242, 232, 0.7));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 12px 24px rgba(76, 49, 23, 0.04);
+}
+
 .pin-sidebar.expanded {
   align-items: stretch;
-  padding: 18px 12px;
+  padding: 18px 14px;
+}
+
+.pin-sidebar.expanded .sidebar-primary-stack,
+.pin-sidebar.expanded .sidebar-section {
+  align-items: stretch;
+}
+
+.pin-sidebar.expanded .sidebar-section-label {
+  display: block;
 }
 
 .pin-page.board-page.board-theme-focus-desk {
@@ -685,6 +745,14 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 12px 0 10px;
+  border-radius: 30px;
+}
+
+.sidebar-section-workspace,
+.sidebar-footer .sidebar-section {
+  padding: 8px 0;
+  border-radius: 26px;
 }
 
 .pin-brand,
@@ -1002,6 +1070,16 @@ button {
   height: auto;
   padding: 0 14px;
   border-radius: 22px;
+}
+
+.pin-sidebar.expanded .board-menu {
+  padding: 14px 10px 10px;
+}
+
+.pin-sidebar.expanded .sidebar-section-workspace,
+.pin-sidebar.expanded .sidebar-footer .sidebar-section {
+  padding: 12px 10px;
+  border-radius: 26px;
 }
 
 .pin-sidebar.expanded .board-chip-badge {
