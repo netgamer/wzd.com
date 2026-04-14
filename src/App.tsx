@@ -393,6 +393,12 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
+const CloseIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M7 7l10 10M17 7 7 17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const LAST_VIEWED_BOARD_KEY = "wzd-board-v2-last-viewed";
 const INITIAL_VISIBLE_NOTE_COUNT = 8;
@@ -10701,24 +10707,40 @@ const App = () => {
                                     title="메모 색상 변경"
                                   />
                                 )}
-                                <button
-                                  className="pin-icon-button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    if (feedMode === "active") {
-                                      setSelectedNoteId(note.id);
-                                    } else {
-                                      restoreNote(note.id);
-                                    }
-                                  }}
-                                  aria-label={feedMode === "active" ? "메모 수정" : "메모 복구"}
-                                  title={feedMode === "active" ? "메모 수정" : "메모 복구"}
-                                >
-                                  <span className="pin-icon-glyph">
-                                    <EditIcon />
-                                  </span>
-                                </button>
-                                {(!isWidgetNote || selected) && (
+                                {feedMode === "active" && isWidgetNote && selected ? (
+                                  <button
+                                    className="pin-icon-button"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      setSelectedNoteId(null);
+                                    }}
+                                    aria-label="편집 닫기"
+                                    title="편집 닫기"
+                                  >
+                                    <span className="pin-icon-glyph">
+                                      <CloseIcon />
+                                    </span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    className="pin-icon-button"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      if (feedMode === "active") {
+                                        setSelectedNoteId(note.id);
+                                      } else {
+                                        restoreNote(note.id);
+                                      }
+                                    }}
+                                    aria-label={feedMode === "active" ? "메모 수정" : "메모 복구"}
+                                    title={feedMode === "active" ? "메모 수정" : "메모 복구"}
+                                  >
+                                    <span className="pin-icon-glyph">
+                                      <EditIcon />
+                                    </span>
+                                  </button>
+                                )}
+                                {!isWidgetNote && (
                                   <button
                                     className="pin-icon-button danger"
                                     onClick={(event) => {
@@ -10753,15 +10775,6 @@ const App = () => {
                                   aria-label="위젯 색상 변경"
                                   title="위젯 색상 변경"
                                 />
-                                <button
-                                  className="widget-edit-toolbar-button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    setSelectedNoteId(null);
-                                  }}
-                                >
-                                  {siteLanguage === "ko" ? "닫기" : "Close"}
-                                </button>
                                 <button
                                   className="widget-edit-toolbar-button danger"
                                   onClick={(event) => {
