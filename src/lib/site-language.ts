@@ -1,6 +1,30 @@
 export type SiteLanguage = "ko" | "en";
+export type SiteLanguageOption = {
+  code: SiteLanguage;
+  shortLabel: string;
+  nativeLabel: string;
+  englishLabel: string;
+};
 
 const SITE_LANGUAGE_STORAGE_KEY = "wzd-site-language";
+
+export const SITE_LANGUAGE_OPTIONS: SiteLanguageOption[] = [
+  {
+    code: "ko",
+    shortLabel: "KO",
+    nativeLabel: "한국어",
+    englishLabel: "Korean"
+  },
+  {
+    code: "en",
+    shortLabel: "EN",
+    nativeLabel: "English",
+    englishLabel: "English"
+  }
+];
+
+export const getSiteLanguageOption = (language: SiteLanguage) =>
+  SITE_LANGUAGE_OPTIONS.find((option) => option.code === language) ?? SITE_LANGUAGE_OPTIONS[0];
 
 export const getStoredSiteLanguage = (): SiteLanguage | null => {
   if (typeof window === "undefined") {

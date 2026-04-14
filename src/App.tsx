@@ -20,11 +20,17 @@ import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { runAgentChat } from "./lib/agent";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
-import { fetchRssFeed, type RssFeedPreview } from "./lib/rss";
+import { fetchRssFeed, type RssFeedPreview, type RssItem } from "./lib/rss";
 import { fetchSocialFeed, type SocialFeedPreview } from "./lib/social";
 import { fetchTrendingKeywords, type TrendingPreview } from "./lib/trending";
 import { fetchWeatherPreview, type WeatherPreview } from "./lib/weather";
-import { getInitialSiteLanguage, persistSiteLanguage, type SiteLanguage } from "./lib/site-language";
+import {
+  getInitialSiteLanguage,
+  getSiteLanguageOption,
+  persistSiteLanguage,
+  SITE_LANGUAGE_OPTIONS,
+  type SiteLanguage
+} from "./lib/site-language";
 import {
   type BoardBackgroundStyle,
   type BoardMemberProfile,
@@ -371,6 +377,19 @@ const MessageIcon = () => (
       strokeLinejoin="round"
     />
     <path d="M9 12h6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+const GlobeIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M3.8 12h16.4M12 3.8c2.4 2.3 3.7 5.1 3.7 8.2S14.4 17.9 12 20.2M12 3.8c-2.4 2.3-3.7 5.1-3.7 8.2s1.3 5.9 3.7 8.2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ChevronDownIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -1773,6 +1792,13 @@ const getNoteTitle = (content: unknown) => {
   const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "새 메모";
   return firstLine.slice(0, 48);
 };
+
+const delay = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+
+const isSameRssItem = (left: RssItem | undefined, right: RssItem | undefined) =>
+  (left?.title ?? "") === (right?.title ?? "") &&
+  (left?.link ?? "") === (right?.link ?? "") &&
+  (left?.pubDate ?? "") === (right?.pubDate ?? "");
 
 const renderMemoTextWithLinks = (content: unknown) => {
   const text = normalizeUrlsInText(content);
@@ -3337,6 +3363,7 @@ const autoOrganizeBoardNotes = (
 
 const App = () => {
   const [siteLanguage, setSiteLanguage] = useState<SiteLanguage>(() => getInitialSiteLanguage());
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [user, setUser] = useState<AuthUserProfile | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [boards, setBoards] = useState<BoardV2[]>(() => createDefaultSnapshot().boards);
@@ -3359,6 +3386,9 @@ const App = () => {
   const [columnCount, setColumnCount] = useState(() => getColumnCount());
   const [linkPreviews, setLinkPreviews] = useState<Record<string, LinkPreviewState>>({});
   const [rssFeeds, setRssFeeds] = useState<Record<string, RssFeedState>>({});
+  const [rssDisplayFeeds, setRssDisplayFeeds] = useState<Record<string, RssFeedState>>({});
+  const [rssFlipStates, setRssFlipStates] = useState<Record<string, { index: number; nextItem: RssItem } | null>>({});
+  const [rssRefreshingIds, setRssRefreshingIds] = useState<Record<string, boolean>>({});
   const [socialWidgets, setSocialWidgets] = useState<Record<string, SocialFeedState>>({});
   const [weatherWidgets, setWeatherWidgets] = useState<Record<string, WeatherState>>({});
   const [trendingWidgets, setTrendingWidgets] = useState<Record<string, TrendingState>>({});
@@ -3417,12 +3447,41 @@ const App = () => {
     }
   }, [siteLanguage]);
 
+  useEffect(() => {
+    if (typeof document === "undefined" || !languageMenuOpen) {
+      return;
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (languageMenuRef.current?.contains(event.target as Node)) {
+        return;
+      }
+
+      setLanguageMenuOpen(false);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setLanguageMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [languageMenuOpen]);
+
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
   const latestBoardsRef = useRef<BoardV2[]>(boards);
   const latestNotesRef = useRef<NoteV2[]>(notes);
+  const rssDisplayFeedsRef = useRef<Record<string, RssFeedState>>({});
   const latestUserIdRef = useRef<string | null>(user?.id ?? null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const languageMenuRef = useRef<HTMLDivElement | null>(null);
   const saveStateResetTimerRef = useRef<number | null>(null);
   const loadedBoardNotesRef = useRef<Set<string>>(new Set(createDefaultSnapshot().boards.map((board) => board.id)));
   const pendingBoardNotesRef = useRef<Set<string>>(new Set());
@@ -3431,6 +3490,7 @@ const App = () => {
   const mobileBoardTabsRef = useRef<HTMLDivElement | null>(null);
   const mobileBoardTabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const catRemoteCommandIdRef = useRef(0);
+  const rssAnimationTokenRef = useRef<Record<string, number>>({});
   const noteCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const noteEditorRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const playerAudioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
@@ -3626,6 +3686,10 @@ const App = () => {
   useEffect(() => {
     latestBoardsRef.current = boards;
   }, [boards]);
+
+  useEffect(() => {
+    rssDisplayFeedsRef.current = rssDisplayFeeds;
+  }, [rssDisplayFeeds]);
 
   useEffect(() => {
     latestNotesRef.current = notes;
@@ -6701,6 +6765,100 @@ const App = () => {
     });
   }, [visibleNotes, selectedNoteId]);
 
+  const animateRssFeedForNote = async (noteId: string, nextFeed: RssFeedState) => {
+    const currentFeed = rssDisplayFeedsRef.current[noteId] ?? null;
+
+    if (!nextFeed) {
+      setRssDisplayFeeds((prev) => ({ ...prev, [noteId]: null }));
+      setRssFlipStates((prev) => ({ ...prev, [noteId]: null }));
+      return;
+    }
+
+    if (!currentFeed) {
+      setRssDisplayFeeds((prev) => ({ ...prev, [noteId]: nextFeed }));
+      setRssFlipStates((prev) => ({ ...prev, [noteId]: null }));
+      return;
+    }
+
+    const hasAnyChange =
+      currentFeed.title !== nextFeed.title ||
+      currentFeed.description !== nextFeed.description ||
+      currentFeed.link !== nextFeed.link ||
+      Math.max(currentFeed.items.length, nextFeed.items.length) > 0 &&
+        Array.from({ length: Math.max(currentFeed.items.length, nextFeed.items.length) }).some((_, index) =>
+          !isSameRssItem(currentFeed.items[index], nextFeed.items[index])
+        );
+
+    if (!hasAnyChange) {
+      setRssDisplayFeeds((prev) => ({ ...prev, [noteId]: nextFeed }));
+      setRssFlipStates((prev) => ({ ...prev, [noteId]: null }));
+      return;
+    }
+
+    const token = (rssAnimationTokenRef.current[noteId] ?? 0) + 1;
+    rssAnimationTokenRef.current[noteId] = token;
+    const limit = Math.min(Math.max(currentFeed.items.length, nextFeed.items.length), 10);
+
+    setRssDisplayFeeds((prev) => ({
+      ...prev,
+      [noteId]: {
+        ...currentFeed,
+        title: nextFeed.title,
+        description: nextFeed.description,
+        link: nextFeed.link
+      }
+    }));
+
+    for (let index = 0; index < limit; index += 1) {
+      const currentItem = currentFeed.items[index];
+      const nextItem = nextFeed.items[index];
+
+      if (!nextItem || isSameRssItem(currentItem, nextItem)) {
+        continue;
+      }
+
+      setRssFlipStates((prev) => ({
+        ...prev,
+        [noteId]: {
+          index,
+          nextItem
+        }
+      }));
+
+      await delay(190);
+      if (rssAnimationTokenRef.current[noteId] !== token) {
+        return;
+      }
+
+      setRssDisplayFeeds((prev) => {
+        const base = prev[noteId] ?? currentFeed;
+        const nextItems = [...base.items];
+        nextItems[index] = nextItem;
+        return {
+          ...prev,
+          [noteId]: {
+            ...base,
+            items: nextItems
+          }
+        };
+      });
+
+      await delay(210);
+      if (rssAnimationTokenRef.current[noteId] !== token) {
+        return;
+      }
+
+      setRssFlipStates((prev) => ({ ...prev, [noteId]: null }));
+      await delay(60);
+      if (rssAnimationTokenRef.current[noteId] !== token) {
+        return;
+      }
+    }
+
+    setRssDisplayFeeds((prev) => ({ ...prev, [noteId]: nextFeed }));
+    setRssFlipStates((prev) => ({ ...prev, [noteId]: null }));
+  };
+
   useEffect(() => {
     const urls = Array.from(
       new Set(
@@ -6748,40 +6906,82 @@ const App = () => {
   }, [visibleNotes, linkPreviews]);
 
   useEffect(() => {
-    const urls = Array.from(
-      new Set(
-        visibleNotes
-          .filter((note) => getWidgetType(note) === "rss")
-          .map((note) => getRssFeedUrl(note))
-          .filter(Boolean)
-      )
-    ).filter((url) => !(url in rssFeeds));
+    const rssNotes = visibleNotes
+      .filter((note) => getWidgetType(note) === "rss")
+      .map((note) => ({
+        id: note.id,
+        url: getRssFeedUrl(note)
+      }))
+      .filter((note): note is { id: string; url: string } => Boolean(note.url));
 
-    if (urls.length === 0) {
+    if (rssNotes.length === 0) {
       return;
     }
 
     let cancelled = false;
 
-    void Promise.all(
-      urls.map(async (url) => {
-        try {
-          const feed = await fetchRssFeed(url);
-          if (!cancelled) {
+    const refreshFeeds = async () => {
+      const grouped = new Map<string, string[]>();
+      rssNotes.forEach((note) => {
+        const noteIds = grouped.get(note.url) ?? [];
+        noteIds.push(note.id);
+        grouped.set(note.url, noteIds);
+      });
+
+      await Promise.all(
+        Array.from(grouped.entries()).map(async ([url, noteIds]) => {
+          if (cancelled) {
+            return;
+          }
+
+          setRssRefreshingIds((prev) => {
+            const next = { ...prev };
+            noteIds.forEach((noteId) => {
+              next[noteId] = true;
+            });
+            return next;
+          });
+
+          try {
+            const feed = await fetchRssFeed(url);
+            if (cancelled) {
+              return;
+            }
+
             setRssFeeds((prev) => ({ ...prev, [url]: feed }));
+            await Promise.all(noteIds.map((noteId) => animateRssFeedForNote(noteId, feed)));
+          } catch {
+            if (!cancelled) {
+              setRssFeeds((prev) => ({ ...prev, [url]: null }));
+              noteIds.forEach((noteId) => {
+                void animateRssFeedForNote(noteId, null);
+              });
+            }
+          } finally {
+            if (!cancelled) {
+              setRssRefreshingIds((prev) => {
+                const next = { ...prev };
+                noteIds.forEach((noteId) => {
+                  next[noteId] = false;
+                });
+                return next;
+              });
+            }
           }
-        } catch {
-          if (!cancelled) {
-            setRssFeeds((prev) => ({ ...prev, [url]: null }));
-          }
-        }
-      })
-    );
+        })
+      );
+    };
+
+    void refreshFeeds();
+    const intervalId = window.setInterval(() => {
+      void refreshFeeds();
+    }, 60000);
 
     return () => {
       cancelled = true;
+      window.clearInterval(intervalId);
     };
-  }, [visibleNotes, rssFeeds]);
+  }, [visibleNotes]);
 
   useEffect(() => {
     const noteIds = visibleNotes
@@ -9112,22 +9312,69 @@ const App = () => {
     );
   };
 
+  const currentLanguage = getSiteLanguageOption(siteLanguage);
+  const otherLanguages = SITE_LANGUAGE_OPTIONS.filter((option) => option.code !== siteLanguage);
   const languageToggle = (
-    <div className="global-language-toggle" role="group" aria-label={siteLanguage === "ko" ? "언어 선택" : "Language selector"}>
+    <div className={`global-language-menu ${languageMenuOpen ? "open" : ""}`} ref={languageMenuRef}>
       <button
         type="button"
-        className={`global-language-option ${siteLanguage === "ko" ? "active" : ""}`}
-        onClick={() => setSiteLanguage("ko")}
+        className="global-language-trigger"
+        aria-haspopup="dialog"
+        aria-expanded={languageMenuOpen}
+        aria-label={siteLanguage === "ko" ? "언어 메뉴 열기" : "Open language menu"}
+        onClick={() => setLanguageMenuOpen((prev) => !prev)}
       >
-        한국어
+        <span className="global-language-trigger-icon" aria-hidden="true">
+          <GlobeIcon />
+        </span>
+        <span className="global-language-trigger-code">{currentLanguage.shortLabel}</span>
+        <span className={`global-language-trigger-chevron ${languageMenuOpen ? "open" : ""}`} aria-hidden="true">
+          <ChevronDownIcon />
+        </span>
       </button>
-      <button
-        type="button"
-        className={`global-language-option ${siteLanguage === "en" ? "active" : ""}`}
-        onClick={() => setSiteLanguage("en")}
-      >
-        EN
-      </button>
+
+      {languageMenuOpen && (
+        <div className="global-language-popover" role="dialog" aria-label={siteLanguage === "ko" ? "언어 선택" : "Language selector"}>
+          <div className="global-language-popover-header">
+            <span className="global-language-popover-kicker">{siteLanguage === "ko" ? "현재 언어" : "Current language"}</span>
+            <strong className="global-language-popover-current">
+              {currentLanguage.nativeLabel}
+              {currentLanguage.englishLabel !== currentLanguage.nativeLabel ? ` (${currentLanguage.englishLabel})` : ""}
+            </strong>
+          </div>
+
+          <div className="global-language-popover-list" role="list">
+            <button
+              type="button"
+              className="global-language-popover-item current"
+              onClick={() => setLanguageMenuOpen(false)}
+            >
+              <span className="global-language-popover-item-copy">
+                <strong>{currentLanguage.nativeLabel}</strong>
+                <span>{siteLanguage === "ko" ? "현재 사용 중" : "Currently selected"}</span>
+              </span>
+              <span className="global-language-popover-item-code">{currentLanguage.shortLabel}</span>
+            </button>
+            {otherLanguages.map((option) => (
+              <button
+                key={option.code}
+                type="button"
+                className="global-language-popover-item"
+                onClick={() => {
+                  setSiteLanguage(option.code);
+                  setLanguageMenuOpen(false);
+                }}
+              >
+                <span className="global-language-popover-item-copy">
+                  <strong>{option.nativeLabel}</strong>
+                  <span>{option.englishLabel}</span>
+                </span>
+                <span className="global-language-popover-item-code">{option.shortLabel}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -10304,9 +10551,12 @@ const App = () => {
                     const isChecklistWidget = widgetType === "checklist";
                     const isCountdownWidget = widgetType === "countdown";
                     const isPlainMemo = !widgetType;
+                    const isWidgetNote = !isPlainMemo;
                     const extraWidgetBody = renderExtraWidgetBody(note, selected, false);
                     const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
-                    const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
+                    const rssFeed = isRssWidget ? rssDisplayFeeds[note.id] ?? (rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined) : undefined;
+                    const rssFlipState = isRssWidget ? rssFlipStates[note.id] : null;
+                    const rssRefreshing = isRssWidget ? Boolean(rssRefreshingIds[note.id]) : false;
                     const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
                     const checklistItems = isChecklistWidget ? getChecklistItems(note) : [];
                     const countdownTargetDate = isCountdownWidget ? getCountdownTargetDate(note) : "";
@@ -10440,7 +10690,7 @@ const App = () => {
                             <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
                             {!isReadOnlyBoardView && (
                               <div className="pin-actions">
-                                {!useImageHeroCard && !useFramedLinkCard && !isDocumentWidget && (
+                                {!isWidgetNote && !useImageHeroCard && !useFramedLinkCard && !isDocumentWidget && (
                                   <button
                                     className={`note-color-toggle chip-${note.color}`}
                                     onClick={(event) => {
@@ -10468,8 +10718,52 @@ const App = () => {
                                     <EditIcon />
                                   </span>
                                 </button>
+                                {(!isWidgetNote || selected) && (
+                                  <button
+                                    className="pin-icon-button danger"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      if (feedMode === "active") {
+                                        archiveNote(note.id);
+                                      } else {
+                                        deleteArchivedNote(note.id);
+                                      }
+                                    }}
+                                    aria-label={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
+                                    title={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
+                                  >
+                                    <span className="pin-icon-glyph">
+                                      <TrashIcon />
+                                    </span>
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="pin-card-body">
+                            {!isReadOnlyBoardView && isWidgetNote && selected && (
+                              <div className="widget-edit-toolbar">
                                 <button
-                                  className="pin-icon-button danger"
+                                  className={`note-color-toggle chip-${note.color}`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    cycleNoteColor(note.id, note.color);
+                                  }}
+                                  aria-label="위젯 색상 변경"
+                                  title="위젯 색상 변경"
+                                />
+                                <button
+                                  className="widget-edit-toolbar-button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedNoteId(null);
+                                  }}
+                                >
+                                  {siteLanguage === "ko" ? "닫기" : "Close"}
+                                </button>
+                                <button
+                                  className="widget-edit-toolbar-button danger"
                                   onClick={(event) => {
                                     event.stopPropagation();
                                     if (feedMode === "active") {
@@ -10478,18 +10772,17 @@ const App = () => {
                                       deleteArchivedNote(note.id);
                                     }
                                   }}
-                                  aria-label={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
-                                  title={feedMode === "active" ? "메모 삭제" : "영구 삭제"}
                                 >
-                                  <span className="pin-icon-glyph">
-                                    <TrashIcon />
-                                  </span>
+                                  {feedMode === "active"
+                                    ? siteLanguage === "ko"
+                                      ? "삭제"
+                                      : "Delete"
+                                    : siteLanguage === "ko"
+                                      ? "영구 삭제"
+                                      : "Delete permanently"}
                                 </button>
                               </div>
                             )}
-                          </div>
-
-                          <div className="pin-card-body">
                             {extraWidgetBody ? (
                               extraWidgetBody
                             ) : isRssWidget ? (
@@ -10497,6 +10790,11 @@ const App = () => {
                                 <div className="widget-header">
                                   <span className="widget-badge">RSS</span>
                                   <p className="pin-title">{asText(note.content).trim() || "RSS 리더"}</p>
+                                  {!selected && (
+                                    <span className={`widget-refresh-indicator ${rssRefreshing ? "spinning" : ""}`} aria-hidden="true">
+                                      <ChevronDownIcon />
+                                    </span>
+                                  )}
                                 </div>
                                 {selected ? (
                                   <div className="widget-editor-stack">
@@ -10538,19 +10836,33 @@ const App = () => {
                                     </a>
                                     {rssFeed?.items?.length ? (
                                       <>
-                                        {rssFeed.items.slice(0, rssVisibleCount).map((item) => (
+                                        {rssFeed.items.slice(0, rssVisibleCount).map((item, index) => {
+                                          const isFlipping = rssFlipState?.index === index;
+                                          const incomingItem = isFlipping ? rssFlipState.nextItem : item;
+                                          return (
                                           <a
                                             key={`${note.id}-${item.link}-${item.title}`}
-                                            className="rss-item"
+                                            className={`rss-item ${isFlipping ? "is-flipping" : ""}`}
                                             href={item.link}
                                             target="_blank"
                                             rel="noreferrer"
                                             onClick={(event) => event.stopPropagation()}
                                           >
-                                            <span className="rss-item-title">{item.title}</span>
-                                            {item.pubDate && <span className="rss-item-date">{item.pubDate}</span>}
+                                            <span className="rss-item-flip-shell">
+                                              <span className="rss-item-flip">
+                                                <span className="rss-item-face front">
+                                                  <span className="rss-item-title">{item.title}</span>
+                                                  {item.pubDate && <span className="rss-item-date">{item.pubDate}</span>}
+                                                </span>
+                                                <span className="rss-item-face back">
+                                                  <span className="rss-item-title">{incomingItem.title}</span>
+                                                  {incomingItem.pubDate && <span className="rss-item-date">{incomingItem.pubDate}</span>}
+                                                </span>
+                                              </span>
+                                            </span>
                                           </a>
-                                        ))}
+                                          );
+                                        })}
                                         {rssFeed.items.length > rssVisibleCount && (
                                           <button
                                             className="note-more-button"
