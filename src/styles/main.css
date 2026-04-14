@@ -2830,6 +2830,12 @@ button {
   box-sizing: border-box;
 }
 
+.board-page .workspace-feed-panel {
+  width: min(100%, 1600px);
+  margin: 0 auto;
+  position: relative;
+}
+
 .board-page .current-board-panel {
   width: min(100%, 1600px);
   margin: 0 auto;

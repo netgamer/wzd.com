@@ -9173,9 +9173,11 @@ const App = () => {
   } ${pageModeClassName}-topbar`.trim();
   const showWorkspaceBoardTabs = !isHomeView && !isReadOnlyBoardView && activeBoards.length > 0;
   const mainClassName = `pin-main ${isReadOnlyBoardView ? "public-main" : "workspace-main"} ${pageModeClassName}-main`.trim();
-  const boardPanelClassName = `pin-board-panel current-board-panel ${
-    isReadOnlyBoardView ? "public-board-panel" : "workspace-board-panel"
-  } ${isHomeView ? "home-board-panel" : isReadOnlyBoardView ? "share-board-panel" : ""}`.trim();
+  const boardPanelClassName = isHomeView
+    ? "pin-board-panel current-board-panel public-board-panel home-board-panel"
+    : isReadOnlyBoardView
+      ? "pin-board-panel current-board-panel public-board-panel share-board-panel"
+      : `pin-board-panel ${mobileViewport ? "current-board-panel workspace-board-panel" : "workspace-feed-panel"}`;
   const feedHeadClassName = `feed-head ${isReadOnlyBoardView ? "public-feed-head" : "workspace-feed-head"} ${
     isHomeView ? "home-feed-head" : isSharedView ? "share-feed-head" : ""
   }`.trim();
