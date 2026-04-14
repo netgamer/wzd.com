@@ -10,9 +10,12 @@
 import BoardCatCompanion, { type CatRemoteAction, type CatRemoteCommand } from "./components/BoardCatCompanion";
 import BoardPage from "./features/board/BoardPage";
 import HomePage from "./features/home/HomePage";
+import InsightReaderPage from "./features/insight/InsightReaderPage";
 import LandingPage from "./features/landing/LandingPage";
 import MarketPage from "./features/market/MarketPage";
 import SharePage from "./features/share/SharePage";
+import UpdateDetailPage from "./features/updates/UpdateDetailPage";
+import UpdatesIndexPage from "./features/updates/UpdatesIndexPage";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { runAgentChat } from "./lib/agent";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
@@ -1863,6 +1866,31 @@ const isMarketLocation = () => {
   return window.location.pathname === "/market";
 };
 
+const isInsightLocation = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.location.pathname === "/insight";
+};
+
+const isUpdatesIndexLocation = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.location.pathname === "/updates";
+};
+
+const getUpdateSlugFromLocation = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const match = window.location.pathname.match(/^\/updates\/([a-z0-9-]+)$/i);
+  return match?.[1] ?? null;
+};
+
 const hasPendingAuthHash = () => {
   if (typeof window === "undefined") {
     return false;
@@ -3287,6 +3315,9 @@ const App = () => {
   const [homeBoardRoute, setHomeBoardRoute] = useState<boolean>(() => isHomeBoardLocation());
   const [publicLandingRoute, setPublicLandingRoute] = useState<boolean>(() => isPublicLandingLocation());
   const [marketRoute, setMarketRoute] = useState<boolean>(() => isMarketLocation());
+  const [insightRoute, setInsightRoute] = useState<boolean>(() => isInsightLocation());
+  const [updatesIndexRoute, setUpdatesIndexRoute] = useState<boolean>(() => isUpdatesIndexLocation());
+  const [updateSlugRoute, setUpdateSlugRoute] = useState<string | null>(() => getUpdateSlugFromLocation());
   const [sharedBoardSlug, setSharedBoardSlug] = useState<string | null>(() => getSharedBoardSlugFromLocation());
   const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(
     () => Boolean(getSharedBoardSlugFromLocation()) || isHomeBoardLocation()
@@ -3537,10 +3568,16 @@ const App = () => {
       const nextHomeRoute = isHomeBoardLocation();
       const nextPublicLandingRoute = isPublicLandingLocation();
       const nextMarketRoute = isMarketLocation();
+      const nextInsightRoute = isInsightLocation();
+      const nextUpdatesIndexRoute = isUpdatesIndexLocation();
+      const nextUpdateSlugRoute = getUpdateSlugFromLocation();
       const nextSlug = getSharedBoardSlugFromLocation();
       setHomeBoardRoute(nextHomeRoute);
       setPublicLandingRoute(nextPublicLandingRoute);
       setMarketRoute(nextMarketRoute);
+      setInsightRoute(nextInsightRoute);
+      setUpdatesIndexRoute(nextUpdatesIndexRoute);
+      setUpdateSlugRoute(nextUpdateSlugRoute);
       setSharedBoardSlug(nextSlug);
       setSharedBoardReadOnly(Boolean(nextSlug) || nextHomeRoute);
     };
@@ -5827,23 +5864,24 @@ const App = () => {
   const latestHistorySnapshot = boardHistorySnapshots[0] ?? null;
   const totalTrashCount = sortedTrashedBoards.length + sortedTrashedNotes.length;
   const lastPersistedLabel = formatSavedAtLabel(lastPersistedAt);
+  const noteCountLabel = feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`;
   const persistenceStatusLabel = isReadOnlyBoardView
     ? "읽기 전용"
     : hasSupabaseConfig && user
       ? cloudSaveState === "saving"
-        ? "클라우드 저장 중"
+        ? "저장 중"
         : cloudSaveState === "saved"
           ? lastPersistedLabel
-            ? `${lastPersistedLabel} 저장 완료`
-            : "클라우드 저장 완료"
+            ? `${lastPersistedLabel} 저장됨`
+            : "저장됨"
           : cloudSaveState === "error"
-            ? "클라우드 저장 실패"
+            ? "저장 확인 필요"
             : lastPersistedLabel
-              ? `${lastPersistedLabel} 마지막 저장`
-              : "클라우드 동기화 대기"
+              ? `${lastPersistedLabel} 저장됨`
+              : "저장 대기 중"
       : lastPersistedLabel
-        ? `${lastPersistedLabel} 브라우저 저장`
-        : "브라우저 저장";
+        ? `${lastPersistedLabel} 브라우저 저장됨`
+        : "브라우저에 저장 중";
   const currentNotes = feedMode === "active" ? activeNotes : archivedNotes;
 
   const filteredNotes = useMemo(() => {
@@ -6987,6 +7025,9 @@ const App = () => {
     setHomeBoardRoute(false);
     setPublicLandingRoute(true);
     setMarketRoute(false);
+    setInsightRoute(false);
+    setUpdatesIndexRoute(false);
+    setUpdateSlugRoute(null);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
@@ -7002,6 +7043,9 @@ const App = () => {
     setHomeBoardRoute(false);
     setPublicLandingRoute(false);
     setMarketRoute(false);
+    setInsightRoute(false);
+    setUpdatesIndexRoute(false);
+    setUpdateSlugRoute(null);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
@@ -9003,6 +9047,42 @@ const App = () => {
     </div>
   );
 
+  const showMobileWorkspaceMeta = compactHeader && !isReadOnlyBoardView && !isHomeView;
+  const boardHeading = canRenameBoard && editingBoardTitle ? (
+    <input
+      className="board-title-input"
+      value={boardTitleDraft}
+      onChange={(event) => setBoardTitleDraft(event.target.value.slice(0, MAX_BOARD_TITLE_LENGTH))}
+      onBlur={commitBoardTitle}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          commitBoardTitle();
+        }
+
+        if (event.key === "Escape") {
+          setBoardTitleDraft(selectedBoard?.title ?? "");
+          setEditingBoardTitle(false);
+        }
+      }}
+      maxLength={MAX_BOARD_TITLE_LENGTH}
+      autoFocus
+    />
+  ) : (
+    <h1
+      className={canRenameBoard ? "editable-board-title" : undefined}
+      onClick={() => {
+        if (!canRenameBoard) {
+          return;
+        }
+        setBoardTitleDraft(selectedBoard?.title ?? "");
+        setEditingBoardTitle(true);
+      }}
+    >
+      {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}
+    </h1>
+  );
+
   const renderFeedLoadingSkeleton = () => {
     const skeletonColumnCount = compactHeader ? 2 : Math.min(4, Math.max(2, columnCount));
     const skeletonCards = Array.from({ length: skeletonColumnCount * 2 }, (_, index) => ({
@@ -9056,6 +9136,18 @@ const App = () => {
     return <MarketPage user={user} onNavigateBack={user ? navigateToWorkspace : navigateToPublicLanding} />;
   }
 
+  if (insightRoute && !isSharedView) {
+    return <InsightReaderPage onNavigateBack={navigateToPublicLanding} userId={user?.id ?? null} />;
+  }
+
+  if (updatesIndexRoute && !isSharedView) {
+    return <UpdatesIndexPage onNavigateBack={navigateToPublicLanding} />;
+  }
+
+  if (updateSlugRoute && !isSharedView) {
+    return <UpdateDetailPage slug={updateSlugRoute} onNavigateBack={navigateToPublicLanding} />;
+  }
+
   if (!user && !isSharedView && waitingForAuthResolution) {
     return <div className="landing-auth-wait">로그인 상태를 확인하는 중입니다.</div>;
   }
@@ -9070,6 +9162,7 @@ const App = () => {
   const topbarClassName = `pin-topbar ${compactHeader ? "compact-header" : ""} ${
     isReadOnlyBoardView ? "public-topbar" : "workspace-topbar"
   } ${pageModeClassName}-topbar`.trim();
+  const showWorkspaceBoardTabs = !isHomeView && !isReadOnlyBoardView && activeBoards.length > 0;
   const mainClassName = `pin-main ${isReadOnlyBoardView ? "public-main" : "workspace-main"} ${pageModeClassName}-main`.trim();
   const boardPanelClassName = `pin-board-panel current-board-panel ${
     isReadOnlyBoardView ? "public-board-panel" : "workspace-board-panel"
@@ -9092,277 +9185,371 @@ const App = () => {
 
   return (
     <CurrentPage showExpandedSidebar={showExpandedSidebar} extraClassName={boardThemeClassName}>
-      <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`}>
-        <button
-          className="pin-brand"
-          aria-label={showExpandedSidebar ? "WZD 홈으로 이동" : "사이드 메뉴 펼치기"}
-          onClick={() => {
-            if (!compactSidebar && !showExpandedSidebar) {
-              setSidebarPinned(true);
-              return;
-            }
-
-            navigateToPublicLanding();
-          }}
-        >
-          <span className="pin-brand-inner">
-            <span className="pin-brand-logo" aria-hidden="true">
-              {showExpandedSidebar ? "WZD" : "W"}
-            </span>
-            {!showExpandedSidebar && !compactSidebar ? (
-              <span className="pin-brand-toggle" aria-hidden="true">
-                <SidebarToggleIcon />
-              </span>
-            ) : null}
-          </span>
-        </button>
-
-        <div className="board-menu">
-          <div
-            className="board-switcher"
-            onDragOver={(event) => {
-              if (draggingBoardId) {
-                event.preventDefault();
-                if (event.target === event.currentTarget) {
-                  setDragPreviewBoardId(null);
-                }
+      <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`} aria-label="작업공간 기본 탐색">
+        <div className="sidebar-primary-stack">
+          <button
+            className="pin-brand"
+            aria-label={showExpandedSidebar ? "WZD 홈으로 이동" : "사이드 메뉴 펼치기"}
+            onClick={() => {
+              if (!compactSidebar && !showExpandedSidebar) {
+                setSidebarPinned(true);
+                return;
               }
+
+              navigateToPublicLanding();
             }}
-            onDrop={(event) => onBoardChipDrop(event)}
           >
-            {activeBoards.map((boardItem) => (
-              <div key={boardItem.id} className="board-chip-slot">
-                {draggingBoardId && dragPreviewBoardId === boardItem.id && draggingBoardId !== boardItem.id && (
-                  <div className="board-chip-drop-preview" aria-hidden="true">
-                    <span className="board-chip-drop-label">여기에 이동</span>
-                  </div>
-                )}
-                <button
-                  className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""} ${
-                    draggingBoardId === boardItem.id ? "dragging" : ""
-                  }`}
-                  draggable={showExpandedSidebar && dragArmedBoardId === boardItem.id}
-                  onMouseDown={() => armBoardDrag(boardItem.id)}
-                  onMouseUp={clearBoardLongPress}
-                  onMouseLeave={clearBoardLongPress}
-                  onDragStart={(event) => onBoardChipDragStart(event, boardItem.id)}
-                  onDragEnd={() => {
-                    clearBoardLongPress();
-                    setDraggingBoardId(null);
-                    setDragPreviewBoardId(null);
-                    setDragArmedBoardId(null);
-                  }}
-                  onDragEnter={() => {
-                    if (draggingBoardId && draggingBoardId !== boardItem.id) {
-                      setDragPreviewBoardId(boardItem.id);
-                    }
-                  }}
+            <span className="pin-brand-inner">
+              <span className="pin-brand-logo" aria-hidden="true">
+                {showExpandedSidebar ? "WZD" : "W"}
+              </span>
+              {!showExpandedSidebar && !compactSidebar ? (
+                <span className="pin-brand-toggle" aria-hidden="true">
+                  <SidebarToggleIcon />
+                </span>
+              ) : null}
+            </span>
+          </button>
+
+          <nav className="sidebar-nav" aria-label="작업공간 탐색">
+            <div className="sidebar-section sidebar-section-boards">
+              <p className="sidebar-section-label">Boards</p>
+              <div className="board-menu">
+                <div
+                  className="board-switcher"
                   onDragOver={(event) => {
                     if (draggingBoardId) {
                       event.preventDefault();
+                      if (event.target === event.currentTarget) {
+                        setDragPreviewBoardId(null);
+                      }
                     }
                   }}
-                  onDrop={(event) => onBoardChipDrop(event, boardItem.id)}
-                  onClick={() => {
-                    if (dragArmedBoardId === boardItem.id || draggingBoardId === boardItem.id) {
-                      return;
-                    }
+                  onDrop={(event) => onBoardChipDrop(event)}
+                >
+                  {activeBoards.map((boardItem) => (
+                    <div key={boardItem.id} className="board-chip-slot">
+                      {draggingBoardId && dragPreviewBoardId === boardItem.id && draggingBoardId !== boardItem.id && (
+                        <div className="board-chip-drop-preview" aria-hidden="true">
+                          <span className="board-chip-drop-label">여기에 이동</span>
+                        </div>
+                      )}
+                      <button
+                        className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""} ${
+                          draggingBoardId === boardItem.id ? "dragging" : ""
+                        }`}
+                        draggable={showExpandedSidebar && dragArmedBoardId === boardItem.id}
+                        onMouseDown={() => armBoardDrag(boardItem.id)}
+                        onMouseUp={clearBoardLongPress}
+                        onMouseLeave={clearBoardLongPress}
+                        onDragStart={(event) => onBoardChipDragStart(event, boardItem.id)}
+                        onDragEnd={() => {
+                          clearBoardLongPress();
+                          setDraggingBoardId(null);
+                          setDragPreviewBoardId(null);
+                          setDragArmedBoardId(null);
+                        }}
+                        onDragEnter={() => {
+                          if (draggingBoardId && draggingBoardId !== boardItem.id) {
+                            setDragPreviewBoardId(boardItem.id);
+                          }
+                        }}
+                        onDragOver={(event) => {
+                          if (draggingBoardId) {
+                            event.preventDefault();
+                          }
+                        }}
+                        onDrop={(event) => onBoardChipDrop(event, boardItem.id)}
+                        onClick={() => {
+                          if (dragArmedBoardId === boardItem.id || draggingBoardId === boardItem.id) {
+                            return;
+                          }
 
-                    if (!compactSidebar) {
-                      setSidebarPinned(true);
-                    }
+                          if (!compactSidebar) {
+                            setSidebarPinned(true);
+                          }
+                          setSelectedBoardId(boardItem.id);
+                          setSelectedNoteId(null);
+                          setFeedMode("active");
+                        }}
+                        aria-label={boardItem.title}
+                        title={boardItem.title}
+                      >
+                        <span className="board-chip-badge">{getBoardBadge(boardItem.title)}</span>
+                        <span className="board-chip-label">{boardItem.title}</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="sidebar-section sidebar-section-workspace">
+              <p className="sidebar-section-label">Workspace</p>
+              <button
+                className="side-icon"
+                onClick={() => {
+                  if (!compactSidebar) {
+                    setSidebarPinned(true);
+                  }
+                  openTemplatePicker();
+                }}
+                aria-label="새 보드"
+              >
+                <span className="side-icon-glyph" aria-hidden="true">
+                  +
+                </span>
+                <span className="side-icon-label">보드 추가</span>
+              </button>
+            </div>
+          </nav>
+        </div>
+
+        <div className="sidebar-spacer" />
+
+        <div className="sidebar-footer">
+          <div className="sidebar-section sidebar-section-settings">
+            <p className="sidebar-section-label">Settings</p>
+            <button
+              className={`side-icon subtle settings-icon ${settingsOpen ? "active" : ""}`}
+              onClick={() => {
+                if (!compactSidebar) {
+                  setSidebarPinned(true);
+                }
+                if (settingsOpen) {
+                  setSettingsOpen(false);
+                } else {
+                  openBoardSettings();
+                }
+              }}
+              aria-label="설정"
+            >
+              <span className="side-icon-glyph settings-glyph" aria-hidden="true">
+                <SettingsIcon />
+              </span>
+              <span className="side-icon-label">설정</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <div className={`pin-app ${pageModeClassName}-app`}>
+        {showWorkspaceBoardTabs ? (
+          <header className={`${topbarClassName} board-tabs-only-topbar`}>
+            <div className="workspace-board-tabs" role="tablist" aria-label="보드 목록" ref={mobileBoardTabsRef}>
+              {activeBoards.map((boardItem) => (
+                <button
+                  key={`workspace-tab-${boardItem.id}`}
+                  role="tab"
+                  aria-selected={selectedBoard?.id === boardItem.id}
+                  className={`workspace-board-tab ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
+                  ref={(node) => {
+                    mobileBoardTabRefs.current[boardItem.id] = node;
+                  }}
+                  onClick={() => {
                     setSelectedBoardId(boardItem.id);
                     setSelectedNoteId(null);
                     setFeedMode("active");
                   }}
-                  aria-label={boardItem.title}
-                  title={boardItem.title}
                 >
-                  <span className="board-chip-badge">{getBoardBadge(boardItem.title)}</span>
-                  <span className="board-chip-label">{boardItem.title}</span>
+                  <span className="workspace-board-tab-badge">{getBoardBadge(boardItem.title)}</span>
+                  <span className="workspace-board-tab-label">{boardItem.title}</span>
                 </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <button
-          className="side-icon"
-          onClick={() => {
-            if (!compactSidebar) {
-              setSidebarPinned(true);
-            }
-            openTemplatePicker();
-          }}
-          aria-label="새 보드"
-        >
-          <span className="side-icon-glyph" aria-hidden="true">
-            +
-          </span>
-          <span className="side-icon-label">보드 추가</span>
-        </button>
-
-        <div className="sidebar-spacer" />
-
-        <button
-          className={`side-icon subtle settings-icon ${settingsOpen ? "active" : ""}`}
-          onClick={() => {
-            if (!compactSidebar) {
-              setSidebarPinned(true);
-            }
-            if (settingsOpen) {
-              setSettingsOpen(false);
-            } else {
-              openBoardSettings();
-            }
-          }}
-          aria-label="설정"
-        >
-          <span className="side-icon-glyph settings-glyph" aria-hidden="true">
-            <SettingsIcon />
-          </span>
-          <span className="side-icon-label">설정</span>
-        </button>
-      </aside>
-
-      <div className={`pin-app ${pageModeClassName}-app`}>
-        <header className={topbarClassName}>
+              ))}
+            </div>
+          </header>
+        ) : (
+          <header className={topbarClassName}>
             <div className="topbar-primary">
-            <div className={`topbar-board-title ${isReadOnlyBoardView ? "readonly-board-title" : ""}`}>
-              {compactHeader && (
-                <button
-                  className="mobile-icon-action mobile-board-toggle"
-                  onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
-                  aria-label="보드 메뉴"
-                >
-                  ≡
-                </button>
-              )}
-              <p className="feed-kicker">
-                {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
-              </p>
-              {canRenameBoard && editingBoardTitle ? (
-                <input
-                  className="board-title-input"
-                  value={boardTitleDraft}
-                  onChange={(event) => setBoardTitleDraft(event.target.value.slice(0, MAX_BOARD_TITLE_LENGTH))}
-                  onBlur={commitBoardTitle}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      commitBoardTitle();
-                    }
-
-                    if (event.key === "Escape") {
-                      setBoardTitleDraft(selectedBoard?.title ?? "");
-                      setEditingBoardTitle(false);
-                    }
-                  }}
-                  maxLength={MAX_BOARD_TITLE_LENGTH}
-                  autoFocus
-                />
-              ) : (
-                <h1
-                  className={canRenameBoard ? "editable-board-title" : undefined}
-                  onClick={() => {
-                    if (!canRenameBoard) {
-                      return;
-                    }
-                    setBoardTitleDraft(selectedBoard?.title ?? "");
-                    setEditingBoardTitle(true);
-                  }}
-                >
-                  {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}
-                </h1>
-              )}
-              {isReadOnlyBoardView && selectedBoard?.description?.trim() && (
-                <div className="readonly-board-copy">
-                  <p className="readonly-board-description">{selectedBoard.description.trim()}</p>
-                  <div className="readonly-board-meta">
-                    <span>{activeNotes.length}개의 핀</span>
-                    <span>읽기 전용 페이지</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className={`search-shell ${mobileSearchOpen ? "mobile-open" : ""}`}>
-              <span className="search-icon" aria-hidden="true">
-                ⌕
-              </span>
-              <input
-                ref={searchInputRef}
-                className="search-input pinterest-search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={feedMode === "active" ? "내 메모와 링크 검색" : "보관 메모 검색"}
-              />
-            </div>
-          </div>
-
-          <div className="topbar-actions">
-            {homeBoardRoute && user && (
-              <button className="ghost-action" onClick={navigateToWorkspace}>
-                작업공간
-              </button>
-            )}
-            {compactHeader && !isReadOnlyBoardView && (
-              <button className="mobile-icon-action mobile-new-note-action" onClick={addNote} aria-label="새 메모 만들기">
-                +
-              </button>
-            )}
-            {!compactHeader && !isReadOnlyBoardView && (
-              <button className="new-note-pill" onClick={addNote}>
-                새 메모
-              </button>
-            )}
-            {!compactHeader && !isReadOnlyBoardView && (
-              <div className="widget-menu-wrap">
-                <button
-                  className="widget-pill"
-                  onClick={() => {
-                    setWidgetGalleryCategory("collect");
-                    setWidgetMenuOpen(true);
-                  }}
-                >
-                  위젯 추가
-                </button>
-              </div>
-            )}
-            {!compactHeader && canBoardSettings && (
-              <button className="ghost-action" onClick={openBoardSettings}>
-                보드 설정
-              </button>
-            )}
-            {hasSupabaseConfig ? (
-              user ? (
-                <div className="profile-menu-wrap" ref={profileMenuRef}>
-                  <button
-                    className={compactHeader ? "mobile-profile-button" : "profile-pill profile-pill-expandable"}
-                    onClick={() => setProfileMenuOpen((prev) => !prev)}
-                    aria-expanded={profileMenuOpen}
-                  >
-                    <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
-                    {!compactHeader && <span className="profile-email">{user.email}</span>}
-                  </button>
-                  {profileMenuOpen && (
-                    <div className="profile-menu-popover">
-                      <button className="profile-menu-item" onClick={() => void onLogout()}>
-                        로그아웃
-                      </button>
+              <div className={`topbar-board-title ${isReadOnlyBoardView ? "readonly-board-title" : ""}`}>
+                {compactHeader ? (
+                  isReadOnlyBoardView ? (
+                    <>
+                      <div className="mobile-topbar-control-row">
+                        <button
+                          className="mobile-icon-action mobile-board-toggle"
+                          onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+                          aria-label="보드 메뉴"
+                        >
+                          <span className="mobile-board-toggle-glyph" aria-hidden="true">
+                            ≡
+                          </span>
+                          <span className="mobile-board-toggle-label">보드</span>
+                        </button>
+                        <div className="mobile-topbar-action-cluster">
+                          {hasSupabaseConfig ? (
+                            user ? (
+                              <div className="profile-menu-wrap" ref={profileMenuRef}>
+                                <button
+                                  className="mobile-profile-button"
+                                  onClick={() => setProfileMenuOpen((prev) => !prev)}
+                                  aria-expanded={profileMenuOpen}
+                                >
+                                  <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+                                </button>
+                                {profileMenuOpen && (
+                                  <div className="profile-menu-popover">
+                                    <button className="profile-menu-item" onClick={() => void onLogout()}>
+                                      로그아웃
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <button className="mobile-icon-action mobile-auth-action" onClick={onGoogleLogin}>
+                                로그인
+                              </button>
+                            )
+                          ) : (
+                            <div className="profile-pill muted mobile-local-mode-pill">로컬 모드</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mobile-topbar-heading">
+                        <p className="feed-kicker">
+                          {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
+                        </p>
+                        {boardHeading}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mobile-topbar-board-row">
+                        <button
+                          className="mobile-icon-action mobile-board-toggle"
+                          onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+                          aria-label="보드 메뉴"
+                        >
+                          <span className="mobile-board-toggle-glyph" aria-hidden="true">
+                            ≡
+                          </span>
+                          <span className="mobile-board-toggle-label">보드</span>
+                        </button>
+                        <div className="mobile-topbar-board-copy">
+                          <p className="feed-kicker">{feedMode === "active" ? "보드 선택" : "보관 메모"}</p>
+                          {boardHeading}
+                        </div>
+                        {hasSupabaseConfig ? (
+                          user ? (
+                            <div className="profile-menu-wrap" ref={profileMenuRef}>
+                              <button
+                                className="mobile-profile-button"
+                                onClick={() => setProfileMenuOpen((prev) => !prev)}
+                                aria-expanded={profileMenuOpen}
+                              >
+                                <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+                              </button>
+                              {profileMenuOpen && (
+                                <div className="profile-menu-popover">
+                                  <button className="profile-menu-item" onClick={() => void onLogout()}>
+                                    로그아웃
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <button className="mobile-icon-action mobile-auth-action" onClick={onGoogleLogin}>
+                              로그인
+                            </button>
+                          )
+                        ) : (
+                          <div className="profile-pill muted mobile-local-mode-pill">로컬 모드</div>
+                        )}
+                      </div>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <p className="feed-kicker">
+                      {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
+                    </p>
+                    {boardHeading}
+                  </>
+                )}
+                {isReadOnlyBoardView && selectedBoard?.description?.trim() && (
+                  <div className="readonly-board-copy">
+                    <p className="readonly-board-description">{selectedBoard.description.trim()}</p>
+                    <div className="readonly-board-meta">
+                      <span>{activeNotes.length}개의 핀</span>
+                      <span>읽기 전용 페이지</span>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <button className={compactHeader ? "mobile-icon-action mobile-auth-action" : "ghost-action mobile-auth-action"} onClick={onGoogleLogin}>
-                  구글 로그인
+                  </div>
+                )}
+              </div>
+
+              <div className={`search-shell ${mobileSearchOpen ? "mobile-open" : ""}`}>
+                <span className="search-icon" aria-hidden="true">
+                  ⌕
+                </span>
+                <input
+                  ref={searchInputRef}
+                  className="search-input pinterest-search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder={feedMode === "active" ? "내 메모와 링크 검색" : "보관 메모 검색"}
+                />
+              </div>
+            </div>
+
+            {!compactHeader && <div className="topbar-actions">
+              {homeBoardRoute && user && (
+                <button className="ghost-action" onClick={navigateToWorkspace}>
+                  작업공간
                 </button>
-              )
-            ) : (
-              <div className="profile-pill muted">로컬 모드</div>
-            )}
-          </div>
-        </header>
+              )}
+              {!compactHeader && !isReadOnlyBoardView && (
+                <button className="new-note-pill" onClick={addNote}>
+                  새 메모
+                </button>
+              )}
+              {!compactHeader && !isReadOnlyBoardView && (
+                <div className="widget-menu-wrap">
+                  <button
+                    className="widget-pill"
+                    onClick={() => {
+                      setWidgetGalleryCategory("collect");
+                      setWidgetMenuOpen(true);
+                    }}
+                  >
+                    위젯 추가
+                  </button>
+                </div>
+              )}
+              {!compactHeader && canBoardSettings && (
+                <button className="ghost-action" onClick={openBoardSettings}>
+                  보드 설정
+                </button>
+              )}
+              {hasSupabaseConfig ? (
+                user ? (
+                  <div className="profile-menu-wrap" ref={profileMenuRef}>
+                    <button
+                      className={compactHeader ? "mobile-profile-button" : "profile-pill profile-pill-expandable"}
+                      onClick={() => setProfileMenuOpen((prev) => !prev)}
+                      aria-expanded={profileMenuOpen}
+                    >
+                      <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+                      {!compactHeader && <span className="profile-email">{user.email}</span>}
+                    </button>
+                    {profileMenuOpen && (
+                      <div className="profile-menu-popover">
+                        <button className="profile-menu-item" onClick={() => void onLogout()}>
+                          로그아웃
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button className={compactHeader ? "mobile-icon-action mobile-auth-action" : "ghost-action mobile-auth-action"} onClick={onGoogleLogin}>
+                    구글 로그인
+                  </button>
+                )
+              ) : (
+                <div className="profile-pill muted">로컬 모드</div>
+              )}
+            </div>}
+          </header>
+        )}
 
         {mobileBoardMenuOpen && (
           <div className="mobile-board-sheet">
@@ -9937,30 +10124,6 @@ const App = () => {
             </div>
           )}
 
-          {compactHeader && feedMode === "active" && activeBoards.length > 1 && (
-            <div className="mobile-board-tabs" role="tablist" aria-label="보드 목록" ref={mobileBoardTabsRef}>
-              {activeBoards.map((boardItem) => (
-                <button
-                  key={`mobile-tab-${boardItem.id}`}
-                  role="tab"
-                  aria-selected={selectedBoard?.id === boardItem.id}
-                  className={`mobile-board-tab ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
-                  ref={(node) => {
-                    mobileBoardTabRefs.current[boardItem.id] = node;
-                  }}
-                  onClick={() => {
-                    setSelectedBoardId(boardItem.id);
-                    setSelectedNoteId(null);
-                    setFeedMode("active");
-                  }}
-                >
-                  <span className="mobile-board-tab-badge">{getBoardBadge(boardItem.title)}</span>
-                  <span className="mobile-board-tab-label">{boardItem.title}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
           <main className={mainClassName}>
           <div
             className={`pin-board-stage ${mobileSwipeEnabled ? "mobile-swipe-enabled" : ""} ${boardSwipeTransition ? "swipe-transition" : ""}`}
@@ -10025,12 +10188,12 @@ const App = () => {
           <section className={feedHeadClassName}>
             <div className="feed-meta">
               <div className="trust-bar">
-                <span className={`trust-chip save-state-${cloudSaveState}`}>
-                  {persistenceStatusLabel}
-                </span>
-                <span className="trust-chip">
-                  {feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`}
-                </span>
+                {(!showMobileWorkspaceMeta || isReadOnlyBoardView) && (
+                  <span className={`trust-chip save-state-${cloudSaveState}`}>
+                    {persistenceStatusLabel}
+                  </span>
+                )}
+                {(!showMobileWorkspaceMeta || isReadOnlyBoardView) && <span className="trust-chip">{noteCountLabel}</span>}
                 {!isReadOnlyBoardView && (
                   <button
                     className="trust-chip trust-chip-action"
@@ -10889,6 +11052,55 @@ const App = () => {
           </div>
           </div>
         </main>
+
+        {compactHeader && !isReadOnlyBoardView && (
+          <nav className="mobile-bottom-nav-shell" aria-label="작업공간 빠른 메뉴">
+            <button
+              className={`mobile-bottom-nav-item ${mobileBoardMenuOpen ? "active" : ""}`}
+              onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+            >
+              <span className="mobile-bottom-nav-icon" aria-hidden="true">
+                ≡
+              </span>
+              <span>보드</span>
+            </button>
+            {feedMode === "active" && selectedBoard ? (
+              <>
+                <button className="mobile-bottom-nav-item mobile-bottom-nav-item-primary" onClick={addNote}>
+                  <span className="mobile-bottom-nav-icon" aria-hidden="true">
+                    +
+                  </span>
+                  <span>새 메모</span>
+                </button>
+                <button
+                  className={`mobile-bottom-nav-item ${widgetMenuOpen ? "active" : ""}`}
+                  onClick={() => {
+                    setWidgetGalleryCategory("collect");
+                    setWidgetMenuOpen(true);
+                    setMobileBoardMenuOpen(false);
+                  }}
+                >
+                  <span className="mobile-bottom-nav-icon" aria-hidden="true">
+                    ◫
+                  </span>
+                  <span>위젯</span>
+                </button>
+              </>
+            ) : null}
+            <button
+              className={`mobile-bottom-nav-item ${settingsOpen ? "active" : ""}`}
+              onClick={() => {
+                openBoardSettings();
+                setMobileBoardMenuOpen(false);
+              }}
+            >
+              <span className="mobile-bottom-nav-icon settings-glyph" aria-hidden="true">
+                <SettingsIcon />
+              </span>
+              <span>설정</span>
+            </button>
+          </nav>
+        )}
 
         {feedMode === "active" && runningDragNoteId && (
           <button

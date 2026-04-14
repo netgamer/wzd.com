@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 type AuthUserProfile = {
@@ -41,6 +42,18 @@ type HeroPreviewWidget = {
   lines?: string[];
   value?: string;
   chips?: string[];
+};
+
+type FirstPagePreset = {
+  key: "creator" | "research" | "operator";
+  label: string;
+  title: string;
+  description: string;
+  firstOpen: string;
+  bookmarkStack: string;
+  rssStack: string;
+  proofPoints: string[];
+  heroWidgets: HeroPreviewWidget[];
 };
 
 type ShowcaseWidget =
@@ -157,18 +170,18 @@ type ShowcaseWidget =
 const FEATURES: LandingFeature[] = [
   {
     icon: "01",
-    title: "메모와 위젯을 같은 보드에서",
-    description: "단순 메모장에서 끝나지 않고 뉴스, 날씨, 할 일, 북마크까지 한 화면에서 같이 씁니다."
+    title: "브라우저 새 탭 대신 내 첫 페이지로",
+    description: "검색창만 있는 기본 시작페이지 대신, 내가 늘 먼저 여는 링크와 읽을거리가 바로 뜨는 개인화 첫 페이지를 만듭니다."
   },
   {
     icon: "02",
-    title: "개인 보드와 공유 보드를 분리해서",
-    description: "혼자 쓰는 정리판과 팀이 함께 보는 작업공간을 같은 방식으로 운영할 수 있습니다."
+    title: "북마크와 RSS만 먼저 보이게",
+    description: "자주 가는 사이트와 매일 확인하는 피드를 한 화면에 모아, 브라우저를 열자마자 필요한 것부터 바로 보이게 합니다."
   },
   {
     icon: "03",
-    title: "보자마자 감이 오는 화면",
-    description: "설명보다 샘플을 먼저 보여줘서 로그인 전에도 어떤 보드를 만들 수 있는지 바로 이해됩니다."
+    title: "기본은 개인 페이지, 공유는 그다음",
+    description: "핵심은 내가 매일 쓰는 첫 페이지이고, 필요할 때만 링크와 읽을거리를 정리한 페이지처럼 바깥에 보여줄 수 있습니다."
   }
 ];
 
@@ -176,232 +189,240 @@ const WIDGET_SAMPLES: WidgetSample[] = [
   {
     type: "메모",
     title: "빠른 메모",
-    description: "아이디어, 회의 메모, 해야 할 일을 가장 빨리 붙이는 기본 카드입니다.",
+    description: "북마크와 RSS 사이에 오늘 기억할 한 줄을 붙여두는 개인 메모 카드입니다.",
     badge: "NOTE",
     accentClass: "accent-paper",
-    lines: ["회의 전 질문 3개", "담당 문장 한 줄 정리", "https://example.com"],
-    useCase: "링크 하나와 짧은 메모를 같이 적어 두는 개인 작업 카드"
+    lines: ["오늘 먼저 볼 링크 2개", "읽고 싶은 글 1개 체크", "https://example.com"],
+    useCase: "브라우저를 열자마자 기억해야 할 한 줄을 붙여두는 첫 페이지 메모"
   },
   {
     type: "북마크",
     title: "자주 여는 링크",
-    description: "브라우저 탭 대신 자주 보는 링크를 보드 안에서 분류 없이 바로 꺼냅니다.",
+    description: "브라우저를 열자마자 가장 먼저 눌러야 하는 링크를 앞줄에 고정합니다.",
     badge: "BOOKMARK",
     accentClass: "accent-sand",
-    lines: ["OpenAI Docs", "클라이언트 대시보드", "최신 광고 레퍼런스"],
-    useCase: "업무 시작할 때 반드시 여는 링크 묶음"
+    lines: ["Gmail", "Calendar", "자주 가는 커뮤니티"],
+    useCase: "새 탭을 열 때마다 가장 먼저 누르는 링크 묶음"
   },
   {
     type: "체크리스트",
     title: "오늘 할 일",
-    description: "보드 안에서 상태를 바로 바꾸며 진행 상황을 눈으로 확인합니다.",
+    description: "첫 화면에서 바로 확인할 가벼운 할 일만 붙여두는 보조 카드입니다.",
     badge: "TODO",
     accentClass: "accent-mint",
-    lines: ["[x] 회의 자료 정리", "[ ] 피드백 반영", "[ ] 4시 보고 준비"],
-    useCase: "메모와 실행 항목이 섞여 있는 하루 단위 진행 관리"
-  },
-  {
-    type: "디데이",
-    title: "런칭 카운트다운",
-    description: "중요 일정까지 남은 시간을 큰 숫자로 보여줘 팀 집중도를 맞춥니다.",
-    badge: "COUNTDOWN",
-    accentClass: "accent-rose",
-    lines: ["프로젝트 오픈", "D-12", "2026.04.14"],
-    useCase: "런칭, 발표, 제출 마감 같은 이벤트 추적"
-  },
-  {
-    type: "시간표",
-    title: "주간 스케줄",
-    description: "회의와 촬영, 마감, 발표를 주간 흐름으로 한 카드 안에 붙여 둡니다.",
-    badge: "TIMETABLE",
-    accentClass: "accent-blue",
-    lines: ["월 09:00 기획 회의", "수 13:00 촬영", "금 16:30 회고"],
-    useCase: "개인 일정과 팀 루틴을 함께 보는 운영 보드"
+    lines: ["[x] 메일 확인", "[ ] 저장 글 2개 읽기", "[ ] 오늘 링크 정리"],
+    useCase: "브라우저 첫 화면에서 바로 확인하는 하루 시작 체크"
   },
   {
     type: "날씨",
     title: "오늘 날씨",
-    description: "현장 촬영, 외근, 산책 일정처럼 날씨 영향이 큰 루틴에 붙여 쓰기 좋습니다.",
+    description: "외출 전에 한 번 더 확인하고 싶은 정보를 첫 페이지에 같이 둡니다.",
     badge: "WEATHER",
     accentClass: "accent-sky",
-    lines: ["서울 17도", "오후 비 가능성 40%", "내일 오전 맑음"],
-    useCase: "하루 동선과 복장, 촬영 준비 판단용"
-  },
-  {
-    type: "트렌드",
-    title: "지금 뜨는 키워드",
-    description: "실시간 검색과 트렌드 키워드를 보드 안에 붙여 시장 감각을 유지합니다.",
-    badge: "TREND",
-    accentClass: "accent-amber",
-    lines: ["1. AI 에이전트", "2. 반도체", "3. 로봇택시"],
-    useCase: "마케팅, 콘텐츠, 리서치 팀의 실시간 참고 카드"
+    lines: ["서울 17도", "오후 비 가능성 40%", "퇴근 전에는 맑음"],
+    useCase: "메일과 저장 링크를 열기 전에 같이 보는 생활 정보"
   },
   {
     type: "RSS",
     title: "읽을 거리 모음",
-    description: "구독 중인 피드를 보드에 꽂아 두고 메모와 함께 읽습니다.",
+    description: "매일 확인하는 RSS 피드를 첫 페이지 앞줄에 꽂아 두고 한곳에서 훑습니다.",
     badge: "RSS",
     accentClass: "accent-lavender",
-    lines: ["AI 뉴스레터", "디자인 시스템 글", "스타트업 업데이트"],
-    useCase: "아침 리서치 루틴과 자료 큐레이션",
+    lines: ["GeekNews", "디자인 시스템 글", "즐겨보는 블로그"],
+    useCase: "북마크를 열기 전에 새 글부터 훑는 아침 루틴",
     rssSource: "GeekNews - 개발/기술/스타트업 뉴스 서비스",
     rssPreview: [
       { headline: "나는 그만둔다. 클랭커들이 이겼다", time: "2026-04-02T15:33:12+09:00" },
       { headline: "DRAM 가격 상승이 취미용 SBC 시장을 위축시키는 중", time: "2026-04-02T14:33:00+09:00" },
       { headline: "Claude Code 소스 유출로 탄생한 OpenClaude", time: "2026-04-02T14:04:20+09:00" }
     ]
-  },
-  {
-    type: "배송 추적",
-    title: "발송 진행 상태",
-    description: "주문 메모와 송장 상태를 같은 카드 안에서 확인할 수 있습니다.",
-    badge: "DELIVERY",
-    accentClass: "accent-ash",
-    lines: ["집화 완료", "간선 상차", "내일 오후 도착 예정"],
-    useCase: "제품 샘플, 촬영 장비, 사무실 물품 추적"
-  },
-  {
-    type: "펫",
-    title: "반려동물 기록",
-    description: "기분, 방문 횟수, 식사 상태를 감정적인 톤으로 남기는 생활 카드입니다.",
-    badge: "PET",
-    accentClass: "accent-peach",
-    lines: ["모찌", "오늘 산책 2회", "간식 조금 먹음"],
-    useCase: "생활 메모 보드나 가족 공유 보드"
-  },
-  {
-    type: "커버",
-    title: "보드 소개 카드",
-    description: "보드의 목적과 이번 주 초점을 첫 카드에서 바로 설명합니다.",
-    badge: "COVER",
-    accentClass: "accent-ink",
-    lines: ["브랜드 리뉴얼 보드", "핵심 화면 방향 정리", "이번 주 집중 작업"],
-    useCase: "새 보드가 어떤 맥락인지 설명하는 표지"
-  },
-  {
-    type: "문서",
-    title: "기획 문서 카드",
-    description: "긴 문서를 전부 펼치기 전에 핵심 문단만 압축해서 읽게 해 줍니다.",
-    badge: "DOC",
-    accentClass: "accent-cream",
-    lines: ["신규 기능 제안", "문제, 해결 방식, 기대 효과", "회의 전에 읽는 요약"],
-    useCase: "제안서, 회의 문서, PRD 요약"
-  },
-  {
-    type: "집중 타이머",
-    title: "딥워크 세션",
-    description: "집중 시간과 휴식 시간을 시각적으로 박아 두는 생산성 카드입니다.",
-    badge: "FOCUS",
-    accentClass: "accent-burgundy",
-    lines: ["25:00 집중", "현재 세션 진행 중", "다음 휴식 5분"],
-    useCase: "공부 보드, 작업 스프린트, 개인 루틴"
-  },
-  {
-    type: "무드",
-    title: "오늘의 컨디션",
-    description: "기분과 에너지 레벨을 짧게 남겨 하루 기록과 연결합니다.",
-    badge: "MOOD",
-    accentClass: "accent-blush",
-    lines: ["차분함", "에너지 3/5", "회의 전 준비 완료"],
-    useCase: "개인 회고, 감정 기록, 생활 보드"
-  },
-  {
-    type: "루틴",
-    title: "반복 루틴",
-    description: "매일 반복하는 행동을 체크리스트처럼 쌓아 습관으로 만듭니다.",
-    badge: "ROUTINE",
-    accentClass: "accent-olive",
-    lines: ["아침 정리", "중요 작업 1개", "하루 마감 회고"],
-    useCase: "아침 시작 루틴, 팀 오프닝 체크, 학습 습관"
-  },
-  {
-    type: "프롬프트",
-    title: "AI 작업 프롬프트",
-    description: "자주 쓰는 프롬프트를 카드로 모아 두고 바로 복사해 씁니다.",
-    badge: "PROMPT",
-    accentClass: "accent-violet",
-    lines: ["역할", "목표", "말투", "출력 형식"],
-    useCase: "AI 스튜디오, 리서치, 문서 초안 작업"
-  },
-  {
-    type: "맛집 추천",
-    title: "지역별 식사 카드",
-    description: "동네 기준 추천 리스트를 만들어 팀 외근이나 회의 동선을 줄입니다.",
-    badge: "FOOD",
-    accentClass: "accent-coral",
-    lines: ["서울 금천구", "오늘 점심 후보 3곳", "회의 후 도보 7분"],
-    useCase: "팀 외근, 가족 공유, 주말 계획 보드"
   }
 ];
 
 const MEMO_SAMPLES: MemoSample[] = [
   {
     badge: "NOTE",
-    title: "일반 메모 샘플",
+    title: "첫 화면 메모 샘플",
     accentClass: "accent-paper",
-    content: ["회의 전에 꼭 물어볼 질문 3개", "- 현재 병목은 어디인지", "- 이번 주 목표", "- 필요한 레퍼런스 링크"]
+    content: ["오늘 먼저 확인할 링크 3개", "- 메일", "- 저장 글", "- 저녁 전에 열 문서"]
   },
   {
     badge: "LINK",
     title: "하이퍼링크 메모 샘플",
     accentClass: "accent-mint",
-    content: ["OpenAI API 최신 가이드 확인", "클라이언트 발표 전에 참고할 문서 링크"],
+    content: ["오늘 다시 볼 문서 링크", "브라우저 첫 화면에서 바로 열 수 있게 고정"],
     link: { href: "https://platform.openai.com/docs", label: "platform.openai.com/docs" }
-  },
-  {
-    badge: "IMAGE",
-    title: "이미지 메모 샘플",
-    accentClass: "accent-rose",
-    content: ["무드보드 참고 이미지", "광고 비주얼 톤과 조명 방향을 카드 하나에 같이 기록"],
-    image:
-      "https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=900&q=80"
   }
 ];
 
-const HERO_PREVIEW_WIDGETS: HeroPreviewWidget[] = [
+const FIRST_PAGE_PRESETS: FirstPagePreset[] = [
   {
-    kind: "note",
-    badge: "NOTE",
-    title: "빠른 메모",
-    accentClass: "accent-paper",
-    subtitle: "회의 전 질문 3개"
+    key: "creator",
+    label: "크리에이터",
+    title: "레퍼런스와 저장 링크부터 바로 여는 첫 페이지",
+    description: "촬영이나 시안 작업 전에 늘 먼저 여는 북마크와 업계 피드를 같은 첫 화면에 둬서, 새 탭을 열자마자 오늘의 감각을 바로 잡는 조합입니다.",
+    firstOpen: "저장한 레퍼런스 링크, 시안 파일, 피드백 문서",
+    bookmarkStack: "Figma, Canva, 즐겨찾기 레퍼런스 링크",
+    rssStack: "크리에이티브 뉴스, 디자인 글, AI 제작 피드",
+    proofPoints: ["늘 여는 링크를 앞줄에 고정", "레퍼런스 RSS를 같은 화면에서 확인", "작업 전 한 줄 메모까지 같이 보기"],
+    heroWidgets: [
+      {
+        kind: "note",
+        badge: "NOTE",
+        title: "빠른 메모",
+        accentClass: "accent-paper",
+        subtitle: "오늘 먼저 볼 레퍼런스 3개"
+      },
+      {
+        kind: "bookmark",
+        badge: "BOOKMARK",
+        title: "자주 여는 링크",
+        accentClass: "accent-sand",
+        lines: ["Figma Moodboard", "figma.com"]
+      },
+      {
+        kind: "weather",
+        badge: "RSS",
+        title: "읽을 거리",
+        accentClass: "accent-lavender",
+        value: "3개",
+        chips: ["광고 레퍼런스", "브랜드 뉴스", "AI 제작"]
+      },
+      {
+        kind: "todo",
+        badge: "TODO",
+        title: "오늘 체크",
+        accentClass: "accent-mint",
+        lines: ["저장 글 2개 읽기", "피드백 링크 열기"]
+      },
+      {
+        kind: "countdown",
+        badge: "COUNTDOWN",
+        title: "업로드 일정",
+        accentClass: "accent-rose",
+        value: "D-03",
+        subtitle: "포트폴리오 공개"
+      },
+      {
+        kind: "bookmark",
+        badge: "BOOKMARK",
+        title: "보조 링크",
+        accentClass: "accent-blue",
+        lines: ["Behance Saved", "behance.net"]
+      }
+    ]
   },
   {
-    kind: "bookmark",
-    badge: "BOOKMARK",
-    title: "자주 여는 링크",
-    accentClass: "accent-sand",
-    lines: ["OpenAI Docs", "platform.openai.com"]
+    key: "research",
+    label: "리서처",
+    title: "읽을거리와 저장 링크를 같이 여는 리서치 첫 페이지",
+    description: "논문, 아티클, 저장해 둔 문서를 브라우저 첫 화면에서 바로 이어 읽게 해서 북마크와 RSS가 따로 놀지 않도록 만든 조합입니다.",
+    firstOpen: "저장한 아티클, 논문 링크, 정리할 메모",
+    bookmarkStack: "ArXiv, 수업 문서, 저장한 자료 링크",
+    rssStack: "기술 뉴스, 공부용 블로그, 관심 주제 업데이트",
+    proofPoints: ["읽을 자료를 먼저 고정", "새 글을 RSS에서 바로 확인", "읽으면서 메모를 한곳에 붙여두기"],
+    heroWidgets: [
+      {
+        kind: "note",
+        badge: "NOTE",
+        title: "오늘 읽을 것",
+        accentClass: "accent-paper",
+        subtitle: "오늘 먼저 읽을 논문 2개"
+      },
+      {
+        kind: "bookmark",
+        badge: "BOOKMARK",
+        title: "저장한 자료",
+        accentClass: "accent-sand",
+        lines: ["ArXiv Reading List", "arxiv.org"]
+      },
+      {
+        kind: "weather",
+        badge: "RSS",
+        title: "업데이트 피드",
+        accentClass: "accent-lavender",
+        value: "4개",
+        chips: ["ML 뉴스", "HCI 블로그", "GeekNews"]
+      },
+      {
+        kind: "todo",
+        badge: "TODO",
+        title: "읽기 루틴",
+        accentClass: "accent-mint",
+        lines: ["핵심 문장 저장", "메모 3줄 정리"]
+      },
+      {
+        kind: "countdown",
+        badge: "COUNTDOWN",
+        title: "세미나 일정",
+        accentClass: "accent-rose",
+        value: "D-09",
+        subtitle: "발표 초안 마감"
+      },
+      {
+        kind: "bookmark",
+        badge: "BOOKMARK",
+        title: "보조 링크",
+        accentClass: "accent-blue",
+        lines: ["Course Notes", "docs.google.com"]
+      }
+    ]
   },
   {
-    kind: "todo",
-    badge: "TODO",
-    title: "오늘 할 일",
-    accentClass: "accent-mint",
-    lines: ["회의 자료 정리", "피드백 반영"]
-  },
-  {
-    kind: "countdown",
-    badge: "COUNTDOWN",
-    title: "런칭 카운트다운",
-    accentClass: "accent-rose",
-    value: "D-12",
-    subtitle: "프로젝트 오픈"
-  },
-  {
-    kind: "timetable",
-    badge: "TIMETABLE",
-    title: "주간 스케줄",
-    accentClass: "accent-blue",
-    lines: ["월 09:00 기획 회의", "수 13:00 촬영"]
-  },
-  {
-    kind: "weather",
-    badge: "WEATHER",
-    title: "오늘 날씨",
-    accentClass: "accent-sky",
-    value: "17°",
-    chips: ["서울", "오후 흐림"]
+    key: "operator",
+    label: "데일리",
+    title: "매일 여는 생활 링크와 읽을거리를 묶은 첫 페이지",
+    description: "메일, 캘린더, 커뮤니티, 관심 피드를 첫 화면에 모아 두고 새 탭을 열 때마다 같은 순서로 하루를 시작하는 조합입니다.",
+    firstOpen: "메일, 캘린더, 저장한 링크, 오늘 읽을 피드",
+    bookmarkStack: "Gmail, Calendar, 자주 가는 커뮤니티",
+    rssStack: "관심 뉴스, 즐겨보는 블로그, 지역 정보 피드",
+    proofPoints: ["생활 링크를 한 화면에 고정", "RSS를 새 탭에서 바로 확인", "하루 시작용 체크 카드 함께 두기"],
+    heroWidgets: [
+      {
+        kind: "note",
+        badge: "NOTE",
+        title: "오늘 메모",
+        accentClass: "accent-paper",
+        subtitle: "출근 전에 확인할 것 3개"
+      },
+      {
+        kind: "bookmark",
+        badge: "BOOKMARK",
+        title: "바로 열기",
+        accentClass: "accent-sand",
+        lines: ["Gmail Inbox", "mail.google.com"]
+      },
+      {
+        kind: "weather",
+        badge: "RSS",
+        title: "오늘 읽을 피드",
+        accentClass: "accent-lavender",
+        value: "3개",
+        chips: ["로컬 뉴스", "즐겨찾는 블로그", "GeekNews"]
+      },
+      {
+        kind: "todo",
+        badge: "TODO",
+        title: "하루 시작",
+        accentClass: "accent-mint",
+        lines: ["메일 정리", "저장 글 1개 읽기"]
+      },
+      {
+        kind: "countdown",
+        badge: "COUNTDOWN",
+        title: "이번 주 일정",
+        accentClass: "accent-rose",
+        value: "D-02",
+        subtitle: "주말 약속 준비"
+      },
+      {
+        kind: "bookmark",
+        badge: "BOOKMARK",
+        title: "자주 가는 곳",
+        accentClass: "accent-blue",
+        lines: ["Community Board", "dcinside.com"]
+      }
+    ]
   }
 ];
 
@@ -498,13 +519,25 @@ const SHOWCASE_WIDGETS: ShowcaseWidget[] = [
   {
     kind: "rss",
     badge: "RSS",
-    title: "AI 뉴스 피드",
+    title: "오늘 읽을 RSS",
     accentClass: "accent-lavender",
     size: "tall",
     items: [
-      { source: "Google News", headline: "멀티모달 에이전트 실무 적용 사례 정리", time: "6분 전" },
-      { source: "The Verge", headline: "AI tooling stack이 바뀌는 방식", time: "18분 전" },
-      { source: "TechCrunch", headline: "스타트업 운영에 붙는 자동화 루틴", time: "39분 전" }
+      { source: "GeekNews", headline: "개발자가 아침에 훑기 좋은 기술 뉴스 묶음", time: "6분 전" },
+      { source: "Google News", headline: "오늘 바로 읽고 싶은 AI 관련 기사 정리", time: "18분 전" },
+      { source: "The Verge", headline: "브라우저 첫 화면에 두면 좋은 읽을거리 흐름", time: "39분 전" }
+    ]
+  },
+  {
+    kind: "bookmark",
+    badge: "BOOKMARK",
+    title: "자주 여는 북마크",
+    accentClass: "accent-sand",
+    size: "medium",
+    links: [
+      { label: "Gmail", host: "mail.google.com" },
+      { label: "Calendar", host: "calendar.google.com" },
+      { label: "Saved Links", host: "notion.so" }
     ]
   },
   {
@@ -521,185 +554,63 @@ const SHOWCASE_WIDGETS: ShowcaseWidget[] = [
   {
     kind: "todo",
     badge: "TODO",
-    title: "오전 체크리스트",
+    title: "하루 시작 체크",
     accentClass: "accent-mint",
     size: "medium",
     items: [
       { label: "메일 확인", done: true },
-      { label: "우선순위 정리", done: true },
-      { label: "시안 수정", done: false },
-      { label: "공유본 업로드", done: false }
+      { label: "RSS 새 글 확인", done: true },
+      { label: "저장 링크 2개 열기", done: false },
+      { label: "오늘 메모 정리", done: false }
     ]
   },
   {
     kind: "countdown",
     badge: "COUNTDOWN",
-    title: "런칭 카운트다운",
+    title: "이번 주 일정",
     accentClass: "accent-rose",
     size: "short",
-    days: "D-12",
-    date: "2026.04.14",
-    summary: "공유본 최종 점검까지 남은 시간"
-  },
-  {
-    kind: "timetable",
-    badge: "TIMETABLE",
-    title: "주간 일정",
-    accentClass: "accent-blue",
-    size: "tall",
-    rows: [
-      { day: "월", time: "09:00", task: "기획 회의" },
-      { day: "수", time: "13:00", task: "촬영 진행" },
-      { day: "목", time: "15:30", task: "클라이언트 피드백" },
-      { day: "금", time: "17:00", task: "회고 정리" }
-    ]
-  },
-  {
-    kind: "delivery",
-    badge: "DELIVERY",
-    title: "샘플 배송 추적",
-    accentClass: "accent-ash",
-    size: "medium",
-    carrier: "CJ대한통운",
-    status: "간선 상차",
-    steps: ["집화 완료", "간선 상차", "내일 오후 도착 예정"]
-  },
-  {
-    kind: "focus",
-    badge: "FOCUS",
-    title: "딥워크 세션",
-    accentClass: "accent-burgundy",
-    size: "short",
-    timer: "25:00",
-    current: "현재 2세트째 집중 중",
-    next: "다음 휴식 5분"
-  },
-  {
-    kind: "mood",
-    badge: "MOOD",
-    title: "오늘의 컨디션",
-    accentClass: "accent-blush",
-    size: "short",
-    emoji: "🙂",
-    state: "차분함",
-    energy: 3,
-    note: "회의 전 준비 완료"
-  },
-  {
-    kind: "prompt",
-    badge: "PROMPT",
-    title: "문서 초안 프롬프트",
-    accentClass: "accent-violet",
-    size: "medium",
-    sections: ["Role: product marketer", "Goal: launch summary", "Tone: concise", "Format: bullets"]
-  },
-  {
-    kind: "bookmark",
-    badge: "BOOKMARK",
-    title: "바로 열기 링크",
-    accentClass: "accent-sand",
-    size: "medium",
-    links: [
-      { label: "OpenAI Docs", host: "platform.openai.com" },
-      { label: "Canva Board", host: "canva.com" },
-      { label: "GitHub Actions", host: "github.com" }
-    ]
-  },
-  {
-    kind: "trend",
-    badge: "TREND",
-    title: "오늘의 키워드",
-    accentClass: "accent-amber",
-    size: "short",
-    items: ["AI 에이전트", "로봇택시", "온디바이스 모델"]
-  },
-  {
-    kind: "food",
-    badge: "FOOD",
-    title: "금천구 점심 후보",
-    accentClass: "accent-coral",
-    size: "medium",
-    region: "서울 금천구",
-    picks: [
-      { name: "도원", meta: "중식 코스 · 7분" },
-      { name: "면식당", meta: "국수 · 5분" },
-      { name: "국밥집", meta: "빠른 식사 · 4분" }
-    ]
+    days: "D-02",
+    date: "2026.04.16",
+    summary: "이번 주 약속이나 마감까지 남은 시간"
   }
 ];
 
 const SHARED_BOARD_WIDGETS: ShowcaseWidget[] = [
   {
-    kind: "todo",
-    badge: "TODO",
-    title: "이번 주 운영 체크",
-    accentClass: "accent-mint",
-    size: "medium",
-    items: [
-      { label: "행사 장소 확정", done: true },
-      { label: "발표 자료 취합", done: true },
-      { label: "참가자 공지 발송", done: false },
-      { label: "촬영 인력 배치", done: false }
-    ]
-  },
-  {
-    kind: "timetable",
-    badge: "TIMETABLE",
-    title: "행사 당일 스케줄",
-    accentClass: "accent-blue",
-    size: "tall",
-    rows: [
-      { day: "화", time: "10:00", task: "운영팀 리허설" },
-      { day: "화", time: "13:00", task: "게스트 체크인" },
-      { day: "화", time: "15:00", task: "세션 진행" },
-      { day: "화", time: "18:30", task: "정리 및 회수" }
-    ]
-  },
-  {
     kind: "bookmark",
     badge: "BOOKMARK",
-    title: "팀 공용 링크",
+    title: "공유 링크 모음",
     accentClass: "accent-sand",
     size: "medium",
     links: [
-      { label: "Notion 행사 문서", host: "notion.so" },
-      { label: "Canva 발표 자료", host: "canva.com" },
-      { label: "폼 응답 시트", host: "docs.google.com" }
-    ]
-  },
-  {
-    kind: "delivery",
-    badge: "DELIVERY",
-    title: "비품 배송 현황",
-    accentClass: "accent-ash",
-    size: "medium",
-    carrier: "CJ대한통운",
-    status: "행사장 도착 예정",
-    steps: ["배너 출고 완료", "테이블보 이동 중", "내일 오전 수령 예정"]
-  },
-  {
-    kind: "food",
-    badge: "DOC",
-    title: "공유 운영 문서",
-    accentClass: "accent-cream",
-    size: "medium",
-    region: "운영팀 보드",
-    picks: [
-      { name: "역할 분담표", meta: "진행/촬영/안내" },
-      { name: "비상 연락망", meta: "팀장 포함 12명" },
-      { name: "행사 종료 체크", meta: "철수 순서 정리" }
+      { label: "포트폴리오", host: "behance.net" },
+      { label: "읽을거리 모음", host: "notion.so" },
+      { label: "추천 링크", host: "github.com" }
     ]
   },
   {
     kind: "rss",
     badge: "RSS",
-    title: "업계 뉴스 공유",
+    title: "읽을거리 공유",
     accentClass: "accent-lavender",
     size: "tall",
     items: [
-      { source: "GeekNews", headline: "AI 행사 운영에 쓰이는 실전 자동화 사례", time: "12분 전" },
-      { source: "TechCrunch", headline: "커뮤니티 빌딩 팀이 보는 이벤트 운영 변화", time: "28분 전" },
-      { source: "Google News", headline: "기업 세미나와 모임에서 뜨는 협업 툴", time: "51분 전" }
+      { source: "GeekNews", headline: "같이 보면 좋은 기술 글을 RSS로 묶어 공유", time: "12분 전" },
+      { source: "Google News", headline: "관심 주제 뉴스를 링크페이지처럼 함께 보여주기", time: "28분 전" },
+      { source: "The Verge", headline: "즐겨 읽는 소스를 한 페이지에서 소개하는 방식", time: "51분 전" }
+    ]
+  },
+  {
+    kind: "todo",
+    badge: "TODO",
+    title: "먼저 보면 좋은 것",
+    accentClass: "accent-mint",
+    size: "medium",
+    items: [
+      { label: "대표 링크 3개 고정", done: true },
+      { label: "읽을거리 피드 연결", done: true },
+      { label: "짧은 소개 메모 추가", done: false }
     ]
   }
 ];
@@ -991,6 +902,8 @@ type LandingPageProps = {
 };
 
 const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
+  const [activePresetKey, setActivePresetKey] = useState<FirstPagePreset["key"]>("creator");
+
   const handleGoogleLogin = async () => {
     if (!supabase) return;
     await supabase.auth.signInWithOAuth({
@@ -999,13 +912,15 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
     });
   };
 
+  const activePreset = FIRST_PAGE_PRESETS.find((preset) => preset.key === activePresetKey) ?? FIRST_PAGE_PRESETS[0];
+
   return (
     <div className="landing-page">
       <header className="landing-header">
         <div className="landing-header-inner">
           <div className="landing-logo-lockup">
             <div className="landing-logo">WZD</div>
-            <span>보드 위에 메모와 위젯을 같이 쌓는 워크스페이스</span>
+            <span>브라우저를 열면 가장 먼저 보고 싶은 개인화 첫 페이지</span>
           </div>
           {user ? (
             <button className="landing-profile-btn" onClick={onOpenWorkspace}>
@@ -1023,37 +938,70 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
         <section className="landing-hero">
           <div className="landing-hero-inner">
             <div className="landing-hero-copy">
-              <p className="landing-kicker">WZD WIDGET BOARD</p>
+              <p className="landing-kicker">PERSONALIZED FIRST PAGE</p>
               <h1 className="landing-title">
-                메모 앱이 아니라,
+                북마크와 RSS가 먼저 뜨는
                 <br />
-                위젯이 붙는 보드입니다
+                내 브라우저 첫 페이지
               </h1>
               <p className="landing-subtitle">
-                링크 몇 개 저장하는 수준이 아니라, 메모와 체크리스트와 날씨와 RSS와 배송 추적까지 한 보드 안에
-                같이 놓고 보는 작업공간입니다.
+                새 탭을 열자마자 늘 먼저 보는 링크와 매일 확인하는 읽을거리를 한 화면에 모아두고, 내 루틴대로 배치해서 쓰는 개인화 첫 페이지입니다.
               </p>
+              <div className="landing-preset-picker" aria-label="첫 페이지 프리셋 선택">
+                {FIRST_PAGE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    className={`landing-preset-chip ${preset.key === activePreset.key ? "active" : ""}`.trim()}
+                    onClick={() => setActivePresetKey(preset.key)}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <div className="landing-preset-summary">
+                <p className="landing-preset-eyebrow">PERSONALIZED PRESET</p>
+                <strong>{activePreset.title}</strong>
+                <p>{activePreset.description}</p>
+                <div className="landing-preset-meta">
+                  <article>
+                    <span>처음 여는 것</span>
+                    <strong>{activePreset.firstOpen}</strong>
+                  </article>
+                  <article>
+                    <span>북마크 묶음</span>
+                    <strong>{activePreset.bookmarkStack}</strong>
+                  </article>
+                  <article>
+                    <span>RSS 묶음</span>
+                    <strong>{activePreset.rssStack}</strong>
+                  </article>
+                </div>
+              </div>
               <div className="landing-cta">
                 <button className="landing-cta-primary" onClick={handleGoogleLogin}>
                   무료로 바로 시작
                 </button>
                 <a className="landing-cta-secondary" href="#widget-gallery">
-                  위젯 전체 보기
+                  첫 페이지 샘플 보기
                 </a>
               </div>
+              <div className="landing-support-links">
+                <a href="/updates">최근 제품 업데이트 보기</a>
+              </div>
               <div className="landing-proof-strip" aria-label="주요 특성">
-                <span>메모 + 위젯 혼합 보드</span>
-                <span>개인/팀 보드 지원</span>
-                <span>링크, 피드, 루틴 한 화면 정리</span>
+                {activePreset.proofPoints.map((point) => (
+                  <span key={point}>{point}</span>
+                ))}
               </div>
             </div>
             <div className="landing-hero-panel">
               <div className="landing-hero-panel-head">
-                <span>샘플 워크스페이스</span>
-                <strong>오늘 자주 쓰는 조합</strong>
+                <span>{activePreset.label} 프리셋</span>
+                <strong>{activePreset.title}</strong>
               </div>
               <div className="landing-hero-mini-grid">
-                {HERO_PREVIEW_WIDGETS.map((widget) => (
+                {activePreset.heroWidgets.map((widget) => (
                   <article key={widget.badge} className={`landing-widget-mini-card ${widget.accentClass}`}>
                     {renderHeroPreviewWidget(widget)}
                   </article>
@@ -1078,10 +1026,10 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
         <section className="landing-widgets" id="widget-gallery">
           <div className="landing-widgets-inner">
             <div className="landing-section-header">
-              <p className="landing-section-kicker">ALL WIDGETS AT A GLANCE</p>
-              <h2>메모와 위젯이 한 보드에 섞여 있는 모습을 바로 보세요</h2>
+              <p className="landing-section-kicker">FIRST PAGE PREVIEW</p>
+              <h2>북마크와 RSS가 앞에 오는 첫 페이지 구성을 바로 보세요</h2>
               <p className="landing-section-desc">
-                메모 샘플과 실제 위젯형 카드를 한 화면에 같이 놓아서, 로그인 전에 어떤 식으로 보드를 쓰게 되는지 바로 이해할 수 있습니다.
+                가장 자주 여는 링크, 매일 훑는 피드, 짧은 메모 몇 개만 앞에 둔 구성을 먼저 보여줘서 WZD가 어떤 브라우저 첫 페이지인지 바로 이해할 수 있습니다.
               </p>
             </div>
 
@@ -1114,10 +1062,10 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
         <section className="landing-shared-board">
           <div className="landing-shared-board-inner">
             <div className="landing-section-header left">
-              <p className="landing-section-kicker">SHARED BOARD EXAMPLE</p>
-              <h2>회사와 모임에서는 이렇게 공유 보드로 같이 씁니다</h2>
+              <p className="landing-section-kicker">SHAREABLE PAGE</p>
+              <h2>원하면 이렇게 북마크와 읽을거리를 보여주는 페이지로도 이어집니다</h2>
               <p className="landing-section-desc">
-                일정, 공용 링크, 운영 체크리스트, 비품 배송, 공지 문서를 한 보드에 묶어 두면 팀원 모두가 같은 화면을 보고 움직일 수 있습니다.
+                기본은 내가 매일 보는 첫 페이지지만, 필요할 때는 저장한 링크와 읽을거리를 정리한 페이지처럼 다른 사람에게 보여주는 용도로도 이어집니다.
               </p>
             </div>
 
@@ -1130,18 +1078,18 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
         <section className="landing-showcase">
           <div className="landing-showcase-inner">
             <p className="landing-section-kicker">WHY IT FEELS DIFFERENT</p>
-            <h2>보드는 하나인데 메모장과 대시보드와 위키가 같이 움직입니다</h2>
+            <h2>기본 새 탭보다 더 유용하고, 링크 모음보다 더 자주 쓰게 되는 화면입니다</h2>
             <p>
-              메모 따로, 링크 따로, 피드 따로 여는 구조가 아니라 자주 확인하는 정보 블록을 한 보드에 같이 쌓는
-              방식입니다. 그래서 랜딩도 기능 설명보다 샘플 카드와 실제 내용을 먼저 보여 주는 쪽이 맞습니다.
+              검색창만 있는 기본 화면이나 링크 몇 개만 나열된 페이지가 아니라, 내가 실제로 자주 여는 링크와 읽을거리를
+              내 순서대로 정리해두는 브라우저 첫 화면이라는 점이 WZD의 차별점입니다.
             </p>
           </div>
         </section>
 
         <section className="landing-final-cta">
           <div className="landing-final-cta-inner">
-            <h2>마음에 드는 조합을 바로 자기 보드로 가져가면 됩니다</h2>
-            <p>로그인하면 메모, 위젯, 문서 카드를 한 화면에 배치한 자기 작업 보드를 곧바로 시작할 수 있습니다.</p>
+            <h2>이제 브라우저 첫 화면을 네 북마크와 피드 기준으로 바꾸면 됩니다</h2>
+            <p>로그인하면 자주 여는 북마크와 RSS를 모아 둔 나만의 첫 페이지를 바로 시작할 수 있습니다.</p>
             <button className="landing-cta-primary" onClick={handleGoogleLogin}>
               Google로 시작하기
             </button>
@@ -1152,6 +1100,9 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
       <footer className="landing-footer">
         <div className="landing-footer-inner">
           <span className="landing-footer-logo">WZD</span>
+          <a className="landing-footer-link" href="/updates">
+            Updates
+          </a>
           <span className="landing-footer-copy">2026 WZD. All rights reserved.</span>
         </div>
       </footer>
