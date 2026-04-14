@@ -310,16 +310,66 @@ const SettingsIcon = () => (
   </svg>
 );
 
-const SidebarToggleIcon = () => (
+const HomeIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path
-      d="M8 6l6 6-6 6"
+      d="M4.5 10.5 12 4l7.5 6.5"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
+    <path
+      d="M6.5 9.5V20h11V9.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const BoardRailIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <rect x="4" y="5" width="7" height="14" rx="1.8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    <rect x="13" y="5" width="7" height="14" rx="1.8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+);
+
+const AddRailIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <rect x="4.5" y="4.5" width="15" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M12 8v8M8 12h8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+const BellIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M8 17h8l-1.1-1.5V11a4.9 4.9 0 1 0-9.8 0v4.5L8 17Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M10.5 19a1.7 1.7 0 0 0 3 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+const MessageIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M6.5 7.5h11a2.5 2.5 0 0 1 2.5 2.5v4a2.5 2.5 0 0 1-2.5 2.5H12l-4.5 3v-3H6.5A2.5 2.5 0 0 1 4 14V10a2.5 2.5 0 0 1 2.5-2.5Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M9 12h6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
   </svg>
 );
 
@@ -3307,9 +3357,6 @@ const App = () => {
   const [inviteResults, setInviteResults] = useState<BoardUserProfile[]>([]);
   const [boardMembers, setBoardMembers] = useState<BoardMemberProfile[]>([]);
   const [trashDropActive, setTrashDropActive] = useState(false);
-  const [draggingBoardId, setDraggingBoardId] = useState<string | null>(null);
-  const [dragPreviewBoardId, setDragPreviewBoardId] = useState<string | null>(null);
-  const [dragArmedBoardId, setDragArmedBoardId] = useState<string | null>(null);
   const [editorDropNoteId, setEditorDropNoteId] = useState<string | null>(null);
   const [noteMoreState, setNoteMoreState] = useState<Record<string, number>>({});
   const [homeBoardRoute, setHomeBoardRoute] = useState<boolean>(() => isHomeBoardLocation());
@@ -3343,7 +3390,6 @@ const App = () => {
   const youtubePlayerHosts = useRef<Record<string, HTMLDivElement | null>>({});
   const youtubePlayerRefs = useRef<Record<string, YouTubePlayerInstance | null>>({});
   const pendingMobileNewNoteScrollRef = useRef<string | null>(null);
-  const boardLongPressTimerRef = useRef<number | null>(null);
   const boardSwipeStartRef = useRef<{ x: number; y: number; active: boolean }>({
     x: 0,
     y: 0,
@@ -6410,9 +6456,6 @@ const App = () => {
       if (saveStateResetTimerRef.current) {
         window.clearTimeout(saveStateResetTimerRef.current);
       }
-      if (boardLongPressTimerRef.current) {
-        window.clearTimeout(boardLongPressTimerRef.current);
-      }
     };
   }, []);
 
@@ -7045,6 +7088,42 @@ const App = () => {
     setMarketRoute(false);
     setInsightRoute(false);
     setUpdatesIndexRoute(false);
+    setUpdateSlugRoute(null);
+    setSharedBoardSlug(null);
+    setSharedBoardReadOnly(false);
+    setSelectedNoteId(null);
+    setMobileBoardMenuOpen(false);
+  };
+
+  const navigateToInsight = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.history.pushState({}, "", "/insight");
+    setHomeBoardRoute(false);
+    setPublicLandingRoute(false);
+    setMarketRoute(false);
+    setInsightRoute(true);
+    setUpdatesIndexRoute(false);
+    setUpdateSlugRoute(null);
+    setSharedBoardSlug(null);
+    setSharedBoardReadOnly(false);
+    setSelectedNoteId(null);
+    setMobileBoardMenuOpen(false);
+  };
+
+  const navigateToUpdates = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.history.pushState({}, "", "/updates");
+    setHomeBoardRoute(false);
+    setPublicLandingRoute(false);
+    setMarketRoute(false);
+    setInsightRoute(false);
+    setUpdatesIndexRoute(true);
     setUpdateSlugRoute(null);
     setSharedBoardSlug(null);
     setSharedBoardReadOnly(false);
@@ -8539,75 +8618,6 @@ const App = () => {
     updateDragPreview(null, null);
   };
 
-  const clearBoardLongPress = () => {
-    if (boardLongPressTimerRef.current) {
-      window.clearTimeout(boardLongPressTimerRef.current);
-      boardLongPressTimerRef.current = null;
-    }
-  };
-
-  const armBoardDrag = (boardId: string) => {
-    clearBoardLongPress();
-    boardLongPressTimerRef.current = window.setTimeout(() => {
-      setDragArmedBoardId(boardId);
-      boardLongPressTimerRef.current = null;
-    }, 220);
-  };
-
-  const reorderBoards = (draggedBoardId: string, targetBoardId?: string) => {
-    const sorted = sortBoards(boards);
-    const draggedBoard = sorted.find((board) => board.id === draggedBoardId);
-    if (!draggedBoard) {
-      return;
-    }
-
-    const remaining = sorted.filter((board) => board.id !== draggedBoardId);
-    const targetIndex = targetBoardId ? remaining.findIndex((board) => board.id === targetBoardId) : remaining.length;
-    const insertIndex = targetIndex >= 0 ? targetIndex : remaining.length;
-    remaining.splice(insertIndex, 0, draggedBoard);
-
-    const updatedAt = nowIso();
-    setBoards(
-      remaining.map((board, index) => ({
-        ...board,
-        settings: {
-          ...board.settings,
-          sidebarOrder: index
-        },
-        updatedAt: board.id === draggedBoardId ? updatedAt : board.updatedAt
-      }))
-    );
-  };
-
-  const onBoardChipDragStart = (event: ReactDragEvent<HTMLButtonElement>, boardId: string) => {
-    if (dragArmedBoardId !== boardId) {
-      event.preventDefault();
-      return;
-    }
-
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/board-id", boardId);
-    setDraggingBoardId(boardId);
-    setDragPreviewBoardId(boardId);
-  };
-
-  const onBoardChipDrop = (event: ReactDragEvent<HTMLElement>, targetBoardId?: string) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const draggedBoardId = event.dataTransfer.getData("text/board-id") || draggingBoardId;
-    if (!draggedBoardId || draggedBoardId === targetBoardId) {
-      setDraggingBoardId(null);
-      setDragPreviewBoardId(null);
-      setDragArmedBoardId(null);
-      return;
-    }
-
-    reorderBoards(draggedBoardId, targetBoardId);
-    setDraggingBoardId(null);
-    setDragPreviewBoardId(null);
-    setDragArmedBoardId(null);
-  };
-
   const onBoardBackgroundMouseDown = (event: React.MouseEvent<HTMLElement>) => {
     if (event.target !== event.currentTarget) {
       return;
@@ -9156,7 +9166,7 @@ const App = () => {
     return <LandingPage />;
   }
 
-  const showExpandedSidebar = sidebarPinned && !compactSidebar;
+  const showExpandedSidebar = false;
   const CurrentPage = isHomeView ? HomePage : isReadOnlyBoardView ? SharePage : BoardPage;
   const pageModeClassName = isHomeView ? "mode-home" : isReadOnlyBoardView ? "mode-share" : "mode-board";
   const topbarClassName = `pin-topbar ${compactHeader ? "compact-header" : ""} ${
@@ -9189,117 +9199,67 @@ const App = () => {
         <div className="sidebar-primary-stack">
           <button
             className="pin-brand"
-            aria-label={showExpandedSidebar ? "WZD 홈으로 이동" : "사이드 메뉴 펼치기"}
-            onClick={() => {
-              if (!compactSidebar && !showExpandedSidebar) {
-                setSidebarPinned(true);
-                return;
-              }
-
-              navigateToPublicLanding();
-            }}
+            aria-label="WZD 홈으로 이동"
+            onClick={navigateToPublicLanding}
           >
             <span className="pin-brand-inner">
               <span className="pin-brand-logo" aria-hidden="true">
-                {showExpandedSidebar ? "WZD" : "W"}
+                W
               </span>
-              {!showExpandedSidebar && !compactSidebar ? (
-                <span className="pin-brand-toggle" aria-hidden="true">
-                  <SidebarToggleIcon />
-                </span>
-              ) : null}
             </span>
           </button>
 
           <nav className="sidebar-nav" aria-label="작업공간 탐색">
-            <div className="sidebar-section sidebar-section-boards">
-              <p className="sidebar-section-label">Boards</p>
-              <div className="board-menu">
-                <div
-                  className="board-switcher"
-                  onDragOver={(event) => {
-                    if (draggingBoardId) {
-                      event.preventDefault();
-                      if (event.target === event.currentTarget) {
-                        setDragPreviewBoardId(null);
-                      }
-                    }
-                  }}
-                  onDrop={(event) => onBoardChipDrop(event)}
-                >
-                  {activeBoards.map((boardItem) => (
-                    <div key={boardItem.id} className="board-chip-slot">
-                      {draggingBoardId && dragPreviewBoardId === boardItem.id && draggingBoardId !== boardItem.id && (
-                        <div className="board-chip-drop-preview" aria-hidden="true">
-                          <span className="board-chip-drop-label">여기에 이동</span>
-                        </div>
-                      )}
-                      <button
-                        className={`board-chip ${selectedBoard?.id === boardItem.id ? "active" : ""} ${
-                          draggingBoardId === boardItem.id ? "dragging" : ""
-                        }`}
-                        draggable={showExpandedSidebar && dragArmedBoardId === boardItem.id}
-                        onMouseDown={() => armBoardDrag(boardItem.id)}
-                        onMouseUp={clearBoardLongPress}
-                        onMouseLeave={clearBoardLongPress}
-                        onDragStart={(event) => onBoardChipDragStart(event, boardItem.id)}
-                        onDragEnd={() => {
-                          clearBoardLongPress();
-                          setDraggingBoardId(null);
-                          setDragPreviewBoardId(null);
-                          setDragArmedBoardId(null);
-                        }}
-                        onDragEnter={() => {
-                          if (draggingBoardId && draggingBoardId !== boardItem.id) {
-                            setDragPreviewBoardId(boardItem.id);
-                          }
-                        }}
-                        onDragOver={(event) => {
-                          if (draggingBoardId) {
-                            event.preventDefault();
-                          }
-                        }}
-                        onDrop={(event) => onBoardChipDrop(event, boardItem.id)}
-                        onClick={() => {
-                          if (dragArmedBoardId === boardItem.id || draggingBoardId === boardItem.id) {
-                            return;
-                          }
-
-                          if (!compactSidebar) {
-                            setSidebarPinned(true);
-                          }
-                          setSelectedBoardId(boardItem.id);
-                          setSelectedNoteId(null);
-                          setFeedMode("active");
-                        }}
-                        aria-label={boardItem.title}
-                        title={boardItem.title}
-                      >
-                        <span className="board-chip-badge">{getBoardBadge(boardItem.title)}</span>
-                        <span className="board-chip-label">{boardItem.title}</span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="sidebar-section sidebar-section-workspace">
-              <p className="sidebar-section-label">Workspace</p>
+            <div className="sidebar-section sidebar-section-apps">
               <button
-                className="side-icon"
-                onClick={() => {
-                  if (!compactSidebar) {
-                    setSidebarPinned(true);
-                  }
-                  openTemplatePicker();
-                }}
-                aria-label="새 보드"
+                className={`side-icon pinterest-rail-icon ${!publicLandingRoute && !insightRoute && !updatesIndexRoute && !updateSlugRoute ? "active" : ""}`}
+                onClick={navigateToWorkspace}
+                aria-label="워크스페이스"
+                title="워크스페이스"
               >
                 <span className="side-icon-glyph" aria-hidden="true">
-                  +
+                  <HomeIcon />
                 </span>
-                <span className="side-icon-label">보드 추가</span>
+              </button>
+              <button
+                className={`side-icon pinterest-rail-icon ${publicLandingRoute ? "active" : ""}`}
+                onClick={navigateToPublicLanding}
+                aria-label="랜딩"
+                title="랜딩"
+              >
+                <span className="side-icon-glyph" aria-hidden="true">
+                  <BoardRailIcon />
+                </span>
+              </button>
+              <button
+                className="side-icon pinterest-rail-icon"
+                onClick={openTemplatePicker}
+                aria-label="새 보드"
+                title="새 보드"
+              >
+                <span className="side-icon-glyph" aria-hidden="true">
+                  <AddRailIcon />
+                </span>
+              </button>
+              <button
+                className={`side-icon pinterest-rail-icon has-dot ${updatesIndexRoute || Boolean(updateSlugRoute) ? "active" : ""}`}
+                onClick={navigateToUpdates}
+                aria-label="업데이트"
+                title="업데이트"
+              >
+                <span className="side-icon-glyph" aria-hidden="true">
+                  <BellIcon />
+                </span>
+              </button>
+              <button
+                className={`side-icon pinterest-rail-icon ${insightRoute ? "active" : ""}`}
+                onClick={navigateToInsight}
+                aria-label="인사이트"
+                title="인사이트"
+              >
+                <span className="side-icon-glyph" aria-hidden="true">
+                  <MessageIcon />
+                </span>
               </button>
             </div>
           </nav>
@@ -9309,13 +9269,9 @@ const App = () => {
 
         <div className="sidebar-footer">
           <div className="sidebar-section sidebar-section-settings">
-            <p className="sidebar-section-label">Settings</p>
             <button
-              className={`side-icon subtle settings-icon ${settingsOpen ? "active" : ""}`}
+              className={`side-icon subtle settings-icon pinterest-rail-icon ${settingsOpen ? "active" : ""}`}
               onClick={() => {
-                if (!compactSidebar) {
-                  setSidebarPinned(true);
-                }
                 if (settingsOpen) {
                   setSettingsOpen(false);
                 } else {
