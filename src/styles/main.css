@@ -1296,6 +1296,7 @@ button {
   background: transparent;
   border: none;
   box-shadow: none;
+  color: var(--board-page-text);
   transition:
     color 180ms ease,
     opacity 180ms ease;
@@ -1318,7 +1319,7 @@ button {
   bottom: 0;
   height: 2px;
   border-radius: 999px;
-  background: rgba(31, 26, 19, 0.92);
+  background: currentColor;
 }
 
 .workspace-board-tab-label {
@@ -1326,7 +1327,7 @@ button {
   line-height: 1;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: rgba(31, 26, 19, 0.96);
+  color: currentColor;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
