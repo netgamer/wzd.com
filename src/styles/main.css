@@ -3997,12 +3997,22 @@ button {
 }
 
 .board-page .pin-card-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
   justify-content: flex-end;
-  padding: 4px 10px 0;
+  padding: 8px 10px 0;
+  pointer-events: none;
 }
 
 .board-page .pin-dot {
   display: none;
+}
+
+.board-page .pin-actions {
+  pointer-events: auto;
 }
 
 .pin-card.image-note .pin-card-head {
@@ -4129,7 +4139,7 @@ button {
 }
 
 .board-page .pin-card-body {
-  padding: 0 16px 16px;
+  padding: 16px;
   gap: 14px;
 }
 
