@@ -6053,28 +6053,23 @@ const App = () => {
       [...trashedNotes].sort((a, b) => (getNoteTrashedAt(b) ?? "").localeCompare(getNoteTrashedAt(a) ?? "")),
     [trashedNotes]
   );
-  const latestHistorySnapshot = boardHistorySnapshots[0] ?? null;
-  const totalTrashCount = sortedTrashedBoards.length + sortedTrashedNotes.length;
-  const lastPersistedLabel = formatSavedAtLabel(lastPersistedAt);
-  const noteCountLabel = feedMode === "active" ? `${activeNotes.length}개의 핀` : `${archivedNotes.length}개의 보관 메모`;
-  const persistenceStatusLabel = isReadOnlyBoardView
-    ? "읽기 전용"
-    : hasSupabaseConfig && user
-      ? cloudSaveState === "saving"
-        ? "저장 중"
-        : cloudSaveState === "saved"
-          ? lastPersistedLabel
-            ? `${lastPersistedLabel} 저장됨`
-            : "저장됨"
-          : cloudSaveState === "error"
-            ? "저장 확인 필요"
-            : lastPersistedLabel
-              ? `${lastPersistedLabel} 저장됨`
-              : "저장 대기 중"
-      : lastPersistedLabel
-        ? `${lastPersistedLabel} 브라우저 저장됨`
-        : "브라우저에 저장 중";
   const currentNotes = feedMode === "active" ? activeNotes : archivedNotes;
+  const lastPersistedLabel = formatSavedAtLabel(lastPersistedAt);
+  const saveStatusAnnouncement = hasSupabaseConfig && user
+    ? cloudSaveState === "saving"
+      ? "저장 중"
+      : cloudSaveState === "saved"
+        ? lastPersistedLabel
+          ? `${lastPersistedLabel} 저장됨`
+          : "저장됨"
+        : cloudSaveState === "error"
+          ? "저장 확인 필요"
+          : lastPersistedLabel
+            ? `${lastPersistedLabel} 저장됨`
+            : ""
+    : lastPersistedLabel
+      ? `${lastPersistedLabel} 브라우저 저장됨`
+      : "";
 
   const filteredNotes = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -9237,7 +9232,6 @@ const App = () => {
     </div>
   );
 
-  const showMobileWorkspaceMeta = compactHeader && !isReadOnlyBoardView && !isHomeView;
   const boardHeading = canRenameBoard && editingBoardTitle ? (
     <input
       className="board-title-input"
@@ -9459,9 +9453,6 @@ const App = () => {
     : isReadOnlyBoardView
       ? "pin-board-panel current-board-panel public-board-panel share-board-panel"
       : `pin-board-panel ${mobileViewport ? "current-board-panel workspace-board-panel" : "workspace-feed-panel"}`;
-  const feedHeadClassName = `feed-head ${isReadOnlyBoardView ? "public-feed-head" : "workspace-feed-head"} ${
-    isHomeView ? "home-feed-head" : isSharedView ? "share-feed-head" : ""
-  }`.trim();
   const boardClassName = `pin-board ${isReadOnlyBoardView ? "public-board-grid" : "workspace-board-grid"} ${
     isHomeView ? "home-board-grid" : isSharedView ? "share-board-grid" : ""
   }`.trim();
@@ -10426,42 +10417,6 @@ const App = () => {
                 {renderFeedLoadingSkeleton()}
               </div>
             )}
-          <section className={feedHeadClassName}>
-            <div className="feed-meta">
-              <div className="trust-bar">
-                {(!showMobileWorkspaceMeta || isReadOnlyBoardView) && (
-                  <span className={`trust-chip save-state-${cloudSaveState}`}>
-                    {persistenceStatusLabel}
-                  </span>
-                )}
-                {(!showMobileWorkspaceMeta || isReadOnlyBoardView) && <span className="trust-chip">{noteCountLabel}</span>}
-                {!isReadOnlyBoardView && (
-                  <button
-                    className="trust-chip trust-chip-action"
-                    onClick={() => {
-                      setSettingsSection("history");
-                      setSettingsOpen(true);
-                    }}
-                  >
-                    저장본 {boardHistorySnapshots.length}개
-                    {latestHistorySnapshot ? ` · ${latestHistorySnapshot.label}` : ""}
-                  </button>
-                )}
-                {!isReadOnlyBoardView && (
-                  <button
-                    className="trust-chip trust-chip-action"
-                    onClick={() => {
-                      setSettingsSection("trash");
-                      setSettingsOpen(true);
-                    }}
-                  >
-                    휴지통 {totalTrashCount}개
-                  </button>
-                )}
-              </div>
-            </div>
-          </section>
-
           <section
             className={boardClassName}
             ref={boardGridRef}
@@ -11398,6 +11353,23 @@ const App = () => {
               <span>설정</span>
             </button>
           </nav>
+        )}
+
+        {!isReadOnlyBoardView && feedMode === "active" && (
+          <button
+            className={`floating-add-note ${runningDragNoteId ? "lifted" : ""}`}
+            onClick={addNote}
+            aria-label="새 메모 추가"
+            title="새 메모 추가"
+          >
+            <span className="floating-add-note-plus" aria-hidden="true">+</span>
+          </button>
+        )}
+
+        {saveStatusAnnouncement && (
+          <div className="sr-only" aria-live="polite">
+            {saveStatusAnnouncement}
+          </div>
         )}
 
         {feedMode === "active" && runningDragNoteId && (
