@@ -2,17 +2,18 @@
 
 ## Goal
 
-Reduce visual density in the mobile workspace top area and improve hierarchy without changing behavior.
+Restore clear mobile board-title and core menu-control visibility while reducing wasted workspace top-area height without changing behavior.
 
 ## User-visible outcome
 
-- `980px and below`: the workspace top area feels less crowded, with clearer reading order from title to key status to primary actions.
-- `980px and below`: save-status messaging reads calmer and more trustworthy.
+- `980px and below`: the current board title is clearly readable again at first glance.
+- `980px and below`: the core mobile menu/control cluster is clearly visible again without making the top area feel crowded.
+- `980px and below`: the workspace top area uses less wasted vertical space so board content starts sooner.
 
 ## In scope
 
-- `src/App.tsx` mobile workspace header/top-area markup and save-status copy
-- `src/styles/main.css` mobile workspace top-area and trust-bar styling
+- `src/App.tsx` mobile workspace header/top-area markup
+- `src/styles/main.css` mobile workspace top-area, compact-header, and related board-tab styling
 
 ## Out of scope
 
@@ -24,15 +25,15 @@ Reduce visual density in the mobile workspace top area and improve hierarchy wit
 ## Risks
 
 - Over-compressing the top area could hide hierarchy instead of improving it.
+- Restoring menu/control visibility could make the compact header feel busy again if grouping is weak.
 - Mobile-only layout changes could leak into tablet or desktop breakpoints.
-- Softer save-state language could reduce urgency too much if error styling becomes too weak.
 
 ## Pass criteria
 
 - `981px+`: existing workspace header behavior and action set remain intact.
-- `980px and below`: mobile workspace top area reads in the order title, key status, then main actions.
-- `980px and below`: mobile workspace top area uses lighter spacing and grouping so it feels less visually dense.
-- `980px and below`: save-status messaging is calmer than before while still distinguishable across saving, saved, idle, and error states.
+- `980px and below`: the current board title is clearly visible without being squeezed behind the mobile controls.
+- `980px and below`: the board/menu toggle and core mobile action controls are clearly visible again.
+- `980px and below`: the mobile workspace top area is less vertically wasteful than the previous cleanup round.
 - Only `src/App.tsx` and `src/styles/main.css` change for the product surface.
 - `npm run build` passes.
 - `/gstack-review` finds no blocking issues.

@@ -8994,21 +8994,59 @@ const App = () => {
           <div className="topbar-primary">
             <div className={`topbar-board-title ${isReadOnlyBoardView ? "readonly-board-title" : ""}`}>
               {compactHeader ? (
-                <div className="mobile-topbar-title-row">
-                  <button
-                    className="mobile-icon-action mobile-board-toggle"
-                    onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
-                    aria-label="보드 메뉴"
-                  >
-                    ≡
-                  </button>
+                <>
+                  <div className="mobile-topbar-control-row">
+                    <button
+                      className="mobile-icon-action mobile-board-toggle"
+                      onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
+                      aria-label="보드 메뉴"
+                    >
+                      <span className="mobile-board-toggle-glyph" aria-hidden="true">
+                        ≡
+                      </span>
+                      <span className="mobile-board-toggle-label">보드</span>
+                    </button>
+                    <div className="mobile-topbar-action-cluster">
+                      {!isReadOnlyBoardView && (
+                        <button className="mobile-icon-action mobile-new-note-action" onClick={addNote} aria-label="새 메모 만들기">
+                          +
+                        </button>
+                      )}
+                      {hasSupabaseConfig ? (
+                        user ? (
+                          <div className="profile-menu-wrap" ref={profileMenuRef}>
+                            <button
+                              className="mobile-profile-button"
+                              onClick={() => setProfileMenuOpen((prev) => !prev)}
+                              aria-expanded={profileMenuOpen}
+                            >
+                              <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+                            </button>
+                            {profileMenuOpen && (
+                              <div className="profile-menu-popover">
+                                <button className="profile-menu-item" onClick={() => void onLogout()}>
+                                  로그아웃
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <button className="mobile-icon-action mobile-auth-action" onClick={onGoogleLogin}>
+                            로그인
+                          </button>
+                        )
+                      ) : (
+                        <div className="profile-pill muted mobile-local-mode-pill">로컬 모드</div>
+                      )}
+                    </div>
+                  </div>
                   <div className="mobile-topbar-heading">
                     <p className="feed-kicker">
                       {isHomeView ? "WZD 홈" : isSharedView ? "공유 보드" : feedMode === "active" ? "개인 보드" : "보관 메모"}
                     </p>
                     {boardHeading}
                   </div>
-                </div>
+                </>
               ) : (
                 <>
                   <p className="feed-kicker">
@@ -9048,15 +9086,10 @@ const App = () => {
             </div>
           </div>
 
-          <div className="topbar-actions">
+          {!compactHeader && <div className="topbar-actions">
             {homeBoardRoute && user && (
               <button className="ghost-action" onClick={navigateToWorkspace}>
                 작업공간
-              </button>
-            )}
-            {compactHeader && !isReadOnlyBoardView && (
-              <button className="mobile-icon-action mobile-new-note-action" onClick={addNote} aria-label="새 메모 만들기">
-                +
               </button>
             )}
             {!compactHeader && !isReadOnlyBoardView && (
@@ -9109,7 +9142,7 @@ const App = () => {
             ) : (
               <div className="profile-pill muted">로컬 모드</div>
             )}
-          </div>
+          </div>}
         </header>
 
         {mobileBoardMenuOpen && (
