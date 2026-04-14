@@ -1891,7 +1891,6 @@ const isLinkPreviewDuplicateText = (content: unknown, noteUrl: string, preview: 
   );
 };
 
-const getBoardBadge = (title: string) => title.trim().slice(0, 1).toUpperCase() || "B";
 const isHomeBoardLocation = () => {
   if (typeof window === "undefined") {
     return false;
@@ -9292,32 +9291,25 @@ const App = () => {
       <div className={`pin-app ${pageModeClassName}-app`}>
         {showWorkspaceBoardTabs ? (
           <header className={`${topbarClassName} board-tabs-only-topbar`}>
-            <div className="workspace-board-picker">
-              <div className="workspace-board-picker-head">
-                <p className="workspace-board-picker-title">보드 선택</p>
-                <span className="workspace-board-picker-rule" aria-hidden="true" />
-              </div>
-              <div className="workspace-board-tabs" role="tablist" aria-label="보드 목록" ref={mobileBoardTabsRef}>
-                {activeBoards.map((boardItem) => (
-                  <button
-                    key={`workspace-tab-${boardItem.id}`}
-                    role="tab"
-                    aria-selected={selectedBoard?.id === boardItem.id}
-                    className={`workspace-board-tab ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
-                    ref={(node) => {
-                      mobileBoardTabRefs.current[boardItem.id] = node;
-                    }}
-                    onClick={() => {
-                      setSelectedBoardId(boardItem.id);
-                      setSelectedNoteId(null);
-                      setFeedMode("active");
-                    }}
-                  >
-                    <span className="workspace-board-tab-badge">{getBoardBadge(boardItem.title)}</span>
-                    <span className="workspace-board-tab-label">{boardItem.title}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="workspace-board-tabs" role="tablist" aria-label="보드 목록" ref={mobileBoardTabsRef}>
+              {activeBoards.map((boardItem) => (
+                <button
+                  key={`workspace-tab-${boardItem.id}`}
+                  role="tab"
+                  aria-selected={selectedBoard?.id === boardItem.id}
+                  className={`workspace-board-tab ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
+                  ref={(node) => {
+                    mobileBoardTabRefs.current[boardItem.id] = node;
+                  }}
+                  onClick={() => {
+                    setSelectedBoardId(boardItem.id);
+                    setSelectedNoteId(null);
+                    setFeedMode("active");
+                  }}
+                >
+                  <span className="workspace-board-tab-label">{boardItem.title}</span>
+                </button>
+              ))}
             </div>
           </header>
         ) : (
