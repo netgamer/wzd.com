@@ -8719,7 +8719,7 @@ const App = () => {
     </div>
   );
 
-  const showMobileWorkspaceMeta = compactHeader && !isReadOnlyBoardView;
+  const showMobileWorkspaceMeta = compactHeader && !isReadOnlyBoardView && !isHomeView;
   const boardHeading = canRenameBoard && editingBoardTitle ? (
     <input
       className="board-title-input"
@@ -9086,10 +9086,6 @@ const App = () => {
                       ) : (
                         <div className="profile-pill muted mobile-local-mode-pill">로컬 모드</div>
                       )}
-                    </div>
-                    <div className="mobile-topbar-meta" aria-live="polite">
-                      <span className={`topbar-status-pill save-state-${cloudSaveState}`}>{persistenceStatusLabel}</span>
-                      <span className="topbar-status-pill">{noteCountLabel}</span>
                     </div>
                   </>
                 )
@@ -9779,6 +9775,12 @@ const App = () => {
                   <span className="mobile-board-tab-label">{boardItem.title}</span>
                 </button>
               ))}
+            </div>
+          )}
+          {showMobileWorkspaceMeta && (
+            <div className="mobile-board-context" aria-live="polite">
+              <span className={`topbar-status-pill save-state-${cloudSaveState}`}>{persistenceStatusLabel}</span>
+              <span className="topbar-status-pill">{noteCountLabel}</span>
             </div>
           )}
 
