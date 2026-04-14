@@ -24,6 +24,7 @@ import { fetchRssFeed, type RssFeedPreview } from "./lib/rss";
 import { fetchSocialFeed, type SocialFeedPreview } from "./lib/social";
 import { fetchTrendingKeywords, type TrendingPreview } from "./lib/trending";
 import { fetchWeatherPreview, type WeatherPreview } from "./lib/weather";
+import { getInitialSiteLanguage, persistSiteLanguage, type SiteLanguage } from "./lib/site-language";
 import {
   type BoardBackgroundStyle,
   type BoardMemberProfile,
@@ -3296,6 +3297,7 @@ const autoOrganizeBoardNotes = (
 };
 
 const App = () => {
+  const [siteLanguage, setSiteLanguage] = useState<SiteLanguage>(() => getInitialSiteLanguage());
   const [user, setUser] = useState<AuthUserProfile | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [boards, setBoards] = useState<BoardV2[]>(() => createDefaultSnapshot().boards);
@@ -3368,6 +3370,13 @@ const App = () => {
   const [sharedBoardReadOnly, setSharedBoardReadOnly] = useState<boolean>(
     () => Boolean(getSharedBoardSlugFromLocation()) || isHomeBoardLocation()
   );
+
+  useEffect(() => {
+    persistSiteLanguage(siteLanguage);
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = siteLanguage;
+    }
+  }, [siteLanguage]);
 
   const skipNextCloudSaveRef = useRef(false);
   const suppressNextCardClickRef = useRef(false);
@@ -9137,32 +9146,86 @@ const App = () => {
     );
   };
 
+  const languageToggle = (
+    <div className="global-language-toggle" role="group" aria-label={siteLanguage === "ko" ? "언어 선택" : "Language selector"}>
+      <button
+        type="button"
+        className={`global-language-option ${siteLanguage === "ko" ? "active" : ""}`}
+        onClick={() => setSiteLanguage("ko")}
+      >
+        한국어
+      </button>
+      <button
+        type="button"
+        className={`global-language-option ${siteLanguage === "en" ? "active" : ""}`}
+        onClick={() => setSiteLanguage("en")}
+      >
+        EN
+      </button>
+    </div>
+  );
+
   if (publicLandingRoute && !isSharedView) {
-    return <LandingPage user={user} onOpenWorkspace={navigateToWorkspace} />;
+    return (
+      <>
+        <LandingPage user={user} onOpenWorkspace={navigateToWorkspace} />
+        {languageToggle}
+      </>
+    );
   }
 
   if (marketRoute && !isSharedView) {
-    return <MarketPage user={user} onNavigateBack={user ? navigateToWorkspace : navigateToPublicLanding} />;
+    return (
+      <>
+        <MarketPage user={user} onNavigateBack={user ? navigateToWorkspace : navigateToPublicLanding} />
+        {languageToggle}
+      </>
+    );
   }
 
   if (insightRoute && !isSharedView) {
-    return <InsightReaderPage onNavigateBack={navigateToPublicLanding} userId={user?.id ?? null} />;
+    return (
+      <>
+        <InsightReaderPage onNavigateBack={navigateToPublicLanding} userId={user?.id ?? null} language={siteLanguage} />
+        {languageToggle}
+      </>
+    );
   }
 
   if (updatesIndexRoute && !isSharedView) {
-    return <UpdatesIndexPage onNavigateBack={navigateToPublicLanding} />;
+    return (
+      <>
+        <UpdatesIndexPage onNavigateBack={navigateToPublicLanding} language={siteLanguage} />
+        {languageToggle}
+      </>
+    );
   }
 
   if (updateSlugRoute && !isSharedView) {
-    return <UpdateDetailPage slug={updateSlugRoute} onNavigateBack={navigateToPublicLanding} />;
+    return (
+      <>
+        <UpdateDetailPage slug={updateSlugRoute} onNavigateBack={navigateToPublicLanding} language={siteLanguage} />
+        {languageToggle}
+      </>
+    );
   }
 
   if (!user && !isSharedView && waitingForAuthResolution) {
-    return <div className="landing-auth-wait">로그인 상태를 확인하는 중입니다.</div>;
+    return (
+      <>
+        <div className="landing-auth-wait">{siteLanguage === "ko" ? "로그인 상태를 확인하는 중입니다." : "Checking sign-in status."}</div>
+        {languageToggle}
+      </>
+    );
   }
 
   if (!user && !isSharedView) {
-    return <LandingPage />;
+    return (
+      <>
+        <LandingPage />
+        {languageToggle}
+      </>
+    );
   }
 
   const showExpandedSidebar = false;
@@ -9195,6 +9258,7 @@ const App = () => {
   };
 
   return (
+    <>
     <CurrentPage showExpandedSidebar={showExpandedSidebar} extraClassName={boardThemeClassName}>
       <aside className={`pin-sidebar ${showExpandedSidebar ? "expanded" : ""}`} aria-label="작업공간 기본 탐색">
         <div className="sidebar-primary-stack">
@@ -11089,6 +11153,8 @@ const App = () => {
         )}
       </div>
     </CurrentPage>
+    {languageToggle}
+    </>
   );
 };
 
