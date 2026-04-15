@@ -393,12 +393,6 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
-const CloseIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path d="M7 7l10 10M17 7 7 17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const LAST_VIEWED_BOARD_KEY = "wzd-board-v2-last-viewed";
 const INITIAL_VISIBLE_NOTE_COUNT = 8;
@@ -1798,6 +1792,13 @@ const getNoteTitle = (content: unknown) => {
   const firstLine = cleaned.split("\n").find((line) => line.trim().length > 0) ?? "새 메모";
   return firstLine.slice(0, 48);
 };
+
+const serializeNoteEditorState = (note: NoteV2) =>
+  JSON.stringify({
+    content: note.content,
+    color: note.color,
+    metadata: note.metadata ?? null
+  });
 
 const getFoodDetailsUrl = (region: string, recommendation: FoodRecommendation) => {
   const query = [region, recommendation.name, recommendation.menu].filter(Boolean).join(" ");
@@ -3383,6 +3384,7 @@ const App = () => {
   const [editingBoardTitle, setEditingBoardTitle] = useState(false);
   const [notes, setNotes] = useState<NoteV2[]>(() => createDefaultSnapshot().notes);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [selectedNoteSnapshot, setSelectedNoteSnapshot] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [backgroundBoardHydrating, setBackgroundBoardHydrating] = useState(false);
@@ -9130,6 +9132,11 @@ const App = () => {
     }, 240);
   };
 
+  const openNoteEditor = (note: NoteV2) => {
+    setSelectedNoteSnapshot(serializeNoteEditorState(note));
+    setSelectedNoteId(note.id);
+  };
+
   const onBoardTouchStart = (event: ReactTouchEvent<HTMLElement>) => {
     if (!mobileViewport || feedMode !== "active" || activeBoards.length < 2 || boardSwipeAnimatingRef.current) {
       boardSwipeStartRef.current.active = false;
@@ -10577,6 +10584,7 @@ const App = () => {
                       (!hasTextPreview || isLinkPreviewDuplicateText(note.content, noteUrl, linkPreview));
                     const isDocumentWidget = widgetType === "document";
                     const documentVariant = isDocumentWidget ? getDocumentVariant(note) : null;
+                    const selectedWidgetDirty = selected && isWidgetNote && selectedNoteSnapshot !== serializeNoteEditorState(note);
                     const displayTitle = !isPlainMemo && hasExternalLink
                       ? getLinkDisplayTitle(note.content, noteUrl, linkPreview)
                       : getNoteTitle(note.content);
@@ -10668,7 +10676,7 @@ const App = () => {
                               return;
                             }
 
-                            setSelectedNoteId(note.id);
+                            openNoteEditor(note);
                           }}
                         >
                           {hasImagePreview && (
@@ -10704,17 +10712,16 @@ const App = () => {
                                 )}
                                 {feedMode === "active" && isWidgetNote && selected ? (
                                   <button
-                                    className="pin-icon-button"
+                                    className="pin-confirm-button"
                                     onClick={(event) => {
                                       event.stopPropagation();
+                                      setSelectedNoteSnapshot(serializeNoteEditorState(note));
                                       setSelectedNoteId(null);
                                     }}
-                                    aria-label="편집 닫기"
-                                    title="편집 닫기"
+                                    aria-label={selectedWidgetDirty ? "위젯 저장" : "편집 확인"}
+                                    title={selectedWidgetDirty ? "위젯 저장" : "편집 확인"}
                                   >
-                                    <span className="pin-icon-glyph">
-                                      <CloseIcon />
-                                    </span>
+                                    {selectedWidgetDirty ? "저장" : "확인"}
                                   </button>
                                 ) : (
                                   <button
@@ -10722,7 +10729,7 @@ const App = () => {
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       if (feedMode === "active") {
-                                        setSelectedNoteId(note.id);
+                                        openNoteEditor(note);
                                       } else {
                                         restoreNote(note.id);
                                       }
@@ -10771,7 +10778,7 @@ const App = () => {
                                   title="위젯 색상 변경"
                                 />
                                 <button
-                                  className="widget-edit-toolbar-button danger"
+                                  className="pin-icon-button danger"
                                   onClick={(event) => {
                                     event.stopPropagation();
                                     if (feedMode === "active") {
@@ -10780,14 +10787,12 @@ const App = () => {
                                       deleteArchivedNote(note.id);
                                     }
                                   }}
+                                  aria-label={feedMode === "active" ? "위젯 삭제" : "영구 삭제"}
+                                  title={feedMode === "active" ? "위젯 삭제" : "영구 삭제"}
                                 >
-                                  {feedMode === "active"
-                                    ? siteLanguage === "ko"
-                                      ? "삭제"
-                                      : "Delete"
-                                    : siteLanguage === "ko"
-                                      ? "영구 삭제"
-                                      : "Delete permanently"}
+                                  <span className="pin-icon-glyph">
+                                    <TrashIcon />
+                                  </span>
                                 </button>
                               </div>
                             )}
@@ -11225,7 +11230,7 @@ const App = () => {
                                       value={note.content}
                                       style={{ fontSize: `${fontSize}px` }}
                                       onMouseDown={(event) => event.stopPropagation()}
-                                      onFocus={() => setSelectedNoteId(note.id)}
+                                      onFocus={() => openNoteEditor(note)}
                                       onChange={(event) => {
                                         updateNote(note.id, { content: event.target.value });
                                         event.currentTarget.style.height = "0px";
