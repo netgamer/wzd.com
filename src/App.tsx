@@ -22,6 +22,7 @@ import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, typ
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
 import { fetchRssFeed, type RssFeedPreview, type RssItem } from "./lib/rss";
 import { fetchSocialFeed, type SocialFeedPreview } from "./lib/social";
+import { measureInternetSpeed, type InternetSpeedPreview } from "./lib/speed";
 import { fetchTrendingKeywords, type TrendingPreview } from "./lib/trending";
 import { fetchWeatherPreview, type WeatherPreview } from "./lib/weather";
 import {
@@ -119,6 +120,7 @@ type LinkPreviewState = LinkPreview | null;
 type RssFeedState = RssFeedPreview | null;
 type SocialFeedState = SocialFeedPreview | null;
 type WeatherState = WeatherPreview | null;
+type SpeedState = InternetSpeedPreview | null;
 type TrendingState = TrendingPreview | null;
 type DeliveryState = DeliveryTrackingPreview | null;
 type WidgetType =
@@ -133,6 +135,7 @@ type WidgetType =
   | "player"
   | "calculator"
   | "clock"
+  | "speed"
   | "profile"
   | "weather"
   | "trending"
@@ -432,6 +435,7 @@ const DEFAULT_PLAYER_ARTIST = "Unknown Artist";
 const DEFAULT_PLAYER_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 const DEFAULT_CALCULATOR_DISPLAY = "0";
 const DEFAULT_CLOCK_MODE: ClockWidgetMode = "digital";
+const DEFAULT_SPEED_LABEL = "내 네트워크";
 const DEFAULT_PROFILE_NAME = "홍길동";
 const DEFAULT_PROFILE_BIRTHDATE = "1995-05-12";
 const DEFAULT_PROFILE_OCCUPATION = "기획자";
@@ -1314,6 +1318,16 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
         previewLines: ["Seoul · UTC+09:00", "작업 흐름에 맞춘 시간 확인"],
         previewMeta: "심플 데스크 위젯",
         accent: "#7dd5ff"
+      },
+      {
+        type: "speed",
+        title: "인터넷 속도",
+        subtitle: "다운로드 속도와 지연 시간 확인",
+        kicker: "SPEED",
+        previewTitle: "72.4 Mbps",
+        previewLines: ["지연 시간 24ms", "Wi-Fi · 4g"],
+        previewMeta: "브라우저 즉시 측정",
+        accent: "#6eb7ff"
       },
       {
         type: "calculator",
@@ -2220,6 +2234,7 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "player" ||
   note.metadata?.widgetType === "calculator" ||
   note.metadata?.widgetType === "clock" ||
+  note.metadata?.widgetType === "speed" ||
   note.metadata?.widgetType === "profile" ||
   note.metadata?.widgetType === "weather" ||
   note.metadata?.widgetType === "trending" ||
@@ -2662,6 +2677,11 @@ const isClockWidgetMode = (value: unknown): value is ClockWidgetMode => value ==
 const getClockMode = (note: NoteV2): ClockWidgetMode =>
   isClockWidgetMode(note.metadata?.clockMode) ? note.metadata.clockMode : DEFAULT_CLOCK_MODE;
 
+const getSpeedLabel = (note: NoteV2) =>
+  typeof note.metadata?.speedLabel === "string" && note.metadata.speedLabel.trim()
+    ? note.metadata.speedLabel.trim()
+    : DEFAULT_SPEED_LABEL;
+
 const getProfileName = (note: NoteV2) =>
   typeof note.metadata?.profileName === "string" && note.metadata.profileName.trim()
     ? note.metadata.profileName.trim()
@@ -2708,6 +2728,26 @@ const getDeliveryTrackingNumber = (note: NoteV2) =>
 
 const getDeliveryLabel = (note: NoteV2) =>
   typeof note.metadata?.deliveryLabel === "string" ? note.metadata.deliveryLabel.trim() : "";
+
+const getSpeedGrade = (downloadMbps: number | null) => {
+  if (downloadMbps === null) return "측정 필요";
+  if (downloadMbps >= 100) return "매우 빠름";
+  if (downloadMbps >= 40) return "쾌적";
+  if (downloadMbps >= 15) return "보통";
+  return "느림";
+};
+
+const formatSpeedMeasuredAt = (iso: string) => {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  return parsed.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
 
 const getPetName = (note: NoteV2) =>
   typeof note.metadata?.petName === "string" && note.metadata.petName.trim() ? note.metadata.petName.trim() : DEFAULT_PET_NAME;
@@ -3157,6 +3197,7 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   if (widgetType === "countdown") return "countdown";
   if (widgetType === "timetable") return "timetable";
   if (widgetType === "clock") return "clock";
+  if (widgetType === "speed") return "clock";
   if (widgetType === "profile") return "focus";
   if (widgetType === "weather") return "weather";
   if (widgetType === "trending") return "trending";
@@ -3278,6 +3319,7 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
   if (widgetType === "countdown") return layoutStyle === "compact" ? 210 : 240;
   if (widgetType === "timetable") return layoutStyle === "compact" ? 260 : 320;
   if (widgetType === "clock") return layoutStyle === "compact" ? 220 : 260;
+  if (widgetType === "speed") return layoutStyle === "compact" ? 210 : 240;
   if (widgetType === "profile") return layoutStyle === "compact" ? 260 : 310;
   if (widgetType === "weather") return layoutStyle === "compact" ? 220 : 260;
   if (widgetType === "trending") return layoutStyle === "compact" ? 250 : 300;
@@ -3410,6 +3452,7 @@ const App = () => {
   const [expandedTrendingItems, setExpandedTrendingItems] = useState<Record<string, number | null>>({});
   const [socialWidgets, setSocialWidgets] = useState<Record<string, SocialFeedState>>({});
   const [weatherWidgets, setWeatherWidgets] = useState<Record<string, WeatherState>>({});
+  const [speedWidgets, setSpeedWidgets] = useState<Record<string, SpeedState>>({});
   const [trendingWidgets, setTrendingWidgets] = useState<Record<string, TrendingState>>({});
   const [deliveryWidgets, setDeliveryWidgets] = useState<Record<string, DeliveryState>>({});
   const [deliveryCarriers, setDeliveryCarriers] = useState<DeliveryCarrier[]>([]);
@@ -3713,6 +3756,25 @@ const App = () => {
   useEffect(() => {
     latestNotesRef.current = notes;
   }, [notes]);
+
+  const refreshSpeedWidget = async (noteId: string) => {
+    setSpeedWidgets((prev) => ({
+      ...prev,
+      [noteId]:
+        prev[noteId] === null
+          ? null
+          : {
+              ...prev[noteId],
+              error: undefined
+            }
+    }));
+
+    const measured = await measureInternetSpeed();
+    setSpeedWidgets((prev) => ({
+      ...prev,
+      [noteId]: measured
+    }));
+  };
 
   useEffect(() => {
     latestUserIdRef.current = user?.id ?? null;
@@ -4760,6 +4822,88 @@ const App = () => {
                   </div>
                 </>
               )}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (widgetType === "speed") {
+      const speed = speedWidgets[note.id];
+      const label = getSpeedLabel(note);
+      const grade = getSpeedGrade(speed?.downloadMbps ?? null);
+      const measuredAt = speed ? formatSpeedMeasuredAt(speed.measuredAt) : "";
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge">SPEED</span>
+            <p className="pin-title">{asText(note.content).trim() || "인터넷 속도"}</p>
+          </div>
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={note.content}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                placeholder="위젯 제목"
+              />
+              <input
+                className="widget-input"
+                value={label}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) =>
+                  updateNote(note.id, {
+                    metadata: {
+                      ...note.metadata,
+                      widgetType: "speed",
+                      speedLabel: event.target.value
+                    }
+                  })
+                }
+                placeholder="연결 이름"
+              />
+              <button
+                className="widget-confirm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedNoteId(null);
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <div className={`speed-widget ${compact ? "compact" : ""}`}>
+              <div className="speed-widget-head">
+                <strong>{label}</strong>
+                <span>{grade}</span>
+              </div>
+              <div className="speed-widget-grid">
+                <div className="speed-widget-metric">
+                  <span>다운로드</span>
+                  <strong>{speed?.downloadMbps !== null && speed?.downloadMbps !== undefined ? `${speed.downloadMbps} Mbps` : "..."}</strong>
+                </div>
+                <div className="speed-widget-metric">
+                  <span>지연 시간</span>
+                  <strong>{speed?.latencyMs !== null && speed?.latencyMs !== undefined ? `${speed.latencyMs} ms` : "..."}</strong>
+                </div>
+              </div>
+              <div className="speed-widget-meta">
+                <span>{speed?.effectiveType ? speed.effectiveType.toUpperCase() : "network info"}</span>
+                <span>{speed?.downlinkMbps ? `추정 ${speed.downlinkMbps} Mbps` : measuredAt ? `${measuredAt} 측정` : "측정 대기"}</span>
+              </div>
+              {speed?.error ? <p className="rss-empty speed-widget-error">측정 실패: {speed.error}</p> : null}
+              <button
+                className="speed-widget-refresh"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void refreshSpeedWidget(note.id);
+                }}
+              >
+                다시 측정
+              </button>
             </div>
           )}
         </>
@@ -7124,6 +7268,32 @@ const App = () => {
 
   useEffect(() => {
     const noteIds = visibleNotes
+      .filter((note) => getWidgetType(note) === "speed")
+      .map((note) => note.id)
+      .filter((id) => !(id in speedWidgets));
+
+    if (noteIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void Promise.all(
+      noteIds.map(async (noteId) => {
+        const measured = await measureInternetSpeed();
+        if (!cancelled) {
+          setSpeedWidgets((prev) => ({ ...prev, [noteId]: measured }));
+        }
+      })
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [speedWidgets, visibleNotes]);
+
+  useEffect(() => {
+    const noteIds = visibleNotes
       .filter((note) => getWidgetType(note) === "trending")
       .map((note) => note.id)
       .filter((id) => !(id in trendingWidgets));
@@ -8006,6 +8176,37 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addSpeedWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "인터넷 속도"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "speed",
+      speedLabel: DEFAULT_SPEED_LABEL
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const addCalculatorWidget = () => {
     if (!selectedBoard) {
       return;
@@ -8440,6 +8641,7 @@ const App = () => {
       player: addPlayerWidget,
       calculator: addCalculatorWidget,
       clock: addClockWidget,
+      speed: addSpeedWidget,
       profile: addProfileWidget,
       weather: addWeatherWidget,
       trending: addTrendingWidget,
