@@ -1805,6 +1805,11 @@ const getFoodDetailsUrl = (region: string, recommendation: FoodRecommendation) =
   return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 };
 
+const getWeatherDetailsUrl = (location: string, label?: string) => {
+  const query = [location, label, "날씨"].filter(Boolean).join(" ");
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+};
+
 const delay = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 const isSameRssItem = (left: RssItem | undefined, right: RssItem | undefined) =>
@@ -4395,7 +4400,13 @@ const App = () => {
             </div>
           ) : weather ? (
             <div className={`weather-widget ${compact ? "compact" : ""}`}>
-              <div className="weather-current">
+              <a
+                className="weather-current weather-link-card"
+                href={getWeatherDetailsUrl(weather.location)}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <span className="weather-current-emoji">{weather.current.emoji}</span>
                 <div>
                   <strong>{weather.location}</strong>
@@ -4403,16 +4414,23 @@ const App = () => {
                     {weather.current.temperature}° · {weather.current.weatherLabel}
                   </span>
                 </div>
-              </div>
+              </a>
               <div className="weather-forecast-list">
                 {weather.days.slice(0, compact ? 3 : 4).map((day) => (
-                  <div key={`${note.id}-${day.date}`} className="weather-forecast-item">
+                  <a
+                    key={`${note.id}-${day.date}`}
+                    className="weather-forecast-item weather-link-card"
+                    href={getWeatherDetailsUrl(weather.location, day.label)}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <span>{day.label}</span>
                     <span>{day.emoji}</span>
                     <span>
                       {day.tempMax}° / {day.tempMin}°
                     </span>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>

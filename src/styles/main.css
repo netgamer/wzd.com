@@ -7717,6 +7717,17 @@ button {
   background: rgba(255, 255, 255, 0.8);
 }
 
+.weather-link-card {
+  color: inherit;
+  text-decoration: none;
+  transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.weather-link-card:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .weather-current-emoji {
   font-size: 28px;
   line-height: 1;
