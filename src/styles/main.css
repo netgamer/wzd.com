@@ -2016,6 +2016,12 @@ button {
   gap: 14px;
 }
 
+.template-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
 .template-section-list {
   display: flex;
   flex-direction: column;
@@ -2048,6 +2054,29 @@ button {
   line-height: 1.5;
 }
 
+.template-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.template-subsection-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-subsection-head strong {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.template-subsection-head span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .template-card {
   display: flex;
   flex-direction: column;
@@ -2061,6 +2090,14 @@ button {
   text-align: left;
   cursor: pointer;
   transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.template-card:disabled,
+.template-theme-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+  transform: none;
+  box-shadow: none;
 }
 
 .template-card:hover {
@@ -2157,6 +2194,78 @@ button {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.01em;
+}
+
+.template-plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  background: linear-gradient(180deg, rgba(255, 249, 239, 0.96) 0%, rgba(248, 234, 209, 0.72) 100%);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.template-plan-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+  border-color: rgba(230, 0, 35, 0.18);
+}
+
+.template-plan-card.active {
+  border-color: rgba(230, 0, 35, 0.44);
+  box-shadow: 0 18px 36px rgba(230, 0, 35, 0.12);
+}
+
+.template-plan-card-contact {
+  text-decoration: none;
+}
+
+.template-plan-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.template-plan-price {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.template-plan-limit {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.template-plan-copy {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.template-picker-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(230, 0, 35, 0.08);
+  color: #b3192d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.template-theme-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.template-theme-card {
+  text-align: left;
 }
 
 .settings-head-actions {
@@ -6736,6 +6845,11 @@ button {
   }
 
   .template-picker-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .template-plan-grid,
+  .template-theme-grid {
     grid-template-columns: 1fr;
   }
 

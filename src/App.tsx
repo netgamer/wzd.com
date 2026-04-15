@@ -181,6 +181,7 @@ type WidgetGalleryCategory = "collect" | "organize" | "utility" | "identity";
 type BoardLayoutStyle = "balanced" | "compact" | "visual";
 type SettingsSection = "menu" | "trash" | "history";
 type BoardThemeId = "focus-desk" | "glass-studio" | "midnight-ops" | "creator-mood" | "neon-lab" | "cozy-room";
+type SubscriptionTier = "free" | "starter-5" | "pro-10";
 
 type BoardHistorySnapshot = {
   id: string;
@@ -398,6 +399,7 @@ const ChevronDownIcon = () => (
 
 const LOCAL_STORAGE_KEY = "wzd-board-v2-local";
 const LAST_VIEWED_BOARD_KEY = "wzd-board-v2-last-viewed";
+const SUBSCRIPTION_TIER_KEY = "wzd-board-v2-subscription-tier";
 const INITIAL_VISIBLE_NOTE_COUNT = 8;
 const VISIBLE_NOTE_BATCH_SIZE = 12;
 const DEFAULT_FONT_SIZE: NoteFontSize = 16;
@@ -473,6 +475,37 @@ const DEFAULT_BRAIN_AGENT_TYPE: AgentRole = "planner";
 const DEFAULT_BRAIN_PROMPT = "흩어진 메모와 링크를 오늘 할 일 기준으로 정리해줘.";
 const DEFAULT_BRAIN_CONTEXT = "이 보드는 개인 작업 보드입니다. 우선순위, 바로 실행할 일, 빠진 정보까지 함께 정리해줘.";
 const FOCUS_TICK_INTERVAL_MS = 1000;
+const FREE_BOARD_LIMIT = 3;
+const PAID_BOARD_LIMIT = 10;
+const SUBSCRIPTION_PLANS: Array<{
+  key: SubscriptionTier;
+  label: string;
+  price: string;
+  boardLimit: number;
+  description: string;
+}> = [
+  {
+    key: "free",
+    label: "Free",
+    price: "$0",
+    boardLimit: FREE_BOARD_LIMIT,
+    description: "개인 보드 3개까지 가볍게 시작하는 기본 플랜"
+  },
+  {
+    key: "starter-5",
+    label: "Starter",
+    price: "$5 / month",
+    boardLimit: PAID_BOARD_LIMIT,
+    description: "보드 10개까지 확장하고 테마 워크스페이스를 넉넉하게 운영"
+  },
+  {
+    key: "pro-10",
+    label: "Pro",
+    price: "$10 / month",
+    boardLimit: PAID_BOARD_LIMIT,
+    description: "보드 10개와 함께 더 강한 작업 흐름을 쓰는 파워 유저용"
+  }
+];
 
 const FOOD_CATEGORY_LABELS: Record<FoodCategoryKey, string> = {
   chef: "흑백요리사 픽",
@@ -3179,6 +3212,35 @@ const getBoardThemeId = (board: BoardV2 | null | undefined): BoardThemeId => {
   return "focus-desk";
 };
 
+const getBackgroundStyleForTheme = (themeId: BoardThemeId): BoardBackgroundStyle => {
+  if (themeId === "glass-studio") {
+    return "whiteboard";
+  }
+
+  if (themeId === "creator-mood" || themeId === "cozy-room") {
+    return "cork";
+  }
+
+  return "paper";
+};
+
+const getInitialSubscriptionTier = (): SubscriptionTier => {
+  if (typeof window === "undefined") {
+    return "free";
+  }
+
+  const raw = window.localStorage.getItem(SUBSCRIPTION_TIER_KEY);
+  return raw === "starter-5" || raw === "pro-10" ? raw : "free";
+};
+
+const persistSubscriptionTier = (tier: SubscriptionTier) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(SUBSCRIPTION_TIER_KEY, tier);
+};
+
 const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   const widgetType = getWidgetType(note);
   if (widgetType === "cover") return "cover";
@@ -3471,6 +3533,8 @@ const App = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>(() => getInitialSubscriptionTier());
+  const [boardCreationError, setBoardCreationError] = useState<string | null>(null);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const [widgetGalleryCategory, setWidgetGalleryCategory] = useState<WidgetGalleryCategory>("collect");
   const [catRemoteCommand, setCatRemoteCommand] = useState<CatRemoteCommand | null>(null);
@@ -3508,6 +3572,10 @@ const App = () => {
       document.documentElement.lang = siteLanguage;
     }
   }, [siteLanguage]);
+
+  useEffect(() => {
+    persistSubscriptionTier(subscriptionTier);
+  }, [subscriptionTier]);
 
   useEffect(() => {
     if (typeof document === "undefined" || !languageMenuOpen) {
@@ -3619,6 +3687,9 @@ const App = () => {
   );
   const isHomeView = homeBoardRoute && Boolean(selectedBoard && isHomeBoard(selectedBoard));
   const showWorkspaceBoardTabs = !isHomeView && !isReadOnlyBoardView && activeBoards.length > 0;
+  const boardLimit = subscriptionTier === "free" ? FREE_BOARD_LIMIT : PAID_BOARD_LIMIT;
+  const activeBoardLimitReached = activeBoards.length >= boardLimit;
+  const currentSubscriptionPlan = SUBSCRIPTION_PLANS.find((plan) => plan.key === subscriptionTier) ?? SUBSCRIPTION_PLANS[0]!;
   const isBoardOwner = Boolean(user?.id && selectedBoard && selectedBoard.userId === user.id);
   const canShareBoard = feedMode === "active" && Boolean(selectedBoard) && !isReadOnlyBoardView && isBoardOwner;
   const canInviteBoard = canShareBoard;
@@ -7426,26 +7497,47 @@ const App = () => {
   }, [selectedBoard?.id, feedMode]);
 
   const openTemplatePicker = () => {
+    setBoardCreationError(null);
+    setMobileBoardMenuOpen(false);
     setTemplatePickerOpen(true);
   };
 
-  const addBoard = async (templateKey: BoardTemplateKey = "blank") => {
+  const addBoard = async (templateKey: BoardTemplateKey = "blank", themeId?: BoardThemeId) => {
+    if (activeBoardLimitReached) {
+      setBoardCreationError(`현재 ${currentSubscriptionPlan.label} 플랜은 보드를 최대 ${boardLimit}개까지 만들 수 있습니다.`);
+      return;
+    }
+
     const title =
       templateKey === "blank"
         ? makeBoardTitle(boards)
         : BOARD_TEMPLATES.find((item) => item.key === templateKey)?.title ?? makeBoardTitle(boards);
     const nextOrder = orderedBoards.length;
+    const nextBackgroundStyle = themeId ? getBackgroundStyleForTheme(themeId) : undefined;
 
     if (templateKey === "blank" && supabase && user?.id) {
       try {
         const board = await createBoardV2(user.id, title);
-        setBoards((prev) => [{ ...board, settings: { ...board.settings, sidebarOrder: nextOrder } }, ...prev]);
+        setBoards((prev) => [
+          {
+            ...board,
+            backgroundStyle: nextBackgroundStyle ?? board.backgroundStyle,
+            settings: {
+              ...board.settings,
+              sidebarOrder: nextOrder,
+              ...(themeId ? { themeId } : {})
+            }
+          },
+          ...prev
+        ]);
         setSelectedBoardId(board.id);
         setSelectedNoteId(null);
         setFeedMode("active");
         setTemplatePickerOpen(false);
+        setBoardCreationError(null);
         return;
       } catch {
+        setBoardCreationError("보드를 만드는 중 문제가 생겼습니다. 잠시 뒤 다시 시도해주세요.");
         return;
       }
     }
@@ -7454,7 +7546,8 @@ const App = () => {
       templateKey === "blank"
         ? (() => {
             const board = createDefaultBoard(user?.id ?? "local", title);
-            board.settings = { ...board.settings, sidebarOrder: nextOrder };
+            board.backgroundStyle = nextBackgroundStyle ?? board.backgroundStyle;
+            board.settings = { ...board.settings, sidebarOrder: nextOrder, ...(themeId ? { themeId } : {}) };
             return { board, notes: [] as NoteV2[] };
           })()
         : createTemplateBoardSnapshot(user?.id ?? "local", templateKey, nextOrder, getColumnCount());
@@ -7467,10 +7560,17 @@ const App = () => {
     setSelectedNoteId(null);
     setFeedMode("active");
     setTemplatePickerOpen(false);
+    setBoardCreationError(null);
   };
 
   const duplicateSelectedBoard = () => {
     if (!selectedBoard) {
+      return;
+    }
+
+    if (activeBoardLimitReached) {
+      setBoardCreationError(`현재 ${currentSubscriptionPlan.label} 플랜은 보드를 최대 ${boardLimit}개까지 만들 수 있습니다.`);
+      setTemplatePickerOpen(true);
       return;
     }
 
@@ -8662,6 +8762,12 @@ const App = () => {
     }
 
     actions[type]();
+  };
+
+  const openWidgetGallery = () => {
+    setWidgetGalleryCategory("collect");
+    setWidgetMenuOpen(true);
+    setMobileBoardMenuOpen(false);
   };
 
   const activeWidgetGallerySection =
@@ -10069,14 +10175,10 @@ const App = () => {
                 )}
                 {!isReadOnlyBoardView && feedMode === "active" && selectedBoard && (
                   <div className="mobile-board-widget-group">
-                    <button
-                      className={`mobile-board-action ${widgetMenuOpen ? "active" : ""}`}
-                      onClick={() => {
-                        setWidgetGalleryCategory("collect");
-                        setWidgetMenuOpen(true);
-                        setMobileBoardMenuOpen(false);
-                      }}
-                    >
+                <button
+                  className={`mobile-board-action ${widgetMenuOpen ? "active" : ""}`}
+                  onClick={openWidgetGallery}
+                >
                       <span className="mobile-board-action-icon" aria-hidden="true">
                         ◫
                       </span>
@@ -10121,8 +10223,8 @@ const App = () => {
             >
               <div className="settings-panel-head">
                 <div>
-                  <p className="settings-kicker">스타터 보드</p>
-                  <h2>어떤 보드로 시작할까요?</h2>
+                  <p className="settings-kicker">새 보드</p>
+                  <h2>어떤 방식으로 보드를 만들까요?</h2>
                 </div>
                 <button
                   className="settings-close"
@@ -10136,8 +10238,44 @@ const App = () => {
               <div className="template-section-list">
                 <section className="template-section">
                   <div className="template-section-head">
-                    <strong>빠른 시작</strong>
-                    <span>아무 제약 없이 바로 메모를 시작하고 싶다면 빈 보드가 가장 가볍습니다.</span>
+                    <strong>플랜 선택</strong>
+                    <span>
+                      현재 {activeBoards.length} / {boardLimit}개 보드 사용 중 · {currentSubscriptionPlan.label} 플랜
+                    </span>
+                  </div>
+                  <div className="template-plan-grid">
+                    {SUBSCRIPTION_PLANS.map((plan) => {
+                      const active = subscriptionTier === plan.key;
+                      return (
+                        <button
+                          key={plan.key}
+                          className={`template-plan-card ${active ? "active" : ""}`}
+                          onClick={() => {
+                            setSubscriptionTier(plan.key);
+                            setBoardCreationError(null);
+                          }}
+                        >
+                          <span className="template-plan-label">{plan.label}</span>
+                          <strong className="template-plan-price">{plan.price}</strong>
+                          <span className="template-plan-limit">보드 {plan.boardLimit}개</span>
+                          <span className="template-plan-copy">{plan.description}</span>
+                        </button>
+                      );
+                    })}
+                    <a className="template-plan-card template-plan-card-contact" href="mailto:hello@wzd.kr?subject=WZD%20Business%20Inquiry">
+                      <span className="template-plan-label">Business</span>
+                      <strong className="template-plan-price">문의</strong>
+                      <span className="template-plan-limit">팀 도입 상담</span>
+                      <span className="template-plan-copy">워크스페이스 운영 규모와 사용 방식에 맞춰 별도 플랜을 안내합니다.</span>
+                    </a>
+                  </div>
+                  {boardCreationError ? <p className="template-picker-error">{boardCreationError}</p> : null}
+                </section>
+
+                <section className="template-section">
+                  <div className="template-section-head">
+                    <strong>빈 보드로 시작</strong>
+                    <span>가장 빠르게 시작하는 기본 보드입니다. 바로 메모를 쌓고 위젯을 얹을 수 있습니다.</span>
                   </div>
                   <div className="template-picker-grid">
                     {BOARD_TEMPLATES.filter((template) => template.key === "blank").map((template) => (
@@ -10145,6 +10283,7 @@ const App = () => {
                         key={template.key}
                         className="template-card"
                         onClick={() => void addBoard(template.key)}
+                        disabled={activeBoardLimitReached}
                       >
                         <div className={`template-card-preview template-${template.backgroundStyle}`}>
                           <span className="template-card-badge">{template.tag}</span>
@@ -10166,39 +10305,75 @@ const App = () => {
                   </div>
                 </section>
 
-                {starterTemplateSections.map((section) => (
-                  <section className="template-section" key={`picker-${section.key}`}>
-                    <div className="template-section-head">
-                      <strong>{section.title}</strong>
-                      <span>{section.subtitle}</span>
+                <section className="template-section">
+                  <div className="template-section-head">
+                    <strong>테마 보드로 시작</strong>
+                    <span>빈 보드를 만들되 배경 톤과 전체 분위기를 먼저 정해두고 시작합니다.</span>
+                  </div>
+                  <div className="settings-theme-grid template-theme-grid">
+                    {BOARD_THEME_PRESETS.map((theme) => (
+                      <button
+                        key={`template-theme-${theme.key}`}
+                        className={`settings-theme-card template-theme-card ${theme.previewClassName}`}
+                        onClick={() => void addBoard("blank", theme.key)}
+                        disabled={activeBoardLimitReached}
+                      >
+                        <div className="settings-theme-preview" aria-hidden="true">
+                          <span className="settings-theme-preview-topbar" />
+                          <span className="settings-theme-preview-card large" />
+                          <span className="settings-theme-preview-card small" />
+                          <span className="settings-theme-preview-card accent" />
+                        </div>
+                        <div className="settings-theme-copy">
+                          <span className="settings-theme-title">{theme.label}</span>
+                          <span className="settings-theme-accent">{theme.accent}</span>
+                          <span className="settings-theme-description">{theme.description}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="template-section">
+                  <div className="template-section-head">
+                    <strong>스타터 보드 템플릿</strong>
+                    <span>빈 보드보다 구조가 잡힌 출발점이 필요할 때 바로 참고할 수 있는 샘플입니다.</span>
+                  </div>
+                  {starterTemplateSections.map((section) => (
+                    <div className="template-subsection" key={`picker-${section.key}`}>
+                      <div className="template-subsection-head">
+                        <strong>{section.title}</strong>
+                        <span>{section.subtitle}</span>
+                      </div>
+                      <div className="template-picker-grid">
+                        {section.templates.map((template) => (
+                          <button
+                            key={`picker-${template.key}`}
+                            className="template-card"
+                            onClick={() => void addBoard(template.key)}
+                            disabled={activeBoardLimitReached}
+                          >
+                            <div className={`template-card-preview template-${template.backgroundStyle}`}>
+                              <span className="template-card-badge">{template.tag}</span>
+                              <strong>{template.title}</strong>
+                              <span>{template.subtitle}</span>
+                            </div>
+                            <span className="template-card-title">{template.title}</span>
+                            <span className="template-card-copy">{template.subtitle}</span>
+                            <span className="template-card-audience">{template.audience}</span>
+                            <div className="template-card-highlights">
+                              {template.highlights.map((highlight) => (
+                                <span key={`${template.key}-${highlight}`} className="template-card-chip">
+                                  {highlight}
+                                </span>
+                              ))}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="template-picker-grid">
-                      {section.templates.map((template) => (
-                        <button
-                          key={`picker-${template.key}`}
-                          className="template-card"
-                          onClick={() => void addBoard(template.key)}
-                        >
-                          <div className={`template-card-preview template-${template.backgroundStyle}`}>
-                            <span className="template-card-badge">{template.tag}</span>
-                            <strong>{template.title}</strong>
-                            <span>{template.subtitle}</span>
-                          </div>
-                          <span className="template-card-title">{template.title}</span>
-                          <span className="template-card-copy">{template.subtitle}</span>
-                          <span className="template-card-audience">{template.audience}</span>
-                          <div className="template-card-highlights">
-                            {template.highlights.map((highlight) => (
-                              <span key={`${template.key}-${highlight}`} className="template-card-chip">
-                                {highlight}
-                              </span>
-                            ))}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                ))}
+                  ))}
+                </section>
               </div>
             </section>
           </div>
