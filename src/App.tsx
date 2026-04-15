@@ -3395,6 +3395,7 @@ const App = () => {
   const [rssDisplayFeeds, setRssDisplayFeeds] = useState<Record<string, RssFeedState>>({});
   const [rssFlipStates, setRssFlipStates] = useState<Record<string, { index: number; nextItem: RssItem } | null>>({});
   const [rssRefreshingIds, setRssRefreshingIds] = useState<Record<string, boolean>>({});
+  const [expandedTrendingItems, setExpandedTrendingItems] = useState<Record<string, number | null>>({});
   const [socialWidgets, setSocialWidgets] = useState<Record<string, SocialFeedState>>({});
   const [weatherWidgets, setWeatherWidgets] = useState<Record<string, WeatherState>>({});
   const [trendingWidgets, setTrendingWidgets] = useState<Record<string, TrendingState>>({});
@@ -4882,6 +4883,7 @@ const App = () => {
     if (widgetType === "trending") {
       const region = getTrendingRegion(note);
       const trending = trendingWidgets[note.id];
+      const expandedIndex = expandedTrendingItems[note.id] ?? null;
 
       return (
         <>
@@ -4933,18 +4935,44 @@ const App = () => {
               <div className="trending-region">{trending.region} · 인기 키워드</div>
               <div className="trending-list">
                 {trending.items.slice(0, compact ? 5 : 8).map((item, index) => (
-                  <a
+                  <div
                     key={`${note.id}-trend-${item.link}-${index}`}
-                    className="trending-item"
-                    href={item.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(event) => event.stopPropagation()}
+                    className={`trending-entry ${expandedIndex === index ? "expanded" : ""}`}
                   >
-                    <span className="trending-rank">{index + 1}</span>
-                    <span className="trending-title">{item.title}</span>
-                    {item.traffic && <span className="trending-traffic">{item.traffic}</span>}
-                  </a>
+                    <button
+                      type="button"
+                      className="trending-item"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setExpandedTrendingItems((prev) => ({
+                          ...prev,
+                          [note.id]: prev[note.id] === index ? null : index
+                        }));
+                      }}
+                      aria-expanded={expandedIndex === index}
+                    >
+                      <span className="trending-rank">{index + 1}</span>
+                      <span className="trending-title">{item.title}</span>
+                      {item.traffic && <span className="trending-traffic">{item.traffic}</span>}
+                    </button>
+                    {expandedIndex === index && item.newsItems.length > 0 && (
+                      <div className="trending-news-list">
+                        {item.newsItems.map((newsItem) => (
+                          <a
+                            key={`${item.title}-${newsItem.link}`}
+                            className="trending-news-item"
+                            href={newsItem.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <span className="trending-news-title">{newsItem.title}</span>
+                            <span className="trending-news-source">{newsItem.source}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
