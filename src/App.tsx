@@ -1799,6 +1799,11 @@ const getNoteTitle = (content: unknown) => {
   return firstLine.slice(0, 48);
 };
 
+const getFoodDetailsUrl = (region: string, recommendation: FoodRecommendation) => {
+  const query = [region, recommendation.name, recommendation.menu].filter(Boolean).join(" ");
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+};
+
 const delay = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 const isSameRssItem = (left: RssItem | undefined, right: RssItem | undefined) =>
@@ -5890,12 +5895,19 @@ const App = () => {
           )}
           <div className="food-widget-list">
             {recommendationSet.entries.map(({ category, label, item }) => (
-              <article key={`${category}-${item.name}`} className="food-widget-card">
+              <a
+                key={`${category}-${item.name}`}
+                className="food-widget-card food-widget-card-link"
+                href={getFoodDetailsUrl(recommendationSet.region, item)}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <span className={`food-widget-label ${category}`}>{label}</span>
                 <strong>{item.name}</strong>
                 <p>{item.menu}</p>
                 <small>{item.summary}</small>
-              </article>
+              </a>
             ))}
           </div>
           {!compact && (

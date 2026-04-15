@@ -5271,6 +5271,18 @@ button {
   border: 1px solid rgba(31, 26, 19, 0.08);
 }
 
+.food-widget-card-link {
+  color: inherit;
+  text-decoration: none;
+  transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.food-widget-card-link:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 26px rgba(31, 26, 19, 0.08);
+}
+
 .food-widget-card strong,
 .food-widget-card p,
 .food-widget-card small {
