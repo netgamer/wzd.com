@@ -5517,10 +5517,10 @@ button {
   inset: 0;
   z-index: 8;
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   justify-content: stretch;
   border-radius: 0;
-  background: transparent;
+  background: var(--board-page-surface, #fffdf9);
   backdrop-filter: blur(6px);
 }
 
@@ -5529,8 +5529,12 @@ button {
   flex-direction: column;
   gap: 0;
   width: 100%;
-  padding: 24px;
+  padding: 24px 28px;
   box-sizing: border-box;
+}
+
+.full-span > .feed-loading-overlay-content {
+  padding: 0;
 }
 
 .feed-loading-header {
@@ -5706,7 +5710,8 @@ button {
   box-sizing: border-box;
 }
 
-.feed-empty.full-span {
+.feed-empty.full-span,
+.full-span {
   grid-column: 1 / -1;
   width: 100%;
   justify-self: stretch;

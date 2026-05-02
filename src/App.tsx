@@ -9556,7 +9556,7 @@ const App = () => {
   );
 
   const renderFeedLoadingSkeleton = () => {
-    const skeletonColumnCount = compactHeader ? 2 : Math.min(4, Math.max(3, columnCount));
+    const skeletonColumnCount = compactHeader ? 2 : 4;
     const cardHeights = [180, 240, 160, 280, 200, 150, 260, 190, 220, 170, 250, 210];
     const skeletonCards = Array.from({ length: skeletonColumnCount * 3 }, (_, index) => ({
       id: index,
