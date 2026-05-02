@@ -9556,25 +9556,18 @@ const App = () => {
   );
 
   const renderFeedLoadingSkeleton = () => {
-    const skeletonColumnCount = compactHeader ? 2 : Math.min(4, Math.max(2, columnCount));
-    const skeletonCards = Array.from({ length: skeletonColumnCount * 2 }, (_, index) => ({
+    const skeletonColumnCount = compactHeader ? 2 : Math.min(4, Math.max(3, columnCount));
+    const cardHeights = [180, 240, 160, 280, 200, 150, 260, 190, 220, 170, 250, 210];
+    const skeletonCards = Array.from({ length: skeletonColumnCount * 3 }, (_, index) => ({
       id: index,
-      tall: index % 3 === 1,
-      image: index % 4 === 0
+      height: cardHeights[index % cardHeights.length],
+      hasImage: index % 3 === 0,
+      hasLines: index % 2 === 0 ? 3 : 2,
+      delay: index * 60
     }));
 
     return (
       <div className="feed-loading-overlay-content">
-        <div className="feed-loading-header">
-          <div className="feed-loading-title">
-            <span className="skeleton feed-loading-kicker" />
-            <span className="skeleton feed-loading-heading" />
-          </div>
-          <div className="feed-loading-chips">
-            <span className="skeleton feed-loading-chip" />
-            <span className="skeleton feed-loading-chip short" />
-          </div>
-        </div>
         <div
           className="feed-loading-skeleton-grid"
           style={{ "--loading-columns": String(skeletonColumnCount) } as CSSProperties}
@@ -9582,20 +9575,23 @@ const App = () => {
           {skeletonCards.map((card) => (
             <div
               key={card.id}
-              className={`feed-loading-skeleton-card ${card.tall ? "tall" : ""} ${card.image ? "image" : ""}`}
+              className={`feed-loading-skeleton-card ${card.hasImage ? "image" : ""}`}
+              style={{
+                minHeight: `${card.height}px`,
+                animationDelay: `${card.delay}ms`
+              } as CSSProperties}
             >
-              <span className="skeleton feed-loading-dot" />
+              {card.hasImage && <span className="skeleton feed-loading-image" />}
               <div className="feed-loading-card-body">
                 <span className="skeleton feed-loading-badge" />
                 <span className="skeleton feed-loading-line title" />
-                <span className="skeleton feed-loading-line" />
-                <span className="skeleton feed-loading-line short" />
-                {card.image ? <span className="skeleton feed-loading-image" /> : null}
+                {Array.from({ length: card.hasLines }, (_, i) => (
+                  <span key={i} className={`skeleton feed-loading-line ${i === card.hasLines - 1 ? "short" : ""}`} />
+                ))}
               </div>
             </div>
           ))}
         </div>
-        <div className="feed-loading-message">보드를 준비하고 있어요.</div>
       </div>
     );
   };
