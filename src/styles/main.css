@@ -3382,16 +3382,16 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  min-height: 22px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: capitalize;
-  letter-spacing: 0.01em;
+  min-width: 0;
+  min-height: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.3);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .pin-dot {
@@ -3685,13 +3685,15 @@ button {
 
 .widget-badge {
   align-self: flex-start;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: rgba(31, 26, 19, 0.08);
-  color: var(--muted);
-  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(31, 26, 19, 0.05);
+  color: rgba(31, 26, 19, 0.36);
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.4;
 }
 
 .widget-badge.blog-badge {
@@ -4131,17 +4133,21 @@ button {
 
 .rss-item {
   display: flex;
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.72);
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: transparent;
   color: var(--text);
   text-decoration: none;
-  transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+  transition:
+    transform 200ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 180ms ease,
+    box-shadow 200ms ease;
 }
 
 .rss-item:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.92);
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(31, 26, 19, 0.06);
 }
 
 .rss-item-flip-shell {
@@ -6721,16 +6727,14 @@ button {
 .delivery-progress-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
 }
 
 .timetable-preview-item,
-.weather-forecast-item,
-.trending-item,
 .delivery-progress-item {
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.78);
-  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 8px 10px;
 }
 
 .timetable-preview-item {
@@ -6940,9 +6944,9 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.8);
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .weather-link-card {
@@ -7294,28 +7298,32 @@ button {
   display: grid;
   grid-template-columns: 48px 32px 1fr;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.72);
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: transparent;
   font-size: 12px;
   color: rgba(31, 26, 19, 0.76);
-  transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+  transition:
+    transform 200ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 180ms ease,
+    box-shadow 200ms ease;
 }
 
 .weather-forecast-item:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.92);
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 8px rgba(31, 26, 19, 0.06);
 }
 
 .trending-widget {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .trending-list {
   display: grid;
-  gap: 10px;
+  gap: 2px;
 }
 
 .trending-region {
@@ -7334,18 +7342,23 @@ button {
   grid-template-columns: 26px 1fr auto;
   width: 100%;
   gap: 10px;
-  padding: 0;
+  padding: 8px 10px;
   border: none;
+  border-radius: 12px;
   background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: transform 140ms ease, background-color 140ms ease;
+  transition:
+    transform 200ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 180ms ease,
+    box-shadow 200ms ease;
 }
 
 .trending-item:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.92);
+  transform: translateX(6px) translateY(-2px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(31, 26, 19, 0.1);
 }
 
 .trending-rank {
