@@ -6963,9 +6963,9 @@ button {
 .weather-current {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 14px;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.5);
 }
 
@@ -6981,7 +6981,7 @@ button {
 }
 
 .weather-current-emoji {
-  font-size: 28px;
+  font-size: 64px;
   line-height: 1;
 }
 
@@ -7316,7 +7316,7 @@ button {
 
 .weather-forecast-item {
   display: grid;
-  grid-template-columns: 48px 32px 1fr;
+  grid-template-columns: 48px 40px 1fr;
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
@@ -7328,6 +7328,11 @@ button {
     transform 200ms cubic-bezier(0.2, 0, 0, 1),
     background-color 180ms ease,
     box-shadow 200ms ease;
+}
+
+.weather-forecast-item > span:nth-child(2) {
+  font-size: 28px;
+  line-height: 1;
 }
 
 .weather-forecast-item:hover {
