@@ -9847,25 +9847,38 @@ const App = () => {
       <div className={`pin-app ${pageModeClassName}-app`}>
         {showWorkspaceBoardTabs ? (
           <header className={`${topbarClassName} board-tabs-only-topbar ${workspaceTabsHidden ? "is-scroll-hidden" : ""}`.trim()}>
-            <div className="workspace-board-tabs" role="tablist" aria-label="보드 목록" ref={mobileBoardTabsRef}>
-              {activeBoards.map((boardItem) => (
-                <button
-                  key={`workspace-tab-${boardItem.id}`}
-                  role="tab"
-                  aria-selected={selectedBoard?.id === boardItem.id}
-                  className={`workspace-board-tab ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
-                  ref={(node) => {
-                    mobileBoardTabRefs.current[boardItem.id] = node;
-                  }}
-                  onClick={() => {
-                    setSelectedBoardId(boardItem.id);
-                    setSelectedNoteId(null);
-                    setFeedMode("active");
-                  }}
-                >
-                  <span className="workspace-board-tab-label">{boardItem.title}</span>
-                </button>
-              ))}
+            <div className="workspace-topbar-row">
+              <div className="workspace-board-tabs" role="tablist" aria-label="보드 목록" ref={mobileBoardTabsRef}>
+                {activeBoards.map((boardItem) => (
+                  <button
+                    key={`workspace-tab-${boardItem.id}`}
+                    role="tab"
+                    aria-selected={selectedBoard?.id === boardItem.id}
+                    className={`workspace-board-tab ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
+                    ref={(node) => {
+                      mobileBoardTabRefs.current[boardItem.id] = node;
+                    }}
+                    onClick={() => {
+                      setSelectedBoardId(boardItem.id);
+                      setSelectedNoteId(null);
+                      setFeedMode("active");
+                    }}
+                  >
+                    <span className="workspace-board-tab-label">{boardItem.title}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="workspace-topbar-search">
+                <span className="workspace-search-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </span>
+                <input
+                  className="workspace-search-input"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search notes, boards..."
+                />
+              </div>
             </div>
           </header>
         ) : (
