@@ -147,7 +147,8 @@ type WidgetType =
   | "mood"
   | "routine"
   | "prompt"
-  | "food";
+  | "food"
+  | "blog";
 type DocumentWidgetVariant = "hero" | "section" | "feature" | "cta";
 type ClockWidgetMode = "digital" | "analog";
 type CalculatorOperator = "+" | "-" | "×" | "÷";
@@ -342,20 +343,6 @@ const HomeIcon = () => (
   </svg>
 );
 
-const BoardRailIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <rect x="4" y="5" width="7" height="14" rx="1.8" fill="none" stroke="currentColor" strokeWidth="1.8" />
-    <rect x="13" y="5" width="7" height="14" rx="1.8" fill="none" stroke="currentColor" strokeWidth="1.8" />
-  </svg>
-);
-
-const AddRailIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <rect x="4.5" y="4.5" width="15" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
-    <path d="M12 8v8M8 12h8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-  </svg>
-);
-
 const BellIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path
@@ -367,20 +354,6 @@ const BellIcon = () => (
       strokeLinejoin="round"
     />
     <path d="M10.5 19a1.7 1.7 0 0 0 3 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-  </svg>
-);
-
-const MessageIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path
-      d="M6.5 7.5h11a2.5 2.5 0 0 1 2.5 2.5v4a2.5 2.5 0 0 1-2.5 2.5H12l-4.5 3v-3H6.5A2.5 2.5 0 0 1 4 14V10a2.5 2.5 0 0 1 2.5-2.5Z"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path d="M9 12h6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
   </svg>
 );
 
@@ -413,6 +386,7 @@ const MOBILE_LAYOUT_BREAKPOINT = 980;
 const MOBILE_SINGLE_COLUMN_BREAKPOINT = 680;
 const COMPACT_SIDEBAR_BREAKPOINT = 1120;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
+const BLOG_FEED_URL = "https://netgamer.github.io/wzd-blog-platform/index.xml";
 const DEFAULT_SOCIAL_SOURCE = "https://bsky.app/profile/openai.com";
 const DEFAULT_BOOKMARK_URL = "https://";
 const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
@@ -1217,6 +1191,16 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
         previewLines: ["핵심 뉴스 헤드라인 3개", "새 글이 올라오면 바로 확인"],
         previewMeta: "업데이트 자동 반영",
         accent: "#8f7cff"
+      },
+      {
+        type: "blog",
+        title: "오늘의 트렌드",
+        subtitle: "매시간 업데이트되는 한국 트렌드 블로그",
+        kicker: "트렌드",
+        previewTitle: "오늘의 트렌드",
+        previewLines: ["정책·뉴스", "지원금·혜택", "생활·명소"],
+        previewMeta: "매시간 자동 업데이트",
+        accent: "#e74c8b"
       },
       {
         type: "social",
@@ -2279,13 +2263,15 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "mood" ||
   note.metadata?.widgetType === "routine" ||
   note.metadata?.widgetType === "prompt" ||
-  note.metadata?.widgetType === "food"
+  note.metadata?.widgetType === "food" ||
+  note.metadata?.widgetType === "blog"
     ? note.metadata.widgetType
     : "note";
 const getRssFeedUrl = (note: NoteV2) =>
   typeof note.metadata?.feedUrl === "string" && note.metadata.feedUrl.trim()
     ? note.metadata.feedUrl.trim()
     : DEFAULT_RSS_FEED_URL;
+const getBlogFeedUrl = () => BLOG_FEED_URL;
 const getSocialSource = (note: NoteV2) =>
   typeof note.metadata?.socialSource === "string" && note.metadata.socialSource.trim()
     ? note.metadata.socialSource.trim()
@@ -3080,6 +3066,7 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   if (widgetType === "prompt") return 1;
   if (widgetType === "food") return 1;
   if (widgetType === "rss") return 0;
+  if (widgetType === "blog") return 0;
   if (widgetType === "bookmark") return 1;
   if (widgetType === "checklist") return 2;
   if (widgetType === "countdown") return 2;
@@ -3128,88 +3115,12 @@ const BOARD_LAYOUT_STYLES: Array<{
   { key: "visual", label: "종류별 정리", description: "메모와 위젯 비중을 보고 한쪽 컬럼군씩 묶어서 정리합니다." }
 ];
 
-const BOARD_THEME_PRESETS: Array<{
-  key: BoardThemeId;
-  label: string;
-  description: string;
-  accent: string;
-  previewClassName: string;
-}> = [
-  {
-    key: "focus-desk",
-    label: "Focus Desk",
-    description: "따뜻한 종이와 우드 톤으로 집중 보드에 맞는 기본 테마",
-    accent: "크림 · 브라운",
-    previewClassName: "theme-preview-focus-desk"
-  },
-  {
-    key: "glass-studio",
-    label: "Glass Studio",
-    description: "유리 패널과 차가운 블루 톤으로 깔끔한 작업실 분위기",
-    accent: "아이스 블루 · 실버",
-    previewClassName: "theme-preview-glass-studio"
-  },
-  {
-    key: "midnight-ops",
-    label: "Midnight Ops",
-    description: "다크 네이비와 네온 포인트로 야간 작업 보드에 어울리는 테마",
-    accent: "네이비 · 일렉트릭 블루",
-    previewClassName: "theme-preview-midnight-ops"
-  },
-  {
-    key: "creator-mood",
-    label: "Creator Mood",
-    description: "웜 핑크와 살구빛 톤으로 이미지, 링크, 아이디어 보드에 잘 맞는 테마",
-    accent: "살구 · 로즈",
-    previewClassName: "theme-preview-creator-mood"
-  },
-  {
-    key: "neon-lab",
-    label: "Neon Lab",
-    description: "짙은 배경 위 민트와 바이올렛 포인트가 살아 있는 실험용 테마",
-    accent: "민트 · 바이올렛",
-    previewClassName: "theme-preview-neon-lab"
-  },
-  {
-    key: "cozy-room",
-    label: "Cozy Room",
-    description: "패브릭과 오후 햇빛 느낌의 부드러운 생활 기록 테마",
-    accent: "샌드 · 카멜",
-    previewClassName: "theme-preview-cozy-room"
-  }
-];
-
 const isBoardLayoutStyle = (value: unknown): value is BoardLayoutStyle =>
   value === "balanced" || value === "compact" || value === "visual";
-
-const isBoardThemeId = (value: unknown): value is BoardThemeId =>
-  value === "focus-desk" ||
-  value === "glass-studio" ||
-  value === "midnight-ops" ||
-  value === "creator-mood" ||
-  value === "neon-lab" ||
-  value === "cozy-room";
 
 const getBoardLayoutStyle = (board: BoardV2 | null | undefined): BoardLayoutStyle => {
   const value = board?.settings?.layoutStyle;
   return isBoardLayoutStyle(value) ? value : "balanced";
-};
-
-const getBoardThemeId = (board: BoardV2 | null | undefined): BoardThemeId => {
-  const explicitTheme = board?.settings?.themeId;
-  if (isBoardThemeId(explicitTheme)) {
-    return explicitTheme;
-  }
-
-  if (board?.backgroundStyle === "whiteboard") {
-    return "glass-studio";
-  }
-
-  if (board?.backgroundStyle === "cork") {
-    return "creator-mood";
-  }
-
-  return "focus-desk";
 };
 
 const getBackgroundStyleForTheme = (themeId: BoardThemeId): BoardBackgroundStyle => {
@@ -3254,6 +3165,7 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   if (widgetType === "prompt") return "prompt";
   if (widgetType === "food") return "prompt";
   if (widgetType === "rss") return "rss";
+  if (widgetType === "blog") return "rss";
   if (widgetType === "bookmark") return "bookmark";
   if (widgetType === "checklist") return "checklist";
   if (widgetType === "countdown") return "countdown";
@@ -3376,6 +3288,7 @@ const estimateNoteVisualHeight = (note: NoteV2, layoutStyle: BoardLayoutStyle) =
   if (widgetType === "prompt") return layoutStyle === "compact" ? 230 : 270;
   if (widgetType === "food") return layoutStyle === "compact" ? 250 : 290;
   if (widgetType === "rss") return layoutStyle === "compact" ? 270 : 300;
+  if (widgetType === "blog") return layoutStyle === "compact" ? 270 : 300;
   if (widgetType === "bookmark") return layoutStyle === "compact" ? 230 : 260;
   if (widgetType === "checklist") return layoutStyle === "compact" ? 250 : 290;
   if (widgetType === "countdown") return layoutStyle === "compact" ? 210 : 240;
@@ -7183,10 +7096,10 @@ const App = () => {
 
   useEffect(() => {
     const rssNotes = visibleNotes
-      .filter((note) => getWidgetType(note) === "rss")
+      .filter((note) => getWidgetType(note) === "rss" || getWidgetType(note) === "blog")
       .map((note) => ({
         id: note.id,
-        url: getRssFeedUrl(note)
+        url: getWidgetType(note) === "blog" ? getBlogFeedUrl() : getRssFeedUrl(note)
       }))
       .filter((note): note is { id: string; url: string } => Boolean(note.url));
 
@@ -7698,24 +7611,6 @@ const App = () => {
     setMobileBoardMenuOpen(false);
   };
 
-  const navigateToInsight = () => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.history.pushState({}, "", "/insight");
-    setHomeBoardRoute(false);
-    setPublicLandingRoute(false);
-    setMarketRoute(false);
-    setInsightRoute(true);
-    setUpdatesIndexRoute(false);
-    setUpdateSlugRoute(null);
-    setSharedBoardSlug(null);
-    setSharedBoardReadOnly(false);
-    setSelectedNoteId(null);
-    setMobileBoardMenuOpen(false);
-  };
-
   const navigateToUpdates = () => {
     if (typeof window === "undefined") {
       return;
@@ -8007,6 +7902,37 @@ const App = () => {
       ...note.metadata,
       widgetType: "rss",
       feedUrl: DEFAULT_RSS_FEED_URL
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
+  const addBlogWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "오늘의 트렌드"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "blog",
+      feedUrl: BLOG_FEED_URL
     };
 
     setNotes((prev) => [note, ...prev]);
@@ -8754,7 +8680,8 @@ const App = () => {
       routine: addRoutineWidget,
       prompt: addPromptWidget,
       social: addSocialWidget,
-      food: addFoodWidget
+      food: addFoodWidget,
+      blog: addBlogWidget
     };
 
     if (type === "note") {
@@ -8814,23 +8741,6 @@ const App = () => {
     );
   };
 
-  const updateBoardThemeId = (boardId: string, themeId: BoardThemeId) => {
-    setBoards((prev) =>
-      prev.map((board) =>
-        board.id === boardId
-          ? {
-              ...board,
-              settings: {
-                ...board.settings,
-                themeId
-              },
-              updatedAt: nowIso()
-            }
-          : board
-      )
-    );
-  };
-
   const applyBoardLayoutStyle = (layoutStyle: BoardLayoutStyle) => {
     if (!selectedBoard) {
       return;
@@ -8840,14 +8750,6 @@ const App = () => {
     const nextColumnCount = getColumnCount();
     setNotes((prev) => autoOrganizeBoardNotes(prev, selectedBoard.id, nextColumnCount, layoutStyle));
     touchBoard(selectedBoard.id);
-  };
-
-  const applyBoardTheme = (themeId: BoardThemeId) => {
-    if (!selectedBoard) {
-      return;
-    }
-
-    updateBoardThemeId(selectedBoard.id, themeId);
   };
 
   const saveCurrentBoardToHistory = () => {
@@ -9260,12 +9162,13 @@ const App = () => {
                   const fontSize = getNoteFontSize(note);
                   const widgetType = getWidgetType(note);
                   const isRssWidget = widgetType === "rss";
+                  const isBlogWidget = widgetType === "blog";
                   const isBookmarkWidget = widgetType === "bookmark";
                   const isChecklistWidget = widgetType === "checklist";
                   const isCountdownWidget = widgetType === "countdown";
                   const isPlainMemo = !widgetType;
                   const extraWidgetBody = renderExtraWidgetBody(note, false, true);
-                  const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
+                  const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : isBlogWidget ? getBlogFeedUrl() : "";
                   const rssFeed = rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined;
                   const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
                   const checklistItems = isChecklistWidget ? getChecklistItems(note) : [];
@@ -9321,6 +9224,18 @@ const App = () => {
                             <div className="rss-widget-feed">
                               <a className="rss-feed-source" href={rssFeed?.link || rssFeedUrl} target="_blank" rel="noreferrer">
                                 {rssFeed?.title || "RSS 피드 열기"}
+                              </a>
+                            </div>
+                          </>
+                        ) : isBlogWidget ? (
+                          <>
+                            <div className="widget-header">
+                              <span className="widget-badge blog-badge">트렌드</span>
+                              <p className="pin-title">{asText(note.content).trim() || "오늘의 트렌드"}</p>
+                            </div>
+                            <div className="rss-widget-feed">
+                              <a className="rss-feed-source blog-feed-source" href={rssFeed?.link || BLOG_FEED_URL} target="_blank" rel="noreferrer">
+                                {rssFeed?.title || "오늘의 트렌드 블로그"}
                               </a>
                             </div>
                           </>
@@ -9830,7 +9745,7 @@ const App = () => {
     isHomeView ? "home-board-grid" : isSharedView ? "share-board-grid" : ""
   }`.trim();
   const showBoardCatCompanion = boardCatEligible;
-  const boardThemeClassName = !isHomeView && !isReadOnlyBoardView && selectedBoard ? `board-theme-${getBoardThemeId(selectedBoard)}` : "";
+  const boardThemeClassName = "";
   const issueCatRemoteCommand = (action: CatRemoteAction) => {
     catRemoteCommandIdRef.current += 1;
     setCatRemoteCommand({
@@ -9867,46 +9782,18 @@ const App = () => {
                 <span className="side-icon-glyph" aria-hidden="true">
                   <HomeIcon />
                 </span>
-              </button>
-              <button
-                className={`side-icon pinterest-rail-icon ${publicLandingRoute ? "active" : ""}`}
-                onClick={navigateToPublicLanding}
-                aria-label="랜딩"
-                title="랜딩"
-              >
-                <span className="side-icon-glyph" aria-hidden="true">
-                  <BoardRailIcon />
-                </span>
-              </button>
-              <button
-                className="side-icon pinterest-rail-icon"
-                onClick={openTemplatePicker}
-                aria-label="새 보드"
-                title="새 보드"
-              >
-                <span className="side-icon-glyph" aria-hidden="true">
-                  <AddRailIcon />
-                </span>
+                <span className="side-icon-label">홈</span>
               </button>
               <button
                 className={`side-icon pinterest-rail-icon has-dot ${updatesIndexRoute || Boolean(updateSlugRoute) ? "active" : ""}`}
                 onClick={navigateToUpdates}
-                aria-label="업데이트"
-                title="업데이트"
+                aria-label="알림"
+                title="알림"
               >
                 <span className="side-icon-glyph" aria-hidden="true">
                   <BellIcon />
                 </span>
-              </button>
-              <button
-                className={`side-icon pinterest-rail-icon ${insightRoute ? "active" : ""}`}
-                onClick={navigateToInsight}
-                aria-label="인사이트"
-                title="인사이트"
-              >
-                <span className="side-icon-glyph" aria-hidden="true">
-                  <MessageIcon />
-                </span>
+                <span className="side-icon-label">알림</span>
               </button>
             </div>
           </nav>
@@ -9936,6 +9823,24 @@ const App = () => {
               <span className="side-icon-label">설정</span>
             </button>
           </div>
+          {hasSupabaseConfig && (
+            <div className="sidebar-section sidebar-section-auth">
+              {user ? (
+                <button className="side-icon pinterest-rail-icon sidebar-profile-btn" onClick={onLogout} aria-label="로그아웃" title="로그아웃">
+                  <span className="sidebar-avatar" aria-hidden="true">
+                    {(user.email || "U").charAt(0).toUpperCase()}
+                  </span>
+                </button>
+              ) : (
+                <button className="side-icon pinterest-rail-icon sidebar-login-btn" onClick={onGoogleLogin} aria-label="로그인" title="로그인">
+                  <span className="side-icon-glyph" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </span>
+                  <span className="side-icon-label">로그인</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </aside>
 
@@ -10145,8 +10050,14 @@ const App = () => {
                     )}
                   </div>
                 ) : (
-                  <button className={compactHeader ? "mobile-icon-action mobile-auth-action" : "ghost-action mobile-auth-action"} onClick={onGoogleLogin}>
-                    구글 로그인
+                  <button className="primary-auth-action" onClick={onGoogleLogin}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    로그인
                   </button>
                 )
               ) : (
@@ -10305,34 +10216,7 @@ const App = () => {
                   </div>
                 </section>
 
-                <section className="template-section">
-                  <div className="template-section-head">
-                    <strong>테마 보드로 시작</strong>
-                    <span>빈 보드를 만들되 배경 톤과 전체 분위기를 먼저 정해두고 시작합니다.</span>
-                  </div>
-                  <div className="settings-theme-grid template-theme-grid">
-                    {BOARD_THEME_PRESETS.map((theme) => (
-                      <button
-                        key={`template-theme-${theme.key}`}
-                        className={`settings-theme-card template-theme-card ${theme.previewClassName}`}
-                        onClick={() => void addBoard("blank", theme.key)}
-                        disabled={activeBoardLimitReached}
-                      >
-                        <div className="settings-theme-preview" aria-hidden="true">
-                          <span className="settings-theme-preview-topbar" />
-                          <span className="settings-theme-preview-card large" />
-                          <span className="settings-theme-preview-card small" />
-                          <span className="settings-theme-preview-card accent" />
-                        </div>
-                        <div className="settings-theme-copy">
-                          <span className="settings-theme-title">{theme.label}</span>
-                          <span className="settings-theme-accent">{theme.accent}</span>
-                          <span className="settings-theme-description">{theme.description}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </section>
+                {/* Theme board section removed — using unified clean design */}
 
                 <section className="template-section">
                   <div className="template-section-head">
@@ -10567,37 +10451,6 @@ const App = () => {
                               >
                                 <span className="settings-layout-title">{style.label}</span>
                                 <span className="settings-layout-copy">{style.description}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <div className="settings-section">
-                        <div className="settings-section-head">
-                          <strong>보드 테마</strong>
-                          <span>작업공간 전체 톤을 개인 취향에 맞게 고를 수 있습니다.</span>
-                        </div>
-                        <div className="settings-theme-grid">
-                          {BOARD_THEME_PRESETS.map((theme) => {
-                            const active = getBoardThemeId(selectedBoard) === theme.key;
-                            return (
-                              <button
-                                key={theme.key}
-                                className={`settings-theme-card ${theme.previewClassName} ${active ? "active" : ""}`}
-                                onClick={() => applyBoardTheme(theme.key)}
-                              >
-                                <div className="settings-theme-preview" aria-hidden="true">
-                                  <span className="settings-theme-preview-topbar" />
-                                  <span className="settings-theme-preview-card large" />
-                                  <span className="settings-theme-preview-card small" />
-                                  <span className="settings-theme-preview-card accent" />
-                                </div>
-                                <div className="settings-theme-copy">
-                                  <span className="settings-theme-title">{theme.label}</span>
-                                  <span className="settings-theme-accent">{theme.accent}</span>
-                                  <span className="settings-theme-description">{theme.description}</span>
-                                </div>
                               </button>
                             );
                           })}
@@ -10950,16 +10803,18 @@ const App = () => {
                     const fontSize = getNoteFontSize(note);
                     const widgetType = getWidgetType(note);
                     const isRssWidget = widgetType === "rss";
+                    const isBlogWidget = widgetType === "blog";
+                    const isRssOrBlog = isRssWidget || isBlogWidget;
                     const isBookmarkWidget = widgetType === "bookmark";
                     const isChecklistWidget = widgetType === "checklist";
                     const isCountdownWidget = widgetType === "countdown";
                     const isPlainMemo = !widgetType;
                     const isWidgetNote = !isPlainMemo;
                     const extraWidgetBody = renderExtraWidgetBody(note, selected, false);
-                    const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : "";
-                    const rssFeed = isRssWidget ? rssDisplayFeeds[note.id] ?? (rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined) : undefined;
-                    const rssFlipState = isRssWidget ? rssFlipStates[note.id] : null;
-                    const rssRefreshing = isRssWidget ? Boolean(rssRefreshingIds[note.id]) : false;
+                    const rssFeedUrl = isRssWidget ? getRssFeedUrl(note) : isBlogWidget ? getBlogFeedUrl() : "";
+                    const rssFeed = isRssOrBlog ? rssDisplayFeeds[note.id] ?? (rssFeedUrl ? rssFeeds[rssFeedUrl] : undefined) : undefined;
+                    const rssFlipState = isRssOrBlog ? rssFlipStates[note.id] : null;
+                    const rssRefreshing = isRssOrBlog ? Boolean(rssRefreshingIds[note.id]) : false;
                     const bookmarkUrls = isBookmarkWidget ? getBookmarkUrls(note) : [];
                     const checklistItems = isChecklistWidget ? getChecklistItems(note) : [];
                     const countdownTargetDate = isCountdownWidget ? getCountdownTargetDate(note) : "";
@@ -11036,7 +10891,7 @@ const App = () => {
                             isHomeView && documentVariant ? `landing-home-${documentVariant}-note` : ""
                           } ${
                             !hideHoverMetadata && (hasTextPreview || hasLinkPreview) ? "has-hover-copy" : "image-only"
-                          } ${isRssWidget ? "widget-note rss-widget" : ""} ${selected ? "selected" : ""} ${
+                          } ${isRssWidget ? "widget-note rss-widget" : ""} ${isBlogWidget ? "widget-note rss-widget blog-widget" : ""} ${selected ? "selected" : ""} ${
                             runningDragNoteId === note.id ? "dragging" : ""
                           }`}
                           draggable={feedMode === "active" && !selected && !isReadOnlyBoardView}
@@ -11288,6 +11143,97 @@ const App = () => {
                                       </>
                                     ) : (
                                       <p className="rss-empty">RSS 항목을 불러오는 중이거나 피드를 찾을 수 없습니다.</p>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            ) : isBlogWidget ? (
+                              <>
+                                <div className="widget-header">
+                                  <span className="widget-badge blog-badge">트렌드</span>
+                                  <p className="pin-title">{asText(note.content).trim() || "오늘의 트렌드"}</p>
+                                  {!selected && (
+                                    <span className={`widget-refresh-indicator ${rssRefreshing ? "spinning" : ""}`} aria-hidden="true">
+                                      <ChevronDownIcon />
+                                    </span>
+                                  )}
+                                </div>
+                                {selected ? (
+                                  <div className="widget-editor-stack">
+                                    <input
+                                      className="widget-input"
+                                      value={note.content}
+                                      onMouseDown={(event) => event.stopPropagation()}
+                                      onChange={(event) => updateNote(note.id, { content: event.target.value })}
+                                      placeholder="위젯 제목"
+                                    />
+                                    <button
+                                      className="widget-confirm"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setSelectedNoteId(null);
+                                      }}
+                                    >
+                                      확인
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="rss-widget-feed blog-widget-feed">
+                                    <a
+                                      className="rss-feed-source blog-feed-source"
+                                      href={rssFeed?.link || BLOG_FEED_URL}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      onClick={(event) => event.stopPropagation()}
+                                    >
+                                      {rssFeed?.title || "오늘의 트렌드 블로그"}
+                                    </a>
+                                    {rssFeed?.items?.length ? (
+                                      <>
+                                        {rssFeed.items.slice(0, rssVisibleCount).map((item, index) => {
+                                          const isFlipping = rssFlipState?.index === index;
+                                          const incomingItem = isFlipping ? rssFlipState.nextItem : item;
+                                          return (
+                                          <a
+                                            key={`${note.id}-blog-${item.link}-${item.title}`}
+                                            className={`rss-item blog-item ${isFlipping ? "is-flipping" : ""}`}
+                                            href={item.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            onClick={(event) => event.stopPropagation()}
+                                          >
+                                            <span className="rss-item-flip-shell">
+                                              <span className="rss-item-flip">
+                                                <span className="rss-item-face front">
+                                                  <span className="rss-item-title">{item.title}</span>
+                                                  {item.pubDate && <span className="rss-item-date">{item.pubDate}</span>}
+                                                </span>
+                                                <span className="rss-item-face back">
+                                                  <span className="rss-item-title">{incomingItem.title}</span>
+                                                  {incomingItem.pubDate && <span className="rss-item-date">{incomingItem.pubDate}</span>}
+                                                </span>
+                                              </span>
+                                            </span>
+                                          </a>
+                                          );
+                                        })}
+                                        {rssFeed.items.length > rssVisibleCount && (
+                                          <button
+                                            className="note-more-button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              revealMoreForNote(note.id);
+                                            }}
+                                          >
+                                            <span className="note-more-icon" aria-hidden="true">
+                                              ↓
+                                            </span>
+                                            <span>More</span>
+                                          </button>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <p className="rss-empty">트렌드 포스트를 불러오는 중입니다...</p>
                                     )}
                                   </div>
                                 )}

@@ -1,148 +1,150 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { SiteLanguage } from "../../lib/site-language";
-import { UPDATE_POSTS } from "./updatesContent";
 
 type UpdatesIndexPageProps = {
   onNavigateBack?: () => void;
   language: SiteLanguage;
 };
 
-const ensureDescriptionMeta = () => {
-  if (typeof document === "undefined") {
-    return null;
-  }
+interface NotificationItem {
+  id: string;
+  title: string;
+  link: string;
+  date: string;
+  source: string;
+  category: string;
+}
 
-  let element = document.querySelector('meta[name="description"]');
-  if (!element) {
-    element = document.createElement("meta");
-    element.setAttribute("name", "description");
-    document.head.appendChild(element);
+const BLOG_RSS_URL = "https://netgamer.github.io/wzd-blog-platform/index.xml";
+
+const API_BASE =
+  (import.meta.env.VITE_AGENT_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ||
+  window.location.origin;
+
+const parsePubDate = (raw: string) => {
+  try {
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return raw;
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "방금 전";
+    if (diffMin < 60) return `${diffMin}분 전`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}시간 전`;
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 7) return `${diffDay}일 전`;
+    return d.toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
+  } catch {
+    return raw;
   }
-  return element;
 };
 
-const formatDate = (value: string, language: SiteLanguage) =>
-  new Intl.DateTimeFormat(language === "ko" ? "ko-KR" : "en", {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  }).format(new Date(value));
+const guessCategory = (title: string) => {
+  if (/정책|법안|규제|정부|국회/.test(title)) return "정책·뉴스";
+  if (/지원금|혜택|보조금|신청|복지/.test(title)) return "지원금·혜택";
+  return "생활·트렌드";
+};
 
-const UpdatesIndexPage = ({ onNavigateBack, language }: UpdatesIndexPageProps) => {
-  const copy =
-    language === "ko"
-      ? {
-          pageTitle: "WZD 업데이트",
-          description: "포지셔닝, 랜딩 변경, 제품 보조 MVP 진행 상황을 다루는 WZD 제품 업데이트 모음.",
-          topbarTitle: "팀의 작은 제품 노트",
-          productPage: "제품 페이지로",
-          back: "뒤로",
-          heroKicker: "출시 노트",
-          heroTitle: "제품 이야기를 대체하지 않고, 더 또렷하게 만드는 업데이트",
-          heroCopy:
-            "이 페이지는 제품 맥락과 출시 기록을 남기는 작은 업데이트 허브입니다. WZD의 중심은 여전히 북마크와 RSS를 위한 개인화 첫 화면이고, 이 글들은 그 방향을 설명하기 위해 존재합니다.",
-          publishedNotes: "발행 노트",
-          currentTheme: "현재 테마",
-          focus: "집중 포인트",
-          productFirst: "제품 중심",
-          bookmarksAndRss: "북마크 + RSS",
-          readUpdate: "업데이트 보기"
-        }
-      : {
-          pageTitle: "WZD Updates",
-          description: "Small product updates from WZD covering positioning, landing changes, and product-supporting MVP progress.",
-          topbarTitle: "Small product notes from the team",
-          productPage: "Go to product page",
-          back: "Back",
-          heroKicker: "Shipping notes",
-          heroTitle: "Updates that support the product story, not replace it",
-          heroCopy:
-            "This is a small in-repo updates hub for product context and shipping notes. WZD is still a personalized first page for bookmarks and RSS. These posts exist to explain the direction, not to turn WZD into a publishing product.",
-          publishedNotes: "Published notes",
-          currentTheme: "Current theme",
-          focus: "Focus",
-          productFirst: "Product-first",
-          bookmarksAndRss: "Bookmarks + RSS",
-          readUpdate: "Read update"
-        };
+const UpdatesIndexPage = ({ onNavigateBack }: UpdatesIndexPageProps) => {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const previousTitle = document.title;
-    const descriptionMeta = ensureDescriptionMeta();
-    const previousDescription = descriptionMeta?.getAttribute("content") ?? "";
+    document.title = "알림 — WZD";
 
-    document.title = copy.pageTitle;
-    descriptionMeta?.setAttribute("content", copy.description);
+    const fetchNotifications = async () => {
+      try {
+        const endpoint = `${API_BASE}/api/rss-feed?url=${encodeURIComponent(BLOG_RSS_URL)}`;
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error("피드 로딩 실패");
+        const data = await response.json() as { ok?: boolean; feed?: { title: string; items: Array<{ title: string; link: string; pubDate?: string }> }; error?: string };
+        if (!data.ok || !data.feed) throw new Error(data.error || "피드 데이터 없음");
+
+        const items: NotificationItem[] = data.feed.items.slice(0, 20).map((item, i) => ({
+          id: `blog-${i}`,
+          title: item.title,
+          link: item.link,
+          date: item.pubDate || "",
+          source: "오늘의 트렌드",
+          category: guessCategory(item.title)
+        }));
+
+        setNotifications(items);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "알림을 불러올 수 없습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
 
     return () => {
       document.title = previousTitle;
-      descriptionMeta?.setAttribute("content", previousDescription);
     };
-  }, [copy.description, copy.pageTitle]);
+  }, []);
 
   return (
     <div className="updates-page">
       <div className="updates-shell">
         <header className="updates-topbar">
           <div className="updates-topbar-copy">
-            <p className="updates-kicker">{copy.pageTitle}</p>
-            <strong>{copy.topbarTitle}</strong>
+            <p className="updates-kicker">알림</p>
+            <strong>최근 소식</strong>
           </div>
           <div className="updates-topbar-actions">
-            <a className="updates-topbar-link" href="/landing">
-              {copy.productPage}
-            </a>
             {onNavigateBack ? (
               <button type="button" className="updates-back-button" onClick={onNavigateBack}>
-                {copy.back}
+                뒤로
               </button>
             ) : null}
           </div>
         </header>
 
         <main className="updates-layout">
-          <section className="updates-hero-card">
-            <div className="updates-hero-grid">
-              <div className="updates-hero-content">
-                <p className="updates-kicker">{copy.heroKicker}</p>
-                <h1>{copy.heroTitle}</h1>
-                <p className="updates-hero-copy">{copy.heroCopy}</p>
-              </div>
-              <div className="updates-hero-stats" aria-label="Updates summary">
-                <div className="updates-stat-card">
-                  <span>{copy.publishedNotes}</span>
-                  <strong>{UPDATE_POSTS.length}</strong>
-                </div>
-                <div className="updates-stat-card">
-                  <span>{copy.currentTheme}</span>
-                  <strong>{copy.productFirst}</strong>
-                </div>
-                <div className="updates-stat-card">
-                  <span>{copy.focus}</span>
-                  <strong>{copy.bookmarksAndRss}</strong>
-                </div>
-              </div>
-            </div>
+          <section className="notifications-header">
+            <h1>알림</h1>
+            <p>오늘의 트렌드 블로그에서 새로 발행된 포스트입니다.</p>
           </section>
 
-          <section className="updates-index-grid" aria-label="WZD update posts">
-            {UPDATE_POSTS.map((post) => (
-              <article key={post.slug} className="updates-post-card">
-                <div className="updates-post-meta">
-                  <span>{post.category}</span>
-                  <span>{formatDate(post.publishedAt, language)}</span>
-                </div>
-                <h2>
-                  <a href={`/updates/${post.slug}`}>{post.title}</a>
-                </h2>
-                <p>{post.summary}</p>
-                <div className="updates-post-footer">
-                  <span>{post.readingTime}</span>
-                  <a href={`/updates/${post.slug}`}>{copy.readUpdate}</a>
-                </div>
-              </article>
-            ))}
-          </section>
+          {loading ? (
+            <div className="notifications-loading">
+              <span className="notifications-spinner" />
+              <span>알림을 불러오는 중...</span>
+            </div>
+          ) : error ? (
+            <div className="notifications-empty">{error}</div>
+          ) : notifications.length === 0 ? (
+            <div className="notifications-empty">새로운 알림이 없습니다.</div>
+          ) : (
+            <section className="notifications-list" aria-label="알림 목록">
+              {notifications.map((item) => (
+                <a
+                  key={item.id}
+                  className="notification-card"
+                  href={item.link}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <div className="notification-dot-wrap">
+                    <span className="notification-dot" />
+                  </div>
+                  <div className="notification-body">
+                    <div className="notification-meta">
+                      <span className="notification-source">{item.source}</span>
+                      <span className="notification-category">{item.category}</span>
+                      <span className="notification-time">{parsePubDate(item.date)}</span>
+                    </div>
+                    <p className="notification-title">{item.title}</p>
+                  </div>
+                  <span className="notification-arrow" aria-hidden="true">›</span>
+                </a>
+              ))}
+            </section>
+          )}
         </main>
       </div>
     </div>

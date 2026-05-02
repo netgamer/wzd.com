@@ -1,15 +1,15 @@
 :root {
   --bg: #ffffff;
   --surface: #ffffff;
-  --surface-soft: #f6f4ef;
-  --surface-muted: #efebe4;
-  --surface-paper: #fffaf4;
-  --surface-editor: #f8f1e7;
-  --line: rgba(31, 26, 19, 0.08);
-  --text: #1f1a13;
-  --muted: #74685c;
+  --surface-soft: #f5f5f5;
+  --surface-muted: #efefef;
+  --surface-paper: #ffffff;
+  --surface-editor: #fafafa;
+  --line: rgba(0, 0, 0, 0.06);
+  --text: #111111;
+  --muted: #767676;
   --accent: #e60023;
-  --accent-soft: rgba(230, 0, 35, 0.1);
+  --accent-soft: rgba(230, 0, 35, 0.08);
   --focus: #1d6fd8;
   --shadow: 0 18px 36px rgba(34, 23, 12, 0.08);
   --shadow-soft: 0 20px 48px rgba(48, 31, 14, 0.08);
@@ -135,14 +135,8 @@ button {
   align-items: center;
   gap: 18px;
   padding: 14px 10px 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(252, 246, 238, 0.94));
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-right: 1px solid rgba(72, 51, 26, 0.06);
-  box-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.8),
-    4px 0 24px rgba(31, 26, 19, 0.03);
+  background: #ffffff;
+  border-right: 1px solid rgba(0, 0, 0, 0.04);
   overflow: hidden;
   transition:
     padding var(--duration-normal) var(--ease-out),
@@ -153,52 +147,42 @@ button {
 
 .pin-page.board-page {
   --board-rail-width: 64px;
-  --board-shell-bg:
-    radial-gradient(circle at top left, rgba(255, 235, 205, 0.78), transparent 28%),
-    linear-gradient(180deg, #fffefb, #fbf7f0 42%, #f6efe4);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(246, 236, 224, 0.94));
-  --board-sidebar-border: rgba(91, 62, 31, 0.09);
-  --board-sidebar-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.76),
-    18px 0 40px rgba(76, 49, 23, 0.05);
-  --board-brand-bg: linear-gradient(135deg, #ff1747, #b5122f);
-  --board-brand-shadow: 0 16px 30px rgba(204, 22, 56, 0.24);
-  --board-chip-bg: rgba(255, 255, 255, 0.66);
-  --board-chip-border: rgba(93, 68, 41, 0.06);
-  --board-chip-badge-bg: rgba(81, 58, 34, 0.08);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.82);
-  --board-chip-hover-border: rgba(93, 68, 41, 0.08);
-  --board-chip-active-bg: linear-gradient(135deg, #ff1747, #c71437);
-  --board-chip-active-shadow: 0 16px 30px rgba(208, 26, 60, 0.26);
-  --board-topbar-bg: linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(251, 241, 228, 0.94));
-  --board-topbar-border: rgba(92, 67, 40, 0.08);
-  --board-topbar-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    0 20px 46px rgba(60, 38, 15, 0.08);
-  --board-search-bg: rgba(255, 255, 255, 0.76);
-  --board-search-border: rgba(92, 67, 40, 0.08);
-  --board-kicker-color: #8a5a37;
-  --board-new-note-bg: linear-gradient(135deg, #ff1747, #c61538);
-  --board-new-note-shadow: 0 16px 28px rgba(209, 25, 60, 0.22);
-  --board-widget-bg: linear-gradient(135deg, #2f2418, #17120d);
-  --board-widget-shadow: 0 14px 26px rgba(28, 20, 12, 0.18);
-  --board-ghost-bg: rgba(255, 255, 255, 0.8);
-  --board-ghost-border: rgba(92, 67, 40, 0.08);
-  --board-panel-bg: linear-gradient(180deg, rgba(255, 253, 250, 0.98), rgba(247, 239, 228, 0.95));
-  --board-panel-border: rgba(92, 67, 40, 0.08);
-  --board-panel-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 26px 54px rgba(58, 38, 15, 0.08);
-  --board-panel-outline: rgba(125, 96, 63, 0.16);
-  --board-feed-bg: rgba(255, 252, 247, 0.84);
-  --board-feed-border: rgba(125, 96, 63, 0.12);
-  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 243, 235, 0.96));
-  --board-base-card-border: rgba(75, 56, 35, 0.1);
-  --board-base-card-shadow:
-    0 18px 30px rgba(44, 31, 15, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88);
-  --board-page-text: #1f1a13;
-  --board-page-muted: #74685c;
+  --board-shell-bg: #ffffff;
+  --board-sidebar-bg: #ffffff;
+  --board-sidebar-border: rgba(0, 0, 0, 0.04);
+  --board-sidebar-shadow: none;
+  --board-brand-bg: #e60023;
+  --board-brand-shadow: none;
+  --board-chip-bg: #f5f5f5;
+  --board-chip-border: transparent;
+  --board-chip-badge-bg: rgba(0, 0, 0, 0.06);
+  --board-chip-hover-bg: #efefef;
+  --board-chip-hover-border: transparent;
+  --board-chip-active-bg: #111111;
+  --board-chip-active-shadow: none;
+  --board-topbar-bg: #ffffff;
+  --board-topbar-border: rgba(0, 0, 0, 0.04);
+  --board-topbar-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  --board-search-bg: #f0f0f0;
+  --board-search-border: transparent;
+  --board-kicker-color: #767676;
+  --board-new-note-bg: #e60023;
+  --board-new-note-shadow: none;
+  --board-widget-bg: #111111;
+  --board-widget-shadow: none;
+  --board-ghost-bg: #ffffff;
+  --board-ghost-border: rgba(0, 0, 0, 0.06);
+  --board-panel-bg: #ffffff;
+  --board-panel-border: rgba(0, 0, 0, 0.06);
+  --board-panel-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --board-panel-outline: rgba(0, 0, 0, 0.1);
+  --board-feed-bg: #fafafa;
+  --board-feed-border: rgba(0, 0, 0, 0.06);
+  --board-base-card-bg: #ffffff;
+  --board-base-card-border: rgba(0, 0, 0, 0.06);
+  --board-base-card-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  --board-page-text: #111111;
+  --board-page-muted: #767676;
   background: var(--board-shell-bg);
   --text: var(--board-page-text);
   --muted: var(--board-page-muted);
@@ -309,421 +293,19 @@ button {
 .pin-sidebar.expanded .sidebar-section-label {
   display: block;
 }
-.pin-page.board-page.board-theme-focus-desk {
-  --board-shell-bg:
-    radial-gradient(circle at top left, rgba(255, 238, 212, 0.75), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(255, 245, 230, 0.5), transparent 40%),
-    linear-gradient(180deg, #fffefb, #fcf8f2 40%, #f5efe6);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 253, 250, 0.96), rgba(248, 240, 228, 0.92));
-  --board-sidebar-border: rgba(91, 62, 31, 0.07);
-  --board-sidebar-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.9),
-    16px 0 36px rgba(76, 49, 23, 0.04);
-  --board-brand-bg: linear-gradient(135deg, #ff1747, #b5122f);
-  --board-brand-shadow: 0 14px 28px rgba(204, 22, 56, 0.22);
-  --board-chip-bg: rgba(255, 255, 255, 0.72);
-  --board-chip-border: rgba(93, 68, 41, 0.05);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.88);
-  --board-chip-active-bg: linear-gradient(135deg, #ff1747, #c71437);
-  --board-chip-active-shadow: 0 14px 28px rgba(208, 26, 60, 0.24);
-  --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(255, 244, 225, 0.88), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 252, 247, 0.85));
-  --board-topbar-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 18px 40px rgba(60, 38, 15, 0.06);
-  --board-search-bg: rgba(255, 255, 255, 0.82);
-  --board-search-border: rgba(92, 67, 40, 0.06);
-  --board-panel-bg:
-    radial-gradient(circle at top left, rgba(255, 248, 235, 0.72), transparent 30%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 250, 243, 0.72)),
-    rgba(255, 255, 255, 0.56);
-  --board-panel-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 24px 48px rgba(58, 38, 15, 0.06);
-  --board-base-card-shadow:
-    0 2px 4px rgba(44, 31, 15, 0.04),
-    0 16px 28px rgba(44, 31, 15, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92);
-}
 
-.pin-page.board-page.board-theme-glass-studio {
-  --board-shell-bg:
-    radial-gradient(circle at top left, rgba(210, 238, 255, 0.72), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(230, 245, 255, 0.5), transparent 36%),
-    linear-gradient(180deg, #f8fcff, #f0f7fc 46%, #e9f2f9);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(250, 253, 255, 0.94), rgba(230, 242, 250, 0.9));
-  --board-sidebar-border: rgba(84, 118, 147, 0.1);
-  --board-sidebar-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.92),
-    16px 0 36px rgba(73, 104, 135, 0.06);
-  --board-brand-bg: linear-gradient(135deg, #4ca4ff, #6d7cff);
-  --board-brand-shadow: 0 14px 28px rgba(83, 129, 255, 0.2);
-  --board-chip-bg: rgba(255, 255, 255, 0.62);
-  --board-chip-border: rgba(90, 124, 151, 0.08);
-  --board-chip-badge-bg: rgba(78, 120, 168, 0.1);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.85);
-  --board-chip-hover-border: rgba(82, 119, 148, 0.14);
-  --board-chip-active-bg: linear-gradient(135deg, #4ca4ff, #6d7cff);
-  --board-chip-active-shadow: 0 14px 28px rgba(83, 129, 255, 0.2);
-  --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(220, 244, 255, 0.85), transparent 38%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(245, 251, 255, 0.78));
-  --board-topbar-border: rgba(100, 133, 160, 0.08);
-  --board-topbar-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 18px 40px rgba(82, 115, 149, 0.07);
-  --board-search-bg: rgba(255, 255, 255, 0.76);
-  --board-search-border: rgba(96, 130, 160, 0.1);
-  --board-kicker-color: #5f84a3;
-  --board-new-note-bg: linear-gradient(135deg, #4ca4ff, #6d7cff);
-  --board-new-note-shadow: 0 14px 26px rgba(83, 129, 255, 0.2);
-  --board-widget-bg: linear-gradient(135deg, #1f3445, #122736);
-  --board-widget-shadow: 0 12px 24px rgba(22, 40, 56, 0.16);
-  --board-ghost-bg: rgba(255, 255, 255, 0.72);
-  --board-ghost-border: rgba(96, 130, 160, 0.08);
-  --board-panel-bg:
-    radial-gradient(circle at top left, rgba(225, 244, 255, 0.65), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(242, 249, 255, 0.72)),
-    rgba(255, 255, 255, 0.5);
-  --board-panel-border: rgba(96, 130, 160, 0.1);
-  --board-panel-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 24px 48px rgba(92, 121, 148, 0.08);
-  --board-panel-outline: rgba(138, 180, 214, 0.3);
-  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 249, 255, 0.94));
-  --board-base-card-border: rgba(98, 132, 160, 0.1);
-  --board-base-card-shadow:
-    0 2px 4px rgba(92, 121, 148, 0.04),
-    0 16px 36px rgba(92, 121, 148, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88);
-}
 
-.pin-page.board-page.board-theme-glass-studio .current-board-panel::after {
-  content: "";
-  position: absolute;
-  inset: 10px;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.92;
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.96) 0 1.4px, transparent 1.9px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.82) 0 2px, transparent 2.6px),
-    radial-gradient(circle, rgba(234, 246, 255, 0.95) 0 2.8px, transparent 3.4px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.5px);
-  background-size: 120px 120px, 180px 180px, 260px 260px, 90px 90px;
-  background-position: 18px -16px, 72px -108px, 126px -188px, 40px -36px;
-  animation: glass-studio-snowfall 16s linear infinite;
-}
 
-.pin-page.board-page.board-theme-glass-studio .pin-card {
-  overflow: hidden;
-}
 
-.pin-page.board-page.board-theme-glass-studio .pin-card > * {
-  position: relative;
-  z-index: 1;
-}
 
-.pin-page.board-page.board-theme-glass-studio .pin-card::after {
-  content: "";
-  position: absolute;
-  top: 8px;
-  left: 12px;
-  right: 12px;
-  height: 16px;
-  border-radius: 999px;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.96;
-  background:
-    radial-gradient(circle at 12% 58%, rgba(255, 255, 255, 0.92) 0 11px, transparent 12px),
-    radial-gradient(circle at 38% 48%, rgba(255, 255, 255, 0.98) 0 13px, transparent 14px),
-    radial-gradient(circle at 66% 58%, rgba(255, 255, 255, 0.9) 0 11px, transparent 12px),
-    radial-gradient(circle at 88% 50%, rgba(255, 255, 255, 0.84) 0 9px, transparent 10px),
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.96),
-      rgba(247, 252, 255, 0.9) 62%,
-      rgba(239, 247, 253, 0.18)
-    );
-  box-shadow:
-    0 2px 8px rgba(255, 255, 255, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.96);
-  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.28));
-}
 
-.pin-page.board-page.board-theme-midnight-ops {
-  /* Bento-inspired Sophisticated Dark: Single accent, sharp shadows, high contrast */
-  --board-shell-bg:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(77, 124, 255, 0.12), transparent 60%),
-    linear-gradient(180deg, #090d14, #0f1621 60%, #151d2d);
-  --board-sidebar-bg: linear-gradient(180deg, #0b1018, #101620);
-  --board-sidebar-border: rgba(77, 124, 255, 0.15);
-  --board-sidebar-shadow:
-    inset 1px 0 0 rgba(77, 124, 255, 0.08),
-    8px 0 24px rgba(0, 0, 0, 0.3);
-  --board-brand-bg: #4d7cff;
-  --board-brand-shadow: 0 4px 16px rgba(77, 124, 255, 0.4);
-  --board-chip-bg: rgba(255, 255, 255, 0.04);
-  --board-chip-border: rgba(77, 124, 255, 0.12);
-  --board-chip-badge-bg: rgba(77, 124, 255, 0.15);
-  --board-chip-hover-bg: rgba(77, 124, 255, 0.1);
-  --board-chip-hover-border: rgba(77, 124, 255, 0.25);
-  --board-chip-active-bg: #4d7cff;
-  --board-chip-active-shadow: 0 2px 8px rgba(77, 124, 255, 0.3);
-  --board-topbar-bg: linear-gradient(180deg, #0a0f18, #0e1520);
-  --board-topbar-border: rgba(77, 124, 255, 0.1);
-  --board-topbar-shadow:
-    inset 0 1px 0 rgba(77, 124, 255, 0.06),
-    0 4px 20px rgba(0, 0, 0, 0.3);
-  --board-search-bg: rgba(255, 255, 255, 0.03);
-  --board-search-border: rgba(77, 124, 255, 0.1);
-  --board-kicker-color: #6b8fcc;
-  --board-new-note-bg: #4d7cff;
-  --board-new-note-shadow: 0 4px 16px rgba(77, 124, 255, 0.35);
-  --board-widget-bg: linear-gradient(135deg, #0c1018, #111828);
-  --board-widget-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(77, 124, 255, 0.05);
-  --board-ghost-bg: rgba(77, 124, 255, 0.03);
-  --board-ghost-border: rgba(77, 124, 255, 0.08);
-  --board-panel-bg: linear-gradient(180deg, #0f1622, #131c28);
-  --board-panel-border: rgba(77, 124, 255, 0.12);
-  --board-panel-shadow:
-    inset 0 1px 0 rgba(77, 124, 255, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.35);
-  --board-panel-outline: rgba(77, 124, 255, 0.15);
-  --board-feed-bg: rgba(255, 255, 255, 0.02);
-  --board-feed-border: rgba(77, 124, 255, 0.06);
-  --board-base-card-bg: linear-gradient(180deg, #131a26, #0f1520);
-  --board-base-card-border: rgba(255, 255, 255, 0.05);
-  --board-base-card-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.3),
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.015);
-  --board-page-text: #e8edf5;
-  --board-page-muted: #7a8ba8;
-}
 
-.pin-page.board-page.board-theme-creator-mood {
-  --board-shell-bg:
-    radial-gradient(circle at top left, rgba(255, 225, 210, 0.7), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(255, 235, 220, 0.5), transparent 36%),
-    linear-gradient(180deg, #fff9f6, #fff2ec 44%, #fdeae2);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 250, 247, 0.94), rgba(252, 238, 230, 0.9));
-  --board-sidebar-border: rgba(149, 95, 79, 0.08);
-  --board-sidebar-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.88),
-    16px 0 36px rgba(141, 86, 69, 0.05);
-  --board-brand-bg: linear-gradient(135deg, #ff7c8b, #ff9c5f);
-  --board-brand-shadow: 0 14px 28px rgba(255, 124, 139, 0.22);
-  --board-chip-bg: rgba(255, 255, 255, 0.7);
-  --board-chip-border: rgba(149, 95, 79, 0.06);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.86);
-  --board-chip-active-bg: linear-gradient(135deg, #ff7c8b, #ff9c5f);
-  --board-chip-active-shadow: 0 14px 28px rgba(255, 124, 139, 0.2);
-  --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(255, 230, 218, 0.85), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 248, 243, 0.84));
-  --board-topbar-border: rgba(149, 95, 79, 0.08);
-  --board-topbar-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 18px 40px rgba(141, 86, 69, 0.06);
-  --board-search-bg: rgba(255, 255, 255, 0.84);
-  --board-search-border: rgba(149, 95, 79, 0.08);
-  --board-kicker-color: #af6556;
-  --board-new-note-bg: linear-gradient(135deg, #ff7c8b, #ff9c5f);
-  --board-new-note-shadow: 0 14px 26px rgba(255, 124, 139, 0.2);
-  --board-widget-bg: linear-gradient(135deg, #674239, #34211d);
-  --board-widget-shadow: 0 12px 24px rgba(52, 33, 29, 0.16);
-  --board-ghost-bg: rgba(255, 255, 255, 0.76);
-  --board-ghost-border: rgba(149, 95, 79, 0.06);
-  --board-panel-bg:
-    radial-gradient(circle at top left, rgba(255, 235, 222, 0.68), transparent 30%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 248, 242, 0.74)),
-    rgba(255, 253, 251, 0.54);
-  --board-panel-border: rgba(149, 95, 79, 0.08);
-  --board-panel-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 24px 48px rgba(141, 86, 69, 0.06);
-  --board-panel-outline: rgba(210, 154, 138, 0.18);
-  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 242, 0.95));
-  --board-base-card-shadow:
-    0 2px 4px rgba(141, 86, 69, 0.04),
-    0 16px 32px rgba(141, 86, 69, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
 
-.pin-page.board-page.board-theme-creator-mood .pin-main {
-  position: relative;
-  isolation: isolate;
-}
 
-.pin-page.board-page.board-theme-creator-mood .pin-main::before {
-  content: "";
-  position: absolute;
-  top: 112px;
-  right: 18px;
-  width: min(34vw, 360px);
-  height: min(28vw, 280px);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.55;
-  background-image:
-    radial-gradient(circle at 18% 22%, rgba(255, 210, 226, 0.92) 0 16px, transparent 18px),
-    radial-gradient(circle at 30% 16%, rgba(255, 225, 234, 0.86) 0 14px, transparent 16px),
-    radial-gradient(circle at 42% 26%, rgba(255, 214, 229, 0.84) 0 18px, transparent 20px),
-    radial-gradient(circle at 56% 18%, rgba(255, 228, 236, 0.8) 0 15px, transparent 17px),
-    radial-gradient(circle at 72% 28%, rgba(255, 210, 222, 0.82) 0 16px, transparent 18px),
-    radial-gradient(circle at 64% 8%, rgba(255, 236, 241, 0.76) 0 12px, transparent 14px),
-    linear-gradient(145deg, transparent 0 32%, rgba(109, 70, 60, 0.3) 33% 37%, transparent 38%),
-    linear-gradient(122deg, transparent 0 48%, rgba(109, 70, 60, 0.24) 49% 52%, transparent 53%),
-    linear-gradient(100deg, transparent 0 60%, rgba(126, 83, 72, 0.2) 61% 64%, transparent 65%);
-  background-repeat: no-repeat;
-}
 
-.pin-page.board-page.board-theme-creator-mood .pin-topbar,
-.pin-page.board-page.board-theme-creator-mood .pin-board-stage {
-  position: relative;
-  z-index: 1;
-}
 
-.pin-page.board-page.board-theme-creator-mood .current-board-panel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.72;
-  background-image:
-    radial-gradient(ellipse 8px 5px, rgba(255, 214, 226, 0.86) 0 56%, transparent 62%),
-    radial-gradient(ellipse 10px 6px, rgba(255, 236, 241, 0.74) 0 56%, transparent 62%),
-    radial-gradient(ellipse 7px 4px, rgba(255, 197, 215, 0.7) 0 56%, transparent 62%);
-  background-size: 180px 220px, 260px 300px, 340px 360px;
-  background-position: 24px -20px, 120px -110px, 210px -180px;
-  animation: creator-mood-petals 22s linear infinite;
-}
 
-.pin-page.board-page.board-theme-neon-lab {
-  /* Cyberpunk Bento: Triple neon accent (mint + violet + cyan), strong glow, dramatic lighting */
-  --board-shell-bg:
-    radial-gradient(ellipse 100% 60% at 0% 0%, rgba(66, 255, 216, 0.12), transparent 50%),
-    radial-gradient(ellipse 80% 50% at 100% 20%, rgba(164, 116, 255, 0.1), transparent 45%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(0, 212, 255, 0.06), transparent 40%),
-    linear-gradient(180deg, #080b12, #0d1220 50%, #101525);
-  --board-sidebar-bg: linear-gradient(180deg, #090c14, #0f1422);
-  --board-sidebar-border: rgba(66, 255, 216, 0.2);
-  --board-sidebar-shadow:
-    inset 1px 0 0 rgba(66, 255, 216, 0.15),
-    inset -1px 0 0 rgba(164, 116, 255, 0.1),
-    8px 0 24px rgba(0, 0, 0, 0.35),
-    0 0 40px rgba(66, 255, 216, 0.05);
-  --board-brand-bg: linear-gradient(135deg, #42ffd8 0%, #a474ff 50%, #00d4ff 100%);
-  --board-brand-shadow:
-    0 4px 20px rgba(66, 255, 216, 0.5),
-    0 0 40px rgba(164, 116, 255, 0.3),
-    0 0 60px rgba(0, 212, 255, 0.2);
-  --board-chip-bg: rgba(66, 255, 216, 0.04);
-  --board-chip-border: rgba(66, 255, 216, 0.15);
-  --board-chip-badge-bg: rgba(164, 116, 255, 0.2);
-  --board-chip-hover-bg: rgba(66, 255, 216, 0.08);
-  --board-chip-hover-border: rgba(66, 255, 216, 0.3);
-  --board-chip-active-bg: linear-gradient(135deg, #42ffd8, #a474ff);
-  --board-chip-active-shadow:
-    0 4px 16px rgba(66, 255, 216, 0.4),
-    0 0 24px rgba(164, 116, 255, 0.25);
-  --board-topbar-bg: linear-gradient(180deg, #090c14, #0d1120);
-  --board-topbar-border: rgba(66, 255, 216, 0.12);
-  --board-topbar-shadow:
-    inset 0 1px 0 rgba(66, 255, 216, 0.1),
-    inset 0 -1px 0 rgba(164, 116, 255, 0.05),
-    0 4px 24px rgba(0, 0, 0, 0.3),
-    0 0 30px rgba(66, 255, 216, 0.03);
-  --board-search-bg: rgba(66, 255, 216, 0.03);
-  --board-search-border: rgba(66, 255, 216, 0.15);
-  --board-kicker-color: #42ffd8;
-  --board-new-note-bg: linear-gradient(135deg, #42ffd8, #00d4ff);
-  --board-new-note-shadow:
-    0 4px 20px rgba(66, 255, 216, 0.5),
-    0 0 30px rgba(0, 212, 255, 0.25);
-  --board-widget-bg: linear-gradient(135deg, rgba(66, 255, 216, 0.08), rgba(164, 116, 255, 0.06)), #0a0e18;
-  --board-widget-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(66, 255, 216, 0.1),
-    0 0 20px rgba(164, 116, 255, 0.08);
-  --board-ghost-bg: rgba(164, 116, 255, 0.05);
-  --board-ghost-border: rgba(66, 255, 216, 0.12);
-  --board-panel-bg: linear-gradient(180deg, #0d1120, #0a0e18);
-  --board-panel-border: rgba(66, 255, 216, 0.15);
-  --board-panel-shadow:
-    inset 0 1px 0 rgba(66, 255, 216, 0.12),
-    inset 1px 0 0 rgba(164, 116, 255, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.35),
-    0 0 40px rgba(66, 255, 216, 0.04);
-  --board-panel-outline: rgba(66, 255, 216, 0.25);
-  --board-feed-bg: rgba(0, 212, 255, 0.02);
-  --board-feed-border: rgba(164, 116, 255, 0.1);
-  --board-base-card-bg: linear-gradient(180deg, rgba(16, 20, 32, 0.95), rgba(12, 16, 26, 0.98));
-  --board-base-card-border: rgba(255, 255, 255, 0.055);
-  --board-base-card-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.25),
-    0 8px 24px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.02);
-  --board-page-text: #e8f4ff;
-  --board-page-muted: #8090b0;
-}
 
-.pin-page.board-page.board-theme-cozy-room {
-  --board-shell-bg:
-    radial-gradient(circle at top left, rgba(255, 238, 210, 0.68), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(255, 240, 220, 0.45), transparent 36%),
-    linear-gradient(180deg, #fffdf9, #faf4ec 42%, #f3e9dc);
-  --board-sidebar-bg: linear-gradient(180deg, rgba(255, 252, 248, 0.96), rgba(246, 234, 220, 0.92));
-  --board-sidebar-border: rgba(116, 88, 55, 0.08);
-  --board-sidebar-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.88),
-    16px 0 36px rgba(90, 67, 39, 0.04);
-  --board-brand-bg: linear-gradient(135deg, #d28f55, #9d5b34);
-  --board-brand-shadow: 0 14px 28px rgba(157, 91, 52, 0.22);
-  --board-chip-bg: rgba(255, 255, 255, 0.7);
-  --board-chip-border: rgba(116, 88, 55, 0.06);
-  --board-chip-hover-bg: rgba(255, 255, 255, 0.86);
-  --board-chip-active-bg: linear-gradient(135deg, #d28f55, #9d5b34);
-  --board-chip-active-shadow: 0 14px 28px rgba(157, 91, 52, 0.2);
-  --board-topbar-bg:
-    radial-gradient(circle at top left, rgba(255, 240, 212, 0.82), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(253, 248, 241, 0.86));
-  --board-topbar-border: rgba(116, 88, 55, 0.07);
-  --board-topbar-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 18px 40px rgba(90, 67, 39, 0.05);
-  --board-search-bg: rgba(255, 255, 255, 0.82);
-  --board-search-border: rgba(116, 88, 55, 0.07);
-  --board-kicker-color: #9a6a43;
-  --board-new-note-bg: linear-gradient(135deg, #d28f55, #b86b3a);
-  --board-new-note-shadow: 0 14px 26px rgba(184, 107, 58, 0.2);
-  --board-widget-bg: linear-gradient(135deg, #4c3425, #281a12);
-  --board-widget-shadow: 0 12px 24px rgba(40, 26, 18, 0.16);
-  --board-ghost-bg: rgba(255, 255, 255, 0.74);
-  --board-ghost-border: rgba(116, 88, 55, 0.06);
-  --board-panel-bg:
-    radial-gradient(circle at top left, rgba(255, 244, 225, 0.68), transparent 30%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 244, 235, 0.76)),
-    rgba(255, 253, 248, 0.56);
-  --board-panel-border: rgba(116, 88, 55, 0.08);
-  --board-panel-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 24px 48px rgba(90, 67, 39, 0.05);
-  --board-panel-outline: rgba(188, 153, 119, 0.16);
-  --board-base-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 245, 237, 0.96));
-  --board-base-card-shadow:
-    0 2px 4px rgba(90, 67, 39, 0.04),
-    0 16px 32px rgba(90, 67, 39, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
 
 .theme-preview-focus-desk .settings-theme-preview {
   background: linear-gradient(180deg, #fff9ee, #f4ead6);
@@ -836,8 +418,8 @@ button {
 }
 
 .board-page .pin-brand {
-  background: var(--board-brand-bg);
-  box-shadow: var(--board-brand-shadow);
+  background: #e60023;
+  box-shadow: none;
   width: 44px;
   height: 44px;
   font-size: 17px;
@@ -876,9 +458,7 @@ button {
 }
 
 .pin-brand:hover {
-  box-shadow:
-    var(--board-brand-shadow),
-    0 0 0 8px rgba(255, 255, 255, 0.12);
+  opacity: 0.9;
 }
 
 .pin-brand:hover .pin-brand-logo {
@@ -912,18 +492,41 @@ button {
 .pinterest-rail-icon {
   position: relative;
   width: 48px;
-  height: 48px;
+  height: auto;
   min-height: 48px;
-  padding: 0;
-  border-radius: 999px;
+  padding: 8px 0 4px;
+  border-radius: 24px;
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
   box-shadow: none;
-  color: rgba(31, 26, 19, 0.86);
+  color: #111111;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.pinterest-rail-icon:hover {
+  background: #f0f0f0;
+}
+
+.pinterest-rail-icon.active {
+  background: transparent;
+  font-weight: 800;
+}
+
+.pinterest-rail-icon.active .side-icon-glyph {
+  transform: scale(1.1);
+}
+
+.pinterest-rail-icon.active .side-icon-label {
+  opacity: 1;
+  font-weight: 800;
 }
 
 .board-page .pinterest-rail-icon {
-  color: rgba(31, 26, 19, 0.9);
+  color: #111111;
 }
 
 .pinterest-rail-icon.has-dot::after {
@@ -950,12 +553,18 @@ button {
 }
 
 .side-icon-label {
-  max-width: 0;
-  opacity: 0;
+  display: block;
+  max-width: none;
+  opacity: 0.65;
   overflow: hidden;
   white-space: nowrap;
-  transform: translateX(-8px);
-  transition: max-width 240ms ease, opacity 180ms ease, transform 240ms ease;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  margin-top: 2px;
+  text-align: center;
+  transition: opacity 180ms ease;
 }
 
 .board-chip {
@@ -1171,12 +780,16 @@ button {
 }
 
 .board-page .side-icon-label,
-.board-page .pin-sidebar.expanded .side-icon-label,
+.board-page .pin-sidebar.expanded .side-icon-label {
+  display: block;
+  max-width: none;
+  opacity: 0.55;
+}
+
 .board-page .pin-sidebar.expanded .sidebar-section-label {
   display: none;
   max-width: 0;
   opacity: 0;
-  transform: translateX(-8px);
 }
 
 .board-page .pin-sidebar.expanded .sidebar-primary-stack,
@@ -3153,13 +2766,7 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pin-page.board-page.board-theme-glass-studio .current-board-panel::after {
-    animation: none;
-  }
 
-  .pin-page.board-page.board-theme-creator-mood .current-board-panel::after {
-    animation: none;
-  }
 }
 
 .swipe-preview-panel {
@@ -3422,8 +3029,8 @@ button {
 }
 
 .pin-card:hover {
-  transform: translateY(-6px) scale(1.008);
-  box-shadow: var(--shadow-elevation-3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .pin-card:active {
@@ -3432,16 +3039,14 @@ button {
 }
 
 .board-page .pin-card {
-  border-radius: var(--radius-2xl);
+  border-radius: 16px;
   border-color: var(--board-base-card-border);
   background: var(--board-base-card-bg);
   box-shadow: var(--board-base-card-shadow);
 }
 
 .board-page .pin-card:hover {
-  box-shadow:
-    var(--shadow-elevation-3),
-    0 0 0 1px var(--board-base-card-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .board-page .pin-card.note-yellow {
@@ -3548,533 +3153,15 @@ button {
     inset 0 -1px 3px rgba(172, 146, 116, 0.05);
 }
 
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(223, 232, 243, 0.18), rgba(191, 204, 221, 0.12));
-}
 
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-yellow,
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow {
-  border-color: var(--board-base-card-border);
-}
 
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-yellow:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-}
 
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-pink:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-}
 
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-blue:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-}
 
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-green:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-}
 
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-purple:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-}
 
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-mint:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-}
 
 /* Midnight Ops: Subtle card adjustments */
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-blue:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-pink:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-pink:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(80, 47, 69, 0.95), rgba(58, 35, 52, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-pink,
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-pink {
-  border-color: var(--board-base-card-border);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-blue:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-blue:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(42, 58, 92, 0.95), rgba(31, 43, 70, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-blue,
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-blue {
-  border-color: var(--board-base-card-border);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-green:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-green:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(35, 75, 67, 0.95), rgba(26, 55, 50, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-green,
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-green {
-  border-color: rgba(87, 157, 138, 0.38);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-orange:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-orange:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(102, 64, 42, 0.95), rgba(74, 47, 31, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-orange,
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-orange {
-  border-color: rgba(182, 121, 83, 0.4);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-purple:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-purple:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(68, 56, 104, 0.95), rgba(49, 41, 76, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-purple,
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-purple {
-  border-color: rgba(145, 122, 203, 0.38);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-mint:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-mint:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(30, 76, 83, 0.95), rgba(22, 56, 62, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-mint,
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-mint {
-  border-color: rgba(89, 163, 168, 0.38);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-white:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note),
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-white:not(.image-note):not(.link-only-note):not(.document-note):not(.widget-note) {
-  background: linear-gradient(180deg, rgba(44, 50, 64, 0.96), rgba(31, 37, 49, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.note-white,
-.pin-page.board-page.board-theme-neon-lab .pin-card.note-white {
-  border-color: rgba(125, 141, 172, 0.28);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-yellow,
-.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-yellow {
-  background: linear-gradient(180deg, rgba(223, 232, 243, 0.16), rgba(191, 204, 221, 0.1));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-pink,
-.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-pink {
-  background: linear-gradient(180deg, rgba(80, 47, 69, 0.95), rgba(58, 35, 52, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-blue,
-.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-blue {
-  background: linear-gradient(180deg, rgba(42, 58, 92, 0.95), rgba(31, 43, 70, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-green,
-.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-green {
-  background: linear-gradient(180deg, rgba(35, 75, 67, 0.95), rgba(26, 55, 50, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-orange,
-.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-orange {
-  background: linear-gradient(180deg, rgba(102, 64, 42, 0.95), rgba(74, 47, 31, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-purple,
-.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-purple {
-  background: linear-gradient(180deg, rgba(68, 56, 104, 0.95), rgba(49, 41, 76, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-mint,
-.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-mint {
-  background: linear-gradient(180deg, rgba(30, 76, 83, 0.95), rgba(22, 56, 62, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.link-only-note.note-white,
-.pin-page.board-page.board-theme-neon-lab .pin-card.link-only-note.note-white {
-  background: linear-gradient(180deg, rgba(44, 50, 64, 0.96), rgba(31, 37, 49, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-yellow,
-.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-yellow {
-  background: linear-gradient(180deg, rgba(95, 76, 34, 0.95), rgba(70, 57, 28, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-pink,
-.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-pink {
-  background: linear-gradient(180deg, rgba(80, 47, 69, 0.95), rgba(58, 35, 52, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-blue,
-.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-blue {
-  background: linear-gradient(180deg, rgba(42, 58, 92, 0.95), rgba(31, 43, 70, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-green,
-.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-green {
-  background: linear-gradient(180deg, rgba(35, 75, 67, 0.95), rgba(26, 55, 50, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-orange,
-.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-orange {
-  background: linear-gradient(180deg, rgba(102, 64, 42, 0.95), rgba(74, 47, 31, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-purple,
-.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-purple {
-  background: linear-gradient(180deg, rgba(68, 56, 104, 0.95), rgba(49, 41, 76, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-mint,
-.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-mint {
-  background: linear-gradient(180deg, rgba(30, 76, 83, 0.95), rgba(22, 56, 62, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.rss-widget.note-white,
-.pin-page.board-page.board-theme-neon-lab .pin-card.rss-widget.note-white {
-  background: linear-gradient(180deg, rgba(44, 50, 64, 0.96), rgba(31, 37, 49, 0.96));
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .pin-title,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .pin-title,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .pin-body-preview,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .pin-body-preview,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .checklist-widget-text,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .checklist-widget-text,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .countdown-widget-value,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .countdown-widget-value,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .trending-title,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .trending-title,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .link-preview-title,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .link-preview-title {
-  color: #f4f7ff;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .pin-body-copy,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .pin-body-copy,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .link-preview-description,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .link-preview-description,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .countdown-widget-date,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .countdown-widget-date,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .countdown-widget-description,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .countdown-widget-description,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .trending-traffic,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .trending-traffic,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .rss-empty,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .rss-empty,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .checklist-widget-summary,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .checklist-widget-summary,
-.pin-page.board-page.board-theme-midnight-ops .pin-card:not(.image-note) .trending-region,
-.pin-page.board-page.board-theme-neon-lab .pin-card:not(.image-note) .trending-region {
-  color: rgba(230, 236, 249, 0.76);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .widget-badge,
-.pin-page.board-page.board-theme-neon-lab .widget-badge,
-.pin-page.board-page.board-theme-midnight-ops .checklist-widget-item,
-.pin-page.board-page.board-theme-neon-lab .checklist-widget-item,
-.pin-page.board-page.board-theme-midnight-ops .countdown-widget-card,
-.pin-page.board-page.board-theme-neon-lab .countdown-widget-card,
-.pin-page.board-page.board-theme-midnight-ops .trending-item,
-.pin-page.board-page.board-theme-neon-lab .trending-item,
-.pin-page.board-page.board-theme-midnight-ops .timetable-preview-item,
-.pin-page.board-page.board-theme-neon-lab .timetable-preview-item,
-.pin-page.board-page.board-theme-midnight-ops .weather-forecast-item,
-.pin-page.board-page.board-theme-neon-lab .weather-forecast-item,
-.pin-page.board-page.board-theme-midnight-ops .delivery-progress-item,
-.pin-page.board-page.board-theme-neon-lab .delivery-progress-item,
-.pin-page.board-page.board-theme-midnight-ops .link-chip,
-.pin-page.board-page.board-theme-neon-lab .link-chip {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(240, 245, 255, 0.86);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .memo-inline-link,
-.pin-page.board-page.board-theme-neon-lab .memo-inline-link {
-  color: rgba(201, 224, 255, 0.92);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .trending-item:hover,
-.pin-page.board-page.board-theme-neon-lab .trending-item:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .trending-rank,
-.pin-page.board-page.board-theme-neon-lab .trending-rank {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff3f6;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta),
-.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f4f7ff;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) strong,
-.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) strong {
-  color: #f4f7ff;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) p,
-.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) p,
-.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) .document-widget-kicker,
-.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) .document-widget-kicker {
-  color: rgba(230, 236, 249, 0.8);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) .document-widget-kicker,
-.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) .document-widget-kicker,
-.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta) .document-widget-action,
-.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta) .document-widget-action {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f4f7ff;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .rss-item,
-.pin-page.board-page.board-theme-neon-lab .rss-item,
-.pin-page.board-page.board-theme-midnight-ops .widget-menu,
-.pin-page.board-page.board-theme-neon-lab .widget-menu,
-.pin-page.board-page.board-theme-midnight-ops .mobile-widget-menu,
-.pin-page.board-page.board-theme-neon-lab .mobile-widget-menu,
-.pin-page.board-page.board-theme-midnight-ops .cat-remote {
-  background: rgba(24, 31, 48, 0.94);
-  border-color: rgba(143, 171, 255, 0.14);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
-}
-
-.pin-page.board-page.board-theme-neon-lab .cat-remote {
-  background: rgba(19, 23, 36, 0.95);
-  border-color: rgba(132, 255, 227, 0.16);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .rss-item-title,
-.pin-page.board-page.board-theme-neon-lab .rss-item-title,
-.pin-page.board-page.board-theme-midnight-ops .widget-menu-item,
-.pin-page.board-page.board-theme-neon-lab .widget-menu-item,
-.pin-page.board-page.board-theme-midnight-ops .cat-remote-title,
-.pin-page.board-page.board-theme-neon-lab .cat-remote-title,
-.pin-page.board-page.board-theme-midnight-ops .cat-remote-button,
-.pin-page.board-page.board-theme-neon-lab .cat-remote-button,
-.pin-page.board-page.board-theme-midnight-ops .cat-remote-close,
-.pin-page.board-page.board-theme-neon-lab .cat-remote-close,
-.pin-page.board-page.board-theme-midnight-ops .board-chip-label,
-.pin-page.board-page.board-theme-neon-lab .board-chip-label,
-.pin-page.board-page.board-theme-midnight-ops .side-icon-label,
-.pin-page.board-page.board-theme-neon-lab .side-icon-label,
-.pin-page.board-page.board-theme-midnight-ops .side-icon,
-.pin-page.board-page.board-theme-neon-lab .side-icon,
-.pin-page.board-page.board-theme-midnight-ops .board-chip,
-.pin-page.board-page.board-theme-neon-lab .board-chip {
-  color: #f4f7ff;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .rss-item-date,
-.pin-page.board-page.board-theme-neon-lab .rss-item-date,
-.pin-page.board-page.board-theme-midnight-ops .cat-remote-title,
-.pin-page.board-page.board-theme-neon-lab .cat-remote-title {
-  color: rgba(226, 234, 250, 0.72);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .rss-item,
-.pin-page.board-page.board-theme-neon-lab .rss-item,
-.pin-page.board-page.board-theme-midnight-ops .widget-menu-item,
-.pin-page.board-page.board-theme-neon-lab .widget-menu-item,
-.pin-page.board-page.board-theme-midnight-ops .cat-remote-button,
-.pin-page.board-page.board-theme-neon-lab .cat-remote-button,
-.pin-page.board-page.board-theme-midnight-ops .cat-remote-close,
-.pin-page.board-page.board-theme-neon-lab .cat-remote-close {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .widget-menu-item:hover,
-.pin-page.board-page.board-theme-neon-lab .widget-menu-item:hover,
-.pin-page.board-page.board-theme-midnight-ops .cat-remote-button:hover,
-.pin-page.board-page.board-theme-neon-lab .cat-remote-button:hover,
-.pin-page.board-page.board-theme-midnight-ops .cat-remote-close:hover,
-.pin-page.board-page.board-theme-neon-lab .cat-remote-close:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: none;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .board-chip-badge,
-.pin-page.board-page.board-theme-neon-lab .board-chip-badge {
-  background: rgba(18, 28, 44, 0.9);
-  border: 1px solid rgba(143, 171, 255, 0.18);
-  color: #f4f7ff;
-}
-
-.pin-page.board-page.board-theme-neon-lab .board-chip-badge {
-  background: rgba(17, 24, 39, 0.92);
-  border-color: rgba(132, 255, 227, 0.18);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-sidebar.expanded .board-chip-badge,
-.pin-page.board-page.board-theme-neon-lab .pin-sidebar.expanded .board-chip-badge {
-  background: rgba(18, 28, 44, 0.82);
-}
-
-.pin-page.board-page.board-theme-neon-lab .pin-sidebar.expanded .board-chip-badge {
-  background: rgba(17, 24, 39, 0.84);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-panel,
-.pin-page.board-page.board-theme-neon-lab .settings-panel {
-  background: rgba(17, 24, 39, 0.96);
-  border-color: rgba(143, 171, 255, 0.14);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.34);
-  color: #f4f7ff;
-}
-
-.pin-page.board-page.board-theme-neon-lab .settings-panel {
-  background: rgba(15, 21, 35, 0.97);
-  border-color: rgba(132, 255, 227, 0.16);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-section,
-.pin-page.board-page.board-theme-neon-lab .settings-section {
-  border-top-color: rgba(255, 255, 255, 0.08);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-kicker,
-.pin-page.board-page.board-theme-neon-lab .settings-kicker,
-.pin-page.board-page.board-theme-midnight-ops .settings-menu-meta,
-.pin-page.board-page.board-theme-neon-lab .settings-menu-meta,
-.pin-page.board-page.board-theme-midnight-ops .settings-info-label,
-.pin-page.board-page.board-theme-neon-lab .settings-info-label,
-.pin-page.board-page.board-theme-midnight-ops .settings-layout-copy,
-.pin-page.board-page.board-theme-neon-lab .settings-layout-copy,
-.pin-page.board-page.board-theme-midnight-ops .settings-theme-description,
-.pin-page.board-page.board-theme-neon-lab .settings-theme-description,
-.pin-page.board-page.board-theme-midnight-ops .settings-theme-accent,
-.pin-page.board-page.board-theme-neon-lab .settings-theme-accent,
-.pin-page.board-page.board-theme-midnight-ops .settings-section-head span,
-.pin-page.board-page.board-theme-neon-lab .settings-section-head span,
-.pin-page.board-page.board-theme-midnight-ops .settings-empty,
-.pin-page.board-page.board-theme-neon-lab .settings-empty,
-.pin-page.board-page.board-theme-midnight-ops .invite-user-copy span,
-.pin-page.board-page.board-theme-neon-lab .invite-user-copy span,
-.pin-page.board-page.board-theme-midnight-ops .invite-feedback,
-.pin-page.board-page.board-theme-neon-lab .invite-feedback {
-  color: rgba(226, 234, 250, 0.76);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-panel-head h2,
-.pin-page.board-page.board-theme-neon-lab .settings-panel-head h2,
-.pin-page.board-page.board-theme-midnight-ops .settings-menu-title,
-.pin-page.board-page.board-theme-neon-lab .settings-menu-title,
-.pin-page.board-page.board-theme-midnight-ops .settings-layout-title,
-.pin-page.board-page.board-theme-neon-lab .settings-layout-title,
-.pin-page.board-page.board-theme-midnight-ops .settings-theme-title,
-.pin-page.board-page.board-theme-neon-lab .settings-theme-title,
-.pin-page.board-page.board-theme-midnight-ops .settings-section-head strong,
-.pin-page.board-page.board-theme-neon-lab .settings-section-head strong,
-.pin-page.board-page.board-theme-midnight-ops .settings-info-item strong,
-.pin-page.board-page.board-theme-neon-lab .settings-info-item strong,
-.pin-page.board-page.board-theme-midnight-ops .invite-user-copy strong,
-.pin-page.board-page.board-theme-neon-lab .invite-user-copy strong {
-  color: #f4f7ff;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-menu-card,
-.pin-page.board-page.board-theme-neon-lab .settings-menu-card,
-.pin-page.board-page.board-theme-midnight-ops .settings-layout-card,
-.pin-page.board-page.board-theme-neon-lab .settings-layout-card,
-.pin-page.board-page.board-theme-midnight-ops .settings-theme-card,
-.pin-page.board-page.board-theme-neon-lab .settings-theme-card,
-.pin-page.board-page.board-theme-midnight-ops .settings-info-item,
-.pin-page.board-page.board-theme-neon-lab .settings-info-item,
-.pin-page.board-page.board-theme-midnight-ops .invite-result-item,
-.pin-page.board-page.board-theme-neon-lab .invite-result-item,
-.pin-page.board-page.board-theme-midnight-ops .invite-member-item,
-.pin-page.board-page.board-theme-neon-lab .invite-member-item {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.09);
-  color: #f4f7ff;
-  box-shadow: none;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-theme-preview,
-.pin-page.board-page.board-theme-neon-lab .settings-theme-preview {
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-close,
-.pin-page.board-page.board-theme-neon-lab .settings-close,
-.pin-page.board-page.board-theme-midnight-ops .settings-back,
-.pin-page.board-page.board-theme-neon-lab .settings-back,
-.pin-page.board-page.board-theme-midnight-ops .trash-restore,
-.pin-page.board-page.board-theme-neon-lab .trash-restore,
-.pin-page.board-page.board-theme-midnight-ops .widget-secondary,
-.pin-page.board-page.board-theme-neon-lab .widget-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #f4f7ff;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-close:hover,
-.pin-page.board-page.board-theme-neon-lab .settings-close:hover,
-.pin-page.board-page.board-theme-midnight-ops .settings-back:hover,
-.pin-page.board-page.board-theme-neon-lab .settings-back:hover,
-.pin-page.board-page.board-theme-midnight-ops .settings-menu-card:hover,
-.pin-page.board-page.board-theme-neon-lab .settings-menu-card:hover,
-.pin-page.board-page.board-theme-midnight-ops .settings-layout-card:hover,
-.pin-page.board-page.board-theme-neon-lab .settings-layout-card:hover,
-.pin-page.board-page.board-theme-midnight-ops .settings-theme-card:hover,
-.pin-page.board-page.board-theme-neon-lab .settings-theme-card:hover,
-.pin-page.board-page.board-theme-midnight-ops .trash-restore:hover,
-.pin-page.board-page.board-theme-neon-lab .trash-restore:hover,
-.pin-page.board-page.board-theme-midnight-ops .widget-secondary:hover,
-.pin-page.board-page.board-theme-neon-lab .widget-secondary:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: none;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-layout-card.active,
-.pin-page.board-page.board-theme-neon-lab .settings-layout-card.active {
-  background: rgba(111, 224, 255, 0.12);
-  border-color: rgba(111, 224, 255, 0.28);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .settings-theme-card.active,
-.pin-page.board-page.board-theme-neon-lab .settings-theme-card.active {
-  border-color: rgba(111, 224, 255, 0.26);
-  box-shadow: 0 16px 32px rgba(6, 12, 24, 0.38);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-icon-button:not(.danger),
-.pin-page.board-page.board-theme-neon-lab .pin-icon-button:not(.danger),
-.pin-page.board-page.board-theme-midnight-ops .note-color-toggle,
-.pin-page.board-page.board-theme-neon-lab .note-color-toggle {
-  background: rgba(250, 252, 255, 0.96);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: rgba(30, 37, 52, 0.96);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-icon-button:not(.danger):hover,
-.pin-page.board-page.board-theme-neon-lab .pin-icon-button:not(.danger):hover,
-.pin-page.board-page.board-theme-midnight-ops .note-color-toggle:hover,
-.pin-page.board-page.board-theme-neon-lab .note-color-toggle:hover {
-  background: rgba(255, 255, 255, 1);
-  color: rgba(20, 25, 38, 1);
-}
-
-.share-page .pin-card {
-  border-radius: 30px;
-  border-color: rgba(96, 73, 48, 0.08);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 246, 0.94));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 16px 38px rgba(60, 39, 18, 0.08);
-}
 
 .home-page .pin-card {
   border-radius: 36px;
@@ -4094,14 +3181,12 @@ button {
 
 .pin-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 24px 44px rgba(34, 23, 12, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .board-page .pin-card:hover {
-  transform: translateY(-5px);
-  box-shadow:
-    0 30px 56px rgba(42, 29, 14, 0.16),
-    0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .share-page .pin-card:hover {
@@ -4333,8 +3418,7 @@ button {
 
 .pin-card.link-only-note {
   position: relative;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(252, 247, 240, 0.96));
+  background: #ffffff;
 }
 
 .pin-card.link-only-note .pin-note-stack {
@@ -4525,6 +3609,76 @@ button {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
+}
+
+.widget-badge.blog-badge {
+  background: #e74c8b;
+  color: #fff;
+}
+
+.blog-feed-source {
+  color: #e74c8b !important;
+  font-weight: 600;
+}
+
+.blog-widget .rss-item:hover {
+  background: rgba(231, 76, 139, 0.06);
+}
+
+/* Primary auth button */
+.primary-auth-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #1f1a13;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background var(--duration-fast) ease, transform var(--duration-fast) ease;
+  white-space: nowrap;
+  gap: 2px;
+}
+
+.primary-auth-action:hover {
+  background: #3a332a;
+  transform: translateY(-1px);
+}
+
+.primary-auth-action:active {
+  transform: translateY(0);
+}
+
+/* Sidebar auth section */
+.sidebar-section-auth {
+  padding: 4px 0 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.sidebar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--accent, #e74c8b);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sidebar-login-btn {
+  opacity: 0.7;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.sidebar-login-btn:hover {
+  opacity: 1;
 }
 
 .widget-editor-stack,
@@ -4865,17 +4019,7 @@ button {
   cursor: pointer;
 }
 
-.pin-page.board-page.board-theme-midnight-ops .widget-confirm,
-.pin-page.board-page.board-theme-neon-lab .widget-confirm {
-  background: rgba(236, 242, 249, 0.92);
-  color: #142033;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
-}
 
-.pin-page.board-page.board-theme-midnight-ops .widget-confirm:hover,
-.pin-page.board-page.board-theme-neon-lab .widget-confirm:hover {
-  background: rgba(248, 251, 255, 0.98);
-}
 
 .widget-secondary {
   min-height: 40px;
@@ -5443,178 +4587,6 @@ button {
 .food-widget-actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-header strong,
-.pin-page.board-page.board-theme-neon-lab .food-widget-header strong {
-  color: rgba(245, 248, 255, 0.94);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-kicker,
-.pin-page.board-page.board-theme-neon-lab .food-widget-kicker {
-  display: inline-flex;
-  align-self: flex-start;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(240, 245, 255, 0.86);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-card,
-.pin-page.board-page.board-theme-neon-lab .food-widget-card {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-card strong,
-.pin-page.board-page.board-theme-neon-lab .food-widget-card strong {
-  color: rgba(245, 248, 255, 0.92);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-card p,
-.pin-page.board-page.board-theme-neon-lab .food-widget-card p {
-  color: rgba(230, 236, 249, 0.86);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-card small,
-.pin-page.board-page.board-theme-neon-lab .food-widget-card small {
-  color: rgba(208, 216, 232, 0.72);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-label.chef,
-.pin-page.board-page.board-theme-neon-lab .food-widget-label.chef,
-.pin-page.board-page.board-theme-midnight-ops .food-widget-label.instagram,
-.pin-page.board-page.board-theme-neon-lab .food-widget-label.instagram,
-.pin-page.board-page.board-theme-midnight-ops .food-widget-label.trending,
-.pin-page.board-page.board-theme-neon-lab .food-widget-label.trending {
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-label.chef,
-.pin-page.board-page.board-theme-neon-lab .food-widget-label.chef {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(245, 248, 255, 0.86);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-label.instagram,
-.pin-page.board-page.board-theme-neon-lab .food-widget-label.instagram {
-  background: rgba(255, 120, 142, 0.18);
-  color: rgba(255, 211, 220, 0.92);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .food-widget-label.trending,
-.pin-page.board-page.board-theme-neon-lab .food-widget-label.trending {
-  background: rgba(115, 160, 255, 0.18);
-  color: rgba(214, 228, 255, 0.92);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .weather-current,
-.pin-page.board-page.board-theme-neon-lab .weather-current {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .weather-current strong,
-.pin-page.board-page.board-theme-neon-lab .weather-current strong {
-  color: rgba(245, 248, 255, 0.92);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .weather-current span,
-.pin-page.board-page.board-theme-neon-lab .weather-current span {
-  color: rgba(208, 216, 232, 0.74);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .speed-widget-head strong,
-.pin-page.board-page.board-theme-neon-lab .speed-widget-head strong,
-.pin-page.board-page.board-theme-midnight-ops .speed-widget-metric strong,
-.pin-page.board-page.board-theme-neon-lab .speed-widget-metric strong {
-  color: rgba(245, 248, 255, 0.92);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .speed-widget-head span,
-.pin-page.board-page.board-theme-neon-lab .speed-widget-head span,
-.pin-page.board-page.board-theme-midnight-ops .speed-widget-meta,
-.pin-page.board-page.board-theme-neon-lab .speed-widget-meta,
-.pin-page.board-page.board-theme-midnight-ops .speed-widget-metric span,
-.pin-page.board-page.board-theme-neon-lab .speed-widget-metric span {
-  color: rgba(208, 216, 232, 0.72);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .speed-widget-metric,
-.pin-page.board-page.board-theme-neon-lab .speed-widget-metric,
-.pin-page.board-page.board-theme-midnight-ops .speed-widget-refresh,
-.pin-page.board-page.board-theme-neon-lab .speed-widget-refresh {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .speed-widget-refresh,
-.pin-page.board-page.board-theme-neon-lab .speed-widget-refresh {
-  color: rgba(245, 248, 255, 0.88);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .speed-widget-refresh:hover,
-.pin-page.board-page.board-theme-neon-lab .speed-widget-refresh:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pet-widget,
-.pin-page.board-page.board-theme-neon-lab .pet-widget {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pet-widget strong,
-.pin-page.board-page.board-theme-neon-lab .pet-widget strong {
-  color: rgba(245, 248, 255, 0.92);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pet-widget span,
-.pin-page.board-page.board-theme-neon-lab .pet-widget span {
-  color: rgba(208, 216, 232, 0.76);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pet-stats span,
-.pin-page.board-page.board-theme-neon-lab .pet-stats span {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(230, 236, 249, 0.82);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .profile-widget-identity strong,
-.pin-page.board-page.board-theme-neon-lab .profile-widget-identity strong {
-  color: rgba(245, 248, 255, 0.92);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .profile-widget-identity span,
-.pin-page.board-page.board-theme-neon-lab .profile-widget-identity span {
-  color: rgba(208, 216, 232, 0.74);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .profile-widget-meta-item,
-.pin-page.board-page.board-theme-neon-lab .profile-widget-meta-item {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .profile-widget-meta-item span,
-.pin-page.board-page.board-theme-neon-lab .profile-widget-meta-item span {
-  color: rgba(208, 216, 232, 0.72);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .profile-widget-meta-item strong,
-.pin-page.board-page.board-theme-neon-lab .profile-widget-meta-item strong {
-  color: rgba(245, 248, 255, 0.9);
-}
-
-.mp3-widget {
-  gap: 10px;
-  padding: 16px;
-  border-radius: 22px;
-  background:
-    linear-gradient(180deg, rgba(228, 231, 236, 0.98), rgba(198, 203, 210, 0.96));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(91, 98, 109, 0.15),
-    0 16px 28px rgba(18, 24, 35, 0.08);
 }
 
 .mp3-widget-hidden-player {
@@ -7422,13 +6394,6 @@ button {
     border-radius: 22px;
   }
 
-  .pin-page.board-page.board-theme-creator-mood .pin-main::before {
-    top: 96px;
-    right: 10px;
-    width: min(42vw, 280px);
-    height: min(30vw, 220px);
-    opacity: 0.46;
-  }
 
   .board-cat-companion {
     inset: 104px 16px 16px;
@@ -7613,13 +6578,6 @@ button {
     border-radius: 16px;
   }
 
-  .pin-page.board-page.board-theme-creator-mood .pin-main::before {
-    top: 86px;
-    right: 4px;
-    width: 210px;
-    height: 160px;
-    opacity: 0.38;
-  }
 
   .share-page .public-board-panel,
   .home-page .public-board-panel {
@@ -10447,36 +9405,14 @@ button {
 }
 
 /* Dark theme focus ring */
-.pin-page.board-page.board-theme-midnight-ops :focus-visible,
-.pin-page.board-page.board-theme-neon-lab :focus-visible {
-  box-shadow: 0 0 0 3px rgba(77, 124, 255, 0.4);
-}
 
 /* Midnight Ops: Sharp focus with single accent */
-.pin-page.board-page.board-theme-midnight-ops :focus-visible {
-  box-shadow:
-    0 0 0 2px rgba(77, 124, 255, 0.5);
-}
 
 /* Neon Lab: Cyberpunk glow effects */
-.pin-page.board-page.board-theme-neon-lab :focus-visible {
-  box-shadow:
-    0 0 0 3px rgba(66, 255, 216, 0.35),
-    0 0 20px rgba(66, 255, 216, 0.2);
-}
 
 /* Neon Lab: Card glow on hover */
-.pin-page.board-page.board-theme-neon-lab .pin-card:hover {
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.28),
-    0 8px 24px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.18);
-}
 
 /* Neon Lab: Active chip glow pulse */
-.pin-page.board-page.board-theme-neon-lab .board-chip.active {
-  animation: neon-pulse 2s ease-in-out infinite;
-}
 
 @keyframes neon-pulse {
   0%, 100% {
@@ -10488,150 +9424,8 @@ button {
 }
 
 /* Midnight Ops: Subtle hover lift */
-.pin-page.board-page.board-theme-midnight-ops .pin-card:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.3),
-    0 8px 24px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.16);
-}
 
 /* Dark themes: normalize all cards to RSS-like subtle chrome */
-.pin-page.board-page.board-theme-midnight-ops .pin-card,
-.pin-page.board-page.board-theme-neon-lab .pin-card {
-  border-color: rgba(255, 255, 255, 0.022) !important;
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.16),
-    0 8px 24px rgba(0, 0, 0, 0.1) !important;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card:hover,
-.pin-page.board-page.board-theme-neon-lab .pin-card:hover {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.2),
-    0 10px 26px rgba(0, 0, 0, 0.14),
-    0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .pin-card.document-note,
-.pin-page.board-page.board-theme-neon-lab .pin-card.document-note {
-  border-color: rgba(255, 255, 255, 0.022) !important;
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.16),
-    0 8px 24px rgba(0, 0, 0, 0.1) !important;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .widget-badge,
-.pin-page.board-page.board-theme-neon-lab .widget-badge,
-.pin-page.board-page.board-theme-midnight-ops .checklist-widget-item,
-.pin-page.board-page.board-theme-neon-lab .checklist-widget-item,
-.pin-page.board-page.board-theme-midnight-ops .countdown-widget-card,
-.pin-page.board-page.board-theme-neon-lab .countdown-widget-card,
-.pin-page.board-page.board-theme-midnight-ops .trending-item,
-.pin-page.board-page.board-theme-neon-lab .trending-item,
-.pin-page.board-page.board-theme-midnight-ops .timetable-preview-item,
-.pin-page.board-page.board-theme-neon-lab .timetable-preview-item,
-.pin-page.board-page.board-theme-midnight-ops .weather-forecast-item,
-.pin-page.board-page.board-theme-neon-lab .weather-forecast-item,
-.pin-page.board-page.board-theme-midnight-ops .delivery-progress-item,
-.pin-page.board-page.board-theme-neon-lab .delivery-progress-item,
-.pin-page.board-page.board-theme-midnight-ops .link-chip,
-.pin-page.board-page.board-theme-neon-lab .link-chip,
-.pin-page.board-page.board-theme-midnight-ops .document-widget:not(.cta),
-.pin-page.board-page.board-theme-neon-lab .document-widget:not(.cta),
-.pin-page.board-page.board-theme-midnight-ops .rss-item,
-.pin-page.board-page.board-theme-neon-lab .rss-item,
-.pin-page.board-page.board-theme-midnight-ops .bookmark-widget-card,
-.pin-page.board-page.board-theme-neon-lab .bookmark-widget-card,
-.pin-page.board-page.board-theme-midnight-ops .food-widget-card,
-.pin-page.board-page.board-theme-neon-lab .food-widget-card,
-.pin-page.board-page.board-theme-midnight-ops .weather-widget-card,
-.pin-page.board-page.board-theme-neon-lab .weather-widget-card,
-.pin-page.board-page.board-theme-midnight-ops .delivery-widget-card,
-.pin-page.board-page.board-theme-neon-lab .delivery-widget-card,
-.pin-page.board-page.board-theme-midnight-ops .focus-widget-panel,
-.pin-page.board-page.board-theme-neon-lab .focus-widget-panel,
-.pin-page.board-page.board-theme-midnight-ops .calculator-screen,
-.pin-page.board-page.board-theme-neon-lab .calculator-screen,
-.pin-page.board-page.board-theme-midnight-ops .calculator-key,
-.pin-page.board-page.board-theme-neon-lab .calculator-key,
-.pin-page.board-page.board-theme-midnight-ops .prompt-widget-card,
-.pin-page.board-page.board-theme-neon-lab .prompt-widget-card,
-.pin-page.board-page.board-theme-midnight-ops .routine-widget-item,
-.pin-page.board-page.board-theme-neon-lab .routine-widget-item,
-.pin-page.board-page.board-theme-midnight-ops .mood-widget-option,
-.pin-page.board-page.board-theme-neon-lab .mood-widget-option {
-  border-color: rgba(255, 255, 255, 0.04) !important;
-  box-shadow: none !important;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .calculator-screen,
-.pin-page.board-page.board-theme-neon-lab .calculator-screen {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .calculator-display,
-.pin-page.board-page.board-theme-neon-lab .calculator-display,
-.pin-page.board-page.board-theme-midnight-ops .calculator-screen-meta,
-.pin-page.board-page.board-theme-neon-lab .calculator-screen-meta {
-  color: rgba(240, 244, 250, 0.92);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .calculator-key,
-.pin-page.board-page.board-theme-neon-lab .calculator-key {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(240, 244, 250, 0.9);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .calculator-key.function,
-.pin-page.board-page.board-theme-neon-lab .calculator-key.function {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .calculator-key.operator,
-.pin-page.board-page.board-theme-neon-lab .calculator-key.operator {
-  background: rgba(95, 186, 255, 0.18);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .calculator-key:hover,
-.pin-page.board-page.board-theme-neon-lab .calculator-key:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.pin-page.board-page.board-theme-midnight-ops .calculator-key.equals,
-.pin-page.board-page.board-theme-neon-lab .calculator-key.equals {
-  background: rgba(243, 247, 255, 0.92);
-  color: #122039;
-}
-
-.pin-page.board-page.board-theme-midnight-ops .calculator-key.equals:hover,
-.pin-page.board-page.board-theme-neon-lab .calculator-key.equals:hover {
-  background: rgba(255, 255, 255, 0.98);
-}
-
-/* Reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  .pin-card:hover {
-    transform: none;
-  }
-
-  .side-icon:hover,
-  .board-chip:hover,
-  .new-note-pill:hover,
-  .widget-pill:hover,
-  .ghost-action:hover {
-    transform: none;
-  }
-}
 
 /* Smooth scroll behavior */
 html {
@@ -10859,27 +9653,9 @@ html {
 }
 
 /* Theme Adjustments */
-.board-theme-midnight-ops .widget-modal-large {
-  background: linear-gradient(180deg, rgba(15, 20, 32, 0.98), rgba(10, 14, 24, 0.98));
-}
 
-.board-theme-midnight-ops .widget-showcase-card:hover {
-  box-shadow: 
-    0 0 0 1px rgba(77, 124, 255, 0.5),
-    0 8px 24px rgba(0, 0, 0, 0.35);
-}
 
-.board-theme-neon-lab .widget-modal-large {
-  background: linear-gradient(180deg, rgba(12, 16, 28, 0.98), rgba(8, 12, 22, 0.98));
-  border-color: rgba(66, 255, 216, 0.15);
-}
 
-.board-theme-neon-lab .widget-showcase-card:hover {
-  box-shadow: 
-    0 0 0 1px rgba(66, 255, 216, 0.4),
-    0 8px 24px rgba(0, 0, 0, 0.35),
-    0 0 20px rgba(66, 255, 216, 0.1);
-}
 
 .widget-gallery-backdrop {
   z-index: 1200;
@@ -11915,6 +10691,146 @@ html {
 .updates-article-section ul {
   margin: 14px 0 0;
   padding-left: 20px;
+}
+
+/* Notification styles */
+.notifications-header {
+  padding: 8px 0 16px;
+}
+
+.notifications-header h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #1f1a13;
+}
+
+.notifications-header p {
+  margin: 0;
+  font-size: 15px;
+  color: #746457;
+}
+
+.notifications-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0;
+  color: #746457;
+  font-size: 15px;
+}
+
+.notifications-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(31, 26, 19, 0.12);
+  border-top-color: #e74c8b;
+  border-radius: 999px;
+  animation: spin 600ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.notifications-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: #746457;
+  font-size: 15px;
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.notification-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: transparent;
+  text-decoration: none;
+  color: inherit;
+  transition: background 150ms ease;
+  cursor: pointer;
+}
+
+.notification-card:hover {
+  background: rgba(31, 26, 19, 0.04);
+}
+
+.notification-dot-wrap {
+  flex: 0 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #e74c8b;
+}
+
+.notification-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #746457;
+}
+
+.notification-source {
+  font-weight: 700;
+  color: #e74c8b;
+}
+
+.notification-category {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(31, 26, 19, 0.06);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.notification-time {
+  margin-left: auto;
+  font-size: 12px;
+  color: #9b8a7c;
+}
+
+.notification-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #1f1a13;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notification-arrow {
+  flex: 0 0 auto;
+  font-size: 20px;
+  color: #bfb3a6;
+  transition: transform 150ms ease;
+}
+
+.notification-card:hover .notification-arrow {
+  transform: translateX(3px);
 }
 
 .global-language-menu {
