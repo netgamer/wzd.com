@@ -3680,7 +3680,11 @@ button {
 .widget-header {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
+}
+
+.widget-header > .pin-title {
+  display: none;
 }
 
 .widget-badge {
