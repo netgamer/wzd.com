@@ -6529,6 +6529,7 @@ const App = () => {
       pendingBoardNotesRef.current.clear();
       setSelectedBoardId(localSnapshot.selectedBoardId ?? localSnapshot.boards[0]?.id ?? null);
       setLoading(false);
+      setBoardContentLoading(true);
     }
 
     (hasLocalImport ? loadBoardsV2(user.id) : Promise.resolve(null))
