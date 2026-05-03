@@ -4999,7 +4999,7 @@ const App = () => {
             <div className={`profile-widget ${compact ? "compact" : ""}`}>
               <div className="profile-widget-head">
                 {profileImageUrl ? (
-                  <img className="profile-widget-avatar" src={profileImageUrl} alt={`${profileName} 프로필`} loading="lazy" />
+                  <img className="profile-widget-avatar" src={profileImageUrl} alt={`${profileName} 프로필`} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 ) : (
                   <div className="profile-widget-avatar fallback" aria-hidden="true">
                     {fallbackInitial}
@@ -5297,7 +5297,7 @@ const App = () => {
             <div className={`social-widget ${compact ? "compact" : ""}`}>
               <div className="social-widget-head">
                 {socialFeed.avatar ? (
-                  <img className="social-widget-avatar" src={socialFeed.avatar} alt={socialFeed.title} />
+                  <img className="social-widget-avatar" src={socialFeed.avatar} alt={socialFeed.title} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 ) : (
                   <div className="social-widget-avatar fallback" aria-hidden="true">
                     {(socialFeed.title || "S").slice(0, 1).toUpperCase()}
@@ -5322,7 +5322,7 @@ const App = () => {
                       <div className="social-feed-card-head">
                         <div className="social-feed-card-user">
                           {post.avatar ? (
-                            <img className="social-widget-avatar small" src={post.avatar} alt={post.author} />
+                            <img className="social-widget-avatar small" src={post.avatar} alt={post.author} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                           ) : (
                             <div className="social-widget-avatar fallback small" aria-hidden="true">
                               {(post.author || "S").slice(0, 1).toUpperCase()}
