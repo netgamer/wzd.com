@@ -6855,6 +6855,15 @@ button {
 .weather-widget {
   display: grid;
   gap: 12px;
+  overflow: visible;
+}
+
+.pin-card:has(.weather-widget) {
+  overflow: visible;
+}
+
+.pin-card:has(.weather-widget) .pin-card-body {
+  overflow: visible;
 }
 
 .clock-widget {
@@ -6991,6 +7000,8 @@ button {
   padding: 16px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.5);
+  overflow: visible;
+  position: relative;
 }
 
 .weather-link-card {
@@ -7005,8 +7016,10 @@ button {
 }
 
 .weather-current-emoji {
-  font-size: 64px;
+  font-size: 140px;
   line-height: 1;
+  margin: -60px -10px -20px 0;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
 }
 
 .weather-current strong {
@@ -7340,7 +7353,7 @@ button {
 
 .weather-forecast-item {
   display: grid;
-  grid-template-columns: 48px 40px 1fr;
+  grid-template-columns: 48px 48px 1fr;
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
@@ -7355,7 +7368,7 @@ button {
 }
 
 .weather-forecast-item > span:nth-child(2) {
-  font-size: 28px;
+  font-size: 32px;
   line-height: 1;
 }
 
