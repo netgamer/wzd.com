@@ -1013,6 +1013,7 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
 
         <section className="landing-features">
           <div className="landing-features-inner">
+            <h2 className="sr-only">WZD 주요 기능</h2>
             {FEATURES.map((feature) => (
               <article key={feature.title} className="landing-feature-card">
                 <div className="landing-feature-icon">{feature.icon}</div>
@@ -1049,7 +1050,7 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
                         {memo.link.label}
                       </a>
                     ) : null}
-                    {memo.image ? <img className="landing-note-image" src={memo.image} alt={memo.title} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
+                    {memo.image ? <img className="landing-note-image" src={memo.image} alt={memo.title} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
                   </div>
                 </article>
               ))}
