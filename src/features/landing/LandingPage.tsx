@@ -1049,7 +1049,7 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
                         {memo.link.label}
                       </a>
                     ) : null}
-                    {memo.image ? <img className="landing-note-image" src={memo.image} alt={memo.title} /> : null}
+                    {memo.image ? <img className="landing-note-image" src={memo.image} alt={memo.title} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
                   </div>
                 </article>
               ))}

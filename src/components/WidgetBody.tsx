@@ -74,7 +74,7 @@ export const WidgetBody = ({ data, onMemoChange, onAgentRun, runningAgentIds }: 
               <article className="agent-card" key={agent.id}>
                 <div className="agent-avatar-wrap">
                   {agent.avatarUrl ? (
-                    <img className="agent-avatar" src={agent.avatarUrl} alt={`${agent.name} 아바타`} />
+                    <img className="agent-avatar" src={agent.avatarUrl} alt={`${agent.name} 아바타`} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   ) : (
                     <div className="agent-avatar agent-avatar-fallback" aria-hidden="true">
                       🦁

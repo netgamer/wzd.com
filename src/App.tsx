@@ -9202,7 +9202,7 @@ const App = () => {
                       </div>
                       {cardImageUrl && (
                         <div className="pin-image-wrap">
-                          <img className="pin-image" src={getImageProxyUrl(cardImageUrl)} alt={getNoteTitle(note.content)} />
+                          <img className="pin-image" src={getImageProxyUrl(cardImageUrl)} alt={getNoteTitle(note.content)} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                         </div>
                       )}
                       <div className="pin-card-body">
@@ -10935,6 +10935,7 @@ const App = () => {
                                 className="pin-image"
                                 src={getImageProxyUrl(cardImageUrl)}
                                 alt={getNoteTitle(note.content)}
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                               />
                             </div>
                           )}
@@ -11307,6 +11308,7 @@ const App = () => {
                                                 className="link-preview-image"
                                                 src={getImageProxyUrl(preview.image)}
                                                 alt={preview.title}
+                                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                               />
                                             )}
                                             <span className="link-preview-meta">
@@ -11601,6 +11603,7 @@ const App = () => {
                                               className="link-preview-image"
                                               src={getImageProxyUrl(linkPreview.image)}
                                               alt={linkPreview.title}
+                                              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                             />
                                           )}
                                           <span className="link-preview-meta">
@@ -11611,6 +11614,7 @@ const App = () => {
                                                   src={getImageProxyUrl(linkPreview.favicon)}
                                                   alt=""
                                                   aria-hidden="true"
+                                                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                                 />
                                               )}
                                               <span className="link-preview-site">

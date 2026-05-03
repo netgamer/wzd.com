@@ -596,11 +596,6 @@ button {
   box-shadow: var(--shadow-sm);
 }
 
-.board-page .board-chip {
-  background: var(--board-chip-bg);
-  border-color: var(--board-chip-border);
-}
-
 .board-page .board-chip:hover {
   background: var(--board-chip-hover-bg);
   border-color: var(--board-chip-hover-border);
