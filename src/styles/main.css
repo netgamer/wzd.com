@@ -11024,7 +11024,7 @@ html {
 
 .global-language-menu {
   position: relative;
-  display: inline-flex;
+  display: none;
 }
 
 .sidebar-section-language {
