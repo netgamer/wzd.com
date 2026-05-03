@@ -7034,7 +7034,7 @@ button {
   background: rgba(255, 255, 255, 0.92);
 }
 
-.weather-current-emoji {
+.weather-current .weather-current-emoji {
   font-size: 80px;
   line-height: 1;
   flex: 0 0 auto;
