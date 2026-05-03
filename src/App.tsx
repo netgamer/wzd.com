@@ -9292,6 +9292,7 @@ const App = () => {
                                       className="link-preview-image"
                                       src={getImageProxyUrl(linkPreview.image)}
                                       alt={linkPreview.title}
+                                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                     />
                                   )}
                                   <span className="link-preview-meta">
@@ -9302,6 +9303,7 @@ const App = () => {
                                           src={getImageProxyUrl(linkPreview.favicon)}
                                           alt=""
                                           aria-hidden="true"
+                                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                         />
                                       )}
                                       <span className="link-preview-site">{displaySite || linkPreview.hostname}</span>
