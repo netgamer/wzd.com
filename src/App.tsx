@@ -357,13 +357,6 @@ const BellIcon = () => (
   </svg>
 );
 
-const GlobeIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
-    <path d="M3.8 12h16.4M12 3.8c2.4 2.3 3.7 5.1 3.7 8.2S14.4 17.9 12 20.2M12 3.8c-2.4 2.3-3.7 5.1-3.7 8.2s1.3 5.9 3.7 8.2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 const ChevronDownIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -6585,8 +6578,6 @@ const App = () => {
         setNotes([]);
         setSelectedBoardId(initialBoardId);
         setSelectedNoteId(null);
-        setLoading(false);
-        setBoardContentLoading(Boolean(initialBoardId));
 
         const initialNotes = sanitizeNotes(await loadBoardNotesV2(initialBoardId ? [initialBoardId] : []));
         if (!active) {
@@ -6599,6 +6590,7 @@ const App = () => {
           loadedBoardNotesRef.current.clear();
         }
         setNotes(initialNotes);
+        setLoading(false);
         setBoardContentLoading(false);
 
         const deferredBoardIds = remoteBoards.map((board) => board.id).filter((boardId) => boardId !== initialBoardId);
@@ -6821,7 +6813,7 @@ const App = () => {
   }, [activeBoards, selectedBoard]);
 
   useEffect(() => {
-    if (!mobileViewport || feedMode !== "active" || !selectedBoard?.id) {
+    if (feedMode !== "active" || !selectedBoard?.id) {
       return;
     }
 
@@ -6844,7 +6836,7 @@ const App = () => {
     if (rightGap > 0) {
       container.scrollBy({ left: rightGap + 12, behavior: "smooth" });
     }
-  }, [mobileViewport, feedMode, selectedBoard?.id]);
+  }, [feedMode, selectedBoard?.id]);
 
   useEffect(() => {
     if (!mobileViewport || !selectedNoteId || pendingMobileNewNoteScrollRef.current !== selectedNoteId) {
@@ -9609,7 +9601,7 @@ const App = () => {
         onClick={() => setLanguageMenuOpen((prev) => !prev)}
       >
         <span className="global-language-trigger-icon" aria-hidden="true">
-          <GlobeIcon />
+          {siteLanguage === "ko" ? "🇰🇷" : "🇺🇸"}
         </span>
         <span className="global-language-trigger-code">{currentLanguage.shortLabel}</span>
         <span className={`global-language-trigger-chevron ${languageMenuOpen ? "open" : ""}`} aria-hidden="true">

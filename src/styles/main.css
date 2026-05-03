@@ -527,9 +527,17 @@ button {
   transform: scale(1.1);
 }
 
+.pinterest-rail-icon:hover .side-icon-label {
+  opacity: 0.7;
+}
+
 .pinterest-rail-icon.active .side-icon-label {
-  opacity: 1;
+  opacity: 0;
   font-weight: 800;
+}
+
+.pinterest-rail-icon.active:hover .side-icon-label {
+  opacity: 1;
 }
 
 .board-page .pinterest-rail-icon {
@@ -562,7 +570,7 @@ button {
 .side-icon-label {
   display: block;
   max-width: none;
-  opacity: 0.65;
+  opacity: 0;
   overflow: hidden;
   white-space: nowrap;
   font-size: 10px;
@@ -572,6 +580,7 @@ button {
   margin-top: 2px;
   text-align: center;
   transition: opacity 180ms ease;
+  pointer-events: none;
 }
 
 .board-chip {
@@ -790,6 +799,10 @@ button {
 .board-page .pin-sidebar.expanded .side-icon-label {
   display: block;
   max-width: none;
+  opacity: 0;
+}
+
+.board-page .pinterest-rail-icon:hover .side-icon-label {
   opacity: 0.55;
 }
 
@@ -4683,26 +4696,27 @@ button {
 .food-widget-label {
   display: inline-flex;
   align-self: flex-start;
-  padding: 2px 7px;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  opacity: 0.5;
 }
 
 .food-widget-label.chef {
-  background: rgba(31, 26, 19, 0.06);
-  color: rgba(31, 26, 19, 0.5);
+  background: rgba(31, 26, 19, 0.05);
+  color: rgba(31, 26, 19, 0.6);
 }
 
 .food-widget-label.instagram {
-  background: rgba(230, 0, 35, 0.08);
-  color: rgba(230, 0, 35, 0.6);
+  background: rgba(230, 0, 35, 0.06);
+  color: rgba(230, 0, 35, 0.5);
 }
 
 .food-widget-label.trending {
-  background: rgba(29, 111, 216, 0.08);
-  color: rgba(29, 111, 216, 0.6);
+  background: rgba(29, 111, 216, 0.06);
+  color: rgba(29, 111, 216, 0.5);
 }
 
 .food-widget-actions {
@@ -6869,15 +6883,6 @@ button {
 .weather-widget {
   display: grid;
   gap: 12px;
-  overflow: visible;
-}
-
-.pin-card:has(.weather-widget) {
-  overflow: visible;
-}
-
-.pin-card:has(.weather-widget) .pin-card-body {
-  overflow: visible;
 }
 
 .clock-widget {
@@ -7030,10 +7035,9 @@ button {
 }
 
 .weather-current-emoji {
-  font-size: 140px;
+  font-size: 80px;
   line-height: 1;
-  margin: -60px -10px -20px 0;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
+  flex: 0 0 auto;
 }
 
 .weather-current strong {
@@ -7372,7 +7376,7 @@ button {
 
 .weather-forecast-item {
   display: grid;
-  grid-template-columns: 48px 48px 1fr;
+  grid-template-columns: 48px 32px 1fr;
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
@@ -7387,7 +7391,7 @@ button {
 }
 
 .weather-forecast-item > span:nth-child(2) {
-  font-size: 32px;
+  font-size: 20px;
   line-height: 1;
 }
 
