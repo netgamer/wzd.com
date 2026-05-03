@@ -5935,14 +5935,14 @@ button {
   }
 
   .pin-main {
-    padding-bottom: 24px;
+    padding-bottom: 84px;
   }
 
   .board-page .pin-main,
   .board-page .workspace-main {
     width: 100%;
     min-width: 0;
-    padding: 10px 0 30px;
+    padding: 10px 0 90px;
   }
 
   .pin-app,
@@ -5984,18 +5984,18 @@ button {
 
   .floating-trash {
     right: 16px;
-    bottom: 88px;
+    bottom: 148px;
   }
 
   .floating-add-note {
     right: 16px;
-    bottom: 18px;
+    bottom: 78px;
     width: 56px;
     height: 56px;
   }
 
   .floating-add-note.lifted {
-    bottom: 158px;
+    bottom: 218px;
   }
 
   .cat-remote {
@@ -11237,4 +11237,60 @@ html {
     right: 12px;
     bottom: 12px;
   }
+}
+
+.pin-input {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  border-radius: 12px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.75);
+  outline: none;
+  font-size: var(--font-sm);
+}
+
+.mobile-bottom-nav-shell {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 25;
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: var(--font-xs);
+  line-height: 1.2;
+  transition: color var(--duration-fast);
+}
+
+.mobile-bottom-nav-item.active {
+  color: var(--accent);
+}
+
+.mobile-bottom-nav-item-primary {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.mobile-bottom-nav-icon {
+  display: block;
+  font-size: 20px;
+  line-height: 1;
 }
