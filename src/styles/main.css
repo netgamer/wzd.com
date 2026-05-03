@@ -4695,7 +4695,7 @@ button {
 
 .food-widget-label {
   display: inline-flex;
-  align-self: flex-start;
+  width: fit-content;
   padding: 1px 5px;
   border-radius: 3px;
   font-size: 8px;
