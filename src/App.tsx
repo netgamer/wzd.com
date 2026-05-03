@@ -10715,8 +10715,8 @@ const App = () => {
               </div>
             </div>
           ) : null}
-          <div className={`feed-stage ${loading ? "is-loading" : ""}`} aria-busy={loading || boardContentLoading}>
-            {loading && !selectedBoard && (
+          <div className={`feed-stage ${loading || boardContentLoading ? "is-loading" : ""}`} aria-busy={loading || boardContentLoading}>
+            {(loading || boardContentLoading) && (
               <div className="feed-loading-overlay" role="status" aria-live="polite">
                 {renderFeedLoadingSkeleton()}
               </div>
@@ -10744,11 +10744,7 @@ const App = () => {
                   모든 템플릿 보기
                 </button>
               </div>
-            ) : boardContentLoading && selectedBoard ? (
-              <div className="full-span" role="status" aria-live="polite">
-                {renderFeedLoadingSkeleton()}
-              </div>
-            ) : visibleNotes.length === 0 ? (
+            ) : visibleNotes.length === 0 && !loading && !boardContentLoading ? (
               feedMode === "active" ? (
                 <div className="feed-empty empty-templates full-span">
                   <div className="feed-empty-copy">
