@@ -923,7 +923,7 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
             <span>브라우저를 열면 가장 먼저 보고 싶은 개인화 첫 페이지</span>
           </div>
           {user ? (
-            <button className="landing-profile-btn" onClick={onOpenWorkspace}>
+            <button className="landing-profile-btn" aria-label="내 워크스페이스 열기" onClick={onOpenWorkspace}>
               <span className="landing-profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
             </button>
           ) : (
