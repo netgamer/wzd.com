@@ -1,5 +1,45 @@
 # WZD.KR Codebase Health Metrics
 
+## 2026-05-08
+
+| Metric | Value | vs Yesterday |
+|---|---|---|
+| Date | 2026-05-08 | — |
+| Build Status | ✅ SUCCESS | ✅ SUCCESS |
+| Build Time (total) | 11.09s (tsc + vite) | -0.44s |
+| Build Time (vite only) | 2.16s | +0.13s |
+| App.tsx Lines | 11,800 | ↔ no change |
+| main.css Size | 216,939 bytes (212 KB) | ↔ no change |
+| Commits Today | 3 | ↔ no change |
+
+### Bundle Sizes
+
+| File | Raw | Gzip | vs Yesterday |
+|---|---|---|---|
+| index.html | 3.24 kB | 1.21 kB | ↔ |
+| vendor.js | 10.28 kB | 3.55 kB | ↔ |
+| react-vendor.js | 137.64 kB | 44.02 kB | ↔ |
+| supabase-vendor.js | 168.04 kB | 44.43 kB | ↔ |
+| index.js (main) | 490.52 kB | 114.87 kB | ↔ |
+| **Total JS** | **806.48 kB** | **206.87 kB** | ↔ |
+
+### Today's Commits (2026-05-08)
+All 3 commits are SEO/report — low risk, no source logic touched.
+
+| Hash | Message | Risk |
+|---|---|---|
+| f2b556a | seo(auto): update sitemap lastmod dates to 2026-05-08 | 🟢 Low |
+| cb6247d | seo(auto): add image sitemap entry for og-image | 🟢 Low |
+| 7ed7181 | report(auto): daily health metrics 2026-05-07 | 🟢 Low |
+
+### Warnings
+- ⚠️ `npm audit` found 4 vulnerabilities (3 moderate, 1 high) — run `npm audit fix` (unchanged)
+- ✅ All JS chunks under 600 KB threshold
+- ✅ index.js (main) at 490.52 kB — 82% of 600 KB limit, watch for growth
+- ✅ Build time improved: 11.09s vs 11.53s yesterday (-3.8%)
+
+---
+
 ## 2026-05-07
 
 | Metric | Value | vs Yesterday |
