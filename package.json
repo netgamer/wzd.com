@@ -9,10 +9,12 @@
     "verify:build": "npm run build",
     "hades:verify-local": "npm run build",
     "preview": "vite preview",
-    "server": "node server/index.js"
+    "server": "node server/index.js",
+    "db:migrate:local": "wrangler d1 migrations apply wzd --local",
+    "db:migrate:prod": "wrangler d1 migrations apply wzd --remote",
+    "dev:pages": "wrangler pages dev dist --d1 DB=wzd --compatibility-date=2024-09-01"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.51.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "react": "^18.3.1",
@@ -24,6 +26,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.5.4",
-    "vite": "^5.3.4"
+    "vite": "^5.3.4",
+    "wrangler": "^3.78.0"
   }
 }

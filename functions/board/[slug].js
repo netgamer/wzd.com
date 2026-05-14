@@ -148,52 +148,63 @@ const injectMetaTags = (html, metadata) => {
     .replace("</head>", `${metaTags}\n  </head>`);
 };
 
+const parseSettings = (raw) => {
+  if (raw === null || raw === undefined || raw === "") return {};
+  if (typeof raw === "object") return raw;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+};
+
 const fetchSharedBoard = async (env, slug) => {
-  const supabaseUrl = env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const db = env.DB;
+  if (!db) {
     return null;
   }
 
-  const headers = {
-    apikey: supabaseAnonKey,
-    Authorization: `Bearer ${supabaseAnonKey}`
-  };
-
-  const boardUrl = new URL(`${supabaseUrl}/rest/v1/boards`);
-  boardUrl.searchParams.set("select", "id,title,description,settings,background_style");
-  boardUrl.searchParams.set("is_archived", "eq.false");
-  boardUrl.searchParams.set("settings->>sharedSlug", `eq.${slug}`);
-  boardUrl.searchParams.set("limit", "1");
-
-  const boardResponse = await fetch(boardUrl.toString(), { headers });
-  if (!boardResponse.ok) {
+  const boardRow = await db
+    .prepare(
+      `SELECT id, title, description, settings, background_style
+         FROM boards
+        WHERE is_archived = 0
+          AND json_extract(settings, '$.sharedSlug') = ?
+        LIMIT 1`
+    )
+    .bind(slug)
+    .first();
+  if (!boardRow?.id) {
     return null;
   }
 
-  const boards = await boardResponse.json();
-  const board = Array.isArray(boards) ? boards[0] : null;
-  if (!board?.id) {
-    return null;
-  }
+  const notesResult = await db
+    .prepare(
+      `SELECT content, metadata, z_index
+         FROM notes
+        WHERE board_id = ? AND archived = 0
+        ORDER BY z_index ASC
+        LIMIT 6`
+    )
+    .bind(boardRow.id)
+    .all();
 
-  const notesUrl = new URL(`${supabaseUrl}/rest/v1/notes`);
-  notesUrl.searchParams.set("select", "content,metadata,z_index");
-  notesUrl.searchParams.set("board_id", `eq.${board.id}`);
-  notesUrl.searchParams.set("archived", "eq.false");
-  notesUrl.searchParams.set("order", "z_index.asc");
-  notesUrl.searchParams.set("limit", "6");
-
-  const notesResponse = await fetch(notesUrl.toString(), { headers });
-  const notes = notesResponse.ok ? await notesResponse.json() : [];
+  const settings = parseSettings(boardRow.settings);
+  const notes = (notesResult?.results ?? []).map((row) => ({
+    content: row.content,
+    metadata: parseSettings(row.metadata),
+    z_index: row.z_index
+  }));
 
   return {
     board: {
-      ...board,
-      backgroundStyle: asText(board.background_style || board.backgroundStyle || board?.settings?.backgroundStyle || "paper")
+      ...boardRow,
+      settings,
+      backgroundStyle: asText(
+        boardRow.background_style || settings.backgroundStyle || "paper"
+      )
     },
-    notes: Array.isArray(notes) ? notes : []
+    notes
   };
 };
 

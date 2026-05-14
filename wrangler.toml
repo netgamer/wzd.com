@@ -1,0 +1,20 @@
+name = "wzd"
+compatibility_date = "2024-09-01"
+pages_build_output_dir = "dist"
+
+# D1 binding. Run `npx wrangler d1 create wzd` once and paste the returned
+# database_id below. Secrets (JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+# OAUTH_REDIRECT_URL) are set per-environment via `wrangler pages secret put`.
+[[d1_databases]]
+binding = "DB"
+database_name = "wzd"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# R2 bucket for note image attachments. Create with:
+#   npx wrangler r2 bucket create wzd-media
+# Files are served through /api/media/<key> (see functions/api/media/[[path]].js)
+# rather than direct R2 public URLs, so ownership/Cache-Control can be enforced.
+[[r2_buckets]]
+binding = "R2_MEDIA"
+bucket_name = "wzd-media"

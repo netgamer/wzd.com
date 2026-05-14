@@ -1,0 +1,7 @@
+# Cloudflare Pages local-dev secrets (consumed by `wrangler pages dev`).
+# Copy to `.dev.vars` and fill in values. Do NOT commit `.dev.vars`.
+
+JWT_SECRET=replace-with-random-32-byte-base64-string
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+OAUTH_REDIRECT_URL=http://localhost:8788/api/auth/callback

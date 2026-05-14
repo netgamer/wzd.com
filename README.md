@@ -14,9 +14,14 @@ WZD can also grow into a shareable personal page. Someone deep in AI can make a 
 - Multi-device sync, widget expansion, and desktop/mobile surfaces as later extensions.
 
 ## Run locally
-1. Copy `.env.example` to `.env` and fill Supabase values.
-2. Install dependencies: `npm install`
-3. Run dev server: `npm run dev`
+1. Copy `.env.example` to `.env` (optional — only sets the agent server URL).
+2. Copy `.dev.vars.example` to `.dev.vars` and fill `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OAUTH_REDIRECT_URL`.
+3. Install dependencies: `npm install`
+4. Bootstrap the D1 database (first run only):
+   - `npx wrangler d1 create wzd` and paste the returned `database_id` into `wrangler.toml`
+   - `npm run db:migrate:local`
+5. Vite-only client preview (no API): `npm run dev`
+6. Full-stack preview (Pages Functions + D1): `npm run build && npm run dev:pages` → http://localhost:8788
 
 ## Hades + gstack workflow
 1. Read `HADES.md`.
@@ -43,11 +48,16 @@ WZD can also grow into a shareable personal page. Someone deep in AI can make a 
 2. In Cloudflare Pages, connect the Git repository.
 3. Build command: `npm run build`
 4. Build output directory: `dist`
-5. Add env vars in Pages:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
+5. Bind D1 database `wzd` to the project (Settings → Functions → D1 bindings, `DB`).
+6. Add Pages secrets (`wrangler pages secret put …` or dashboard):
+   - `JWT_SECRET` — random 32-byte base64 string
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `OAUTH_REDIRECT_URL` — `https://<your-pages-domain>/api/auth/callback`
+7. Build-time env vars (Variables tab):
    - `VITE_APP_ENV`
    - `VITE_AGENT_API_BASE_URL`
+8. Apply migrations once: `npm run db:migrate:prod`.
 
 ## Insight Reader MVP assets
 - Static sample page: `public/wzd_kr_insight_sample.html`
@@ -74,16 +84,30 @@ WZD can also grow into a shareable personal page. Someone deep in AI can make a 
    - `GCP_VM_SSH_KEY`
 6. Push to `main` -> `.github/workflows/deploy-agent-server.yml` runs and auto deploys.
 
-## Supabase setup
-1. Create a Supabase project.
-2. Enable Google provider in Auth.
-3. Set Authorized redirect URL:
-   - `https://<your-pages-domain>`
-   - `http://localhost:5173`
-4. Run SQL from `supabase/schema.sql` in SQL editor.
-   - Includes: `dashboard_layouts`, `widgets`, `agent_runs`, `agent_steps`, `user_workflows`
-5. For cork-board redesign, run `supabase/schema.board-v2.sql` in SQL editor.
-   - Includes: `boards`, `notes`, `note_tags` with RLS policies.
+## D1 setup
+1. `npx wrangler d1 create wzd` — copy `database_id` into `wrangler.toml`.
+2. Apply migrations:
+   - Local: `npm run db:migrate:local`
+   - Production: `npm run db:migrate:prod`
+3. Migrations live in `migrations/`:
+   - `0001_init.sql` — users, dashboard_layouts, widgets, agent_runs, agent_steps, user_workflows
+   - `0002_board_v2.sql` — boards, notes, note_tags, user_profiles, board_members
+   - `0003_insight_reader.sql` — sources, items, tags, clusters, action_suggestions, bookmarks
+   - `0004_media.sql` — media (R2 object index for ownership / cleanup)
+
+## R2 setup (image attachments)
+1. `npx wrangler r2 bucket create wzd-media`
+2. Bind it in production: Pages → Settings → Functions → R2 bindings, `R2_MEDIA = wzd-media`.
+3. Uploads go to `POST /api/upload` (auth required, 5 MB cap, image/* only).
+4. Serving goes through `GET /api/media/<key>` — never expose the bucket's
+   public URL directly, so ownership + Cache-Control can be enforced.
+
+## Google OAuth
+1. In Google Cloud Console, reuse the existing OAuth 2.0 client.
+2. Add authorized redirect URIs:
+   - `https://<your-pages-domain>/api/auth/callback`
+   - `http://localhost:8788/api/auth/callback`
+3. Copy the client ID/secret to Pages secrets (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) and to `.dev.vars` for local runs.
 
 ## Current milestone
 - 3-column dashboard layout

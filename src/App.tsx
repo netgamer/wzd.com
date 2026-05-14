@@ -52,7 +52,8 @@ import {
   type NoteV2,
   saveBoardsV2,
   searchUserProfiles,
-  syncUserProfile
+  syncUserProfile,
+  updateBoard
 } from "./lib/supabase-board-v2";
 
 interface AuthUserProfile {
@@ -2068,15 +2069,10 @@ const hasPendingAuthHash = () => {
 };
 
 const hasStoredSupabaseSession = () => {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  try {
-    return Object.keys(window.localStorage).some((key) => key.startsWith("sb-") && key.endsWith("-auth-token"));
-  } catch {
-    return false;
-  }
+  // Cookie-based auth — HttpOnly cookies are invisible to JS. The brief
+  // window between mount and getMe() resolving is bounded; rely on
+  // authChecked to flip false→true instead of pre-checking storage.
+  return false;
 };
 
 const getSharedBoardSlugFromLocation = () => {
@@ -7735,19 +7731,15 @@ const App = () => {
       }
 
       if (supabase && user?.id) {
-        const updateResult = await supabase
-          .from("boards")
-          .update({
+        try {
+          await updateBoard(selectedBoard.id, {
             settings: {
               ...selectedBoard.settings,
               sharedSlug: shareSlug
-            },
-            updated_at: timestamp
-          })
-          .eq("id", selectedBoard.id)
-          .eq("user_id", user.id);
-
-        if (updateResult.error) {
+            }
+          });
+        } catch (error) {
+          console.error("Failed to save shared slug", error);
           window.alert("공유 링크를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
           return;
         }
