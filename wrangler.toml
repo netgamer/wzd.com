@@ -8,7 +8,7 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "wzd"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "bc7e27dd-cf93-4a71-b09a-96cb2cae8553"
 migrations_dir = "migrations"
 
 # R2 bucket for note image attachments. Create with:
