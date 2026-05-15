@@ -179,8 +179,6 @@ type BoardTemplateKey =
   | "group-chat"
   | "family"
   | "couple"
-  | "insta-ai"
-  | "insta-fitness"
   | "youtube-curation"
   | "prompt-vault";
 type BoardTemplateSectionKey = "notes" | "widgets" | "groups" | "curation";
@@ -1145,67 +1143,12 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
     ]
   },
   {
-    key: "insta-ai",
-    title: "인스타 AI 큐레이션",
-    subtitle: "인스타에서 저장한 AI 릴스·게시물을 그리드로",
-    tag: "수집 보드",
-    audience: "AI 트렌드를 인스타로 따라가는 사람",
-    highlights: ["인스타 공식 임베드", "URL만 붙여넣으면 자동", "그리드 갤러리"],
-    backgroundStyle: "whiteboard",
-    layoutStyle: "visual",
-    notes: [
-      {
-        color: "yellow",
-        content:
-          "📌 사용법\n\n각 카드를 클릭한 뒤 인스타 게시물 URL을\n( https://www.instagram.com/p/... 또는 /reel/... )\n붙여넣으면 자동으로 원본 게시물이 임베드됩니다.\n\n카드를 더 추가하려면 우측 상단 \"위젯 추가\" → \"임베드\"."
-      },
-      { color: "white", content: "🤖 GPT 단축키 / 사용법", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🎨 Midjourney 프롬프트 공식", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "💼 AI로 사이드프로젝트", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "📊 Claude·Notion 자동화 팁", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🎵 음악·보이스 AI 데모", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🧠 AI 에이전트 사용 사례", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "📱 디자인→코드 (v0, Cursor)", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🔮 새 모델·기능 후기", metadata: { widgetType: "embed", embedUrl: "" } }
-    ]
-  },
-  {
-    key: "insta-fitness",
-    title: "인스타 운동 큐레이션",
-    subtitle: "저장한 홈트·릴스 게시물을 그리드 갤러리로",
-    tag: "수집 보드",
-    audience: "운동 영감을 인스타에서 모으는 사람",
-    highlights: ["인스타 공식 임베드", "URL 붙여넣기만", "원본 영상 바로 재생"],
-    backgroundStyle: "whiteboard",
-    layoutStyle: "visual",
-    notes: [
-      {
-        color: "yellow",
-        content:
-          "📌 사용법\n\n각 카드를 클릭 → 인스타 릴스/게시물 URL\n( /reel/... 또는 /p/... ) 붙여넣기 →\n자동으로 원본 영상이 임베드됩니다.\n\n새 카드는 우측 상단 \"위젯 추가\" → \"임베드\"."
-      },
-      { color: "white", content: "🔥 홈트 풀세트", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🧘 아침 스트레칭", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "💪 푸시업 자세 교정", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🏃 러닝 페이스 가이드", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🏋️ 케틀벨 루틴", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🦵 무릎 부담 적은 운동", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🥗 운동 후 식단", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "👟 러닝화·장비 리뷰", metadata: { widgetType: "embed", embedUrl: "" } },
-      {
-        color: "yellow",
-        content:
-          "📅 이번주 루틴\n\n월: 푸시\n화: 러닝 30분\n수: 휴식·스트레칭\n목: 풀\n금: 케틀벨\n주말: 야외 활동"
-      }
-    ]
-  },
-  {
     key: "youtube-curation",
     title: "유튜브 큐레이션 보드",
-    subtitle: "유튜브 영상을 임베드 카드로 모아 바로 재생",
+    subtitle: "보고 싶은 유튜브 영상을 임베드 카드로 모아 바로 재생",
     tag: "수집 보드",
     audience: "유튜브를 학습·리서치 도구로 쓰는 사람",
-    highlights: ["유튜브 공식 임베드", "URL 붙여넣기", "보드 안에서 바로 재생"],
+    highlights: ["유튜브 공식 임베드", "URL 붙여넣기로 자동", "보드 안에서 바로 재생"],
     backgroundStyle: "whiteboard",
     layoutStyle: "visual",
     notes: [
@@ -1222,9 +1165,11 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
           embedUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw"
         }
       },
-      { color: "white", content: "⚡ 개발·AI 채널", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "⚡ 개발·AI 영상", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🏋️ 홈트·운동 루틴", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🧘 스트레칭·요가", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🧠 AI 도구 튜토리얼", metadata: { widgetType: "embed", embedUrl: "" } },
       { color: "white", content: "📚 자기계발·생산성", metadata: { widgetType: "embed", embedUrl: "" } },
-      { color: "white", content: "🧠 AI·머신러닝 강의", metadata: { widgetType: "embed", embedUrl: "" } },
       { color: "white", content: "🎨 디자인·크리에이티브", metadata: { widgetType: "embed", embedUrl: "" } },
       { color: "white", content: "🎙️ 인터뷰·롱폼", metadata: { widgetType: "embed", embedUrl: "" } },
       { color: "white", content: "💻 코딩 튜토리얼", metadata: { widgetType: "embed", embedUrl: "" } },
@@ -1294,8 +1239,8 @@ const BOARD_TEMPLATE_SECTIONS: BoardTemplateSection[] = [
   {
     key: "curation",
     title: "수집·큐레이션 보드",
-    subtitle: "인스타·유튜브에서 저장한 콘텐츠를 썸네일 갤러리로 정리",
-    templateKeys: ["insta-ai", "insta-fitness", "youtube-curation", "prompt-vault"]
+    subtitle: "유튜브 영상·프롬프트처럼 매일 모이는 콘텐츠를 임베드 카드로 정리",
+    templateKeys: ["youtube-curation", "prompt-vault"]
   },
   {
     key: "widgets",
@@ -1370,11 +1315,11 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
       {
         type: "embed",
         title: "임베드",
-        subtitle: "인스타·유튜브·X URL을 카드로",
+        subtitle: "유튜브 영상을 카드로 임베드",
         kicker: "EMBED",
-        previewTitle: "원본 게시물 임베드",
-        previewLines: ["인스타 릴스·게시물", "유튜브 영상", "X 트윗"],
-        previewMeta: "URL 붙여넣기로 자동 임베드",
+        previewTitle: "유튜브 영상 임베드",
+        previewLines: ["youtube.com/watch?v=...", "youtu.be/...", "보드 안에서 바로 재생"],
+        previewMeta: "URL 붙여넣기로 자동",
         accent: "#111111"
       },
       {
