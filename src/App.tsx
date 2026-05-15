@@ -11456,6 +11456,10 @@ const App = () => {
                           } ${isRssWidget ? "widget-note rss-widget" : ""} ${isBlogWidget ? "widget-note rss-widget blog-widget" : ""} ${
                             typeof note.metadata?.posterVariant === "string" && note.metadata.posterVariant
                               ? `poster-${note.metadata.posterVariant}`
+                              : note.metadata?.widgetType === "embed" &&
+                                typeof note.metadata?.embedUrl === "string" &&
+                                /youtu\.?be/.test(note.metadata.embedUrl)
+                              ? "poster-youtube"
                               : ""
                           } ${selected ? "selected" : ""} ${
                             runningDragNoteId === note.id ? "dragging" : ""
@@ -11495,13 +11499,34 @@ const App = () => {
                             openNoteEditor(note);
                           }}
                         >
-                          {note.metadata?.posterVariant === "youtube" ? (() => {
-                            const ytId = typeof note.metadata?.youtubeId === "string" ? note.metadata.youtubeId : "";
-                            const isShort = Boolean(note.metadata?.youtubeIsShort);
+                          {(() => {
+                            const variantTag = typeof note.metadata?.posterVariant === "string" ? note.metadata.posterVariant : "";
+                            const embedUrlMeta = typeof note.metadata?.embedUrl === "string" ? note.metadata.embedUrl : "";
+                            const isYoutubeCard =
+                              variantTag === "youtube" ||
+                              (note.metadata?.widgetType === "embed" && /youtu\.?be/.test(embedUrlMeta));
+                            return isYoutubeCard;
+                          })() ? (() => {
+                            let ytId = typeof note.metadata?.youtubeId === "string" ? note.metadata.youtubeId : "";
+                            const embedUrlMeta = typeof note.metadata?.embedUrl === "string" ? note.metadata.embedUrl : "";
+                            const fallbackUrl = typeof note.metadata?.youtubeUrl === "string" ? note.metadata.youtubeUrl : embedUrlMeta;
+                            if (!ytId && fallbackUrl) {
+                              const watchMatch = fallbackUrl.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
+                              const shortMatch = fallbackUrl.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);
+                              const shortsMatch = fallbackUrl.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/);
+                              const embedMatch = fallbackUrl.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);
+                              ytId = watchMatch?.[1] || shortsMatch?.[1] || shortMatch?.[1] || embedMatch?.[1] || "";
+                            }
+                            const durSec = typeof note.metadata?.youtubeDurationSec === "number" ? note.metadata.youtubeDurationSec : null;
+                            const isShort =
+                              Boolean(note.metadata?.youtubeIsShort) ||
+                              /youtube\.com\/shorts\//.test(fallbackUrl || "") ||
+                              (durSec !== null && durSec > 0 && durSec <= 60);
                             const duration = typeof note.metadata?.youtubeDuration === "string" ? note.metadata.youtubeDuration : "";
-                            const thumbUrl = isShort && ytId
-                              ? `https://i.ytimg.com/vi/${ytId}/oar2.jpg`
-                              : getAttachedImageUrl(note);
+                            const attached = getAttachedImageUrl(note);
+                            const thumbUrl =
+                              attached ||
+                              (ytId ? `https://i.ytimg.com/vi/${ytId}/${isShort ? "oar2.jpg" : "hqdefault.jpg"}` : "");
                             const playing = playingYoutubeNoteId === note.id;
                             return (
                               <div
