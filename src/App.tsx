@@ -1352,12 +1352,12 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
       },
       {
         type: "embed",
-        title: "임베드",
-        subtitle: "유튜브 영상을 카드로 임베드",
-        kicker: "EMBED",
-        previewTitle: "유튜브 영상 임베드",
-        previewLines: ["youtube.com/watch?v=...", "youtu.be/...", "보드 안에서 바로 재생"],
-        previewMeta: "URL 붙여넣기로 자동",
+        title: "URL",
+        subtitle: "유튜브·인스타·틱톡 URL을 카드로",
+        kicker: "URL",
+        previewTitle: "URL 붙여넣기",
+        previewLines: ["YouTube · long/shorts", "Instagram · post/reel", "TikTok"],
+        previewMeta: "자동 감지 + 인라인 재생",
         accent: "#111111"
       },
       {
@@ -4147,13 +4147,52 @@ const App = () => {
       const descriptor = buildEmbedDescriptor(rawEmbedUrl);
 
       const handleUrlChange = (value: string) => {
+        // 즉시 URL만 반영 + 이전 media meta 클리어
         updateNote(note.id, {
           metadata: {
             ...note.metadata,
             widgetType: "embed",
-            embedUrl: value
+            embedUrl: value,
+            mediaKind: undefined,
+            mediaPlatform: undefined,
+            mediaId: undefined,
+            mediaEmbedUrl: undefined,
+            mediaThumbnail: undefined,
+            mediaFallbackThumbnail: undefined,
+            mediaAspectRatio: undefined,
+            mediaTitle: undefined,
+            mediaAuthor: undefined,
+            mediaOpenUrl: undefined
           }
         });
+        // 백엔드에 platform 감지 + 메타 요청 (async)
+        if (value && /^https?:\/\//.test(value.trim())) {
+          fetch(`/api/url-meta?url=${encodeURIComponent(value.trim())}`)
+            .then((resp) => (resp.ok ? resp.json() : null))
+            .then((meta) => {
+              if (!meta || !meta.kind || meta.kind === "unknown") return;
+              updateNote(note.id, {
+                metadata: {
+                  ...note.metadata,
+                  widgetType: "embed",
+                  embedUrl: value,
+                  mediaKind: meta.kind,
+                  mediaPlatform: meta.platform,
+                  mediaId: meta.mediaId,
+                  mediaEmbedUrl: meta.embedUrl,
+                  mediaThumbnail: meta.thumbnailUrl,
+                  mediaFallbackThumbnail: meta.fallbackThumbnailUrl,
+                  mediaAspectRatio: meta.aspectRatio,
+                  mediaTitle: meta.title,
+                  mediaAuthor: meta.author,
+                  mediaOpenUrl: meta.openUrl
+                }
+              });
+            })
+            .catch(() => {
+              // 무시 — 폴백으로 기존 embed iframe 동작
+            });
+        }
       };
 
       const handleCaptionChange = (value: string) => {
@@ -11458,7 +11497,9 @@ const App = () => {
                               ? `poster-${note.metadata.posterVariant}`
                               : note.metadata?.widgetType === "embed" &&
                                 typeof note.metadata?.embedUrl === "string" &&
-                                /youtu\.?be/.test(note.metadata.embedUrl)
+                                /youtu\.?be|instagram\.com|tiktok\.com/.test(note.metadata.embedUrl)
+                              ? "poster-youtube"
+                              : typeof note.metadata?.mediaKind === "string" && note.metadata.mediaKind
                               ? "poster-youtube"
                               : ""
                           } ${selected ? "selected" : ""} ${
@@ -11502,47 +11543,118 @@ const App = () => {
                           {(() => {
                             const variantTag = typeof note.metadata?.posterVariant === "string" ? note.metadata.posterVariant : "";
                             const embedUrlMeta = typeof note.metadata?.embedUrl === "string" ? note.metadata.embedUrl : "";
+                            const mediaKind = typeof note.metadata?.mediaKind === "string" ? note.metadata.mediaKind : "";
+                            const hasMediaKind = Boolean(mediaKind);
                             const isYoutubeCard =
                               variantTag === "youtube" ||
                               (note.metadata?.widgetType === "embed" && /youtu\.?be/.test(embedUrlMeta));
-                            return isYoutubeCard;
+                            const isInstagramCard =
+                              note.metadata?.widgetType === "embed" && /instagram\.com/.test(embedUrlMeta);
+                            const isTiktokCard =
+                              note.metadata?.widgetType === "embed" && /tiktok\.com/.test(embedUrlMeta);
+                            return hasMediaKind || isYoutubeCard || isInstagramCard || isTiktokCard;
                           })() ? (() => {
-                            let ytId = typeof note.metadata?.youtubeId === "string" ? note.metadata.youtubeId : "";
+                            // 통합 미디어 카드: YouTube/Instagram/TikTok
                             const embedUrlMeta = typeof note.metadata?.embedUrl === "string" ? note.metadata.embedUrl : "";
-                            const fallbackUrl = typeof note.metadata?.youtubeUrl === "string" ? note.metadata.youtubeUrl : embedUrlMeta;
-                            if (!ytId && fallbackUrl) {
-                              const watchMatch = fallbackUrl.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
-                              const shortMatch = fallbackUrl.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);
-                              const shortsMatch = fallbackUrl.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/);
-                              const embedMatch = fallbackUrl.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);
-                              ytId = watchMatch?.[1] || shortsMatch?.[1] || shortMatch?.[1] || embedMatch?.[1] || "";
+                            const mediaKind = typeof note.metadata?.mediaKind === "string"
+                              ? note.metadata.mediaKind
+                              : /youtu\.?be\/.*\/shorts\//.test(embedUrlMeta) || /youtube\.com\/shorts\//.test(embedUrlMeta)
+                              ? "youtube-short"
+                              : /youtu\.?be/.test(embedUrlMeta)
+                              ? "youtube-long"
+                              : /instagram\.com\/reel\//.test(embedUrlMeta) || /instagram\.com\/tv\//.test(embedUrlMeta)
+                              ? "instagram-reel"
+                              : /instagram\.com\/p\//.test(embedUrlMeta)
+                              ? "instagram-post"
+                              : /tiktok\.com/.test(embedUrlMeta)
+                              ? "tiktok"
+                              : "youtube-long";
+
+                            // 메타에 mediaEmbedUrl / mediaThumbnail이 없으면 (옛 노트) 즉석 추론
+                            let mediaId = typeof note.metadata?.mediaId === "string" ? note.metadata.mediaId : "";
+                            let mediaEmbedUrl = typeof note.metadata?.mediaEmbedUrl === "string" ? note.metadata.mediaEmbedUrl : "";
+                            let mediaThumb = typeof note.metadata?.mediaThumbnail === "string" ? note.metadata.mediaThumbnail : "";
+                            let aspectRatio = typeof note.metadata?.mediaAspectRatio === "string" ? note.metadata.mediaAspectRatio : "";
+                            const ytIdFromMeta = typeof note.metadata?.youtubeId === "string" ? note.metadata.youtubeId : "";
+
+                            if (mediaKind.startsWith("youtube")) {
+                              if (!mediaId) {
+                                const src = ytIdFromMeta ? "" : embedUrlMeta || (typeof note.metadata?.youtubeUrl === "string" ? note.metadata.youtubeUrl : "");
+                                if (ytIdFromMeta) {
+                                  mediaId = ytIdFromMeta;
+                                } else if (src) {
+                                  const m =
+                                    src.match(/[?&]v=([A-Za-z0-9_-]{6,})/) ||
+                                    src.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/) ||
+                                    src.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/) ||
+                                    src.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);
+                                  mediaId = m?.[1] || "";
+                                }
+                              }
+                              const isShort = mediaKind === "youtube-short";
+                              if (!mediaEmbedUrl && mediaId) {
+                                mediaEmbedUrl = `https://www.youtube.com/embed/${mediaId}?autoplay=1&rel=0&modestbranding=1${isShort ? "&loop=1&playsinline=1" : ""}`;
+                              }
+                              if (!mediaThumb && mediaId) {
+                                mediaThumb = `https://i.ytimg.com/vi/${mediaId}/${isShort ? "oar2.jpg" : "hqdefault.jpg"}`;
+                              }
+                              if (!aspectRatio) aspectRatio = isShort ? "9 / 16" : "16 / 9";
+                            } else if (mediaKind.startsWith("instagram")) {
+                              const m = embedUrlMeta.match(/instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/);
+                              if (!mediaId && m) mediaId = m[2];
+                              const kindPath = m?.[1] || "p";
+                              if (!mediaEmbedUrl && mediaId) {
+                                mediaEmbedUrl = `https://www.instagram.com/${kindPath}/${mediaId}/embed/captioned`;
+                              }
+                              if (!aspectRatio) aspectRatio = mediaKind === "instagram-post" ? "1 / 1" : "9 / 16";
+                              // 인스타는 thumbnail 없음 → 항상 iframe
+                            } else if (mediaKind === "tiktok") {
+                              if (!aspectRatio) aspectRatio = "9 / 16";
                             }
-                            const durSec = typeof note.metadata?.youtubeDurationSec === "number" ? note.metadata.youtubeDurationSec : null;
-                            const isShort =
-                              Boolean(note.metadata?.youtubeIsShort) ||
-                              /youtube\.com\/shorts\//.test(fallbackUrl || "") ||
-                              (durSec !== null && durSec > 0 && durSec <= 60);
-                            const duration = typeof note.metadata?.youtubeDuration === "string" ? note.metadata.youtubeDuration : "";
+
                             const attached = getAttachedImageUrl(note);
-                            const thumbUrl =
-                              attached ||
-                              (ytId ? `https://i.ytimg.com/vi/${ytId}/${isShort ? "oar2.jpg" : "hqdefault.jpg"}` : "");
-                            const playing = playingYoutubeNoteId === note.id;
+                            const finalThumb = mediaThumb || attached;
+                            // 인스타는 thumbnail 못 받으므로 무조건 playing
+                            const alwaysEmbedded = mediaKind.startsWith("instagram") || !finalThumb;
+                            const playing = playingYoutubeNoteId === note.id || alwaysEmbedded;
+                            const fallbackThumb = typeof note.metadata?.mediaFallbackThumbnail === "string"
+                              ? note.metadata.mediaFallbackThumbnail
+                              : "";
+
+                            // duration chip (YouTube long만)
+                            const duration =
+                              mediaKind === "youtube-long" && typeof note.metadata?.youtubeDuration === "string"
+                                ? note.metadata.youtubeDuration
+                                : "";
+
+                            const cardKindClass =
+                              mediaKind === "youtube-short" || mediaKind.startsWith("instagram") && mediaKind !== "instagram-post" || mediaKind === "tiktok"
+                                ? "is-short"
+                                : mediaKind === "instagram-post"
+                                ? "is-square"
+                                : "is-long";
+
+                            const platformBadge =
+                              mediaKind.startsWith("youtube") ? "" :
+                              mediaKind.startsWith("instagram") ? "INSTAGRAM" :
+                              mediaKind === "tiktok" ? "TIKTOK" : "";
+
                             return (
                               <div
-                                className={`yt-card ${isShort ? "is-short" : "is-long"} ${playing ? "is-playing" : ""}`}
+                                className={`yt-card ${cardKindClass} ${playing ? "is-playing" : ""}`}
+                                style={aspectRatio ? { aspectRatio } : undefined}
                                 onClick={(event) => {
-                                  if (!playing && ytId) {
+                                  if (!playing && mediaEmbedUrl) {
                                     event.stopPropagation();
                                     setPlayingYoutubeNoteId(note.id);
                                   }
                                 }}
                               >
-                                {playing && ytId ? (
+                                {playing && mediaEmbedUrl ? (
                                   <iframe
                                     className="yt-card-frame"
-                                    src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1${isShort ? "&loop=1&playsinline=1" : ""}`}
-                                    title={asText(note.content) || "YouTube"}
+                                    src={mediaEmbedUrl}
+                                    title={asText(note.content) || mediaKind}
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                     allowFullScreen
                                     referrerPolicy="strict-origin-when-cross-origin"
@@ -11552,16 +11664,20 @@ const App = () => {
                                   <>
                                     <img
                                       className="yt-card-thumb"
-                                      src={getImageProxyUrl(thumbUrl)}
+                                      src={getImageProxyUrl(finalThumb)}
                                       alt={asText(note.content)}
                                       onError={(e) => {
-                                        if (isShort && ytId) {
-                                          (e.target as HTMLImageElement).src = getImageProxyUrl(getAttachedImageUrl(note));
+                                        const img = e.target as HTMLImageElement;
+                                        if (fallbackThumb && img.src !== fallbackThumb) {
+                                          img.src = getImageProxyUrl(fallbackThumb);
+                                        } else if (attached && img.src !== attached) {
+                                          img.src = getImageProxyUrl(attached);
                                         } else {
-                                          (e.target as HTMLImageElement).style.display = "none";
+                                          img.style.display = "none";
                                         }
                                       }}
                                     />
+                                    {platformBadge && <span className="yt-card-platform">{platformBadge}</span>}
                                     {duration && <span className="yt-card-duration">{duration}</span>}
                                   </>
                                 )}
