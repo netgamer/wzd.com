@@ -174,13 +174,19 @@ const writeCache = async (db, category, videos) => {
   }
 };
 
-const fetchSearchPage = async (query) => {
+// sp = YouTube 검색 페이지의 정렬·필터 protobuf 코드.
+//   EgQIBBAB → 이번 달 + 영상 (1~30일 전 최근 인기 영상)
+//   CAMSAhAB → 조회수 전체 정렬 + 영상 (명불허전 viral)
+// 둘을 머지하면 "최근 인기 + 명불허전"이 균형있게 섞임.
+const SP_THIS_MONTH = "EgQIBBAB";
+const SP_TOP_VIEWS = "CAMSAhAB";
+
+const fetchSearchPage = async (query, sp) => {
   const url = new URL("https://www.youtube.com/results");
   url.searchParams.set("search_query", query);
   url.searchParams.set("hl", "ko");
   url.searchParams.set("gl", "KR");
-  // sp = sort by viewCount + filter type=video. 안전한 protobuf 코드.
-  url.searchParams.set("sp", "CAMSAhAB");
+  if (sp) url.searchParams.set("sp", sp);
 
   const response = await fetch(url.toString(), {
     redirect: "follow",
@@ -199,6 +205,16 @@ const fetchSearchPage = async (query) => {
     throw new Error(`youtube search status ${response.status}`);
   }
   return response.text();
+};
+
+const parseSearchHtml = (html) => {
+  const data = extractInitialData(html);
+  if (!data) return [];
+  const renderers = collectVideoRenderers(data);
+  return renderers
+    .map(normalizeVideo)
+    .filter(Boolean)
+    .filter((v) => v.durationSec === null || v.durationSec >= MIN_DURATION_SEC);
 };
 
 const dedupe = (videos) => {
@@ -231,19 +247,18 @@ export const onRequestGet = wrap(async ({ env, params, request }) => {
   }
 
   try {
-    const html = await fetchSearchPage(category.query);
-    const data = extractInitialData(html);
-    if (!data) {
-      return errorResponse(502, "youtube_parse_failed", "YouTube 응답에서 데이터를 추출하지 못했습니다.");
-    }
-    const renderers = collectVideoRenderers(data);
-    const normalized = renderers
-      .map(normalizeVideo)
-      .filter(Boolean)
-      .filter((v) => v.durationSec === null || v.durationSec >= MIN_DURATION_SEC);
-    const unique = dedupe(normalized).slice(0, MAX_RESULTS);
+    // 두 번 병렬 fetch — 한쪽 실패해도 다른 쪽으로 결과 채움.
+    const [recentResult, topResult] = await Promise.allSettled([
+      fetchSearchPage(category.query, SP_THIS_MONTH),
+      fetchSearchPage(category.query, SP_TOP_VIEWS)
+    ]);
 
-    if (unique.length === 0) {
+    const recent =
+      recentResult.status === "fulfilled" ? parseSearchHtml(recentResult.value) : [];
+    const top =
+      topResult.status === "fulfilled" ? parseSearchHtml(topResult.value) : [];
+
+    if (recent.length === 0 && top.length === 0) {
       return errorResponse(
         502,
         "youtube_empty_results",
@@ -251,12 +266,38 @@ export const onRequestGet = wrap(async ({ env, params, request }) => {
       );
     }
 
-    await writeCache(env.DB, slug, unique);
+    // 인터리브 머지: 최신·인기·최신·인기 ... 중복 제거. 사용자 의도인
+    // "최신 + 조회수 많은 엄선" 두 축이 보드에 골고루 섞이게 함.
+    const merged = [];
+    const seen = new Set();
+    const maxLen = Math.max(recent.length, top.length);
+    for (let i = 0; i < maxLen && merged.length < MAX_RESULTS; i += 1) {
+      for (const list of [recent, top]) {
+        const v = list[i];
+        if (v && !seen.has(v.id)) {
+          seen.add(v.id);
+          merged.push(v);
+          if (merged.length >= MAX_RESULTS) break;
+        }
+      }
+    }
+
+    await writeCache(env.DB, slug, merged);
     return jsonResponse({
       category: slug,
-      videos: unique,
+      videos: merged,
       cached: false,
-      ...(debug ? { debug: { totalRenderers: renderers.length, query: category.query } } : {})
+      ...(debug
+        ? {
+            debug: {
+              recent: recent.length,
+              top: top.length,
+              query: category.query,
+              recentError: recentResult.status === "rejected" ? String(recentResult.reason) : null,
+              topError: topResult.status === "rejected" ? String(topResult.reason) : null
+            }
+          }
+        : {})
     });
   } catch (error) {
     console.error("youtube curation fetch failed", error);
