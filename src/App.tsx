@@ -450,6 +450,41 @@ const FOCUS_TICK_INTERVAL_MS = 1000;
 // 그때까지는 사실상 무제한으로 두고 한도 UI/disabled 로직만 살려둠.
 const FREE_BOARD_LIMIT = 999;
 const PAID_BOARD_LIMIT = 999;
+
+// 유튜브 추천 카테고리 — 서버 functions/_lib/youtube-categories.js 와 동일.
+// 클릭하면 /api/youtube/category/<slug> 호출로 조회수+최신 영상 10개를 받아
+// 새 보드를 자동 생성한다.
+type YoutubeCurationCategory = {
+  slug: string;
+  label: string;
+  emoji: string;
+  description: string;
+  color: NoteColor;
+};
+
+const YOUTUBE_CURATION_CATEGORIES: YoutubeCurationCategory[] = [
+  { slug: "health", label: "건강·운동", emoji: "🏋️", description: "홈트·다이어트·헬스 인기 영상", color: "mint" },
+  { slug: "tech", label: "IT·개발", emoji: "💻", description: "프로그래밍·개발 강의·신기술", color: "blue" },
+  { slug: "ai", label: "AI·인공지능", emoji: "🤖", description: "ChatGPT·Claude·생성형 AI 활용", color: "purple" },
+  { slug: "design", label: "디자인", emoji: "🎨", description: "UI·UX·브랜딩 사례·튜토리얼", color: "pink" },
+  { slug: "productivity", label: "생산성·자기계발", emoji: "📈", description: "노션·시간관리·루틴", color: "yellow" },
+  { slug: "cooking", label: "요리·집밥", emoji: "🍳", description: "집밥·간단 레시피", color: "orange" },
+  { slug: "travel", label: "여행", emoji: "✈️", description: "국내·해외 여행 코스", color: "blue" },
+  { slug: "finance", label: "재테크·투자", emoji: "💰", description: "주식·부동산·돈공부", color: "green" },
+  { slug: "learning", label: "공부·강의", emoji: "📚", description: "공부법·온라인 강의", color: "white" },
+  { slug: "music", label: "음악", emoji: "🎵", description: "K-pop·플레이리스트·라이브", color: "pink" }
+];
+
+interface YoutubeCurationVideo {
+  id: string;
+  url: string;
+  title: string;
+  channel: string;
+  thumbnail: string;
+  publishedAt: string;
+  duration: string;
+  viewCount: string;
+}
 const SUBSCRIPTION_PLANS: Array<{
   key: SubscriptionTier;
   label: string;
@@ -3645,6 +3680,7 @@ const App = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const [youtubeFetchingSlug, setYoutubeFetchingSlug] = useState<string | null>(null);
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>(() => getInitialSubscriptionTier());
   const [boardCreationError, setBoardCreationError] = useState<string | null>(null);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
@@ -7774,6 +7810,114 @@ const App = () => {
     setBoardCreationError(null);
   };
 
+  const addYoutubeCurationBoard = async (categorySlug: string) => {
+    if (activeBoardLimitReached) {
+      setBoardCreationError(
+        `현재 ${currentSubscriptionPlan.label} 플랜은 보드를 최대 ${boardLimit}개까지 만들 수 있습니다.`
+      );
+      setTemplatePickerOpen(true);
+      return;
+    }
+    const category = YOUTUBE_CURATION_CATEGORIES.find((c) => c.slug === categorySlug);
+    if (!category) return;
+    if (youtubeFetchingSlug) return;
+
+    setYoutubeFetchingSlug(categorySlug);
+    setBoardCreationError(null);
+    try {
+      const response = await fetch(
+        `/api/youtube/category/${encodeURIComponent(categorySlug)}`,
+        { credentials: "include" }
+      );
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload) {
+        const message = payload?.error?.message || "유튜브 영상을 가져오지 못했습니다.";
+        window.alert(message);
+        setBoardCreationError(message);
+        setTemplatePickerOpen(true);
+        return;
+      }
+      const videos: YoutubeCurationVideo[] = Array.isArray(payload.videos) ? payload.videos : [];
+      if (videos.length === 0) {
+        const message = "이 카테고리는 현재 추천 영상이 없습니다. 나중에 다시 시도해주세요.";
+        window.alert(message);
+        setBoardCreationError(message);
+        setTemplatePickerOpen(true);
+        return;
+      }
+
+      const nextOrder = orderedBoards.length;
+      const title = `${category.emoji} ${category.label} 추천`;
+      const board = createDefaultBoard(user?.id ?? "local", title);
+      board.description = `최근 30일 조회수 상위 ${videos.length}개 영상 자동 큐레이션`;
+      board.backgroundStyle = "whiteboard";
+      board.settings = {
+        ...board.settings,
+        sidebarOrder: nextOrder,
+        layoutStyle: "visual",
+        youtubeCurationCategory: categorySlug,
+        youtubeCurationFetchedAt: nowIso()
+      };
+
+      const headerNote = createNote({
+        boardId: board.id,
+        userId: user?.id ?? board.userId,
+        zIndex: 1,
+        color: "yellow",
+        content: `📌 ${category.label}\n\n최근 30일 동안 조회수가 많은 영상 ${videos.length}개를 골라 담았습니다.\n새로고침은 우측 상단 \"위젯 추가\" → \"임베드\"로 직접 추가하거나, 보드 다시 만들기로.`
+      });
+      headerNote.metadata = { ...headerNote.metadata };
+
+      const videoNotes = videos.map((video, index) => {
+        const note = createNote({
+          boardId: board.id,
+          userId: user?.id ?? board.userId,
+          zIndex: index + 2,
+          color: category.color,
+          content: `${video.title}\n${video.channel}${video.viewCount ? ` · ${video.viewCount}회` : ""}${video.duration ? ` · ${video.duration}` : ""}`
+        });
+        note.metadata = {
+          ...note.metadata,
+          widgetType: "embed",
+          embedUrl: video.url,
+          embedCaption: video.title,
+          youtubeChannel: video.channel,
+          youtubeViewCount: video.viewCount,
+          youtubeDuration: video.duration,
+          youtubeThumbnail: video.thumbnail,
+          youtubePublishedAt: video.publishedAt
+        };
+        return note;
+      });
+
+      const organized = autoOrganizeBoardNotes(
+        [headerNote, ...videoNotes],
+        board.id,
+        getColumnCount(),
+        "visual"
+      ).filter((note) => note.boardId === board.id);
+
+      setBoards((prev) => [board, ...prev]);
+      setNotes((prev) => [...organized, ...prev]);
+      setSelectedBoardId(board.id);
+      setSelectedNoteId(null);
+      setFeedMode("active");
+      setTemplatePickerOpen(false);
+      setBoardCreationError(null);
+    } catch (error) {
+      console.error("youtube curation board creation failed", error);
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "유튜브 영상을 가져오지 못했습니다.";
+      window.alert(message);
+      setBoardCreationError(message);
+      setTemplatePickerOpen(true);
+    } finally {
+      setYoutubeFetchingSlug(null);
+    }
+  };
+
   const duplicateSelectedBoard = () => {
     if (!selectedBoard) {
       return;
@@ -9832,8 +9976,43 @@ const App = () => {
     </button>
   );
 
+  const renderYoutubeCurationSection = (keyPrefix: string) => (
+    <section className="template-section youtube-curation-section" key={`${keyPrefix}-youtube-curation`}>
+      <div className="template-section-head">
+        <strong>🎬 유튜브 추천 — 카테고리로 자동 생성</strong>
+        <span>카테고리 하나 클릭하면 최근 30일 조회수 상위 영상 10개로 채워진 보드가 만들어집니다.</span>
+      </div>
+      <div className="youtube-curation-grid">
+        {YOUTUBE_CURATION_CATEGORIES.map((category) => {
+          const loading = youtubeFetchingSlug === category.slug;
+          const disabled = Boolean(youtubeFetchingSlug) || activeBoardLimitReached;
+          return (
+            <button
+              key={`${keyPrefix}-youtube-${category.slug}`}
+              type="button"
+              className={`youtube-curation-card ${loading ? "is-loading" : ""}`}
+              onClick={() => void addYoutubeCurationBoard(category.slug)}
+              disabled={disabled}
+              aria-busy={loading}
+            >
+              <span className="youtube-curation-emoji" aria-hidden="true">{category.emoji}</span>
+              <strong className="youtube-curation-label">{category.label}</strong>
+              <span className="youtube-curation-desc">{category.description}</span>
+              {loading ? (
+                <span className="youtube-curation-loading">유튜브에서 가져오는 중…</span>
+              ) : (
+                <span className="youtube-curation-cta">이 카테고리로 보드 만들기 →</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+
   const renderTemplateSections = (keyPrefix: string, compact = false) => (
     <div className="template-section-list">
+      {renderYoutubeCurationSection(keyPrefix)}
       {starterTemplateSections.map((section) => (
         <section className="template-section" key={`${keyPrefix}-${section.key}`}>
           <div className="template-section-head">

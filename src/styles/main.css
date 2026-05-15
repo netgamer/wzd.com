@@ -5871,6 +5871,103 @@ button {
   width: 100%;
 }
 
+.youtube-curation-section .template-section-head strong {
+  background: linear-gradient(135deg, #ff0000 0%, #1f1a13 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.youtube-curation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.youtube-curation-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px 16px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 246, 223, 0.7));
+  text-align: left;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  min-height: 140px;
+}
+
+.youtube-curation-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border-color: rgba(230, 0, 35, 0.3);
+}
+
+.youtube-curation-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.youtube-curation-card.is-loading {
+  border-color: rgba(230, 0, 35, 0.4);
+  background: linear-gradient(180deg, rgba(255, 240, 240, 0.95), rgba(255, 220, 220, 0.7));
+}
+
+.youtube-curation-emoji {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.youtube-curation-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f1a13;
+}
+
+.youtube-curation-desc {
+  font-size: 12px;
+  color: rgba(31, 26, 19, 0.65);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.youtube-curation-cta {
+  margin-top: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e60023;
+  letter-spacing: 0.02em;
+}
+
+.youtube-curation-loading {
+  margin-top: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e60023;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.youtube-curation-loading::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(230, 0, 35, 0.25);
+  border-top-color: #e60023;
+  animation: youtube-curation-spin 0.7s linear infinite;
+}
+
+@keyframes youtube-curation-spin {
+  to { transform: rotate(360deg); }
+}
+
 .starter-template-grid.compact .template-card-preview {
   min-height: 120px;
 }
