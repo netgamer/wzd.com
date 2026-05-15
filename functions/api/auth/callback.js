@@ -80,7 +80,12 @@ export const onRequestGet = async ({ request, env }) => {
   if (!expectedState || stateNonce !== expectedState) {
     return errorResponse(400, "state_mismatch", "OAuth state mismatch.");
   }
-  const next = encodedNext ? decodeURIComponent(encodedNext) : "/";
+  // After login, "/" is the read-only landing board. Send users to "/#" so they
+  // land in their writable workspace and can see widget/note controls.
+  let next = encodedNext ? decodeURIComponent(encodedNext) : "/";
+  if (next === "/" || next === "") {
+    next = "/#";
+  }
 
   let tokenJson;
   try {
