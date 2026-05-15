@@ -66,11 +66,25 @@ export const onRequestGet = async ({ request }) => {
         "user-agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15",
         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "accept-language": "ko-KR,ko;q=0.9,en;q=0.8"
+        "accept-language": "ko-KR,ko;q=0.9,en;q=0.8",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "none",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1"
       }
     });
 
+    const debug = requestUrl.searchParams.get("debug") === "1";
+
     if (!response.ok) {
+      if (debug) {
+        return Response.json({
+          ok: true,
+          preview: buildFallbackPreview(targetUrl),
+          debug: { status: response.status, finalUrl: response.url }
+        });
+      }
       return Response.json({ ok: true, preview: buildFallbackPreview(targetUrl) });
     }
 
@@ -114,7 +128,17 @@ export const onRequestGet = async ({ request }) => {
         image: image ? new URL(image, finalUrl).toString() : "",
         siteName,
         favicon: favicon ? new URL(favicon, finalUrl).toString() : `${finalUrl.origin}/favicon.ico`
-      }
+      },
+      ...(debug
+        ? {
+            debug: {
+              status: response.status,
+              finalUrl: finalUrl.toString(),
+              htmlLength: html.length,
+              htmlHead: html.slice(0, 800)
+            }
+          }
+        : {})
     });
   } catch (error) {
     try {
