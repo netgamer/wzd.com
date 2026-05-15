@@ -57,10 +57,16 @@ export const onRequestGet = async ({ request }) => {
       return Response.json({ ok: false, error: "only http and https urls are supported" }, { status: 400 });
     }
 
+    // Real browser User-Agent — Instagram, X, and others now serve empty OG
+    // metadata to anything that looks like a bot. The proxy still fetches HTML
+    // only (no JS execution); we just need to pass the bot filter.
     const response = await fetch(targetUrl.toString(), {
       redirect: "follow",
       headers: {
-        "user-agent": "WZD Link Preview Bot/1.0"
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15",
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "accept-language": "ko-KR,ko;q=0.9,en;q=0.8"
       }
     });
 
