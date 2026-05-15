@@ -480,6 +480,7 @@ interface YoutubeCurationVideo {
   url: string;
   title: string;
   channel: string;
+  channelAvatar?: string;
   thumbnail: string;
   publishedAt?: string;
   publishedTime?: string;
@@ -3683,6 +3684,7 @@ const App = () => {
   const [mobileBoardMenuOpen, setMobileBoardMenuOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [youtubeFetchingSlug, setYoutubeFetchingSlug] = useState<string | null>(null);
+  const [playingYoutubeNoteId, setPlayingYoutubeNoteId] = useState<string | null>(null);
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>(() => getInitialSubscriptionTier());
   const [boardCreationError, setBoardCreationError] = useState<string | null>(null);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
@@ -7870,25 +7872,29 @@ const App = () => {
       });
       headerNote.metadata = { ...headerNote.metadata };
 
-      const POSTER_VARIANTS = ["magazine", "minimal", "cinema", "quote"] as const;
       const videoNotes = videos.map((video, index) => {
-        const channelLine = video.channel
-          ? `${video.channel}${video.viewCount ? ` · ${video.viewCount}` : ""}${video.duration ? ` · ${video.duration}` : ""}`
-          : "";
         const note = createNote({
           boardId: board.id,
           userId: user?.id ?? board.userId,
           zIndex: index + 2,
           color: "white",
-          content: `${video.title}\n${video.url}\n${channelLine}`
+          // 제목만 content에 넣음 — URL/채널은 메타로 빼서 카드 내부에서
+          // 자체 typography로 렌더(포스터 디자인)
+          content: video.title
         });
+        const isShort = typeof video.durationSec === "number" && video.durationSec > 0 && video.durationSec <= 60;
         note.metadata = {
           ...note.metadata,
           pastedImageUrl: video.thumbnail,
-          posterVariant: POSTER_VARIANTS[index % POSTER_VARIANTS.length],
+          posterVariant: "youtube",
+          youtubeId: video.id,
+          youtubeUrl: video.url,
+          youtubeIsShort: isShort,
           youtubeChannel: video.channel,
+          youtubeChannelAvatar: video.channelAvatar || "",
           youtubeViewCount: video.viewCount,
           youtubeDuration: video.duration,
+          youtubeDurationSec: video.durationSec ?? null,
           youtubePublishedAt: video.publishedTime || video.publishedAt
         };
         return note;
@@ -11489,21 +11495,72 @@ const App = () => {
                             openNoteEditor(note);
                           }}
                         >
-                          {hasImagePreview && (
-                            <div className="pin-image-wrap">
-                              <img
-                                className="pin-image"
-                                src={getImageProxyUrl(cardImageUrl)}
-                                alt={getNoteTitle(note.content)}
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                              />
-                            </div>
-                          )}
+                          {note.metadata?.posterVariant === "youtube" ? (() => {
+                            const ytId = typeof note.metadata?.youtubeId === "string" ? note.metadata.youtubeId : "";
+                            const isShort = Boolean(note.metadata?.youtubeIsShort);
+                            const duration = typeof note.metadata?.youtubeDuration === "string" ? note.metadata.youtubeDuration : "";
+                            const thumbUrl = isShort && ytId
+                              ? `https://i.ytimg.com/vi/${ytId}/oar2.jpg`
+                              : getAttachedImageUrl(note);
+                            const playing = playingYoutubeNoteId === note.id;
+                            return (
+                              <div
+                                className={`yt-card ${isShort ? "is-short" : "is-long"} ${playing ? "is-playing" : ""}`}
+                                onClick={(event) => {
+                                  if (!playing && ytId) {
+                                    event.stopPropagation();
+                                    setPlayingYoutubeNoteId(note.id);
+                                  }
+                                }}
+                              >
+                                {playing && ytId ? (
+                                  <iframe
+                                    className="yt-card-frame"
+                                    src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1${isShort ? "&loop=1&playsinline=1" : ""}`}
+                                    title={asText(note.content) || "YouTube"}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowFullScreen
+                                    referrerPolicy="strict-origin-when-cross-origin"
+                                    onClick={(event) => event.stopPropagation()}
+                                  />
+                                ) : (
+                                  <>
+                                    <img
+                                      className="yt-card-thumb"
+                                      src={getImageProxyUrl(thumbUrl)}
+                                      alt={asText(note.content)}
+                                      onError={(e) => {
+                                        if (isShort && ytId) {
+                                          (e.target as HTMLImageElement).src = getImageProxyUrl(getAttachedImageUrl(note));
+                                        } else {
+                                          (e.target as HTMLImageElement).style.display = "none";
+                                        }
+                                      }}
+                                    />
+                                    {duration && <span className="yt-card-duration">{duration}</span>}
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })() : (
+                            <>
+                              {hasImagePreview && (
+                                <div className="pin-image-wrap">
+                                  <img
+                                    className="pin-image"
+                                    src={getImageProxyUrl(cardImageUrl)}
+                                    alt={getNoteTitle(note.content)}
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                  />
+                                </div>
+                              )}
 
-                          {useImageHeroCard && (
-                            <div className="image-note-caption" aria-hidden="true">
-                              <p className="image-note-caption-title">{displayTitle}</p>
-                            </div>
+                              {useImageHeroCard && (
+                                <div className="image-note-caption" aria-hidden="true">
+                                  <p className="image-note-caption-title">{displayTitle}</p>
+                                </div>
+                              )}
+                            </>
                           )}
 
                           <div className="pin-card-head">

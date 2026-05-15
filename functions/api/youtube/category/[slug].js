@@ -12,7 +12,6 @@ import { findYoutubeCategory } from "../../../_lib/youtube-categories.js";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_RESULTS = 10;
-const MIN_DURATION_SEC = 60; // 1분 미만(Shorts) 제외
 
 const decodeHtmlEntities = (value = "") =>
   value
@@ -120,6 +119,10 @@ const normalizeVideo = (renderer) => {
   // YouTube CDN의 hqdefault는 모든 영상에 항상 존재(480x360). 검색 결과
   // 페이지에서 받은 sqp 서명 URL보다 안정적이고 캐시도 잘 됨.
   const thumbnail = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  const channelAvatar =
+    renderer.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.url ||
+    renderer.channelThumbnail?.thumbnails?.[0]?.url ||
+    "";
   const lengthText = renderer.lengthText?.simpleText || "";
   const durationSec = parseDurationToSeconds(lengthText);
   const viewCount =
@@ -134,6 +137,7 @@ const normalizeVideo = (renderer) => {
     url: `https://www.youtube.com/watch?v=${id}`,
     title,
     channel,
+    channelAvatar,
     thumbnail,
     duration: lengthText,
     durationSec,
@@ -211,10 +215,8 @@ const parseSearchHtml = (html) => {
   const data = extractInitialData(html);
   if (!data) return [];
   const renderers = collectVideoRenderers(data);
-  return renderers
-    .map(normalizeVideo)
-    .filter(Boolean)
-    .filter((v) => v.durationSec === null || v.durationSec >= MIN_DURATION_SEC);
+  // Shorts(짧은 영상)도 그대로 포함 — 클라이언트가 길이로 16:9 vs 9:16 결정
+  return renderers.map(normalizeVideo).filter(Boolean);
 };
 
 const dedupe = (videos) => {
