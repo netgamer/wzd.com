@@ -481,8 +481,10 @@ interface YoutubeCurationVideo {
   title: string;
   channel: string;
   thumbnail: string;
-  publishedAt: string;
+  publishedAt?: string;
+  publishedTime?: string;
   duration: string;
+  durationSec?: number | null;
   viewCount: string;
 }
 const SUBSCRIPTION_PLANS: Array<{
@@ -7868,24 +7870,26 @@ const App = () => {
       });
       headerNote.metadata = { ...headerNote.metadata };
 
+      const POSTER_VARIANTS = ["magazine", "minimal", "cinema", "quote"] as const;
       const videoNotes = videos.map((video, index) => {
+        const channelLine = video.channel
+          ? `${video.channel}${video.viewCount ? ` · ${video.viewCount}` : ""}${video.duration ? ` · ${video.duration}` : ""}`
+          : "";
         const note = createNote({
           boardId: board.id,
           userId: user?.id ?? board.userId,
           zIndex: index + 2,
-          color: category.color,
-          content: `${video.title}\n${video.channel}${video.viewCount ? ` · ${video.viewCount}회` : ""}${video.duration ? ` · ${video.duration}` : ""}`
+          color: "white",
+          content: `${video.title}\n${video.url}\n${channelLine}`
         });
         note.metadata = {
           ...note.metadata,
-          widgetType: "embed",
-          embedUrl: video.url,
-          embedCaption: video.title,
+          pastedImageUrl: video.thumbnail,
+          posterVariant: POSTER_VARIANTS[index % POSTER_VARIANTS.length],
           youtubeChannel: video.channel,
           youtubeViewCount: video.viewCount,
           youtubeDuration: video.duration,
-          youtubeThumbnail: video.thumbnail,
-          youtubePublishedAt: video.publishedAt
+          youtubePublishedAt: video.publishedTime || video.publishedAt
         };
         return note;
       });
@@ -9668,10 +9672,13 @@ const App = () => {
                       isInstagramLink ||
                       Boolean(extractYouTubeVideoId(noteUrl ?? "")));
 
+                  const posterVariant =
+                    typeof note.metadata?.posterVariant === "string" ? note.metadata.posterVariant : "";
+
                   return (
                     <article
                       key={`${side}-${note.id}`}
-                      className={`pin-card note-${note.color} ${cardImageUrl ? "image-note" : ""} swipe-preview-card`}
+                      className={`pin-card note-${note.color} ${cardImageUrl ? "image-note" : ""} ${posterVariant ? `poster-${posterVariant}` : ""} swipe-preview-card`}
                     >
                       <div className="pin-card-head">
                         <span className={`pin-dot chip-${note.color}`} aria-hidden="true" />
@@ -11440,7 +11447,11 @@ const App = () => {
                             isHomeView && documentVariant ? `landing-home-${documentVariant}-note` : ""
                           } ${
                             !hideHoverMetadata && (hasTextPreview || hasLinkPreview) ? "has-hover-copy" : "image-only"
-                          } ${isRssWidget ? "widget-note rss-widget" : ""} ${isBlogWidget ? "widget-note rss-widget blog-widget" : ""} ${selected ? "selected" : ""} ${
+                          } ${isRssWidget ? "widget-note rss-widget" : ""} ${isBlogWidget ? "widget-note rss-widget blog-widget" : ""} ${
+                            typeof note.metadata?.posterVariant === "string" && note.metadata.posterVariant
+                              ? `poster-${note.metadata.posterVariant}`
+                              : ""
+                          } ${selected ? "selected" : ""} ${
                             runningDragNoteId === note.id ? "dragging" : ""
                           }`}
                           draggable={feedMode === "active" && !selected && !isReadOnlyBoardView}

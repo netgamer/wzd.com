@@ -1114,6 +1114,246 @@ button {
   display: block;
 }
 
+/* ---------------------------------------------------------------- */
+/* 포스터 디자인 variants — YouTube 큐레이션 등 시각 강조 카드        */
+/* metadata.posterVariant ∈ {magazine, minimal, cinema, quote}      */
+/* ---------------------------------------------------------------- */
+
+.pin-card.poster-magazine,
+.pin-card.poster-minimal,
+.pin-card.poster-cinema,
+.pin-card.poster-quote {
+  position: relative;
+  padding: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 20px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(31, 26, 19, 0.06);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.pin-card.poster-magazine:hover,
+.pin-card.poster-minimal:hover,
+.pin-card.poster-cinema:hover,
+.pin-card.poster-quote:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08), 0 18px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* 포스터 카드 안의 기본 elements 숨기기 (head/dot, link preview chip 등은
+   variant별로 자체적으로 표시) */
+.pin-card.poster-magazine .pin-card-head,
+.pin-card.poster-minimal .pin-card-head,
+.pin-card.poster-cinema .pin-card-head,
+.pin-card.poster-quote .pin-card-head {
+  display: none;
+}
+
+/* 공통: 이미지 영역. variant마다 비율/포지션 다름 */
+.pin-card.poster-magazine .pin-image-wrap,
+.pin-card.poster-minimal .pin-image-wrap,
+.pin-card.poster-cinema .pin-image-wrap,
+.pin-card.poster-quote .pin-image-wrap {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.pin-card.poster-magazine .pin-image,
+.pin-card.poster-minimal .pin-image,
+.pin-card.poster-cinema .pin-image,
+.pin-card.poster-quote .pin-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 본문 영역 단순화 — link preview chip은 숨기고 자체 typography 사용 */
+.pin-card.poster-magazine .pin-card-body,
+.pin-card.poster-minimal .pin-card-body,
+.pin-card.poster-cinema .pin-card-body,
+.pin-card.poster-quote .pin-card-body {
+  padding: 14px 16px 16px;
+}
+
+.pin-card.poster-magazine .link-preview-card,
+.pin-card.poster-minimal .link-preview-card,
+.pin-card.poster-cinema .link-preview-card,
+.pin-card.poster-quote .link-preview-card,
+.pin-card.poster-magazine .pin-body-preview,
+.pin-card.poster-minimal .pin-body-preview,
+.pin-card.poster-cinema .pin-body-preview,
+.pin-card.poster-quote .pin-body-preview {
+  display: none !important;
+}
+
+.pin-card.poster-magazine .pin-title,
+.pin-card.poster-minimal .pin-title,
+.pin-card.poster-cinema .pin-title,
+.pin-card.poster-quote .pin-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: inherit;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Variant 1: Magazine — 풀블리드 이미지 + 하단 그라디언트 위 큰 흰 글씨 ─── */
+.pin-card.poster-magazine {
+  aspect-ratio: 4 / 5;
+  background: #000;
+}
+
+.pin-card.poster-magazine .pin-image-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.pin-card.poster-magazine .pin-image-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+.pin-card.poster-magazine .pin-card-body {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding: 16px 18px 18px;
+  color: #fff;
+}
+
+.pin-card.poster-magazine .pin-title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Variant 2: Minimal — 깔끔 흰 배경, 16:9 썸네일, 검정 굵은 타이포 ─── */
+.pin-card.poster-minimal {
+  background: #ffffff;
+}
+
+.pin-card.poster-minimal .pin-image-wrap {
+  aspect-ratio: 16 / 9;
+}
+
+.pin-card.poster-minimal .pin-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: -0.005em;
+}
+
+/* ─── Variant 3: Cinema — 다크 배경, 빨간 액센트 라인, 시네마틱 타이포 ─── */
+.pin-card.poster-cinema {
+  background: #0f0f0f;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.pin-card.poster-cinema .pin-image-wrap {
+  aspect-ratio: 16 / 9;
+}
+
+.pin-card.poster-cinema .pin-image-wrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff0000, #ff6b00);
+}
+
+.pin-card.poster-cinema .pin-card-body {
+  background: #0f0f0f;
+  padding: 14px 16px 16px;
+}
+
+.pin-card.poster-cinema .pin-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: none;
+  letter-spacing: 0.005em;
+}
+
+/* ─── Variant 4: Quote — 큰 따옴표 + 제목이 주인공, 썸네일은 액센트 ─── */
+.pin-card.poster-quote {
+  aspect-ratio: 4 / 5;
+  background: linear-gradient(160deg, #fff8e7 0%, #ffe9c5 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.pin-card.poster-quote::before {
+  content: "“";
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  font-size: 96px;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(31, 26, 19, 0.12);
+  font-family: Georgia, "Nanum Myeongjo", serif;
+}
+
+.pin-card.poster-quote .pin-image-wrap {
+  order: 2;
+  aspect-ratio: 16 / 9;
+  margin: 0 16px 14px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pin-card.poster-quote .pin-card-body {
+  order: 1;
+  padding: 36px 18px 12px;
+  color: #1f1a13;
+}
+
+.pin-card.poster-quote .pin-title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  -webkit-line-clamp: 3;
+  font-family: "Pretendard", "Apple SD Gothic Neo", system-ui, sans-serif;
+}
+
+/* 포스터에서 채널·뷰 메타 (variant 공통 - body 마지막에 추가 가능하면 표시) */
+.pin-card.poster-magazine .pin-title::after,
+.pin-card.poster-minimal .pin-title::after,
+.pin-card.poster-cinema .pin-title::after,
+.pin-card.poster-quote .pin-title::after {
+  /* placeholder; 채널 라벨은 별도 element로 처리 가능 */
+}
+
+/* 모바일: 포스터 너비 자동 */
+@media (max-width: 720px) {
+  .pin-card.poster-magazine {
+    aspect-ratio: 3 / 4;
+  }
+  .pin-card.poster-quote {
+    aspect-ratio: 3 / 4;
+  }
+  .pin-card.poster-magazine .pin-title,
+  .pin-card.poster-quote .pin-title {
+    font-size: 15px;
+  }
+}
+
 .board-page .workspace-topbar .topbar-primary {
   align-items: stretch;
   gap: 16px;

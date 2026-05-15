@@ -117,7 +117,9 @@ const normalizeVideo = (renderer) => {
       ""
   ).trim();
 
-  const thumbnail = pickThumbnail(renderer.thumbnail?.thumbnails);
+  // YouTube CDN의 hqdefault는 모든 영상에 항상 존재(480x360). 검색 결과
+  // 페이지에서 받은 sqp 서명 URL보다 안정적이고 캐시도 잘 됨.
+  const thumbnail = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
   const lengthText = renderer.lengthText?.simpleText || "";
   const durationSec = parseDurationToSeconds(lengthText);
   const viewCount =
