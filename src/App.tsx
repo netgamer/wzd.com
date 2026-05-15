@@ -179,6 +179,7 @@ type BoardTemplateKey =
   | "family"
   | "couple"
   | "insta-ai"
+  | "insta-fitness"
   | "youtube-curation"
   | "prompt-vault";
 type BoardTemplateSectionKey = "notes" | "widgets" | "groups" | "curation";
@@ -1145,89 +1146,243 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
   {
     key: "insta-ai",
     title: "인스타 AI 큐레이션",
-    subtitle: "인스타에서 저장한 AI 정보·릴스·계정을 한 보드에 정리",
+    subtitle: "인스타에서 저장한 AI 릴스·도구를 썸네일 갤러리로",
     tag: "수집 보드",
-    audience: "AI 트렌드를 SNS에서 따라가는 사람",
-    highlights: ["팔로우 계정", "저장한 릴스", "도구·뉴스 메모"],
+    audience: "AI 트렌드를 인스타로 따라가는 사람",
+    highlights: ["저장 릴스 갤러리", "썸네일 + 한줄 제목", "클릭해서 원본 열기"],
     backgroundStyle: "whiteboard",
     layoutStyle: "visual",
     notes: [
       {
-        color: "purple",
+        color: "white",
         content:
-          "📌 팔로우 중인 AI 계정\n\n@aitoolreport — 매일 새 AI 도구 1개\n@levelsio — Indie hacker, AI 사이드프로젝트\n@openai — 공식 업데이트\n@thealexbanks — AI 비즈니스 인사이트\n@bilawalsidhu — Sora·Midjourney 작업물"
+          "🤖 GPT-5 단축키 5가지\n@aitoolreport\nhttps://www.instagram.com/aitoolreport/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=600&h=600&q=80"
+        }
       },
       {
-        color: "pink",
+        color: "white",
         content:
-          "💾 이번주 저장한 릴스\n\n• \"GPT-5 모드 5가지 단축키\" — 실무 자동화에 바로 쓸만함\n• \"클로드로 노션 대시보드 자동 생성\" — 프롬프트 따로 적어두기\n• \"Midjourney v7 시네마틱 프롬프트 공식\" — 영상 작업 참고"
+          "🎨 Midjourney v7 시네마틱 공식\n@bilawalsidhu\nhttps://www.instagram.com/bilawalsidhu/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1655720359946-1c01b04ebd60?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "💼 AI로 1인 SaaS 만든 과정\n@levelsio\nhttps://www.instagram.com/levelsio/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1547954575-855750c57bd3?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "📊 클로드로 노션 대시보드 자동\n@thealexbanks\nhttps://www.instagram.com/thealexbanks/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "🎵 Suno v4 음악 생성 데모\n@suno_ai_\nhttps://www.instagram.com/suno_ai_/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "🧠 AI 에이전트가 코드 짜는 법\n@cursor_ai\nhttps://www.instagram.com/cursor_ai/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "📱 v0.dev로 디자인→React 5분\n@vercel\nhttps://www.instagram.com/vercel/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "🔮 GPT 음성 모드 한국어 후기\n@openai\nhttps://www.instagram.com/openai/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&h=600&q=80"
+        }
       },
       {
         color: "yellow",
         content:
-          "🔥 이번주 본 도구\n\n• Granola — 회의 자동 정리\n• v0.dev — 디자인→React 코드\n• Suno v4 — 음악 생성, 보컬 자연스러움 ↑\n• Cursor + Claude Opus — 페어 코딩"
+          "📝 운영 메모\n\n- 매주 일요일에 인스타 저장한 릴스 옮겨오기\n- 카드 위 썸네일은 원본 게시물 캡처로 교체\n- 안 보는 계정은 분기마다 정리"
+      }
+    ]
+  },
+  {
+    key: "insta-fitness",
+    title: "인스타 운동 큐레이션",
+    subtitle: "저장해둔 홈트·루틴·자세 교정 릴스를 한눈에",
+    tag: "수집 보드",
+    audience: "운동 영감을 인스타에서 찾는 사람",
+    highlights: ["루틴 썸네일 갤러리", "한 줄 요약", "원본 링크 클릭"],
+    backgroundStyle: "whiteboard",
+    layoutStyle: "visual",
+    notes: [
+      {
+        color: "white",
+        content:
+          "🔥 6분 홈트 풀세트 (전신)\n@home_workout_kr\nhttps://www.instagram.com/explore/tags/홈트/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=600&h=600&q=80"
+        }
       },
       {
-        color: "mint",
+        color: "white",
         content:
-          "📝 트렌드 키워드\n\n#AI에이전트 — 멀티스텝 자동화 폭발\n#버티컬AI — 분야 특화 GPT가 SaaS 대체 중\n#개인용RAG — 본인 자료로 챗봇 만드는 사람 늘어남\n#보이스AI — 한국어 TTS 품질 작년 대비 체감 차이 큼"
+          "🧘 아침 5분 스트레칭\n@morningroutine\nhttps://www.instagram.com/explore/tags/스트레칭/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1599058917765-a780eda07a3e?auto=format&fit=crop&w=600&h=600&q=80"
+        }
       },
       {
-        color: "blue",
+        color: "white",
         content:
-          "💡 시도해볼 것\n\n- 인스타 저장 릴스를 매주 일요일에 이 보드로 옮기기\n- 매달 마지막 주에 안 쓰는 도구 정리\n- 좋았던 프롬프트는 [프롬프트 보관소] 보드로 이동"
+          "💪 푸시업 정확한 자세 3가지\n@formcheck\nhttps://www.instagram.com/explore/tags/푸시업/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&h=600&q=80"
+        }
       },
       {
-        color: "orange",
+        color: "white",
         content:
-          "🔗 자주 보는 링크\n\nhttps://www.instagram.com/explore/tags/ai/\nhttps://www.theresanaiforthat.com/\nhttps://news.smol.ai/"
+          "🏃‍♂️ 러닝 페이스 단계별 가이드\n@runner_diary\nhttps://www.instagram.com/explore/tags/러닝/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "🏋️ 케틀벨 풀바디 12분\n@kettlebell.club\nhttps://www.instagram.com/explore/tags/케틀벨/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "🦵 무릎 아플 때 대체 운동 5\n@physio_pt\nhttps://www.instagram.com/explore/tags/홈트/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "🥗 운동 후 단백질 한끼 추천\n@meal_prep_kr\nhttps://www.instagram.com/explore/tags/식단/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "👟 러닝화 비교: 페가수스 vs 노바\n@shoeguide\nhttps://www.instagram.com/explore/tags/러닝화/",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "yellow",
+        content:
+          "📅 이번주 루틴\n\n월: 푸시\n화: 러닝 30분\n수: 휴식·스트레칭\n목: 풀\n금: 케틀벨\n주말: 야외 활동"
       }
     ]
   },
   {
     key: "youtube-curation",
     title: "유튜브 큐레이션 보드",
-    subtitle: "분야별 추천 채널·영상·인사이트를 보기 좋게 정리",
+    subtitle: "보고 싶은 영상을 썸네일·제목 카드로 정리",
     tag: "수집 보드",
     audience: "유튜브를 학습·리서치 도구로 쓰는 사람",
-    highlights: ["채널 분류", "시청 큐", "정리한 인사이트"],
+    highlights: ["썸네일 갤러리", "한 줄 제목", "클릭해서 영상 열기"],
     backgroundStyle: "whiteboard",
     layoutStyle: "visual",
     notes: [
       {
-        color: "blue",
+        color: "white",
         content:
-          "📺 개발·AI 채널\n\n• Fireship — 100초 기술 요약, 트렌드 따라가기 좋음\n• Theo - t3.gg — 풀스택 라이브 코딩\n• Two Minute Papers — 논문 시각적 정리\n• 노마드 코더 — 한국어 부트캠프형\n• 조코딩 — 챗GPT·AI 도구 한국어 실전"
-      },
-      {
-        color: "purple",
-        content:
-          "🎨 디자인·크리에이티브\n\n• The Futur — 디자인 비즈니스/가격 협상\n• Flux Academy — 웹디자인 트렌드\n• 디자인베이스 — 한국 디자이너 인터뷰\n• 빠른생각 — UX 케이스 스터디"
-      },
-      {
-        color: "yellow",
-        content:
-          "🧠 자기계발·생산성\n\n• Ali Abdaal — 학습법, 노션, 사이드프로젝트\n• Tim Ferriss — 롱폼 인터뷰, 분야별 톱플레이어\n• 김작가TV — 한국 자기계발/투자\n• 신사임당 — 사업 케이스"
-      },
-      {
-        color: "mint",
-        content:
-          "📋 시청 큐 (오늘·이번주)\n\n[ ] Fireship — \"AI agents explained in 10 minutes\"\n[ ] Theo — Vercel AI SDK v5 walkthrough\n[ ] Ali Abdaal — How I plan my year (재시청)\n[ ] 조코딩 — Claude로 풀스택 만들기 시리즈"
-      },
-      {
-        color: "orange",
-        content:
-          "✍️ 정리한 인사이트\n\nFireship의 \"왜 SQLite가 다시 뜨는가\"\n→ 서버리스 + 로컬 DB 조합이 늘면서 D1·Turso·LiteFS 같은 분산 SQLite가 부상.\n→ 우리 wzd 프로젝트도 D1 쓰니까 맞는 방향.\n\nAli Abdaal의 \"1년 회고법\"\n→ 잘된 것 / 안된 것 / 다음에 시도할 것 3분할.\n→ 분기마다 적용해보자."
-      },
-      {
-        color: "pink",
-        content:
-          "🎯 보는 규칙\n\n- 1.5배속 기본, 흥미 떨어지면 2배속\n- 30분 이상 영상은 챕터만 훑기\n- 좋았던 영상은 핵심 한 줄을 이 보드에 남기기\n- 채널 구독은 분기마다 정리 (안 본 채널 = 해지)"
+          "⚡ AI agents in 10 minutes\nFireship\nhttps://www.youtube.com/@Fireship",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1542435503-956c469947f6?auto=format&fit=crop&w=600&h=600&q=80"
+        }
       },
       {
         color: "white",
         content:
-          "🔗 플레이리스트\n\nhttps://www.youtube.com/feed/subscriptions\nhttps://www.youtube.com/playlist?list=WL"
+          "🧪 Vercel AI SDK v5 walkthrough\nTheo - t3.gg\nhttps://www.youtube.com/@t3dotgg",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1581090700227-1e37b190418e?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "📚 How I plan my entire year\nAli Abdaal\nhttps://www.youtube.com/@aliabdaal",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1535303311164-664fc9ec6532?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "🧠 Claude로 풀스택 사이트 만들기\n조코딩\nhttps://www.youtube.com/@jocoding",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "📰 Two Minute Papers — Sora 2\nTwo Minute Papers\nhttps://www.youtube.com/@TwoMinutePapers",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "🎙️ Naval on wealth & happiness\nTim Ferriss\nhttps://www.youtube.com/@TimFerriss",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1612865547334-09cb8cb455da?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "💻 노마드 코더 — React 22 신기능\n노마드 코더\nhttps://www.youtube.com/@nomadcoders",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "white",
+        content:
+          "🎨 디자인베이스 — 토스 인터뷰\n디자인베이스\nhttps://www.youtube.com/@designbase",
+        metadata: {
+          pastedImageUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b8?auto=format&fit=crop&w=600&h=600&q=80"
+        }
+      },
+      {
+        color: "yellow",
+        content:
+          "📋 시청 규칙\n\n- 1.5배속 기본\n- 30분↑ 영상은 챕터만\n- 좋았던 건 한 줄 인사이트 이 보드에 남기기\n- 안 본 채널은 분기마다 정리"
       }
     ]
   },
@@ -1290,8 +1445,8 @@ const BOARD_TEMPLATE_SECTIONS: BoardTemplateSection[] = [
   {
     key: "curation",
     title: "수집·큐레이션 보드",
-    subtitle: "인스타·유튜브·AI 도구처럼 매일 모이는 정보를 분류해두는 보드",
-    templateKeys: ["insta-ai", "youtube-curation", "prompt-vault"]
+    subtitle: "인스타·유튜브에서 저장한 콘텐츠를 썸네일 갤러리로 정리",
+    templateKeys: ["insta-ai", "insta-fitness", "youtube-curation", "prompt-vault"]
   },
   {
     key: "widgets",
