@@ -177,8 +177,11 @@ type BoardTemplateKey =
   | "aistudio"
   | "group-chat"
   | "family"
-  | "couple";
-type BoardTemplateSectionKey = "notes" | "widgets" | "groups";
+  | "couple"
+  | "insta-ai"
+  | "youtube-curation"
+  | "prompt-vault";
+type BoardTemplateSectionKey = "notes" | "widgets" | "groups" | "curation";
 type WidgetGalleryCategory = "collect" | "organize" | "utility" | "identity";
 type BoardLayoutStyle = "balanced" | "compact" | "visual";
 type SettingsSection = "menu" | "trash" | "history";
@@ -1136,6 +1139,142 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
         content: "같이 볼 것\n\nhttps://www.netflix.com/\nhttps://www.youtube.com/"
       }
     ]
+  },
+  {
+    key: "insta-ai",
+    title: "인스타 AI 큐레이션",
+    subtitle: "인스타에서 저장한 AI 정보·릴스·계정을 한 보드에 정리",
+    tag: "수집 보드",
+    audience: "AI 트렌드를 SNS에서 따라가는 사람",
+    highlights: ["팔로우 계정", "저장한 릴스", "도구·뉴스 메모"],
+    backgroundStyle: "whiteboard",
+    layoutStyle: "visual",
+    notes: [
+      {
+        color: "purple",
+        content:
+          "📌 팔로우 중인 AI 계정\n\n@aitoolreport — 매일 새 AI 도구 1개\n@levelsio — Indie hacker, AI 사이드프로젝트\n@openai — 공식 업데이트\n@thealexbanks — AI 비즈니스 인사이트\n@bilawalsidhu — Sora·Midjourney 작업물"
+      },
+      {
+        color: "pink",
+        content:
+          "💾 이번주 저장한 릴스\n\n• \"GPT-5 모드 5가지 단축키\" — 실무 자동화에 바로 쓸만함\n• \"클로드로 노션 대시보드 자동 생성\" — 프롬프트 따로 적어두기\n• \"Midjourney v7 시네마틱 프롬프트 공식\" — 영상 작업 참고"
+      },
+      {
+        color: "yellow",
+        content:
+          "🔥 이번주 본 도구\n\n• Granola — 회의 자동 정리\n• v0.dev — 디자인→React 코드\n• Suno v4 — 음악 생성, 보컬 자연스러움 ↑\n• Cursor + Claude Opus — 페어 코딩"
+      },
+      {
+        color: "mint",
+        content:
+          "📝 트렌드 키워드\n\n#AI에이전트 — 멀티스텝 자동화 폭발\n#버티컬AI — 분야 특화 GPT가 SaaS 대체 중\n#개인용RAG — 본인 자료로 챗봇 만드는 사람 늘어남\n#보이스AI — 한국어 TTS 품질 작년 대비 체감 차이 큼"
+      },
+      {
+        color: "blue",
+        content:
+          "💡 시도해볼 것\n\n- 인스타 저장 릴스를 매주 일요일에 이 보드로 옮기기\n- 매달 마지막 주에 안 쓰는 도구 정리\n- 좋았던 프롬프트는 [프롬프트 보관소] 보드로 이동"
+      },
+      {
+        color: "orange",
+        content:
+          "🔗 자주 보는 링크\n\nhttps://www.instagram.com/explore/tags/ai/\nhttps://www.theresanaiforthat.com/\nhttps://news.smol.ai/"
+      }
+    ]
+  },
+  {
+    key: "youtube-curation",
+    title: "유튜브 큐레이션 보드",
+    subtitle: "분야별 추천 채널·영상·인사이트를 보기 좋게 정리",
+    tag: "수집 보드",
+    audience: "유튜브를 학습·리서치 도구로 쓰는 사람",
+    highlights: ["채널 분류", "시청 큐", "정리한 인사이트"],
+    backgroundStyle: "whiteboard",
+    layoutStyle: "visual",
+    notes: [
+      {
+        color: "blue",
+        content:
+          "📺 개발·AI 채널\n\n• Fireship — 100초 기술 요약, 트렌드 따라가기 좋음\n• Theo - t3.gg — 풀스택 라이브 코딩\n• Two Minute Papers — 논문 시각적 정리\n• 노마드 코더 — 한국어 부트캠프형\n• 조코딩 — 챗GPT·AI 도구 한국어 실전"
+      },
+      {
+        color: "purple",
+        content:
+          "🎨 디자인·크리에이티브\n\n• The Futur — 디자인 비즈니스/가격 협상\n• Flux Academy — 웹디자인 트렌드\n• 디자인베이스 — 한국 디자이너 인터뷰\n• 빠른생각 — UX 케이스 스터디"
+      },
+      {
+        color: "yellow",
+        content:
+          "🧠 자기계발·생산성\n\n• Ali Abdaal — 학습법, 노션, 사이드프로젝트\n• Tim Ferriss — 롱폼 인터뷰, 분야별 톱플레이어\n• 김작가TV — 한국 자기계발/투자\n• 신사임당 — 사업 케이스"
+      },
+      {
+        color: "mint",
+        content:
+          "📋 시청 큐 (오늘·이번주)\n\n[ ] Fireship — \"AI agents explained in 10 minutes\"\n[ ] Theo — Vercel AI SDK v5 walkthrough\n[ ] Ali Abdaal — How I plan my year (재시청)\n[ ] 조코딩 — Claude로 풀스택 만들기 시리즈"
+      },
+      {
+        color: "orange",
+        content:
+          "✍️ 정리한 인사이트\n\nFireship의 \"왜 SQLite가 다시 뜨는가\"\n→ 서버리스 + 로컬 DB 조합이 늘면서 D1·Turso·LiteFS 같은 분산 SQLite가 부상.\n→ 우리 wzd 프로젝트도 D1 쓰니까 맞는 방향.\n\nAli Abdaal의 \"1년 회고법\"\n→ 잘된 것 / 안된 것 / 다음에 시도할 것 3분할.\n→ 분기마다 적용해보자."
+      },
+      {
+        color: "pink",
+        content:
+          "🎯 보는 규칙\n\n- 1.5배속 기본, 흥미 떨어지면 2배속\n- 30분 이상 영상은 챕터만 훑기\n- 좋았던 영상은 핵심 한 줄을 이 보드에 남기기\n- 채널 구독은 분기마다 정리 (안 본 채널 = 해지)"
+      },
+      {
+        color: "white",
+        content:
+          "🔗 플레이리스트\n\nhttps://www.youtube.com/feed/subscriptions\nhttps://www.youtube.com/playlist?list=WL"
+      }
+    ]
+  },
+  {
+    key: "prompt-vault",
+    title: "프롬프트 보관소",
+    subtitle: "자주 쓰는 ChatGPT·Claude 프롬프트를 카테고리별로 보관",
+    tag: "수집 보드",
+    audience: "AI를 매일 쓰는 사람의 프롬프트 라이브러리",
+    highlights: ["글쓰기", "코딩", "기획·리서치"],
+    backgroundStyle: "paper",
+    layoutStyle: "balanced",
+    notes: [
+      {
+        color: "yellow",
+        content:
+          "✍️ 글쓰기 — 블로그 초안\n\n\"다음 주제로 1,200자 블로그 초안을 써줘.\n톤: 친근하지만 깊이 있게. 1인칭.\n구조: 후킹 한 문장 → 문제 → 내 경험 → 결론.\n[주제] ___\"\n\n→ 결론 부분이 평범하면 \"독자가 댓글 달고 싶게 만드는 마지막 문장 3개 후보 줘\"로 후속."
+      },
+      {
+        color: "blue",
+        content:
+          "💻 코딩 — 디버깅 페어\n\n\"아래 코드에서 [에러 메시지]가 발생해. 다음 순서로 도와줘:\n1. 가능한 원인 3가지 (가능성 순)\n2. 각각을 확인하는 최소 명령\n3. 가장 빠른 수정 1줄\n수정 전엔 코드 작성하지 마.\n\n[코드 또는 stack trace]\"\n\n→ \"수정 전엔 코드 작성하지 마\" 한 줄이 핵심. 안 적으면 추측으로 고침."
+      },
+      {
+        color: "mint",
+        content:
+          "🧠 기획 — 아이디어 평가\n\n\"내가 생각한 아이디어를 5가지 관점에서 평가해줘:\n1. 누가 진짜로 돈을 낼까 (3명 페르소나)\n2. 비슷한 기존 제품 (3개 + 차별점)\n3. 가장 작은 MVP는?\n4. 6개월 안에 망할 가능성 큰 이유 3개\n5. 그래도 시도할 가치가 있는가\n\n[아이디어] ___\"\n"
+      },
+      {
+        color: "purple",
+        content:
+          "🔍 리서치 — 빠른 비교표\n\n\"다음 [N]개 옵션을 표로 비교해줘.\n열: 가격 / 무료 한도 / 핵심 장점 / 결정적 단점 / 추천 대상\n그리고 표 아래에 '내가 [상황]이라면' 1줄 추천 결론.\n\n[옵션 나열]\"\n\n→ Claude/GPT 둘 다 표 잘 만듦. 결론 한 줄을 강제하는 게 핵심."
+      },
+      {
+        color: "pink",
+        content:
+          "🎨 이미지 — 미드저니 프롬프트\n\n공식:\n[주제], [스타일/아티스트], [구도], [라이팅], [디테일 키워드], --ar 16:9 --style raw\n\n예:\n\"a cozy korean cafe interior, by Studio Ghibli x Wes Anderson, eye-level shot, soft morning light through window, warm wood texture, steam from coffee, --ar 16:9 --style raw\"\n"
+      },
+      {
+        color: "orange",
+        content:
+          "⚡ 메타 — 프롬프트 개선기\n\n\"내 프롬프트를 평가해줘.\n- 모호한 부분 3곳\n- 더 구체적으로 바꿀 단어 3개\n- 결과 형식을 강제할 한 줄 추가 제안\n그 다음 개선된 버전을 출력.\n\n[원본 프롬프트]\"\n\n→ 새 프롬프트 만들 때 항상 마지막에 이거 한 번 통과."
+      },
+      {
+        color: "green",
+        content:
+          "📝 메타 규칙\n\n- 새 프롬프트는 일단 여기 저장 → 1주일 써본 뒤 살아남은 것만 유지\n- 안 쓰는 프롬프트 분기마다 정리\n- 같은 프롬프트의 v2, v3은 들여쓰기로 한 노트에"
+      }
+    ]
   }
 ];
 
@@ -1146,6 +1285,12 @@ const BOARD_TEMPLATE_SECTIONS: BoardTemplateSection[] = [
       subtitle: "텍스트와 링크를 빠르게 정리하는 기본형 보드",
       templateKeys: ["video", "work", "study", "tips", "linktree"]
     },
+  {
+    key: "curation",
+    title: "수집·큐레이션 보드",
+    subtitle: "인스타·유튜브·AI 도구처럼 매일 모이는 정보를 분류해두는 보드",
+    templateKeys: ["insta-ai", "youtube-curation", "prompt-vault"]
+  },
   {
     key: "widgets",
     title: "위젯 보드",
