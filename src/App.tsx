@@ -9862,6 +9862,18 @@ const App = () => {
                   placeholder="Search notes, boards..."
                 />
               </div>
+              {!isReadOnlyBoardView && feedMode === "active" && (
+                <button
+                  type="button"
+                  className="workspace-widget-add"
+                  onClick={openWidgetGallery}
+                  aria-label="위젯 추가"
+                  title="위젯 추가"
+                >
+                  <span className="workspace-widget-add-icon" aria-hidden="true">◫</span>
+                  <span className="workspace-widget-add-label">위젯 추가</span>
+                </button>
+              )}
             </div>
           </header>
         ) : (

@@ -972,6 +972,41 @@ button {
   color: #999999;
 }
 
+.workspace-widget-add {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background: #111111;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 150ms ease, background 200ms ease;
+}
+
+.workspace-widget-add:hover {
+  background: #2a2a2a;
+  transform: translateY(-1px);
+}
+
+.workspace-widget-add-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+@media (max-width: 720px) {
+  .workspace-widget-add-label {
+    display: none;
+  }
+  .workspace-widget-add {
+    padding: 8px 12px;
+  }
+}
+
 .workspace-board-tab {
   position: relative;
   flex: 0 0 auto;
