@@ -446,8 +446,10 @@ const DEFAULT_BRAIN_AGENT_TYPE: AgentRole = "planner";
 const DEFAULT_BRAIN_PROMPT = "흩어진 메모와 링크를 오늘 할 일 기준으로 정리해줘.";
 const DEFAULT_BRAIN_CONTEXT = "이 보드는 개인 작업 보드입니다. 우선순위, 바로 실행할 일, 빠진 정보까지 함께 정리해줘.";
 const FOCUS_TICK_INTERVAL_MS = 1000;
-const FREE_BOARD_LIMIT = 3;
-const PAID_BOARD_LIMIT = 10;
+// TODO: 구독 모델 확정되면 free=3 / paid=10 같은 실제 한도로 되돌리기.
+// 그때까지는 사실상 무제한으로 두고 한도 UI/disabled 로직만 살려둠.
+const FREE_BOARD_LIMIT = 999;
+const PAID_BOARD_LIMIT = 999;
 const SUBSCRIPTION_PLANS: Array<{
   key: SubscriptionTier;
   label: string;
@@ -7552,6 +7554,7 @@ const App = () => {
   const addBoard = async (templateKey: BoardTemplateKey = "blank", themeId?: BoardThemeId) => {
     if (activeBoardLimitReached) {
       setBoardCreationError(`현재 ${currentSubscriptionPlan.label} 플랜은 보드를 최대 ${boardLimit}개까지 만들 수 있습니다.`);
+      setTemplatePickerOpen(true);
       return;
     }
 
