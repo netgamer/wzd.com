@@ -1,8 +1,18 @@
 import { wrap, jsonResponse, errorResponse } from "../../../_lib/auth.js";
 import { findYoutubeCategory } from "../../../_lib/youtube-categories.js";
 
+// 무료 카테고리 큐레이션: YouTube 검색 결과 페이지(HTML)를 직접 가져와
+// ytInitialData JSON에서 videoRenderer를 추출. API 키 불필요.
+//
+// 안정성 노트:
+// - YouTube 검색 페이지는 공개 서비스라 비로그인·서버 IP에서도 잘 응답함
+// - ytInitialData 스키마는 수년간 안정적으로 유지됨
+// - 결과는 YouTube가 관련성·인기도 종합 정렬 → 자연스러운 "엄선" 효과
+// - 24h D1 캐시로 같은 카테고리 재요청은 즉시 응답
+
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_RESULTS = 10;
+const MIN_DURATION_SEC = 60; // 1분 미만(Shorts) 제외
 
 const decodeHtmlEntities = (value = "") =>
   value
@@ -13,40 +23,121 @@ const decodeHtmlEntities = (value = "") =>
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'");
 
-const isoMinus = (days) => new Date(Date.now() - days * 86_400_000).toISOString();
-
-const pickThumbnail = (snippet) => {
-  const t = snippet?.thumbnails ?? {};
-  return (
-    t.maxres?.url ||
-    t.standard?.url ||
-    t.high?.url ||
-    t.medium?.url ||
-    t.default?.url ||
-    ""
-  );
+const parseDurationToSeconds = (text) => {
+  if (!text || typeof text !== "string") return null;
+  const parts = text.trim().split(":").map((p) => parseInt(p, 10));
+  if (parts.some((p) => Number.isNaN(p))) return null;
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 1) return parts[0];
+  return null;
 };
 
-const formatDuration = (iso) => {
-  if (!iso || typeof iso !== "string") return "";
-  const match = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
-  if (!match) return "";
-  const [, h, m, s] = match;
-  const hh = h ? parseInt(h, 10) : 0;
-  const mm = m ? parseInt(m, 10) : 0;
-  const ss = s ? parseInt(s, 10) : 0;
-  if (hh > 0) {
-    return `${hh}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+const pickThumbnail = (thumbnails) => {
+  if (!Array.isArray(thumbnails) || thumbnails.length === 0) return "";
+  // last is usually highest resolution
+  return thumbnails[thumbnails.length - 1]?.url || "";
+};
+
+const collectVideoRenderers = (node, out = []) => {
+  if (!node || typeof node !== "object") return out;
+  if (Array.isArray(node)) {
+    for (const item of node) collectVideoRenderers(item, out);
+    return out;
   }
-  return `${mm}:${String(ss).padStart(2, "0")}`;
+  for (const key of Object.keys(node)) {
+    if (key === "videoRenderer" && node[key] && typeof node[key] === "object" && node[key].videoId) {
+      out.push(node[key]);
+    } else {
+      collectVideoRenderers(node[key], out);
+    }
+  }
+  return out;
 };
 
-const formatViewCount = (raw) => {
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return "";
-  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억`;
-  if (n >= 10_000) return `${Math.round(n / 10_000).toLocaleString()}만`;
-  return n.toLocaleString();
+const extractInitialData = (html) => {
+  // YouTube가 페이지 안에 `var ytInitialData = {...};` 형태로 JSON을 박아둠.
+  // 따옴표 안에 중괄호가 들어갈 수 있으므로 끝 마커는 `;</script>`로 닫는다.
+  const marker = "var ytInitialData = ";
+  const idx = html.indexOf(marker);
+  if (idx < 0) return null;
+  const tail = html.slice(idx + marker.length);
+  // depth 추적해서 첫 번째 외곽 객체 끝을 찾는다.
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = 0; i < tail.length; i += 1) {
+    const ch = tail[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (ch === "{") depth += 1;
+    else if (ch === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        const raw = tail.slice(0, i + 1);
+        try {
+          return JSON.parse(raw);
+        } catch (error) {
+          console.error("ytInitialData parse failed", error);
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+};
+
+const normalizeVideo = (renderer) => {
+  if (!renderer || typeof renderer !== "object") return null;
+  const id = renderer.videoId;
+  if (!id || typeof id !== "string") return null;
+
+  const title = decodeHtmlEntities(
+    renderer.title?.runs?.[0]?.text ||
+      renderer.title?.simpleText ||
+      ""
+  ).trim();
+  if (!title) return null;
+
+  const channel = decodeHtmlEntities(
+    renderer.ownerText?.runs?.[0]?.text ||
+      renderer.longBylineText?.runs?.[0]?.text ||
+      renderer.shortBylineText?.runs?.[0]?.text ||
+      ""
+  ).trim();
+
+  const thumbnail = pickThumbnail(renderer.thumbnail?.thumbnails);
+  const lengthText = renderer.lengthText?.simpleText || "";
+  const durationSec = parseDurationToSeconds(lengthText);
+  const viewCount =
+    renderer.shortViewCountText?.simpleText ||
+    renderer.shortViewCountText?.accessibility?.accessibilityData?.label ||
+    renderer.viewCountText?.simpleText ||
+    "";
+  const publishedTime = renderer.publishedTimeText?.simpleText || "";
+
+  return {
+    id,
+    url: `https://www.youtube.com/watch?v=${id}`,
+    title,
+    channel,
+    thumbnail,
+    duration: lengthText,
+    durationSec,
+    viewCount,
+    publishedTime
+  };
 };
 
 const readCache = async (db, category) => {
@@ -81,67 +172,42 @@ const writeCache = async (db, category, videos) => {
   }
 };
 
-const fetchFromYouTube = async (apiKey, query) => {
-  const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
-  searchUrl.searchParams.set("part", "snippet");
-  searchUrl.searchParams.set("q", query);
-  searchUrl.searchParams.set("type", "video");
-  searchUrl.searchParams.set("videoEmbeddable", "true");
-  searchUrl.searchParams.set("order", "viewCount");
-  searchUrl.searchParams.set("publishedAfter", isoMinus(30));
-  searchUrl.searchParams.set("regionCode", "KR");
-  searchUrl.searchParams.set("relevanceLanguage", "ko");
-  searchUrl.searchParams.set("safeSearch", "moderate");
-  searchUrl.searchParams.set("maxResults", String(MAX_RESULTS));
-  searchUrl.searchParams.set("key", apiKey);
+const fetchSearchPage = async (query) => {
+  const url = new URL("https://www.youtube.com/results");
+  url.searchParams.set("search_query", query);
+  url.searchParams.set("hl", "ko");
+  url.searchParams.set("gl", "KR");
+  // sp = sort by viewCount + filter type=video. 안전한 protobuf 코드.
+  url.searchParams.set("sp", "CAMSAhAB");
 
-  const searchResp = await fetch(searchUrl.toString());
-  if (!searchResp.ok) {
-    const text = await searchResp.text().catch(() => "");
-    throw new Error(`youtube search ${searchResp.status}: ${text.slice(0, 200)}`);
+  const response = await fetch(url.toString(), {
+    redirect: "follow",
+    headers: {
+      "user-agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15",
+      accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "accept-language": "ko-KR,ko;q=0.9,en;q=0.8",
+      "sec-fetch-dest": "document",
+      "sec-fetch-mode": "navigate",
+      "sec-fetch-site": "none",
+      "upgrade-insecure-requests": "1"
+    }
+  });
+  if (!response.ok) {
+    throw new Error(`youtube search status ${response.status}`);
   }
-  const searchJson = await searchResp.json();
-  const items = Array.isArray(searchJson?.items) ? searchJson.items : [];
-  const ids = items
-    .map((item) => item?.id?.videoId)
-    .filter((id) => typeof id === "string" && id.length > 0);
-  if (ids.length === 0) return [];
+  return response.text();
+};
 
-  const detailsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
-  detailsUrl.searchParams.set("part", "snippet,contentDetails,statistics");
-  detailsUrl.searchParams.set("id", ids.join(","));
-  detailsUrl.searchParams.set("key", apiKey);
-
-  const detailsResp = await fetch(detailsUrl.toString());
-  if (!detailsResp.ok) {
-    const text = await detailsResp.text().catch(() => "");
-    throw new Error(`youtube videos.list ${detailsResp.status}: ${text.slice(0, 200)}`);
+const dedupe = (videos) => {
+  const seen = new Set();
+  const out = [];
+  for (const v of videos) {
+    if (!v?.id || seen.has(v.id)) continue;
+    seen.add(v.id);
+    out.push(v);
   }
-  const detailsJson = await detailsResp.json();
-  const detailsById = new Map(
-    (Array.isArray(detailsJson?.items) ? detailsJson.items : []).map((v) => [v.id, v])
-  );
-
-  return ids
-    .map((id) => {
-      const detail = detailsById.get(id);
-      const snippet = detail?.snippet ?? items.find((item) => item?.id?.videoId === id)?.snippet ?? {};
-      const stats = detail?.statistics ?? {};
-      const content = detail?.contentDetails ?? {};
-      const title = decodeHtmlEntities(snippet.title || "");
-      const channel = decodeHtmlEntities(snippet.channelTitle || "");
-      return {
-        id,
-        url: `https://www.youtube.com/watch?v=${id}`,
-        title,
-        channel,
-        thumbnail: pickThumbnail(snippet),
-        publishedAt: snippet.publishedAt || "",
-        duration: formatDuration(content.duration),
-        viewCount: formatViewCount(stats.viewCount)
-      };
-    })
-    .filter((v) => v.title);
+  return out;
 };
 
 export const onRequestGet = wrap(async ({ env, params, request }) => {
@@ -153,6 +219,7 @@ export const onRequestGet = wrap(async ({ env, params, request }) => {
 
   const url = new URL(request.url);
   const skipCache = url.searchParams.get("refresh") === "1";
+  const debug = url.searchParams.get("debug") === "1";
 
   if (!skipCache) {
     const cached = await readCache(env.DB, slug);
@@ -161,27 +228,40 @@ export const onRequestGet = wrap(async ({ env, params, request }) => {
     }
   }
 
-  const apiKey = env.YOUTUBE_API_KEY;
-  if (!apiKey) {
-    return errorResponse(
-      503,
-      "youtube_api_key_missing",
-      "YOUTUBE_API_KEY 환경변수가 설정되지 않았습니다. wrangler pages secret put YOUTUBE_API_KEY 로 등록해주세요."
-    );
-  }
-
   try {
-    const videos = await fetchFromYouTube(apiKey, category.query);
-    if (videos.length > 0) {
-      await writeCache(env.DB, slug, videos);
+    const html = await fetchSearchPage(category.query);
+    const data = extractInitialData(html);
+    if (!data) {
+      return errorResponse(502, "youtube_parse_failed", "YouTube 응답에서 데이터를 추출하지 못했습니다.");
     }
-    return jsonResponse({ category: slug, videos, cached: false });
+    const renderers = collectVideoRenderers(data);
+    const normalized = renderers
+      .map(normalizeVideo)
+      .filter(Boolean)
+      .filter((v) => v.durationSec === null || v.durationSec >= MIN_DURATION_SEC);
+    const unique = dedupe(normalized).slice(0, MAX_RESULTS);
+
+    if (unique.length === 0) {
+      return errorResponse(
+        502,
+        "youtube_empty_results",
+        "검색 결과가 비었습니다. 잠시 후 다시 시도해주세요."
+      );
+    }
+
+    await writeCache(env.DB, slug, unique);
+    return jsonResponse({
+      category: slug,
+      videos: unique,
+      cached: false,
+      ...(debug ? { debug: { totalRenderers: renderers.length, query: category.query } } : {})
+    });
   } catch (error) {
     console.error("youtube curation fetch failed", error);
     return errorResponse(
       502,
       "youtube_fetch_failed",
-      error instanceof Error ? error.message : "YouTube API 호출에 실패했습니다."
+      error instanceof Error ? error.message : "YouTube 검색에 실패했습니다."
     );
   }
 });
