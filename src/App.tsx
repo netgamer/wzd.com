@@ -3766,7 +3766,7 @@ const App = () => {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const boardGridRef = useRef<HTMLElement | null>(null);
   const mobileBoardTabsRef = useRef<HTMLDivElement | null>(null);
-  const mobileBoardTabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const mobileBoardTabRefs = useRef<Record<string, HTMLElement | null>>({});
   const catRemoteCommandIdRef = useRef(0);
   const rssAnimationTokenRef = useRef<Record<string, number>>({});
   const noteCardRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -10352,24 +10352,49 @@ const App = () => {
           <header className={`${topbarClassName} board-tabs-only-topbar ${workspaceTabsHidden ? "is-scroll-hidden" : ""}`.trim()}>
             <div className="workspace-topbar-row">
               <div className="workspace-board-tabs" role="tablist" aria-label="보드 목록" ref={mobileBoardTabsRef}>
-                {activeBoards.map((boardItem) => (
-                  <button
-                    key={`workspace-tab-${boardItem.id}`}
-                    role="tab"
-                    aria-selected={selectedBoard?.id === boardItem.id}
-                    className={`workspace-board-tab ${selectedBoard?.id === boardItem.id ? "active" : ""}`}
-                    ref={(node) => {
-                      mobileBoardTabRefs.current[boardItem.id] = node;
-                    }}
-                    onClick={() => {
-                      setSelectedBoardId(boardItem.id);
-                      setSelectedNoteId(null);
-                      setFeedMode("active");
-                    }}
-                  >
-                    <span className="workspace-board-tab-label">{boardItem.title}</span>
-                  </button>
-                ))}
+                {activeBoards.map((boardItem) => {
+                  const isActive = selectedBoard?.id === boardItem.id;
+                  const canSettings = user?.id ? boardItem.userId === user.id : false;
+                  return (
+                    <div
+                      key={`workspace-tab-${boardItem.id}`}
+                      role="tab"
+                      aria-selected={isActive}
+                      className={`workspace-board-tab ${isActive ? "active" : ""} ${canSettings ? "has-settings" : ""}`}
+                      ref={(node) => {
+                        mobileBoardTabRefs.current[boardItem.id] = node;
+                      }}
+                      onClick={() => {
+                        setSelectedBoardId(boardItem.id);
+                        setSelectedNoteId(null);
+                        setFeedMode("active");
+                      }}
+                    >
+                      <span className="workspace-board-tab-label">{boardItem.title}</span>
+                      {canSettings && (
+                        <button
+                          type="button"
+                          className="workspace-board-tab-settings"
+                          aria-label={`${boardItem.title} 설정`}
+                          title="보드 설정"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedBoardId(boardItem.id);
+                            setSelectedNoteId(null);
+                            setFeedMode("active");
+                            openBoardSettings();
+                          }}
+                          onMouseDown={(event) => event.stopPropagation()}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               <div className="workspace-topbar-search">
                 <span className="workspace-search-icon" aria-hidden="true">

@@ -1058,6 +1058,62 @@ button {
   max-width: 180px;
 }
 
+/* hover 시 우측 설정 아이콘 노출. 본인 소유 보드(.has-settings)만 표시 */
+.workspace-board-tab.has-settings {
+  padding-right: 18px;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    padding-right 180ms ease;
+}
+
+.workspace-board-tab.has-settings:hover,
+.workspace-board-tab.has-settings.active {
+  padding-right: 36px;
+}
+
+.workspace-board-tab-settings {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%) scale(0.85);
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transition: opacity 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.workspace-board-tab.has-settings:hover .workspace-board-tab-settings,
+.workspace-board-tab.has-settings.active .workspace-board-tab-settings,
+.workspace-board-tab-settings:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+
+.workspace-board-tab-settings:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.workspace-board-tab:not(.active) .workspace-board-tab-settings:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.workspace-board-tab-settings svg {
+  display: block;
+}
+
 .board-page .workspace-topbar .topbar-primary {
   align-items: stretch;
   gap: 16px;
