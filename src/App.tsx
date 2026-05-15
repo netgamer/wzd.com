@@ -149,7 +149,8 @@ type WidgetType =
   | "routine"
   | "prompt"
   | "food"
-  | "blog";
+  | "blog"
+  | "embed";
 type DocumentWidgetVariant = "hero" | "section" | "feature" | "cta";
 type ClockWidgetMode = "digital" | "analog";
 type CalculatorOperator = "+" | "-" | "×" | "÷";
@@ -1146,158 +1147,51 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
   {
     key: "insta-ai",
     title: "인스타 AI 큐레이션",
-    subtitle: "인스타에서 저장한 AI 릴스·도구를 썸네일 갤러리로",
+    subtitle: "인스타에서 저장한 AI 릴스·게시물을 그리드로",
     tag: "수집 보드",
     audience: "AI 트렌드를 인스타로 따라가는 사람",
-    highlights: ["저장 릴스 갤러리", "썸네일 + 한줄 제목", "클릭해서 원본 열기"],
+    highlights: ["인스타 공식 임베드", "URL만 붙여넣으면 자동", "그리드 갤러리"],
     backgroundStyle: "whiteboard",
     layoutStyle: "visual",
     notes: [
       {
-        color: "white",
-        content:
-          "🤖 GPT-5 단축키 5가지\n@aitoolreport\nhttps://www.instagram.com/aitoolreport/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🎨 Midjourney v7 시네마틱 공식\n@bilawalsidhu\nhttps://www.instagram.com/bilawalsidhu/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1655720359946-1c01b04ebd60?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "💼 AI로 1인 SaaS 만든 과정\n@levelsio\nhttps://www.instagram.com/levelsio/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1547954575-855750c57bd3?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "📊 클로드로 노션 대시보드 자동\n@thealexbanks\nhttps://www.instagram.com/thealexbanks/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🎵 Suno v4 음악 생성 데모\n@suno_ai_\nhttps://www.instagram.com/suno_ai_/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🧠 AI 에이전트가 코드 짜는 법\n@cursor_ai\nhttps://www.instagram.com/cursor_ai/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "📱 v0.dev로 디자인→React 5분\n@vercel\nhttps://www.instagram.com/vercel/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🔮 GPT 음성 모드 한국어 후기\n@openai\nhttps://www.instagram.com/openai/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
         color: "yellow",
         content:
-          "📝 운영 메모\n\n- 매주 일요일에 인스타 저장한 릴스 옮겨오기\n- 카드 위 썸네일은 원본 게시물 캡처로 교체\n- 안 보는 계정은 분기마다 정리"
-      }
+          "📌 사용법\n\n각 카드를 클릭한 뒤 인스타 게시물 URL을\n( https://www.instagram.com/p/... 또는 /reel/... )\n붙여넣으면 자동으로 원본 게시물이 임베드됩니다.\n\n카드를 더 추가하려면 우측 상단 \"위젯 추가\" → \"임베드\"."
+      },
+      { color: "white", content: "🤖 GPT 단축키 / 사용법", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🎨 Midjourney 프롬프트 공식", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "💼 AI로 사이드프로젝트", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "📊 Claude·Notion 자동화 팁", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🎵 음악·보이스 AI 데모", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🧠 AI 에이전트 사용 사례", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "📱 디자인→코드 (v0, Cursor)", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🔮 새 모델·기능 후기", metadata: { widgetType: "embed", embedUrl: "" } }
     ]
   },
   {
     key: "insta-fitness",
     title: "인스타 운동 큐레이션",
-    subtitle: "저장해둔 홈트·루틴·자세 교정 릴스를 한눈에",
+    subtitle: "저장한 홈트·릴스 게시물을 그리드 갤러리로",
     tag: "수집 보드",
-    audience: "운동 영감을 인스타에서 찾는 사람",
-    highlights: ["루틴 썸네일 갤러리", "한 줄 요약", "원본 링크 클릭"],
+    audience: "운동 영감을 인스타에서 모으는 사람",
+    highlights: ["인스타 공식 임베드", "URL 붙여넣기만", "원본 영상 바로 재생"],
     backgroundStyle: "whiteboard",
     layoutStyle: "visual",
     notes: [
       {
-        color: "white",
+        color: "yellow",
         content:
-          "🔥 6분 홈트 풀세트 (전신)\n@home_workout_kr\nhttps://www.instagram.com/explore/tags/홈트/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=600&h=600&q=80"
-        }
+          "📌 사용법\n\n각 카드를 클릭 → 인스타 릴스/게시물 URL\n( /reel/... 또는 /p/... ) 붙여넣기 →\n자동으로 원본 영상이 임베드됩니다.\n\n새 카드는 우측 상단 \"위젯 추가\" → \"임베드\"."
       },
-      {
-        color: "white",
-        content:
-          "🧘 아침 5분 스트레칭\n@morningroutine\nhttps://www.instagram.com/explore/tags/스트레칭/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1599058917765-a780eda07a3e?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "💪 푸시업 정확한 자세 3가지\n@formcheck\nhttps://www.instagram.com/explore/tags/푸시업/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🏃‍♂️ 러닝 페이스 단계별 가이드\n@runner_diary\nhttps://www.instagram.com/explore/tags/러닝/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🏋️ 케틀벨 풀바디 12분\n@kettlebell.club\nhttps://www.instagram.com/explore/tags/케틀벨/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🦵 무릎 아플 때 대체 운동 5\n@physio_pt\nhttps://www.instagram.com/explore/tags/홈트/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🥗 운동 후 단백질 한끼 추천\n@meal_prep_kr\nhttps://www.instagram.com/explore/tags/식단/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "👟 러닝화 비교: 페가수스 vs 노바\n@shoeguide\nhttps://www.instagram.com/explore/tags/러닝화/",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
+      { color: "white", content: "🔥 홈트 풀세트", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🧘 아침 스트레칭", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "💪 푸시업 자세 교정", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🏃 러닝 페이스 가이드", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🏋️ 케틀벨 루틴", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🦵 무릎 부담 적은 운동", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🥗 운동 후 식단", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "👟 러닝화·장비 리뷰", metadata: { widgetType: "embed", embedUrl: "" } },
       {
         color: "yellow",
         content:
@@ -1308,77 +1202,32 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
   {
     key: "youtube-curation",
     title: "유튜브 큐레이션 보드",
-    subtitle: "보고 싶은 영상을 썸네일·제목 카드로 정리",
+    subtitle: "유튜브 영상을 임베드 카드로 모아 바로 재생",
     tag: "수집 보드",
     audience: "유튜브를 학습·리서치 도구로 쓰는 사람",
-    highlights: ["썸네일 갤러리", "한 줄 제목", "클릭해서 영상 열기"],
+    highlights: ["유튜브 공식 임베드", "URL 붙여넣기", "보드 안에서 바로 재생"],
     backgroundStyle: "whiteboard",
     layoutStyle: "visual",
     notes: [
       {
-        color: "white",
+        color: "yellow",
         content:
-          "⚡ AI agents in 10 minutes\nFireship\nhttps://www.youtube.com/@Fireship",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1542435503-956c469947f6?auto=format&fit=crop&w=600&h=600&q=80"
-        }
+          "📌 사용법\n\n각 카드 클릭 → 유튜브 URL\n( https://www.youtube.com/watch?v=... 또는 https://youtu.be/... )\n붙여넣기 → 자동으로 영상 플레이어 임베드.\n\n새 카드는 우측 상단 \"위젯 추가\" → \"임베드\"."
       },
       {
         color: "white",
-        content:
-          "🧪 Vercel AI SDK v5 walkthrough\nTheo - t3.gg\nhttps://www.youtube.com/@t3dotgg",
+        content: "🎬 임베드 데모 (Me at the zoo)",
         metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1581090700227-1e37b190418e?auto=format&fit=crop&w=600&h=600&q=80"
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw"
         }
       },
-      {
-        color: "white",
-        content:
-          "📚 How I plan my entire year\nAli Abdaal\nhttps://www.youtube.com/@aliabdaal",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1535303311164-664fc9ec6532?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🧠 Claude로 풀스택 사이트 만들기\n조코딩\nhttps://www.youtube.com/@jocoding",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "📰 Two Minute Papers — Sora 2\nTwo Minute Papers\nhttps://www.youtube.com/@TwoMinutePapers",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🎙️ Naval on wealth & happiness\nTim Ferriss\nhttps://www.youtube.com/@TimFerriss",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1612865547334-09cb8cb455da?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "💻 노마드 코더 — React 22 신기능\n노마드 코더\nhttps://www.youtube.com/@nomadcoders",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
-      {
-        color: "white",
-        content:
-          "🎨 디자인베이스 — 토스 인터뷰\n디자인베이스\nhttps://www.youtube.com/@designbase",
-        metadata: {
-          pastedImageUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b8?auto=format&fit=crop&w=600&h=600&q=80"
-        }
-      },
+      { color: "white", content: "⚡ 개발·AI 채널", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "📚 자기계발·생산성", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🧠 AI·머신러닝 강의", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🎨 디자인·크리에이티브", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "🎙️ 인터뷰·롱폼", metadata: { widgetType: "embed", embedUrl: "" } },
+      { color: "white", content: "💻 코딩 튜토리얼", metadata: { widgetType: "embed", embedUrl: "" } },
       {
         color: "yellow",
         content:
@@ -1517,6 +1366,16 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
         previewLines: ["OpenAI Docs", "GenSpark", "Claude MCP 가이드"],
         previewMeta: "링크 붙여넣기로 바로 생성",
         accent: "#f5b941"
+      },
+      {
+        type: "embed",
+        title: "임베드",
+        subtitle: "인스타·유튜브·X URL을 카드로",
+        kicker: "EMBED",
+        previewTitle: "원본 게시물 임베드",
+        previewLines: ["인스타 릴스·게시물", "유튜브 영상", "X 트윗"],
+        previewMeta: "URL 붙여넣기로 자동 임베드",
+        accent: "#111111"
       },
       {
         type: "trending",
@@ -2555,7 +2414,8 @@ const getWidgetType = (note: NoteV2): WidgetType =>
   note.metadata?.widgetType === "routine" ||
   note.metadata?.widgetType === "prompt" ||
   note.metadata?.widgetType === "food" ||
-  note.metadata?.widgetType === "blog"
+  note.metadata?.widgetType === "blog" ||
+  note.metadata?.widgetType === "embed"
     ? note.metadata.widgetType
     : "note";
 const getRssFeedUrl = (note: NoteV2) =>
@@ -3028,6 +2888,107 @@ const getTrendingRegion = (note: NoteV2) =>
     ? note.metadata.trendingRegion.trim().toUpperCase()
     : DEFAULT_TRENDING_REGION;
 
+const getEmbedUrl = (note: NoteV2): string =>
+  typeof note.metadata?.embedUrl === "string" && note.metadata.embedUrl.trim()
+    ? note.metadata.embedUrl.trim()
+    : "";
+
+const getEmbedCaption = (note: NoteV2): string =>
+  typeof note.metadata?.embedCaption === "string" && note.metadata.embedCaption.trim()
+    ? note.metadata.embedCaption.trim()
+    : "";
+
+export type EmbedKind = "instagram" | "youtube" | "twitter" | "unknown";
+
+interface EmbedDescriptor {
+  kind: EmbedKind;
+  src: string;
+  aspectRatio: number; // height / width
+  allow?: string;
+  permalink: string;
+}
+
+const buildEmbedDescriptor = (rawUrl: string): EmbedDescriptor | null => {
+  if (!rawUrl) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname.replace(/^www\./i, "");
+
+  // Instagram: /p/<id>, /reel/<id>, /tv/<id> → official /embed/ endpoint.
+  if (host === "instagram.com" || host.endsWith(".instagram.com")) {
+    const match = parsed.pathname.match(/^\/(p|reel|tv)\/([A-Za-z0-9_-]+)/);
+    if (match) {
+      const path = `/${match[1]}/${match[2]}/embed/captioned`;
+      return {
+        kind: "instagram",
+        src: `https://www.instagram.com${path}`,
+        aspectRatio: 1.4,
+        permalink: `https://www.instagram.com/${match[1]}/${match[2]}/`
+      };
+    }
+  }
+
+  // YouTube: youtu.be/<id> or youtube.com/watch?v=<id> → /embed/<id>.
+  if (host === "youtu.be") {
+    const id = parsed.pathname.slice(1).split("/")[0];
+    if (id) {
+      return {
+        kind: "youtube",
+        src: `https://www.youtube.com/embed/${id}`,
+        aspectRatio: 9 / 16,
+        allow:
+          "accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+        permalink: `https://youtu.be/${id}`
+      };
+    }
+  }
+  if (host === "youtube.com" || host.endsWith(".youtube.com")) {
+    if (parsed.pathname.startsWith("/shorts/")) {
+      const id = parsed.pathname.split("/")[2];
+      if (id) {
+        return {
+          kind: "youtube",
+          src: `https://www.youtube.com/embed/${id}`,
+          aspectRatio: 16 / 9,
+          allow:
+            "accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+          permalink: `https://www.youtube.com/shorts/${id}`
+        };
+      }
+    }
+    const id = parsed.searchParams.get("v");
+    if (id) {
+      return {
+        kind: "youtube",
+        src: `https://www.youtube.com/embed/${id}`,
+        aspectRatio: 9 / 16,
+        allow:
+          "accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+        permalink: `https://www.youtube.com/watch?v=${id}`
+      };
+    }
+  }
+
+  // X / Twitter: rely on the publish.twitter.com Tweet embed widget.
+  if (host === "twitter.com" || host === "x.com" || host.endsWith(".twitter.com") || host.endsWith(".x.com")) {
+    const match = parsed.pathname.match(/^\/[^/]+\/status\/(\d+)/);
+    if (match) {
+      return {
+        kind: "twitter",
+        src: `https://platform.twitter.com/embed/Tweet.html?id=${match[1]}&theme=light`,
+        aspectRatio: 1.3,
+        permalink: `https://twitter.com${parsed.pathname}`
+      };
+    }
+  }
+
+  return null;
+};
+
 const getDeliveryCarrierId = (note: NoteV2) =>
   typeof note.metadata?.deliveryCarrierId === "string" && note.metadata.deliveryCarrierId.trim()
     ? note.metadata.deliveryCarrierId.trim()
@@ -3366,6 +3327,7 @@ const getAutoLayoutPriority = (note: NoteV2) => {
   if (widgetType === "delivery") return 2;
   if (widgetType === "timetable") return 2;
   if (widgetType === "pet") return 3;
+  if (widgetType === "embed") return 2;
   if (getAttachedImageUrl(note)) return 2;
 
   const noteUrl = extractFirstUrl(note.content);
@@ -3468,6 +3430,7 @@ const getAutoLayoutCategory = (note: NoteV2): AutoLayoutCategory => {
   if (widgetType === "trending") return "trending";
   if (widgetType === "delivery") return "delivery";
   if (widgetType === "pet") return "pet";
+  if (widgetType === "embed") return "image";
 
   const imageUrl = getAttachedImageUrl(note);
   const noteUrl = extractFirstUrl(note.content);
@@ -4192,6 +4155,104 @@ const App = () => {
 
   const renderExtraWidgetBody = (note: NoteV2, selected: boolean, compact = false) => {
     const widgetType = getWidgetType(note);
+
+    if (widgetType === "embed") {
+      const rawEmbedUrl = getEmbedUrl(note);
+      const caption = getEmbedCaption(note) || asText(note.content).trim();
+      const descriptor = buildEmbedDescriptor(rawEmbedUrl);
+
+      const handleUrlChange = (value: string) => {
+        updateNote(note.id, {
+          metadata: {
+            ...note.metadata,
+            widgetType: "embed",
+            embedUrl: value
+          }
+        });
+      };
+
+      const handleCaptionChange = (value: string) => {
+        updateNote(note.id, {
+          content: value,
+          metadata: {
+            ...note.metadata,
+            widgetType: "embed",
+            embedCaption: value
+          }
+        });
+      };
+
+      const badgeLabel =
+        descriptor?.kind === "instagram"
+          ? "Instagram"
+          : descriptor?.kind === "youtube"
+          ? "YouTube"
+          : descriptor?.kind === "twitter"
+          ? "X"
+          : "EMBED";
+
+      return (
+        <>
+          <div className="widget-header">
+            <span className="widget-badge embed-badge">{badgeLabel}</span>
+            <p className="pin-title">{caption || "임베드 카드"}</p>
+          </div>
+          {descriptor ? (
+            <div
+              className="embed-frame-wrap"
+              style={{ aspectRatio: `1 / ${descriptor.aspectRatio}` }}
+            >
+              <iframe
+                className="embed-frame"
+                src={descriptor.src}
+                title={caption || badgeLabel}
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allow={descriptor.allow}
+                allowFullScreen
+                sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
+              />
+            </div>
+          ) : (
+            <div className="embed-empty">
+              {rawEmbedUrl
+                ? "지원하지 않는 URL입니다. 인스타 게시물·릴스, 유튜브 영상, X 트윗 링크를 넣어주세요."
+                : "URL을 입력하면 미리보기가 나타납니다."}
+            </div>
+          )}
+          {selected ? (
+            <div className="widget-editor-stack">
+              <input
+                className="widget-input"
+                value={rawEmbedUrl}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => handleUrlChange(event.target.value)}
+                placeholder="인스타·유튜브·X URL"
+              />
+              <input
+                className="widget-input"
+                value={caption}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => handleCaptionChange(event.target.value)}
+                placeholder="카드 제목 (선택)"
+              />
+              {descriptor && (
+                <a
+                  className="widget-input embed-open-link"
+                  href={descriptor.permalink}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  onClick={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
+                >
+                  새 탭에서 원본 열기 →
+                </a>
+              )}
+            </div>
+          ) : null}
+        </>
+      );
+    }
 
     if (widgetType === "brain") {
       const agentType = getBrainAgentType(note);
@@ -8298,6 +8359,37 @@ const App = () => {
     setWidgetMenuOpen(false);
   };
 
+  const addEmbedWidget = () => {
+    if (!selectedBoard) {
+      return;
+    }
+
+    const boardMaxZ = notes
+      .filter((note) => note.boardId === selectedBoard.id)
+      .reduce((max, note) => Math.max(max, note.zIndex), 0);
+
+    const note = createNote({
+      boardId: selectedBoard.id,
+      userId: user?.id ?? selectedBoard.userId,
+      zIndex: boardMaxZ + 1,
+      color: "white",
+      content: "임베드 카드"
+    });
+
+    note.metadata = {
+      ...note.metadata,
+      widgetType: "embed",
+      embedUrl: ""
+    };
+
+    setNotes((prev) => [note, ...prev]);
+    touchBoard(selectedBoard.id);
+    setFeedMode("active");
+    setSelectedNoteId(note.id);
+    setVisibleNoteCount((prev) => Math.max(prev, 1));
+    setWidgetMenuOpen(false);
+  };
+
   const addChecklistWidget = () => {
     if (!selectedBoard) {
       return;
@@ -8969,7 +9061,8 @@ const App = () => {
       prompt: addPromptWidget,
       social: addSocialWidget,
       food: addFoodWidget,
-      blog: addBlogWidget
+      blog: addBlogWidget,
+      embed: addEmbedWidget
     };
 
     if (type === "note") {
