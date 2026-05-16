@@ -6624,17 +6624,25 @@ button {
 }
 
 @media (max-width: 980px) {
+  .pin-page,
   .pin-page.board-page,
-  .pin-page.board-page.sidebar-expanded {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .pin-page {
-    grid-template-columns: 1fr;
+  .pin-page.home-page,
+  .pin-page.share-page,
+  .pin-page.board-page.sidebar-expanded,
+  .pin-page.sidebar-expanded {
+    grid-template-columns: 1fr !important;
   }
 
   .pin-sidebar {
-    display: none;
+    display: none !important;
+  }
+
+  /* sidebar가 빠져도 일부 페이지에서 .pin-app이 두 번째 column에 들어가
+     좌측 빈 공간이 생기는 문제 방지 */
+  .pin-app {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
   }
 
   .sidebar-spacer,
