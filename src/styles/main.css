@@ -886,16 +886,16 @@ button {
 }
 
 .board-page .board-tabs-only-topbar {
-  width: min(1540px, calc(100% - 40px));
-  margin: 0 auto;
-  padding: 16px 0;
-  background: rgba(255, 255, 255, 0.92);
+  width: 100%;
+  margin: 0;
+  padding: 16px 24px;
+  background: #ffffff;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: none;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   border-radius: 0;
-  box-shadow: none;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
   position: sticky;
   top: 0;
   z-index: 10;

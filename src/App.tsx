@@ -2172,7 +2172,10 @@ const getBoardIdFromHash = (): string | null => {
 
 const updateBoardHash = (boardId: string | null) => {
   if (typeof window === "undefined") return;
-  const desired = boardId ? `#b/${boardId}` : "#";
+  // boardId가 비어있으면 hash 그대로 둠 (보드 데이터 로드 전 selectedBoard
+  // 가 null이라고 해서 hash를 비우면 hash 라우팅이 깨짐)
+  if (!boardId) return;
+  const desired = `#b/${boardId}`;
   if (window.location.hash !== desired) {
     window.history.replaceState({}, "", `${window.location.pathname}${desired}`);
   }
