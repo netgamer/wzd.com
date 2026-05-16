@@ -7258,8 +7258,8 @@ button {
       gap: 12px;
     }
 
-  /* 작은 모바일은 무조건 1열로 강제 — JS column 변수 안 먹는 경우 대비 */
-  @media (max-width: 680px) {
+  /* 작은 모바일(<500)만 1열 강제, 그 외(500~980)는 2열로 자연스럽게 */
+  @media (max-width: 500px) {
     .pin-board,
     .pin-board.workspace-board-grid {
       grid-template-columns: 1fr !important;

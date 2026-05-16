@@ -383,7 +383,7 @@ const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const BOARD_HISTORY_LIMIT = 20;
 const SETTINGS_PANEL_ANIMATION_MS = 220;
 const MOBILE_LAYOUT_BREAKPOINT = 980;
-const MOBILE_SINGLE_COLUMN_BREAKPOINT = 680;
+const MOBILE_SINGLE_COLUMN_BREAKPOINT = 500;
 const COMPACT_SIDEBAR_BREAKPOINT = 1120;
 const DEFAULT_RSS_FEED_URL = "https://news.google.com/rss/search?q=AI&hl=ko&gl=KR&ceid=KR:ko";
 const BLOG_FEED_URL = "https://netgamer.github.io/wzd-blog-platform/index.xml";
