@@ -2164,6 +2164,20 @@ const isHomeBoardLocation = () => {
   return window.location.pathname === "/" && !window.location.hash;
 };
 
+const getBoardIdFromHash = (): string | null => {
+  if (typeof window === "undefined") return null;
+  const match = window.location.hash.match(/^#b\/([A-Za-z0-9_-]+)/);
+  return match ? match[1] : null;
+};
+
+const updateBoardHash = (boardId: string | null) => {
+  if (typeof window === "undefined") return;
+  const desired = boardId ? `#b/${boardId}` : "#";
+  if (window.location.hash !== desired) {
+    window.history.replaceState({}, "", `${window.location.pathname}${desired}`);
+  }
+};
+
 const isPublicLandingLocation = () => {
   if (typeof window === "undefined") {
     return false;
@@ -6953,7 +6967,8 @@ const App = () => {
           pendingBoardNotesRef.current.clear();
           setBoards(merged.boards);
           setNotes(sanitizeNotes(merged.notes));
-          const preferredBoardId = loadLastViewedBoardId(user.id);
+          const hashBoardId = getBoardIdFromHash();
+          const preferredBoardId = hashBoardId || loadLastViewedBoardId(user.id);
           const homeBoardId = getPreferredHomeBoardId(merged.boards);
           const restoredBoardId = merged.boards.some((board) => !isBoardTrashed(board) && board.id === preferredBoardId)
             ? preferredBoardId
@@ -6971,7 +6986,8 @@ const App = () => {
           return;
         }
 
-        const preferredBoardId = loadLastViewedBoardId(user.id);
+        const hashBoardId = getBoardIdFromHash();
+        const preferredBoardId = hashBoardId || loadLastViewedBoardId(user.id);
         const homeBoardId = getPreferredHomeBoardId(remoteBoards);
         const initialBoardId = remoteBoards.some((board) => !isBoardTrashed(board) && board.id === preferredBoardId)
           ? preferredBoardId
@@ -7148,7 +7164,29 @@ const App = () => {
     }
 
     saveLastViewedBoardId(selectedBoard?.id ?? null, user?.id ?? null);
+    updateBoardHash(selectedBoard?.id ?? null);
   }, [selectedBoard?.id, user?.id, isReadOnlyBoardView, homeBoardRoute, feedMode]);
+
+  // 홈 라우트("/") 진입 시 로그인되어 있고 마지막 본 보드가 localStorage에
+  // 있으면 그 보드로 자동 redirect (워크스페이스 모드 + #b/<id>).
+  const homeRedirectAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!authChecked) return;
+    if (homeRedirectAppliedRef.current) return;
+    if (!homeBoardRoute) return;
+    if (!user?.id) return;
+    const lastId = loadLastViewedBoardId(user.id) || getBoardIdFromHash();
+    if (!lastId) return;
+    homeRedirectAppliedRef.current = true;
+    if (typeof window !== "undefined") {
+      window.history.replaceState({}, "", `/#b/${lastId}`);
+    }
+    setHomeBoardRoute(false);
+    setSharedBoardReadOnly(false);
+    setSelectedBoardId(lastId);
+    setSelectedNoteId(null);
+    setFeedMode("active");
+  }, [authChecked, user?.id, homeBoardRoute]);
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -8185,7 +8223,10 @@ const App = () => {
       return;
     }
 
-    window.history.pushState({}, "", "/#");
+    const lastId =
+      selectedBoard?.id || loadLastViewedBoardId(user?.id ?? null) || getBoardIdFromHash();
+    const targetHash = lastId ? `#b/${lastId}` : "#";
+    window.history.pushState({}, "", `/${targetHash}`);
     setHomeBoardRoute(false);
     setPublicLandingRoute(false);
     setMarketRoute(false);
@@ -8196,6 +8237,9 @@ const App = () => {
     setSharedBoardReadOnly(false);
     setSelectedNoteId(null);
     setMobileBoardMenuOpen(false);
+    if (lastId) {
+      setSelectedBoardId(lastId);
+    }
   };
 
   const navigateToUpdates = () => {
