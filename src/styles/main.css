@@ -6645,6 +6645,18 @@ button {
     min-width: 0;
   }
 
+  /* 빈 보드 안내(feed-empty)의 카드형 외곽(둥근 모서리 + dashed border +
+     반투명 흰 배경) 모바일에서 제거 → 본문 영역이 페이지에 평평하게
+     녹아들도록 */
+  .feed-empty,
+  .feed-empty.empty-templates {
+    border-radius: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    min-height: auto !important;
+    padding: 16px !important;
+  }
+
   .sidebar-spacer,
   .pin-brand,
   .board-switcher {
