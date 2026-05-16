@@ -3239,17 +3239,32 @@ const getNoteColumn = (note: NoteV2, columnCount: number) => {
 const groupNotesByColumn = (notes: NoteV2[], columnCount: number) => {
   const columns = Array.from({ length: columnCount }, () => [] as NoteV2[]);
 
-  [...notes]
-    .sort((a, b) => {
-      if (a.pinned !== b.pinned) {
-        return a.pinned ? -1 : 1;
-      }
+  const sorted = [...notes].sort((a, b) => {
+    if (a.pinned !== b.pinned) {
+      return a.pinned ? -1 : 1;
+    }
 
-      return a.zIndex - b.zIndex;
-    })
-    .forEach((note) => {
-      columns[getNoteColumn(note, columnCount)]?.push(note);
-    });
+    return a.zIndex - b.zIndex;
+  });
+
+  sorted.forEach((note) => {
+    columns[getNoteColumn(note, columnCount)]?.push(note);
+  });
+
+  // 자동 rebalance: columnCount > 1이고 노트들이 사실상 한 컬럼에만
+  // 몰려 있으면(메타가 모두 column=0인 보드 등) 시각적 균형을 위해
+  // zIndex 순서로 round-robin 재분배. 사용자가 명시적으로 column을
+  // 분산해둔 보드는 nonEmpty > 1이라 영향 없음.
+  if (columnCount > 1 && sorted.length > columnCount) {
+    const nonEmptyCount = columns.reduce((count, col) => count + (col.length > 0 ? 1 : 0), 0);
+    if (nonEmptyCount <= 1) {
+      const rebalanced = Array.from({ length: columnCount }, () => [] as NoteV2[]);
+      sorted.forEach((note, idx) => {
+        rebalanced[idx % columnCount].push(note);
+      });
+      return rebalanced;
+    }
+  }
 
   return columns;
 };
