@@ -1952,6 +1952,18 @@ button {
   -webkit-backdrop-filter: none !important;
 }
 
+/* 모바일에서 보드 제목 영역의 카드형 데코(padding+radius+background+
+   border+shadow)를 무효화 — 헤더 자체가 풀와이드 흰 패널이 되므로
+   안에 또 둥근 카드가 떠 있으면 안 됨 */
+.pin-topbar.compact-header .topbar-board-title {
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+
 .pin-topbar.compact-header .topbar-primary {
   width: 100%;
   flex: 1 1 auto;
