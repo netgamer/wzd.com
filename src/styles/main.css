@@ -1935,18 +1935,21 @@ button {
   padding: 10px 12px;
 }
 
-/* 모바일에서는 board-page의 카드형 헤더 override — 안드로이드 앱 헤더
-   스타일: 풀와이드, 마진 0, 라운드 0, 평평한 흰 배경 + 하단 1px 보더 */
-.board-page .pin-topbar.compact-header {
-  width: 100%;
-  margin: 0;
-  padding: 8px 12px;
-  border-radius: 0;
-  background: #ffffff;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
-  border-bottom: 1px solid rgba(31, 26, 19, 0.06);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+/* 모바일에서는 page wrapper(board-page/home-page/share-page)의 카드형
+   헤더 룰을 무시하고 풀와이드 평평한 흰 헤더로 강제. specificity 다툼
+   회피하려고 !important 적용. */
+.pin-topbar.compact-header {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 8px 12px !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(31, 26, 19, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .pin-topbar.compact-header .topbar-primary {
