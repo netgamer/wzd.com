@@ -3351,6 +3351,21 @@ button {
   box-shadow: var(--board-panel-shadow);
 }
 
+/* 작은 화면 (~1200)에서 두꺼운 카드 외곽이 컨텐츠를 한 번 더
+   감싸는 듯한 룩 제거 — 평평하게 페이지 배경과 같이 흐름 */
+@media (max-width: 1200px) {
+  .board-page .current-board-panel {
+    padding: 8px 12px 20px;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+  .board-page .current-board-panel::before {
+    display: none !important;
+  }
+}
+
 .board-page .current-board-panel::before {
   content: "";
   position: absolute;
