@@ -1304,6 +1304,16 @@ const WIDGET_GALLERY_SECTIONS: WidgetGallerySectionDefinition[] = [
     subtitle: "링크와 외부 정보를 빠르게 모아 바로 쓸 수 있는 위젯입니다.",
     items: [
       {
+        type: "note",
+        title: "메모",
+        subtitle: "빈 메모를 빠르게 추가",
+        kicker: "MEMO",
+        previewTitle: "새 메모",
+        previewLines: ["가볍게 시작", "텍스트·링크 자유롭게"],
+        previewMeta: "어디서나 한 줄로",
+        accent: "#fbbf24"
+      },
+      {
         type: "brain",
         title: "AI 브레인",
         subtitle: "보드 내용을 실행 계획으로 정리",
@@ -3848,7 +3858,8 @@ const App = () => {
     [activeBoards, selectedBoardId]
   );
   const isHomeView = homeBoardRoute && Boolean(selectedBoard && isHomeBoard(selectedBoard));
-  const showWorkspaceBoardTabs = !isHomeView && !isReadOnlyBoardView && activeBoards.length > 0;
+  const showWorkspaceBoardTabs =
+    !mobileViewport && !isHomeView && !isReadOnlyBoardView && activeBoards.length > 0;
   const boardLimit = subscriptionTier === "free" ? FREE_BOARD_LIMIT : PAID_BOARD_LIMIT;
   const activeBoardLimitReached = activeBoards.length >= boardLimit;
   const currentSubscriptionPlan = SUBSCRIPTION_PLANS.find((plan) => plan.key === subscriptionTier) ?? SUBSCRIPTION_PLANS[0]!;
@@ -9289,6 +9300,8 @@ const App = () => {
     };
 
     if (type === "note") {
+      addNote();
+      setWidgetMenuOpen(false);
       return;
     }
 
@@ -10626,45 +10639,57 @@ const App = () => {
                     <>
                       <div className="mobile-topbar-board-row">
                         <button
-                          className="mobile-icon-action mobile-board-toggle"
+                          type="button"
+                          className="mobile-topbar-board-copy mobile-board-title-button"
                           onClick={() => setMobileBoardMenuOpen((prev) => !prev)}
-                          aria-label="보드 메뉴"
+                          aria-label="보드 변경"
+                          aria-expanded={mobileBoardMenuOpen}
                         >
-                          <span className="mobile-board-toggle-glyph" aria-hidden="true">
-                            ≡
+                          <span className="mobile-board-title-text">
+                            {feedMode === "active" ? selectedBoard?.title ?? "My Board" : "보관 메모"}
                           </span>
-                          <span className="mobile-board-toggle-label">보드</span>
+                          <span className="mobile-board-title-caret" aria-hidden="true">▾</span>
                         </button>
-                        <div className="mobile-topbar-board-copy">
-                          <p className="feed-kicker">{feedMode === "active" ? "보드 선택" : "보관 메모"}</p>
-                          {boardHeading}
-                        </div>
-                        {hasSupabaseConfig ? (
-                          user ? (
-                            <div className="profile-menu-wrap" ref={profileMenuRef}>
-                              <button
-                                className="mobile-profile-button"
-                                onClick={() => setProfileMenuOpen((prev) => !prev)}
-                                aria-expanded={profileMenuOpen}
-                              >
-                                <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+                        <div className="mobile-topbar-action-cluster">
+                          <button
+                            type="button"
+                            className={`mobile-icon-action mobile-search-toggle ${mobileSearchOpen ? "is-open" : ""}`}
+                            onClick={() => setMobileSearchOpen((prev) => !prev)}
+                            aria-label={mobileSearchOpen ? "검색 닫기" : "검색 열기"}
+                            aria-expanded={mobileSearchOpen}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <circle cx="11" cy="11" r="8" />
+                              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                          </button>
+                          {hasSupabaseConfig ? (
+                            user ? (
+                              <div className="profile-menu-wrap" ref={profileMenuRef}>
+                                <button
+                                  className="mobile-profile-button"
+                                  onClick={() => setProfileMenuOpen((prev) => !prev)}
+                                  aria-expanded={profileMenuOpen}
+                                >
+                                  <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+                                </button>
+                                {profileMenuOpen && (
+                                  <div className="profile-menu-popover">
+                                    <button className="profile-menu-item" onClick={() => void onLogout()}>
+                                      로그아웃
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <button className="mobile-icon-action mobile-auth-action" onClick={onGoogleLogin}>
+                                로그인
                               </button>
-                              {profileMenuOpen && (
-                                <div className="profile-menu-popover">
-                                  <button className="profile-menu-item" onClick={() => void onLogout()}>
-                                    로그아웃
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                            )
                           ) : (
-                            <button className="mobile-icon-action mobile-auth-action" onClick={onGoogleLogin}>
-                              로그인
-                            </button>
-                          )
-                        ) : (
-                          <div className="profile-pill muted mobile-local-mode-pill">로컬 모드</div>
-                        )}
+                            <div className="profile-pill muted mobile-local-mode-pill">로컬 모드</div>
+                          )}
+                        </div>
                       </div>
                     </>
                   )
@@ -12735,9 +12760,9 @@ const App = () => {
         {!isReadOnlyBoardView && feedMode === "active" && (
           <button
             className={`floating-add-note ${runningDragNoteId ? "lifted" : ""}`}
-            onClick={addNote}
-            aria-label="새 메모 추가"
-            title="새 메모 추가"
+            onClick={openWidgetGallery}
+            aria-label="메모·위젯 추가"
+            title="메모·위젯 추가"
           >
             <span className="floating-add-note-plus" aria-hidden="true">+</span>
           </button>
