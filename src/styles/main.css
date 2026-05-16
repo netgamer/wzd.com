@@ -1935,6 +1935,57 @@ button {
   padding: 10px 12px;
 }
 
+/* 모바일에서는 board-page의 카드형 헤더 override — 안드로이드 앱 헤더
+   스타일: 풀와이드, 마진 0, 라운드 0, 평평한 흰 배경 + 하단 1px 보더 */
+.board-page .pin-topbar.compact-header {
+  width: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(31, 26, 19, 0.06);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.pin-topbar.compact-header .topbar-primary {
+  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pin-topbar.compact-header .topbar-board-title {
+  width: 100%;
+  min-width: 0;
+}
+
+.pin-topbar.compact-header .mobile-topbar-board-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* 모바일 아이콘 버튼 — 외곽 카드 사라졌으니 자체 배경도 미니멀하게 */
+.pin-topbar.compact-header .mobile-icon-action {
+  background: transparent;
+}
+
+.pin-topbar.compact-header .mobile-icon-action:hover,
+.pin-topbar.compact-header .mobile-icon-action:focus-visible {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.pin-topbar.compact-header .mobile-search-toggle.is-open {
+  background: #111;
+  color: #fff;
+}
+
 .pin-topbar.compact-header .search-shell {
   display: none;
 }
