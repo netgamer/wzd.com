@@ -7258,6 +7258,21 @@ button {
       gap: 12px;
     }
 
+  /* 작은 모바일은 무조건 1열로 강제 — JS column 변수 안 먹는 경우 대비 */
+  @media (max-width: 680px) {
+    .pin-board,
+    .pin-board.workspace-board-grid {
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+    }
+
+    .pin-card-slot,
+    .pin-card {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+  }
+
   .pin-column {
       gap: 12px;
     }
