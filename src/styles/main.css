@@ -1962,6 +1962,12 @@ button {
   border: none !important;
   box-shadow: none !important;
   margin: 0 !important;
+  /* 데스크탑용 max-width: clamp(240px, 34vw, 560px) 무효화 — 모바일에선
+     보드 제목 행이 헤더 풀폭을 차지해야 자식 row가 좌(제목) ↔ 우(검색)
+     정렬됨 */
+  max-width: none !important;
+  width: 100% !important;
+  flex: 1 1 100% !important;
 }
 
 .pin-topbar.compact-header .topbar-primary {
