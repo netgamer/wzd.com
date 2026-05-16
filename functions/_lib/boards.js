@@ -8,7 +8,7 @@ const NOTE_JSON_COLS = ["metadata"];
 const NOTE_BOOL_COLS = ["pinned", "archived"];
 
 const BOARD_SELECT =
-  "id, user_id, title, description, background_style, settings, is_archived, updated_at";
+  "id, user_id, title, description, background_style, settings, is_archived, visibility, clone_count, like_count, updated_at";
 const NOTE_SELECT =
   "id, board_id, user_id, content, color, x, y, w, h, z_index, rotation, pinned, archived, metadata, updated_at";
 
@@ -26,6 +26,9 @@ export const mapBoardRow = (row) => {
     backgroundStyle: normalized.background_style,
     settings: normalized.settings ?? {},
     isArchived: normalized.is_archived,
+    visibility: normalized.visibility || "private",
+    cloneCount: typeof normalized.clone_count === "number" ? normalized.clone_count : 0,
+    likeCount: typeof normalized.like_count === "number" ? normalized.like_count : 0,
     updatedAt: normalized.updated_at
   };
 };

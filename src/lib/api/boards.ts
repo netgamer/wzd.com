@@ -10,8 +10,52 @@ export interface BoardV2 {
   description: string;
   backgroundStyle: BoardBackgroundStyle;
   settings: Record<string, unknown>;
+  visibility?: "private" | "public";
+  cloneCount?: number;
+  likeCount?: number;
   updatedAt: string;
 }
+
+export interface DiscoverBoard extends BoardV2 {
+  ownerEmail: string;
+  ownerName: string;
+  noteCount: number;
+  isOwn: boolean;
+}
+
+export interface DiscoverResponse {
+  boards: DiscoverBoard[];
+  total: number;
+  hasMore: boolean;
+  sort: "top" | "recent";
+  q: string;
+  limit: number;
+  offset: number;
+}
+
+export const discoverBoards = async (params: {
+  sort?: "top" | "recent";
+  q?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DiscoverResponse> => {
+  const response = await apiFetch<DiscoverResponse>("/api/discover", {
+    query: {
+      sort: params.sort,
+      q: params.q,
+      limit: params.limit,
+      offset: params.offset
+    },
+    allowUnauthorized: true
+  });
+  return response;
+};
+
+export const cloneBoard = async (boardId: string): Promise<{ board: BoardV2; sourceBoardId: string }> => {
+  return apiFetch(`/api/boards/${encodeURIComponent(boardId)}/clone`, {
+    method: "POST"
+  });
+};
 
 export interface NoteV2 {
   id: string;
@@ -205,6 +249,7 @@ export const updateBoard = async (
     backgroundStyle: BoardBackgroundStyle;
     settings: Record<string, unknown>;
     isArchived: boolean;
+    visibility: "private" | "public";
   }>
 ): Promise<BoardV2 | null> => {
   const response = await apiFetch<BoardResponse>(`/api/boards/${encodeURIComponent(boardId)}`, {

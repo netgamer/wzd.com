@@ -45,6 +45,10 @@ export const onRequestPatch = wrap(async ({ env, data, params, request }) => {
   const nextSettings = body.settings && typeof body.settings === "object" ? body.settings : board.settings;
   const nextArchived =
     typeof body.isArchived === "boolean" ? (body.isArchived ? 1 : 0) : board.isArchived ? 1 : 0;
+  const nextVisibility =
+    body.visibility === "public" || body.visibility === "private"
+      ? body.visibility
+      : board.visibility || "private";
 
   await env.DB.prepare(
     `UPDATE boards SET
@@ -53,6 +57,7 @@ export const onRequestPatch = wrap(async ({ env, data, params, request }) => {
        background_style = ?,
        settings = ?,
        is_archived = ?,
+       visibility = ?,
        updated_at = ?
      WHERE id = ? AND user_id = ?`
   )
@@ -62,6 +67,7 @@ export const onRequestPatch = wrap(async ({ env, data, params, request }) => {
       nextBackground,
       JSON.stringify(nextSettings),
       nextArchived,
+      nextVisibility,
       now,
       params.id,
       user.id

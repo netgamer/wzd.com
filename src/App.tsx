@@ -53,7 +53,10 @@ import {
   saveBoardsV2,
   searchUserProfiles,
   syncUserProfile,
-  updateBoard
+  updateBoard,
+  discoverBoards,
+  cloneBoard,
+  type DiscoverBoard
 } from "./lib/supabase-board-v2";
 
 interface AuthUserProfile {
@@ -3685,6 +3688,13 @@ const App = () => {
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [youtubeFetchingSlug, setYoutubeFetchingSlug] = useState<string | null>(null);
   const [playingYoutubeNoteId, setPlayingYoutubeNoteId] = useState<string | null>(null);
+  const [discoverOpen, setDiscoverOpen] = useState(false);
+  const [discoverSort, setDiscoverSort] = useState<"top" | "recent">("top");
+  const [discoverQuery, setDiscoverQuery] = useState("");
+  const [discoverResults, setDiscoverResults] = useState<DiscoverBoard[]>([]);
+  const [discoverLoading, setDiscoverLoading] = useState(false);
+  const [discoverError, setDiscoverError] = useState<string | null>(null);
+  const [cloningBoardId, setCloningBoardId] = useState<string | null>(null);
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>(() => getInitialSubscriptionTier());
   const [boardCreationError, setBoardCreationError] = useState<string | null>(null);
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
@@ -7967,6 +7977,81 @@ const App = () => {
     }
   };
 
+  const runDiscoverSearch = async (overrides?: { sort?: "top" | "recent"; q?: string }) => {
+    const sort = overrides?.sort ?? discoverSort;
+    const q = overrides?.q ?? discoverQuery;
+    setDiscoverLoading(true);
+    setDiscoverError(null);
+    try {
+      const response = await discoverBoards({ sort, q, limit: 30 });
+      setDiscoverResults(response.boards);
+    } catch (error) {
+      console.error("discover failed", error);
+      setDiscoverError("보드 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+      setDiscoverResults([]);
+    } finally {
+      setDiscoverLoading(false);
+    }
+  };
+
+  const openDiscover = () => {
+    setDiscoverOpen(true);
+    void runDiscoverSearch();
+  };
+
+  const handleDiscoverSortChange = (next: "top" | "recent") => {
+    setDiscoverSort(next);
+    void runDiscoverSearch({ sort: next });
+  };
+
+  const handleDiscoverSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void runDiscoverSearch();
+  };
+
+  const handleCloneDiscoverBoard = async (board: DiscoverBoard) => {
+    if (activeBoardLimitReached) {
+      setBoardCreationError(
+        `현재 ${currentSubscriptionPlan.label} 플랜은 보드를 최대 ${boardLimit}개까지 만들 수 있습니다.`
+      );
+      setDiscoverOpen(false);
+      setTemplatePickerOpen(true);
+      return;
+    }
+    if (!user?.id) {
+      window.alert("로그인 후 이용 가능합니다.");
+      return;
+    }
+    if (cloningBoardId) return;
+    setCloningBoardId(board.id);
+    try {
+      const response = await cloneBoard(board.id);
+      const cloned = response?.board;
+      if (cloned) {
+        // 새 보드를 로컬 상태에 추가
+        const notes = await loadBoardNotesV2([cloned.id]).catch(() => []);
+        setBoards((prev) => [cloned, ...prev]);
+        if (notes.length > 0) {
+          setNotes((prev) => [...notes, ...prev]);
+        }
+        setSelectedBoardId(cloned.id);
+        setSelectedNoteId(null);
+        setFeedMode("active");
+        // 클론 카운트가 올라간 결과 반영하려면 목록 갱신
+        setDiscoverResults((prev) =>
+          prev.map((b) => (b.id === board.id ? { ...b, cloneCount: (b.cloneCount ?? 0) + 1 } : b))
+        );
+        setDiscoverOpen(false);
+      }
+    } catch (error) {
+      console.error("clone failed", error);
+      const message = error instanceof Error ? error.message : "보드 복사에 실패했습니다.";
+      window.alert(message);
+    } finally {
+      setCloningBoardId(null);
+    }
+  };
+
   const duplicateSelectedBoard = () => {
     if (!selectedBoard) {
       return;
@@ -10459,6 +10544,16 @@ const App = () => {
                   placeholder="Search notes, boards..."
                 />
               </div>
+              <button
+                type="button"
+                className="workspace-discover-btn"
+                onClick={openDiscover}
+                aria-label="둘러보기"
+                title="다른 사람 보드 둘러보기"
+              >
+                <span className="workspace-discover-icon" aria-hidden="true">🌐</span>
+                <span className="workspace-discover-label">둘러보기</span>
+              </button>
               {!isReadOnlyBoardView && feedMode === "active" && (
                 <button
                   type="button"
@@ -10731,6 +10826,94 @@ const App = () => {
           </div>
         )}
 
+        {discoverOpen && (
+          <div className="settings-overlay" onClick={() => setDiscoverOpen(false)}>
+            <section
+              className="settings-panel discover-panel"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="settings-panel-head">
+                <div>
+                  <p className="settings-kicker">둘러보기</p>
+                  <h2>공개된 보드를 구경하고 내 보드로 가져오기</h2>
+                </div>
+                <button className="ghost-action" onClick={() => setDiscoverOpen(false)}>
+                  닫기
+                </button>
+              </div>
+
+              <div className="discover-controls">
+                <div className="discover-sort">
+                  {(["top", "recent"] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      className={`discover-sort-pill ${discoverSort === s ? "is-active" : ""}`}
+                      onClick={() => handleDiscoverSortChange(s)}
+                    >
+                      {s === "top" ? "🔥 추천순" : "🆕 최신순"}
+                    </button>
+                  ))}
+                </div>
+                <form className="discover-search" onSubmit={handleDiscoverSubmit}>
+                  <input
+                    type="search"
+                    className="discover-search-input"
+                    placeholder="보드 제목·설명으로 검색"
+                    value={discoverQuery}
+                    onChange={(event) => setDiscoverQuery(event.target.value)}
+                  />
+                  <button type="submit" className="discover-search-submit">
+                    검색
+                  </button>
+                </form>
+              </div>
+
+              {discoverLoading ? (
+                <div className="discover-state">불러오는 중…</div>
+              ) : discoverError ? (
+                <div className="discover-state discover-state-error">{discoverError}</div>
+              ) : discoverResults.length === 0 ? (
+                <div className="discover-state">
+                  {discoverQuery ? "검색 결과가 없습니다." : "아직 공개된 보드가 없습니다."}
+                </div>
+              ) : (
+                <div className="discover-grid">
+                  {discoverResults.map((b) => (
+                    <article key={b.id} className="discover-card">
+                      <header className="discover-card-head">
+                        <strong className="discover-card-title">{b.title}</strong>
+                        <div className="discover-card-meta">
+                          <span>👤 {b.ownerName || b.ownerEmail || "익명"}</span>
+                          <span>📝 {b.noteCount}</span>
+                          <span>🔁 {b.cloneCount ?? 0}</span>
+                        </div>
+                      </header>
+                      {b.description && (
+                        <p className="discover-card-desc">{b.description}</p>
+                      )}
+                      <footer className="discover-card-actions">
+                        {b.isOwn ? (
+                          <span className="discover-card-own">내 보드</span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="discover-card-clone"
+                            disabled={cloningBoardId === b.id || !user?.id}
+                            onClick={() => void handleCloneDiscoverBoard(b)}
+                          >
+                            {cloningBoardId === b.id ? "복사 중…" : "내 보드로 복사"}
+                          </button>
+                        )}
+                      </footer>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
         {templatePickerOpen && (
           <div className="settings-overlay" onClick={() => setTemplatePickerOpen(false)}>
             <section
@@ -10976,6 +11159,52 @@ const App = () => {
                       </button>
                     )}
                   </div>
+
+                  {selectedBoard && isBoardOwner && (
+                    <div className="settings-section">
+                      <div className="settings-section-head">
+                        <strong>공개 설정</strong>
+                        <span>공개로 바꾸면 다른 사람이 둘러보기에서 발견하고 자신의 보드로 복사할 수 있습니다.</span>
+                      </div>
+                      <div className="visibility-toggle">
+                        {(["private", "public"] as const).map((option) => {
+                          const current = (selectedBoard.visibility as string) || "private";
+                          const active = current === option;
+                          return (
+                            <button
+                              key={option}
+                              type="button"
+                              className={`visibility-toggle-option ${active ? "is-active" : ""}`}
+                              onClick={async () => {
+                                if (active) return;
+                                try {
+                                  const updated = await updateBoard(selectedBoard.id, { visibility: option });
+                                  if (updated) {
+                                    setBoards((prev) => prev.map((b) => (b.id === updated.id ? { ...b, ...updated } : b)));
+                                  }
+                                } catch (error) {
+                                  console.error("visibility update failed", error);
+                                  window.alert("공개 설정 변경에 실패했습니다.");
+                                }
+                              }}
+                            >
+                              <strong>{option === "private" ? "🔒 비공개" : "🌐 공개"}</strong>
+                              <span>
+                                {option === "private"
+                                  ? "본인과 초대된 편집자만"
+                                  : "둘러보기 노출 + 누구나 복사 가능"}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {(selectedBoard.visibility as string) === "public" && (
+                        <p className="settings-hint">
+                          현재 복사 {selectedBoard.cloneCount ?? 0}회 · 좋아요 {selectedBoard.likeCount ?? 0}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {selectedBoard && (
                     <>
