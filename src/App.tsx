@@ -10842,6 +10842,33 @@ const App = () => {
         {mobileBoardMenuOpen && (
           <div className="mobile-board-sheet">
             <div className="mobile-board-list">
+              {activeBoards.length > 0 && (
+                <div className="mobile-board-sheet-tabs" role="tablist" aria-label="보드 목록">
+                  {activeBoards.map((boardItem) => {
+                    const isActive = selectedBoard?.id === boardItem.id;
+                    return (
+                      <button
+                        key={`mobile-sheet-tab-${boardItem.id}`}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        className={`mobile-board-sheet-tab ${isActive ? "active" : ""}`}
+                        onClick={() => {
+                          setSelectedBoardId(boardItem.id);
+                          setSelectedNoteId(null);
+                          setFeedMode("active");
+                          setMobileBoardMenuOpen(false);
+                        }}
+                      >
+                        <span className="mobile-board-sheet-tab-title">{boardItem.title}</span>
+                        {isActive && (
+                          <span className="mobile-board-sheet-tab-check" aria-hidden="true">✓</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <div className="mobile-board-actions">
                 {homeBoardRoute && user && (
                   <button
