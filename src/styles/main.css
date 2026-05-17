@@ -6663,6 +6663,131 @@ button {
   .youtube-curation-preview {
     display: none;
   }
+  .template-card-preview-popover {
+    display: none;
+  }
+}
+
+/* 템플릿 카드 hover preview — 같은 popover 스타일 패턴 */
+.template-card-wrap {
+  position: relative;
+}
+
+.template-card-wrap .template-card,
+.template-card-wrap .starter-template-card {
+  width: 100%;
+}
+
+.template-card-preview-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  min-width: 280px;
+  max-width: 360px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(31, 26, 19, 0.1);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.06);
+  padding: 12px 14px 14px;
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.template-card-wrap.is-hover .template-card-preview-popover,
+.template-card-wrap:focus-within .template-card-preview-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.template-card-preview-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(31, 26, 19, 0.06);
+  margin-bottom: 10px;
+}
+
+.template-card-preview-head strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f1a13;
+}
+
+.template-card-preview-head span {
+  font-size: 11px;
+  color: rgba(31, 26, 19, 0.55);
+}
+
+.template-card-preview-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-card-preview-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.template-card-preview-thumb {
+  flex: 0 0 60px;
+  width: 60px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 5px;
+  background: #f0f0f0;
+}
+
+.template-card-preview-placeholder {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: rgba(31, 26, 19, 0.06);
+  border-radius: 6px;
+}
+
+.template-card-preview-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.template-card-preview-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f1a13;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.template-card-preview-meta {
+  font-size: 10px;
+  color: rgba(31, 26, 19, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .youtube-curation-card {

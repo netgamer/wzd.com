@@ -843,9 +843,28 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
           "오프닝 훅\n\n\"정리는 해야 하는데, 노션은 너무 무겁다고 느낀 적 있나요?\""
       },
       {
-        color: "mint",
-        content:
-          "레퍼런스 링크\n\nhttps://www.youtube.com/\nhttps://www.notion.so/"
+        color: "white",
+        content: "레퍼런스 영상 1",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        }
+      },
+      {
+        color: "white",
+        content: "레퍼런스 영상 2",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+        }
+      },
+      {
+        color: "blue",
+        content: "🎨 Canva — 썸네일·로고\nhttps://www.canva.com"
+      },
+      {
+        color: "blue",
+        content: "✂️ CapCut — 영상 편집\nhttps://www.capcut.com"
       }
     ]
   },
@@ -873,6 +892,30 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
         color: "mint",
         content:
           "다음 액션\n\n담당자별로 해야 할 일을 짧게 적고, 관련 링크를 같이 붙여두세요."
+      },
+      {
+        color: "white",
+        content: "회의·생산성 영상",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+        }
+      },
+      {
+        color: "white",
+        content: "업무 자동화 영상",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        }
+      },
+      {
+        color: "blue",
+        content: "📝 Notion — 문서·위키\nhttps://www.notion.so"
+      },
+      {
+        color: "blue",
+        content: "💬 Slack — 팀 채팅\nhttps://slack.com"
       }
     ]
   },
@@ -900,6 +943,30 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
         color: "mint",
         content:
           "복습 메모\n\n헷갈린 개념은 짧게 다시 적고, 다음에 볼 링크와 같이 저장해두세요."
+      },
+      {
+        color: "white",
+        content: "강의 영상 1",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+        }
+      },
+      {
+        color: "white",
+        content: "강의 영상 2",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        }
+      },
+      {
+        color: "blue",
+        content: "🎓 Khan Academy — 무료 강의\nhttps://www.khanacademy.org"
+      },
+      {
+        color: "blue",
+        content: "📚 Coursera — 대학 강의\nhttps://www.coursera.org"
       }
     ]
   },
@@ -927,6 +994,30 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
         color: "blue",
         content:
           "읽을거리\n\n다음에 읽을 아티클과 블로그 링크를 모아두세요.\nhttps://stripe.com/blog"
+      },
+      {
+        color: "white",
+        content: "추천 영상 1",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        }
+      },
+      {
+        color: "white",
+        content: "추천 영상 2",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+        }
+      },
+      {
+        color: "blue",
+        content: "🚀 Product Hunt — 새로운 도구\nhttps://www.producthunt.com"
+      },
+      {
+        color: "blue",
+        content: "⭐ Awesome Lists — 분야별 모음\nhttps://github.com/sindresorhus/awesome"
       }
     ]
   },
@@ -974,6 +1065,30 @@ const BOARD_TEMPLATES: BoardTemplateDefinition[] = [
         color: "yellow",
         content:
           "문의하기\n\n이메일: hello@wzd.kr\n인스타 DM 또는 메일로 문의 주세요."
+      },
+      {
+        color: "white",
+        content: "소개 영상 1",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        }
+      },
+      {
+        color: "white",
+        content: "소개 영상 2",
+        metadata: {
+          widgetType: "embed",
+          embedUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+        }
+      },
+      {
+        color: "blue",
+        content: "🌳 Linktree — 링크 모음\nhttps://linktr.ee"
+      },
+      {
+        color: "blue",
+        content: "🍱 Bento — 개인 페이지\nhttps://bento.me"
       }
     ]
   },
@@ -3732,6 +3847,7 @@ const App = () => {
   const [playingYoutubeNoteId, setPlayingYoutubeNoteId] = useState<string | null>(null);
   const [youtubeCategoryPreviews, setYoutubeCategoryPreviews] = useState<Record<string, YoutubeCurationVideo[]>>({});
   const [hoveredCategorySlug, setHoveredCategorySlug] = useState<string | null>(null);
+  const [hoveredTemplateKey, setHoveredTemplateKey] = useState<string | null>(null);
   const [discoverOpen, setDiscoverOpen] = useState(false);
   const [discoverSort, setDiscoverSort] = useState<"top" | "recent">("top");
   const [discoverQuery, setDiscoverQuery] = useState("");
@@ -10195,22 +10311,80 @@ const App = () => {
       : selectedBoard.userId
     : "";
 
-  const renderTemplateCard = (template: BoardTemplateDefinition, keyPrefix: string) => (
-    <button
-      key={`${keyPrefix}-${template.key}`}
-      className="template-card starter-template-card"
-      onClick={() => void addBoard(template.key)}
-    >
-      <div className={`template-card-preview template-${template.backgroundStyle}`}>
-        <span className="template-card-badge">{template.tag}</span>
-        <strong>{template.title}</strong>
-        <span>{template.subtitle}</span>
+  const renderTemplateCard = (template: BoardTemplateDefinition, keyPrefix: string) => {
+    const isHovered = hoveredTemplateKey === template.key;
+    const previewNotes = template.notes.slice(0, 5);
+    const extractFirstUrl = (text: string): string => {
+      const match = text.match(/https?:\/\/[^\s]+/);
+      return match ? match[0] : "";
+    };
+    return (
+      <div
+        key={`${keyPrefix}-${template.key}`}
+        className={`template-card-wrap ${isHovered ? "is-hover" : ""}`}
+        onMouseEnter={() => setHoveredTemplateKey(template.key)}
+        onMouseLeave={() => setHoveredTemplateKey((k) => (k === template.key ? null : k))}
+      >
+        <button
+          type="button"
+          className="template-card starter-template-card"
+          onClick={() => void addBoard(template.key)}
+        >
+          <div className={`template-card-preview template-${template.backgroundStyle}`}>
+            <span className="template-card-badge">{template.tag}</span>
+            <strong>{template.title}</strong>
+            <span>{template.subtitle}</span>
+          </div>
+          <span className="template-card-title">{template.title}</span>
+          <span className="template-card-copy">{template.subtitle}</span>
+          <span className="template-card-audience">{template.audience}</span>
+        </button>
+        <div className="template-card-preview-popover" aria-hidden={!isHovered}>
+          <div className="template-card-preview-head">
+            <strong>{template.title} 미리보기</strong>
+            <span>총 {template.notes.length}개 카드 · 상위 {previewNotes.length}개</span>
+          </div>
+          <ul className="template-card-preview-list">
+            {previewNotes.map((note, idx) => {
+              const widgetType = note.metadata?.widgetType as string | undefined;
+              const isEmbed = widgetType === "embed";
+              const embedUrl = (note.metadata?.embedUrl as string) || "";
+              const ytIdMatch = embedUrl.match(/(?:v=|youtu\.be\/|\/shorts\/)([A-Za-z0-9_-]{6,})/);
+              const thumb = isEmbed && ytIdMatch
+                ? `https://i.ytimg.com/vi/${ytIdMatch[1]}/mqdefault.jpg`
+                : (note.metadata?.pastedImageUrl as string) || "";
+              const noteUrl = extractFirstUrl(note.content);
+              const titleLine = note.content.split("\n")[0] || (widgetType ? widgetType.toUpperCase() : "메모");
+              const summary = isEmbed
+                ? "YouTube 임베드"
+                : widgetType
+                ? widgetType.toUpperCase()
+                : noteUrl
+                ? noteUrl.replace(/^https?:\/\//, "")
+                : note.content.split("\n").slice(1).join(" ").trim().slice(0, 80) || "메모";
+              return (
+                <li key={`${template.key}-prev-${idx}`} className={`template-card-preview-item note-${note.color}`}>
+                  {thumb ? (
+                    <img className="template-card-preview-thumb" src={getImageProxyUrl(thumb)} alt="" loading="lazy"
+                      onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
+                    />
+                  ) : (
+                    <span className="template-card-preview-placeholder" aria-hidden="true">
+                      {widgetType === "embed" ? "▶" : widgetType === "bookmark" ? "🔖" : widgetType === "profile" ? "👤" : "📝"}
+                    </span>
+                  )}
+                  <span className="template-card-preview-text">
+                    <span className="template-card-preview-title">{titleLine}</span>
+                    <span className="template-card-preview-meta">{summary}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
-      <span className="template-card-title">{template.title}</span>
-      <span className="template-card-copy">{template.subtitle}</span>
-      <span className="template-card-audience">{template.audience}</span>
-    </button>
-  );
+    );
+  };
 
   const renderYoutubeCurationSection = (keyPrefix: string) => (
     <section className="template-section youtube-curation-section" key={`${keyPrefix}-youtube-curation`}>
