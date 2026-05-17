@@ -3730,6 +3730,8 @@ const App = () => {
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [youtubeFetchingSlug, setYoutubeFetchingSlug] = useState<string | null>(null);
   const [playingYoutubeNoteId, setPlayingYoutubeNoteId] = useState<string | null>(null);
+  const [youtubeCategoryPreviews, setYoutubeCategoryPreviews] = useState<Record<string, YoutubeCurationVideo[]>>({});
+  const [hoveredCategorySlug, setHoveredCategorySlug] = useState<string | null>(null);
   const [discoverOpen, setDiscoverOpen] = useState(false);
   const [discoverSort, setDiscoverSort] = useState<"top" | "recent">("top");
   const [discoverQuery, setDiscoverQuery] = useState("");
@@ -8044,6 +8046,28 @@ const App = () => {
     }
   };
 
+  const handleCategoryHover = (slug: string) => {
+    setHoveredCategorySlug(slug);
+    if (youtubeCategoryPreviews[slug] !== undefined) {
+      return; // 이미 fetch 완료(빈 배열 포함)
+    }
+    // 빈 배열로 우선 표시 → 중복 fetch 방지
+    setYoutubeCategoryPreviews((prev) => ({ ...prev, [slug]: [] }));
+    void fetch(`/api/youtube/category/${encodeURIComponent(slug)}`, { credentials: "include" })
+      .then((resp) => (resp.ok ? resp.json() : null))
+      .then((payload) => {
+        const videos: YoutubeCurationVideo[] = Array.isArray(payload?.videos) ? payload.videos : [];
+        setYoutubeCategoryPreviews((prev) => ({ ...prev, [slug]: videos }));
+      })
+      .catch(() => {
+        // 실패 시 빈 배열 유지
+      });
+  };
+
+  const handleCategoryHoverLeave = (slug: string) => {
+    setHoveredCategorySlug((current) => (current === slug ? null : current));
+  };
+
   const runDiscoverSearch = async (overrides?: { sort?: "top" | "recent"; q?: string }) => {
     const sort = overrides?.sort ?? discoverSort;
     const q = overrides?.q ?? discoverQuery;
@@ -10198,24 +10222,70 @@ const App = () => {
         {YOUTUBE_CURATION_CATEGORIES.map((category) => {
           const loading = youtubeFetchingSlug === category.slug;
           const disabled = Boolean(youtubeFetchingSlug) || activeBoardLimitReached;
+          const previewList = youtubeCategoryPreviews[category.slug];
+          const previewLoading = previewList !== undefined && previewList.length === 0;
+          const isHovered = hoveredCategorySlug === category.slug;
           return (
-            <button
+            <div
               key={`${keyPrefix}-youtube-${category.slug}`}
-              type="button"
-              className={`youtube-curation-card ${loading ? "is-loading" : ""}`}
-              onClick={() => void addYoutubeCurationBoard(category.slug)}
-              disabled={disabled}
-              aria-busy={loading}
+              className={`youtube-curation-card-wrap ${isHovered ? "is-hover" : ""}`}
+              onMouseEnter={() => handleCategoryHover(category.slug)}
+              onMouseLeave={() => handleCategoryHoverLeave(category.slug)}
             >
-              <span className="youtube-curation-emoji" aria-hidden="true">{category.emoji}</span>
-              <strong className="youtube-curation-label">{category.label}</strong>
-              <span className="youtube-curation-desc">{category.description}</span>
-              {loading ? (
-                <span className="youtube-curation-loading">유튜브에서 가져오는 중…</span>
-              ) : (
-                <span className="youtube-curation-cta">이 카테고리로 보드 만들기 →</span>
-              )}
-            </button>
+              <button
+                type="button"
+                className={`youtube-curation-card ${loading ? "is-loading" : ""}`}
+                onClick={() => void addYoutubeCurationBoard(category.slug)}
+                disabled={disabled}
+                aria-busy={loading}
+              >
+                <span className="youtube-curation-emoji" aria-hidden="true">{category.emoji}</span>
+                <strong className="youtube-curation-label">{category.label}</strong>
+                <span className="youtube-curation-desc">{category.description}</span>
+                {loading ? (
+                  <span className="youtube-curation-loading">유튜브에서 가져오는 중…</span>
+                ) : (
+                  <span className="youtube-curation-cta">이 카테고리로 보드 만들기 →</span>
+                )}
+              </button>
+              <div className="youtube-curation-preview" aria-hidden={!isHovered}>
+                <div className="youtube-curation-preview-head">
+                  <strong>이 카테고리 미리보기</strong>
+                  <span>최근 인기 + 명불허전 영상</span>
+                </div>
+                {previewList && previewList.length > 0 ? (
+                  <ul className="youtube-curation-preview-list">
+                    {previewList.slice(0, 5).map((video) => (
+                      <li key={video.id} className="youtube-curation-preview-item">
+                        <span className="youtube-curation-preview-thumb-wrap">
+                          <img
+                            className="youtube-curation-preview-thumb"
+                            src={getImageProxyUrl(video.thumbnail)}
+                            alt=""
+                            loading="lazy"
+                            onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
+                          />
+                          {video.duration && (
+                            <span className="youtube-curation-preview-duration">{video.duration}</span>
+                          )}
+                        </span>
+                        <span className="youtube-curation-preview-text">
+                          <span className="youtube-curation-preview-title">{video.title}</span>
+                          <span className="youtube-curation-preview-meta">
+                            {video.channel}
+                            {video.viewCount ? ` · ${video.viewCount}` : ""}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="youtube-curation-preview-empty">
+                    {previewLoading ? "영상을 가져오는 중…" : "지금은 미리볼 영상이 없습니다."}
+                  </p>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>
