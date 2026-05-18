@@ -57,7 +57,24 @@ WZD can also grow into a shareable personal page. Someone deep in AI can make a 
 7. Build-time env vars (Variables tab):
    - `VITE_APP_ENV`
    - `VITE_AGENT_API_BASE_URL`
+   - (선택) `VITE_BMC_USERNAME` — Buy Me a Coffee 사용자명
+   - (선택) `VITE_ADSENSE_CLIENT_ID` — `ca-pub-...` AdSense Publisher ID
 8. Apply migrations once: `npm run db:migrate:prod`.
+
+## 💰 수익화 켜는 법 (선택)
+
+### Buy Me a Coffee — 즉시 활성화 가능
+1. https://www.buymeacoffee.com 가입 후 username 정함
+2. Cloudflare Pages → Settings → Variables → `VITE_BMC_USERNAME = <username>` 추가
+3. 재빌드 후 사이트 우하단에 ☕ 후원 버튼 자동 노출
+4. 누가 한 명만 후원해도 즉시 매출 발생. 한국이면 토스/계좌이체 옵션 BMC에서 활성화 가능
+
+### Google AdSense — 승인 필요 (보통 1~3일)
+1. https://www.google.com/adsense 가입 → 사이트(wzd.kr) 등록
+2. 사이트 검토 통과 후 Publisher ID(`ca-pub-XXXXXXXX`) 발급
+3. Cloudflare Pages → Variables → `VITE_ADSENSE_CLIENT_ID = ca-pub-...` 추가
+4. 재빌드 후 AdSense Auto Ads 스크립트가 자동 로드 → 페이지 적절한 위치에 광고 자동 배치
+5. AdSense 콘솔에서 Auto Ads 옵션 켜면 됨
 
 ## Insight Reader MVP assets
 - Static sample page: `public/wzd_kr_insight_sample.html`

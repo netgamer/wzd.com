@@ -18,6 +18,7 @@ import UpdateDetailPage from "./features/updates/UpdateDetailPage";
 import UpdatesIndexPage from "./features/updates/UpdatesIndexPage";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { runAgentChat } from "./lib/agent";
+import { hasBmc, bmcUrl, injectAdSense } from "./lib/monetization";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
 import { fetchRssFeed, type RssFeedPreview, type RssItem } from "./lib/rss";
@@ -4222,6 +4223,11 @@ const App = () => {
     return () => {
       window.removeEventListener("resize", onResize);
     };
+  }, []);
+
+  useEffect(() => {
+    // 수익화 — AdSense Auto Ads 스크립트 한 번만 inject (env 있을 때)
+    injectAdSense();
   }, []);
 
   useEffect(() => {
@@ -13099,6 +13105,20 @@ const App = () => {
           >
             <span className="floating-add-note-plus" aria-hidden="true">+</span>
           </button>
+        )}
+
+        {hasBmc() && (
+          <a
+            className="floating-bmc"
+            href={bmcUrl()}
+            target="_blank"
+            rel="noreferrer noopener"
+            aria-label="개발자에게 커피 사주기"
+            title="이 사이트가 마음에 들면 ☕ 커피 한 잔 사주세요"
+          >
+            <span className="floating-bmc-emoji" aria-hidden="true">☕</span>
+            <span className="floating-bmc-label">커피 사주기</span>
+          </a>
         )}
 
         {saveStatusAnnouncement && (
