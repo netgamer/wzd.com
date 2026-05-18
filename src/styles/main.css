@@ -3050,10 +3050,31 @@ button {
 }
 
 .support-intro {
-  margin: 4px 0 14px;
+  margin: 4px 0 12px;
   font-size: 13px;
   color: rgba(31, 26, 19, 0.7);
   line-height: 1.55;
+}
+
+.support-share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fff8e7, #ffe9c5);
+  border: 1px solid rgba(31, 26, 19, 0.1);
+  color: #1f1a13;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 0 0 14px;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.support-share-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .support-channel-list {

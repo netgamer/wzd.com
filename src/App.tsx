@@ -4237,6 +4237,18 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    // URL에 ?donate=1 또는 #donate 가 있으면 후원 모달 자동 오픈.
+    // 사용자가 SNS·카톡에 "wzd.kr/?donate=1" 공유 → 한 번 클릭이면
+    // 곧바로 후원 화면 → 한 명만 호응해도 즉시 매출.
+    if (typeof window === "undefined") return;
+    if (!hasAnySupportChannel()) return;
+    const wantsDonate =
+      new URLSearchParams(window.location.search).get("donate") === "1" ||
+      window.location.hash === "#donate";
+    if (wantsDonate) setSupportModalOpen(true);
+  }, []);
+
+  useEffect(() => {
     const syncSharedSlug = () => {
       const nextHomeRoute = isHomeBoardLocation();
       const nextPublicLandingRoute = isPublicLandingLocation();
@@ -13145,6 +13157,30 @@ const App = () => {
                 개발자가 혼자 운영 중인 프로젝트입니다. 도움이 되셨다면 작은 후원으로
                 다음 기능 개발에 힘이 됩니다 💛
               </p>
+              <button
+                type="button"
+                className="support-share-button"
+                onClick={async () => {
+                  const shareUrl = `${window.location.origin}/?donate=1`;
+                  const shareText = "이 사이트 잘 보고 있어 ☕ — 1,000원 후원으로 응원해줘";
+                  if (typeof navigator !== "undefined" && navigator.share) {
+                    try {
+                      await navigator.share({ title: "WZD 응원하기", text: shareText, url: shareUrl });
+                      return;
+                    } catch {
+                      /* 사용자가 취소 — 클립보드로 폴백 */
+                    }
+                  }
+                  try {
+                    await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+                    window.alert("공유 텍스트가 복사되었습니다. SNS·카톡에 붙여넣어주세요.");
+                  } catch {
+                    window.prompt("복사해서 공유해주세요", `${shareText}\n${shareUrl}`);
+                  }
+                }}
+              >
+                🔗 친구·SNS에 후원 링크 공유
+              </button>
               <ul className="support-channel-list">
                 {getSupportChannels().map((channel) => (
                   <li key={channel.id} className="support-channel-item">
