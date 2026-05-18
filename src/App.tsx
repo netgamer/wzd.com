@@ -18,7 +18,11 @@ import UpdateDetailPage from "./features/updates/UpdateDetailPage";
 import UpdatesIndexPage from "./features/updates/UpdatesIndexPage";
 import { hasSupabaseConfig, supabase } from "./lib/supabase";
 import { runAgentChat } from "./lib/agent";
-import { hasBmc, bmcUrl, injectAdSense } from "./lib/monetization";
+import {
+  hasAnySupportChannel,
+  getSupportChannels,
+  injectAdSense
+} from "./lib/monetization";
 import { fetchDeliveryCarriers, fetchDeliveryTracking, type DeliveryCarrier, type DeliveryTrackingPreview } from "./lib/delivery";
 import { fetchLinkPreview, getImageProxyUrl, type LinkPreview } from "./lib/link-preview";
 import { fetchRssFeed, type RssFeedPreview, type RssItem } from "./lib/rss";
@@ -3849,6 +3853,8 @@ const App = () => {
   const [youtubeCategoryPreviews, setYoutubeCategoryPreviews] = useState<Record<string, YoutubeCurationVideo[]>>({});
   const [hoveredCategorySlug, setHoveredCategorySlug] = useState<string | null>(null);
   const [hoveredTemplateKey, setHoveredTemplateKey] = useState<string | null>(null);
+  const [supportModalOpen, setSupportModalOpen] = useState(false);
+  const [supportCopiedId, setSupportCopiedId] = useState<string | null>(null);
   const [discoverOpen, setDiscoverOpen] = useState(false);
   const [discoverSort, setDiscoverSort] = useState<"top" | "recent">("top");
   const [discoverQuery, setDiscoverQuery] = useState("");
@@ -13107,18 +13113,79 @@ const App = () => {
           </button>
         )}
 
-        {hasBmc() && (
-          <a
+        {hasAnySupportChannel() && (
+          <button
+            type="button"
             className="floating-bmc"
-            href={bmcUrl()}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label="개발자에게 커피 사주기"
-            title="이 사이트가 마음에 들면 ☕ 커피 한 잔 사주세요"
+            onClick={() => setSupportModalOpen(true)}
+            aria-label="개발자 후원하기"
+            title="이 사이트가 마음에 들면 ☕ 후원해주세요"
           >
             <span className="floating-bmc-emoji" aria-hidden="true">☕</span>
-            <span className="floating-bmc-label">커피 사주기</span>
-          </a>
+            <span className="floating-bmc-label">후원하기</span>
+          </button>
+        )}
+
+        {supportModalOpen && (
+          <div className="settings-overlay" onClick={() => setSupportModalOpen(false)}>
+            <section
+              className="settings-panel support-panel"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="settings-panel-head">
+                <div>
+                  <p className="settings-kicker">후원하기</p>
+                  <h2>이 사이트가 도움이 됐다면 ☕</h2>
+                </div>
+                <button className="ghost-action" onClick={() => setSupportModalOpen(false)}>
+                  닫기
+                </button>
+              </div>
+              <p className="support-intro">
+                개발자가 혼자 운영 중인 프로젝트입니다. 도움이 되셨다면 작은 후원으로
+                다음 기능 개발에 힘이 됩니다 💛
+              </p>
+              <ul className="support-channel-list">
+                {getSupportChannels().map((channel) => (
+                  <li key={channel.id} className="support-channel-item">
+                    <span className="support-channel-emoji" aria-hidden="true">{channel.emoji}</span>
+                    <div className="support-channel-text">
+                      <strong>{channel.label}</strong>
+                      <span>{channel.description}</span>
+                    </div>
+                    {channel.href ? (
+                      <a
+                        className="support-channel-action"
+                        href={channel.href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        열기 →
+                      </a>
+                    ) : channel.copyText ? (
+                      <button
+                        type="button"
+                        className="support-channel-action"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(channel.copyText!);
+                            setSupportCopiedId(channel.id);
+                            window.setTimeout(() => {
+                              setSupportCopiedId((id) => (id === channel.id ? null : id));
+                            }, 1800);
+                          } catch {
+                            window.prompt("복사해서 사용해주세요", channel.copyText);
+                          }
+                        }}
+                      >
+                        {supportCopiedId === channel.id ? "복사됨 ✓" : "복사"}
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
         )}
 
         {saveStatusAnnouncement && (

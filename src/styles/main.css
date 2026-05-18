@@ -3042,6 +3042,81 @@ button {
   }
 }
 
+/* 후원 모달 */
+.support-panel {
+  max-width: 460px;
+  width: 96vw;
+  padding: 24px 26px 24px;
+}
+
+.support-intro {
+  margin: 4px 0 14px;
+  font-size: 13px;
+  color: rgba(31, 26, 19, 0.7);
+  line-height: 1.55;
+}
+
+.support-channel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.support-channel-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(31, 26, 19, 0.08);
+  border-radius: 12px;
+  background: #fffdf9;
+}
+
+.support-channel-emoji {
+  font-size: 24px;
+  flex: 0 0 32px;
+}
+
+.support-channel-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.support-channel-text strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f1a13;
+}
+
+.support-channel-text span {
+  font-size: 12px;
+  color: rgba(31, 26, 19, 0.62);
+  word-break: keep-all;
+}
+
+.support-channel-action {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.support-channel-action:hover {
+  background: #2a2a2a;
+}
+
 .floating-add-note {
   position: fixed;
   right: 24px;
