@@ -2,9 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import globalStyles from "./styles/main.css?raw";
+import modernStyles from "./styles/modern-ui.css?raw";
 
 const styleTag = document.createElement("style");
-styleTag.textContent = globalStyles;
+styleTag.textContent = `${globalStyles}\n${modernStyles}`;
 document.head.appendChild(styleTag);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
