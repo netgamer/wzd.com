@@ -1,52 +1,134 @@
-/* Final workspace rail override: let the personal board list use the expanded rail width. */
+/* Personal board rail: keep the layout compact and reveal names only on demand. */
 @media (min-width: 1121px) {
-  .pin-page.board-page:has(.my-boards-sidebar) {
-    --board-rail-width: 236px;
-    grid-template-columns: 236px minmax(0, 1fr) !important;
+  .pin-page.board-page {
+    --board-rail-width: 64px;
+    grid-template-columns: 64px minmax(0, 1fr) !important;
   }
 
-  .pin-page.board-page:has(.my-boards-sidebar) .pin-sidebar,
-  .pin-page.board-page:has(.my-boards-sidebar) .pin-sidebar.expanded {
-    width: 236px;
-    min-width: 236px;
+  .pin-page.board-page .pin-sidebar,
+  .pin-page.board-page .pin-sidebar.expanded {
+    position: sticky;
+    width: 64px;
+    min-width: 64px;
+    align-items: center;
+    padding: 14px 6px;
+    overflow: hidden;
+    z-index: 100;
+    transition:
+      width 180ms cubic-bezier(.22,1,.36,1),
+      box-shadow 180ms ease,
+      background-color 180ms ease;
+  }
+
+  /* Expand as an overlay so the workspace never jumps horizontally. */
+  .pin-page.board-page .pin-sidebar:hover,
+  .pin-page.board-page .pin-sidebar:focus-within,
+  .pin-page.board-page .pin-sidebar.expanded:hover,
+  .pin-page.board-page .pin-sidebar.expanded:focus-within {
+    width: 244px;
+    min-width: 244px;
     align-items: stretch;
     padding: 14px 12px;
-    overflow: hidden;
+    overflow: visible;
+    background: rgba(255,255,255,.97);
+    box-shadow: 18px 0 48px rgba(24,33,51,.14);
+    border-right-color: rgba(24,33,51,.08);
   }
 
-  .pin-page.board-page:has(.my-boards-sidebar) .sidebar-primary-stack,
-  .pin-page.board-page:has(.my-boards-sidebar) .sidebar-nav,
-  .pin-page.board-page:has(.my-boards-sidebar) .sidebar-footer,
-  .pin-page.board-page:has(.my-boards-sidebar) .sidebar-section {
+  .pin-page.board-page .pin-sidebar > *,
+  .pin-page.board-page .pin-sidebar.expanded > * {
+    width: 100%;
+  }
+
+  .pin-page.board-page .sidebar-primary-stack,
+  .pin-page.board-page .sidebar-nav,
+  .pin-page.board-page .sidebar-footer,
+  .pin-page.board-page .sidebar-section {
+    align-items: center;
+  }
+
+  .pin-page.board-page .pin-sidebar:hover .sidebar-primary-stack,
+  .pin-page.board-page .pin-sidebar:focus-within .sidebar-primary-stack,
+  .pin-page.board-page .pin-sidebar.expanded:hover .sidebar-primary-stack,
+  .pin-page.board-page .pin-sidebar.expanded:focus-within .sidebar-primary-stack,
+  .pin-page.board-page .pin-sidebar:hover .sidebar-nav,
+  .pin-page.board-page .pin-sidebar:focus-within .sidebar-nav,
+  .pin-page.board-page .pin-sidebar:hover .sidebar-footer,
+  .pin-page.board-page .pin-sidebar:focus-within .sidebar-footer,
+  .pin-page.board-page .pin-sidebar.expanded:hover .sidebar-nav,
+  .pin-page.board-page .pin-sidebar.expanded:focus-within .sidebar-nav,
+  .pin-page.board-page .pin-sidebar.expanded:hover .sidebar-footer,
+  .pin-page.board-page .pin-sidebar.expanded:focus-within .sidebar-footer,
+  .pin-page.board-page .pin-sidebar:hover .sidebar-section,
+  .pin-page.board-page .pin-sidebar:focus-within .sidebar-section,
+  .pin-page.board-page .pin-sidebar.expanded:hover .sidebar-section,
+  .pin-page.board-page .pin-sidebar.expanded:focus-within .sidebar-section {
     align-items: stretch;
   }
 
-  .pin-page.board-page:has(.my-boards-sidebar) .my-boards-sidebar {
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
-    margin: 4px 0 0;
-    padding: 0 2px;
-    display: flex;
-    flex-direction: column;
+  .pin-page.board-page .my-boards-sidebar {
+    position: absolute;
+    top: 78px;
+    left: 0;
+    width: 244px;
+    max-height: calc(100vh - 170px);
+    margin: 0;
+    padding: 0 12px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-8px);
+    transition:
+      opacity 140ms ease,
+      transform 180ms cubic-bezier(.22,1,.36,1),
+      visibility 0s linear 180ms;
   }
 
-  .pin-page.board-page:has(.my-boards-sidebar) .my-boards-sidebar-list {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none;
+  .pin-page.board-page .pin-sidebar:hover .my-boards-sidebar,
+  .pin-page.board-page .pin-sidebar:focus-within .my-boards-sidebar,
+  .pin-page.board-page .pin-sidebar.expanded:hover .my-boards-sidebar,
+  .pin-page.board-page .pin-sidebar.expanded:focus-within .my-boards-sidebar {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+    transition-delay: 0s;
+  }
+
+  .pin-page.board-page .my-boards-sidebar-head {
+    padding: 0 8px 8px;
+  }
+
+  .pin-page.board-page .my-boards-sidebar-list {
+    max-height: calc(100vh - 215px);
+    padding-right: 4px;
     overflow-y: auto;
-    padding-right: 2px;
   }
 
-  .pin-page.board-page:has(.my-boards-sidebar) .my-board-sidebar-item {
+  .pin-page.board-page .my-board-sidebar-item {
     min-width: 0;
     width: 100%;
+    justify-content: flex-start;
+  }
+
+  .pin-page.board-page .my-board-sidebar-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
 @media (max-width: 1120px) {
   .pin-page.board-page .my-boards-sidebar {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pin-page.board-page .pin-sidebar,
+  .pin-page.board-page .my-boards-sidebar {
+    transition: none;
   }
 }
