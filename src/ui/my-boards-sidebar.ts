@@ -20,7 +20,15 @@ const syncSidebar = () => {
     return;
   }
 
+  const boardState = sourceButtons.map((sourceButton, index) => ({
+    label: normalizeLabel(sourceButton.textContent ?? "") || `보드 ${index + 1}`,
+    active: sourceButton.classList.contains("active")
+  }));
+  const signature = JSON.stringify(boardState);
+
   let container = document.getElementById(CONTAINER_ID);
+  if (container?.dataset.boardSignature === signature) return;
+
   if (!container) {
     container = document.createElement("section");
     container.id = CONTAINER_ID;
@@ -41,17 +49,18 @@ const syncSidebar = () => {
   list.setAttribute("aria-label", "내 보드 목록");
 
   sourceButtons.forEach((sourceButton, index) => {
-    const label = normalizeLabel(sourceButton.textContent ?? "") || `보드 ${index + 1}`;
+    const state = boardState[index]!;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "my-board-sidebar-item";
     button.setAttribute("role", "tab");
-    button.setAttribute("aria-label", label);
-    button.setAttribute("title", label);
-    button.classList.toggle("is-active", sourceButton.classList.contains("active"));
+    button.setAttribute("aria-label", state.label);
+    button.setAttribute("title", state.label);
+    button.setAttribute("aria-selected", state.active ? "true" : "false");
+    button.classList.toggle("is-active", state.active);
     button.innerHTML = '<span class="my-board-sidebar-dot" aria-hidden="true"></span><span class="my-board-sidebar-label"></span>';
     const labelNode = button.querySelector<HTMLElement>(".my-board-sidebar-label");
-    if (labelNode) labelNode.textContent = label;
+    if (labelNode) labelNode.textContent = state.label;
     button.addEventListener("click", () => sourceButton.click());
     list.appendChild(button);
   });
@@ -59,11 +68,11 @@ const syncSidebar = () => {
   const head = document.createElement("div");
   head.className = "my-boards-sidebar-head";
   head.innerHTML = '<span>내 보드</span><span class="my-boards-sidebar-count"></span>';
+  const count = head.querySelector<HTMLElement>(".my-boards-sidebar-count");
+  if (count) count.textContent = `${sourceButtons.length}`;
 
   container.replaceChildren(head, list);
-
-  const count = container.querySelector<HTMLElement>(".my-boards-sidebar-count");
-  if (count) count.textContent = `${sourceButtons.length}`;
+  container.dataset.boardSignature = signature;
 };
 
 const init = () => {
@@ -80,7 +89,12 @@ const init = () => {
   syncSidebar();
 
   const observer = new MutationObserver(schedule);
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class"]
+  });
 
   window.addEventListener("beforeunload", () => observer.disconnect(), { once: true });
 };
