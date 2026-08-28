@@ -1,3 +1,5 @@
+export {};
+
 const CARD_SELECTOR = [
   ".pin-card",
   ".starter-template-card",
