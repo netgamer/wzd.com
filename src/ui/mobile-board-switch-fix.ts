@@ -2,10 +2,32 @@ export {};
 
 const MOBILE_BREAKPOINT = 980;
 const MOBILE_BOARD_TAB_SELECTOR = ".mobile-board-sheet-tab";
-const RELOAD_DELAY_MS = 180;
+const RELOAD_DELAY_MS = 120;
+
+type ReactFiberNode = {
+  key?: string | null;
+  return?: ReactFiberNode | null;
+};
+
+const getBoardIdFromReactKey = (element: HTMLElement) => {
+  const fiberKey = Object.keys(element).find((key) => key.startsWith("__reactFiber$"));
+  if (!fiberKey) {
+    return null;
+  }
+
+  let fiber = (element as unknown as Record<string, unknown>)[fiberKey] as ReactFiberNode | undefined;
+  for (let depth = 0; fiber && depth < 6; depth += 1) {
+    if (typeof fiber.key === "string" && fiber.key.startsWith("mobile-sheet-tab-")) {
+      return fiber.key.slice("mobile-sheet-tab-".length);
+    }
+    fiber = fiber.return ?? null;
+  }
+
+  return null;
+};
 
 const initMobileBoardSwitchFix = () => {
-  let pendingReload: number | null = null;
+  let pendingNavigation: number | null = null;
 
   const handleClick = (event: MouseEvent) => {
     if (window.innerWidth > MOBILE_BREAKPOINT) {
@@ -20,20 +42,23 @@ const initMobileBoardSwitchFix = () => {
       return;
     }
 
-    const previousHash = window.location.hash;
-    if (pendingReload !== null) {
-      window.clearTimeout(pendingReload);
+    const boardId = getBoardIdFromReactKey(target);
+    if (!boardId) {
+      return;
     }
 
-    // React updates selectedBoardId first; its existing effect then persists
-    // the selected board and writes #b/<boardId>. Reload only after that effect
-    // has had a chance to run. This also makes mobile selection work when the
-    // local snapshot has stale "loaded" markers for board notes.
-    pendingReload = window.setTimeout(() => {
-      pendingReload = null;
-      const nextHash = window.location.hash;
-      if (nextHash !== previousHash && /^#b\/[A-Za-z0-9-]+$/.test(nextHash)) {
-        window.location.reload();
+    if (pendingNavigation !== null) {
+      window.clearTimeout(pendingNavigation);
+    }
+
+    // The React click handler updates selectedBoardId, but the mobile route can
+    // remain on the previous board. Make the selected board hash explicit so
+    // the existing App route/loading pipeline receives the new board id.
+    pendingNavigation = window.setTimeout(() => {
+      pendingNavigation = null;
+      const nextHash = `#b/${boardId}`;
+      if (window.location.hash !== nextHash) {
+        window.location.hash = nextHash;
       }
     }, RELOAD_DELAY_MS);
   };
@@ -41,9 +66,9 @@ const initMobileBoardSwitchFix = () => {
   document.addEventListener("click", handleClick, true);
   window.addEventListener("beforeunload", () => {
     document.removeEventListener("click", handleClick, true);
-    if (pendingReload !== null) {
-      window.clearTimeout(pendingReload);
-      pendingReload = null;
+    if (pendingNavigation !== null) {
+      window.clearTimeout(pendingNavigation);
+      pendingNavigation = null;
     }
   }, { once: true });
 };
