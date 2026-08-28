@@ -11,6 +11,7 @@ import myBoardsOverrideStyles from "./styles/my-boards-sidebar-override.css?raw"
 import hoverBoardRailStyles from "./styles/hover-board-rail.css?raw";
 import "./ui/immersive-effects";
 import "./ui/my-boards-sidebar";
+import "./ui/mobile-board-switch-fix";
 
 const styleTag = document.createElement("style");
 styleTag.textContent = `${globalStyles}\n${modernStyles}\n${refinementStyles}\n${headerFlatStyles}\n${immersiveStyles}\n${myBoardsStyles}\n${myBoardsOverrideStyles}\n${hoverBoardRailStyles}`;
