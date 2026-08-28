@@ -987,6 +987,7 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
                 </a>
               </div>
               <div className="landing-support-links">
+                <a href="/about">WZD 서비스 소개와 사용 방법</a>
                 <a href="/updates">최근 제품 업데이트 보기</a>
               </div>
               <div className="landing-proof-strip" aria-label="주요 특성">
@@ -1101,6 +1102,9 @@ const LandingPage = ({ user = null, onOpenWorkspace }: LandingPageProps) => {
       <footer className="landing-footer">
         <div className="landing-footer-inner">
           <span className="landing-footer-logo">WZD</span>
+          <a className="landing-footer-link" href="/about">
+            서비스 소개
+          </a>
           <a className="landing-footer-link" href="/updates">
             Updates
           </a>

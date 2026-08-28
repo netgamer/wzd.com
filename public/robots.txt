@@ -1,5 +1,23 @@
 User-agent: *
 Allow: /
 Disallow: /landing
+Disallow: /api/
+
+# Search/retrieval agents, not model-training crawlers.
+# Keep the same exclusions: specific groups do not inherit the wildcard group.
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+Allow: /
+Disallow: /landing
+Disallow: /api/
+
+# robots.txt is crawl guidance, not authentication or a guarantee of deindexing.
+# AI training policy remains managed by Cloudflare; do not override it here.
 
 Sitemap: https://www.wzd.kr/sitemap.xml
