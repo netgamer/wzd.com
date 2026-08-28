@@ -1,3 +1,5 @@
+export {};
+
 const BOARD_TAB_SELECTOR = ".workspace-board-tabs .workspace-board-tab:not(.workspace-board-tab-settings)";
 const SIDEBAR_SELECTOR = ".board-page .pin-sidebar";
 const TABS_SELECTOR = ".workspace-board-tabs";
