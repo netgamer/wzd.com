@@ -1,0 +1,113 @@
+/* WZD hover workspace rail: compact by default, expandable over content on demand. */
+@media (min-width: 1121px) and (hover: hover) and (pointer: fine) {
+  .pin-page.board-page,
+  .pin-page.board-page.sidebar-expanded {
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+  }
+
+  .board-page .pin-sidebar,
+  .board-page .pin-sidebar.expanded {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1200;
+    width: 64px !important;
+    min-width: 64px;
+    max-width: 64px;
+    height: 100vh;
+    overflow: hidden;
+    align-items: center !important;
+    padding: 14px 6px 14px !important;
+    background: rgba(255, 255, 255, .96);
+    border-right: 1px solid rgba(18, 28, 45, .08);
+    box-shadow: 8px 0 28px rgba(18, 28, 45, .06);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    transition: width 180ms cubic-bezier(.22, 1, .36, 1), box-shadow 180ms ease;
+  }
+
+  .board-page .pin-sidebar:hover,
+  .board-page .pin-sidebar:focus-within {
+    width: 244px !important;
+    min-width: 244px;
+    max-width: 244px;
+    align-items: stretch !important;
+    padding: 14px 12px 14px !important;
+    box-shadow: 18px 0 50px rgba(18, 28, 45, .14);
+  }
+
+  .board-page .sidebar-primary-stack,
+  .board-page .pin-sidebar.expanded .sidebar-primary-stack {
+    align-items: center !important;
+    transition: align-items 180ms ease;
+  }
+
+  .board-page .pin-sidebar:hover .sidebar-primary-stack,
+  .board-page .pin-sidebar:focus-within .sidebar-primary-stack {
+    align-items: stretch !important;
+  }
+
+  .board-page .my-boards-sidebar {
+    opacity: 0;
+    transform: translateX(-8px);
+    pointer-events: none;
+    transition: opacity 120ms ease, transform 180ms cubic-bezier(.22, 1, .36, 1);
+  }
+
+  .board-page .pin-sidebar:hover .my-boards-sidebar,
+  .board-page .pin-sidebar:focus-within .my-boards-sidebar {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .board-page .my-boards-sidebar-list {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 2px;
+  }
+
+  .board-page .my-boards-sidebar-head {
+    white-space: nowrap;
+  }
+
+  .board-page .my-board-sidebar-item {
+    min-height: 36px;
+    padding: 7px 9px;
+  }
+
+  .board-page .sidebar-footer,
+  .board-page .sidebar-nav,
+  .board-page .sidebar-section {
+    align-items: center !important;
+  }
+
+  .board-page .pin-sidebar:hover .sidebar-footer,
+  .board-page .pin-sidebar:hover .sidebar-nav,
+  .board-page .pin-sidebar:hover .sidebar-section,
+  .board-page .pin-sidebar:focus-within .sidebar-footer,
+  .board-page .pin-sidebar:focus-within .sidebar-nav,
+  .board-page .pin-sidebar:focus-within .sidebar-section {
+    align-items: stretch !important;
+  }
+
+  .board-page .pin-sidebar .my-board-sidebar-label {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .board-page .pin-sidebar:not(:hover):not(:focus-within) .my-board-sidebar-label,
+  .board-page .pin-sidebar:not(:hover):not(:focus-within) .my-boards-sidebar-head {
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-page .pin-sidebar,
+  .board-page .my-boards-sidebar {
+    transition: none !important;
+  }
+}
