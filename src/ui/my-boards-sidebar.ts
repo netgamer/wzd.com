@@ -2,8 +2,14 @@ const BOARD_TAB_SELECTOR = ".workspace-board-tabs .workspace-board-tab:not(.work
 const SIDEBAR_SELECTOR = ".board-page .pin-sidebar";
 const TABS_SELECTOR = ".workspace-board-tabs";
 const CONTAINER_ID = "wzd-my-boards-sidebar";
+const PAGE_EXPANDED_CLASS = "sidebar-expanded";
 
 const normalizeLabel = (text: string) => text.replace(/\s+/g, " ").trim();
+
+const setSidebarExpanded = (sidebar: HTMLElement, expanded: boolean) => {
+  sidebar.classList.toggle("expanded", expanded);
+  sidebar.closest<HTMLElement>(".pin-page")?.classList.toggle(PAGE_EXPANDED_CLASS, expanded);
+};
 
 const syncSidebar = () => {
   const sidebar = document.querySelector<HTMLElement>(SIDEBAR_SELECTOR);
@@ -11,14 +17,18 @@ const syncSidebar = () => {
 
   if (!sidebar || !tabs) {
     document.getElementById(CONTAINER_ID)?.remove();
+    if (sidebar) setSidebarExpanded(sidebar, false);
     return;
   }
 
   const sourceButtons = Array.from(tabs.querySelectorAll<HTMLElement>(BOARD_TAB_SELECTOR));
   if (sourceButtons.length === 0) {
     document.getElementById(CONTAINER_ID)?.remove();
+    setSidebarExpanded(sidebar, false);
     return;
   }
+
+  setSidebarExpanded(sidebar, true);
 
   const boardState = sourceButtons.map((sourceButton, index) => ({
     label: normalizeLabel(sourceButton.textContent ?? "") || `보드 ${index + 1}`,
