@@ -87,6 +87,12 @@
   white-space: nowrap;
 }
 
+@media (min-width: 1121px) {
+  .board-page .workspace-board-tabs {
+    display: none;
+  }
+}
+
 @media (max-width: 1120px) {
   .my-boards-sidebar { display: none; }
 }
