@@ -1,0 +1,203 @@
+/* WZD immersive web-design effects — intentionally restrained. */
+:root {
+  --fx-ink: #182133;
+  --fx-muted: #728097;
+  --fx-accent: #5b5ce8;
+  --fx-accent-2: #7c6cf6;
+  --fx-surface: #ffffff;
+  --fx-line: rgba(24, 33, 51, .09);
+}
+
+/* Fine grain: a barely visible surface texture, not a visible pattern. */
+html::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  pointer-events: none;
+  opacity: .032;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* Spotlight surfaces. JavaScript updates --mx/--my on hovered cards. */
+@media (hover: hover) and (pointer: fine) {
+  .pin-card,
+  .starter-template-card,
+  .template-card-wrap .template-card,
+  .youtube-curation-card,
+  .document-widget.feature,
+  .document-widget.section {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .pin-card::before,
+  .starter-template-card::before,
+  .template-card-wrap .template-card::before,
+  .youtube-curation-card::before,
+  .document-widget.feature::before,
+  .document-widget.section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(
+      260px circle at var(--mx, -200px) var(--my, -200px),
+      rgba(91, 92, 232, .12),
+      transparent 72%
+    );
+    transition: opacity .28s ease;
+    z-index: -1;
+  }
+
+  .pin-card::after,
+  .starter-template-card::after,
+  .template-card-wrap .template-card::after,
+  .document-widget.feature::after,
+  .document-widget.section::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(
+      210px circle at var(--mx, -200px) var(--my, -200px),
+      rgba(124, 108, 246, .52),
+      transparent 68%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    transition: opacity .28s ease;
+    z-index: 3;
+  }
+
+  .pin-card:hover::before,
+  .starter-template-card:hover::before,
+  .template-card-wrap .template-card:hover::before,
+  .youtube-curation-card:hover::before,
+  .document-widget.feature:hover::before,
+  .document-widget.section:hover::before,
+  .pin-card:hover::after,
+  .starter-template-card:hover::after,
+  .template-card-wrap .template-card:hover::after,
+  .document-widget.feature:hover::after,
+  .document-widget.section:hover::after {
+    opacity: 1;
+  }
+
+  .youtube-curation-card:hover {
+    background:
+      radial-gradient(220px circle at var(--mx, -200px) var(--my, -200px), rgba(91, 92, 232, .08), transparent 72%),
+      #fff;
+  }
+}
+
+/* True glass: small floating layers only, never the whole page header. */
+.settings-panel,
+.template-picker-panel,
+.discover-panel,
+.support-panel,
+.widget-gallery-modal,
+.board-page .workspace-topbar .search-shell {
+  background: rgba(255,255,255,.76) !important;
+  border: 1px solid rgba(255,255,255,.72) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 -1px 0 rgba(24,33,51,.035),
+    0 18px 48px rgba(32, 43, 66, .10) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+
+/* Bento: asymmetric only in discovery/template areas, not the working board. */
+.youtube-curation-grid,
+.starter-template-grid {
+  align-items: stretch;
+}
+
+@media (min-width: 981px) {
+  .youtube-curation-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    grid-auto-rows: minmax(148px, auto);
+  }
+
+  .youtube-curation-card-wrap { grid-column: span 3; }
+  .youtube-curation-card-wrap:nth-child(1) { grid-column: span 6; grid-row: span 2; }
+  .youtube-curation-card-wrap:nth-child(2),
+  .youtube-curation-card-wrap:nth-child(3) { grid-column: span 3; }
+  .youtube-curation-card-wrap:nth-child(n+4) { grid-column: span 2; }
+
+  .youtube-curation-card {
+    min-height: 100%;
+    height: 100%;
+  }
+
+  .starter-template-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    grid-auto-rows: minmax(220px, auto);
+  }
+
+  .template-card-wrap { grid-column: span 3; }
+  .template-card-wrap:nth-child(1) { grid-column: span 6; grid-row: span 2; }
+  .template-card-wrap:nth-child(2),
+  .template-card-wrap:nth-child(3) { grid-column: span 3; }
+}
+
+/* Kinetic headings: outline -> filled, with restrained motion and no body-copy animation. */
+.kinetic-heading {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(24,33,51,.22);
+  background: linear-gradient(90deg, var(--fx-accent), var(--fx-accent-2));
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+  background-position: left center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: background-size .72s cubic-bezier(.22,1,.36,1), -webkit-text-stroke-color .35s ease, letter-spacing .55s cubic-bezier(.22,1,.36,1);
+  letter-spacing: -.02em;
+}
+
+.kinetic-heading.is-visible {
+  background-size: 100% 100%;
+  -webkit-text-stroke-color: transparent;
+  letter-spacing: -.035em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html::before { opacity: .02; }
+  .kinetic-heading,
+  .kinetic-heading.is-visible { transition: none; }
+}
+
+@media (max-width: 980px) {
+  .youtube-curation-grid,
+  .starter-template-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .youtube-curation-card-wrap,
+  .youtube-curation-card-wrap:nth-child(1),
+  .youtube-curation-card-wrap:nth-child(2),
+  .youtube-curation-card-wrap:nth-child(3),
+  .youtube-curation-card-wrap:nth-child(n+4),
+  .template-card-wrap,
+  .template-card-wrap:nth-child(1),
+  .template-card-wrap:nth-child(2),
+  .template-card-wrap:nth-child(3) {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+}
+
+@media (max-width: 620px) {
+  .youtube-curation-grid,
+  .starter-template-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
