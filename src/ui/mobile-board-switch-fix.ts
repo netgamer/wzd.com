@@ -1,8 +1,8 @@
 export {};
 
 const MOBILE_BREAKPOINT = 980;
-const MOBILE_BOARD_TAB_SELECTOR = ".mobile-board-sheet-tab";
 const BOARD_SOURCE_SELECTOR = ".workspace-board-tabs .workspace-board-tab:not(.workspace-board-tab-settings)";
+const MOBILE_BOARD_TAB_SELECTOR = ".mobile-board-sheet-tab";
 const RELOAD_DELAY_MS = 120;
 
 const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
@@ -19,16 +19,16 @@ const getBoardId = (element: HTMLElement) => {
   }
 
   const href = element.getAttribute("href");
-  if (href) {
-    const match = href.match(/#b\/([^/?#]+)/);
-    if (match?.[1]) return decodeURIComponent(match[1]);
-  }
-
-  return null;
+  const match = href?.match(/#b\/([^/?#]+)/);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
 };
 
+const getSourceButtons = () => Array.from(
+  document.querySelectorAll<HTMLElement>(BOARD_SOURCE_SELECTOR)
+);
+
 const findSourceButton = (target: HTMLElement) => {
-  const sources = Array.from(document.querySelectorAll<HTMLElement>(BOARD_SOURCE_SELECTOR));
+  const sources = getSourceButtons();
   if (!sources.length) return null;
 
   const directId = getBoardId(target);
@@ -48,22 +48,20 @@ const initMobileBoardSwitchFix = () => {
   const handleClick = (event: MouseEvent) => {
     if (window.innerWidth > MOBILE_BREAKPOINT) return;
 
-    const target = event.target instanceof Element
-      ? event.target.closest<HTMLElement>(MOBILE_BOARD_TAB_SELECTOR)
+    const rawTarget = event.target instanceof Element
+      ? event.target.closest<HTMLElement>("button, [role='tab'], [role='button'], " + MOBILE_BOARD_TAB_SELECTOR)
       : null;
-    if (!target) return;
+    if (!rawTarget) return;
 
-    const source = findSourceButton(target);
-    if (!source) return;
+    const source = findSourceButton(rawTarget);
+    if (!source || source === rawTarget) return;
 
-    // Use the application's real board button instead of trying to reconstruct
-    // React state from DOM internals. This keeps selectedBoardId, board data,
-    // and the route in the same state transition.
-    if (source !== target) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      source.click();
-    }
+    // Mobile uses a separate picker UI. Delegate to the real React board tab so
+    // selectedBoardId and all of the existing board-loading effects update in
+    // one place. Do not depend on React's private fiber keys.
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    source.click();
 
     if (pendingNavigation !== null) window.clearTimeout(pendingNavigation);
     pendingNavigation = window.setTimeout(() => {
